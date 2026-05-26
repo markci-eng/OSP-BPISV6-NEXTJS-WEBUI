@@ -6,7 +6,6 @@ import {
   Text,
   Box,
   IconButton,
-  useBreakpointValue,
   Collapsible,
   ScrollArea,
   Image,
@@ -35,9 +34,14 @@ export default function Sidebar({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [navItemExpanded, setNavItemExpanded] = useState<string>("");
 
-  // Detect mobile safely
-  const isMobileRaw = useBreakpointValue({ base: true, md: false });
-  const isMobile = isMobileRaw ?? false; // stable boolean
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1047px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const pathname = usePathname();
 

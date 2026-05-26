@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, IconButton, Show, useBreakpointValue } from "@chakra-ui/react";
+import { Flex, IconButton, Show } from "@chakra-ui/react";
 import { LuMenu } from "react-icons/lu";
 import { ColorModeButton } from "@/components/ui/color-mode";
 import { NotificationDataProps } from "../app-layout.type";
@@ -8,6 +8,7 @@ import { HeaderLogo } from "./header-logo";
 import { HeaderSearch } from "./header-search";
 import { HeaderNotifications } from "./header-notifications";
 import { HeaderProfile } from "./header-profile";
+import { useEffect, useState } from "react";
 
 export default function AppHeader({
   onToggleSidebar,
@@ -16,7 +17,14 @@ export default function AppHeader({
   onToggleSidebar: () => void;
   notifications: NotificationDataProps[];
 }) {
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1047px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   return (
     <Flex
@@ -31,17 +39,15 @@ export default function AppHeader({
       fontFamily="'Open Sans', sans-serif"
     >
       <Flex align="center" gap={2}>
-        <Show when={!isMobile}>
-          <IconButton
-            color={"gray.fg"}
-            aria-label="Toggle sidebar"
-            size="sm"
-            variant="ghost"
-            onClick={onToggleSidebar}
-          >
-            <LuMenu />
-          </IconButton>
-        </Show>
+        <IconButton
+          color={"gray.fg"}
+          aria-label="Toggle sidebar"
+          size="sm"
+          variant="ghost"
+          onClick={onToggleSidebar}
+        >
+          <LuMenu />
+        </IconButton>
         <Show when={isMobile}>
           <HeaderLogo />
         </Show>

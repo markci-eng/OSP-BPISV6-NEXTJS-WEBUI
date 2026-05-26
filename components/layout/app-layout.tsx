@@ -1,5 +1,5 @@
 "use client";
-import { Box, Flex, Show, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Flex, Show } from "@chakra-ui/react";
 import Sidebar from "./app-sidebar";
 import AppHeader from "./app-header";
 import { ReactNode, useEffect, useRef, useState } from "react";
@@ -15,14 +15,22 @@ import { StickyNavbarContext } from "./app-navbar/sticky-navbar-context";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
-  const isMobile = useBreakpointValue({ base: true, md: false });
 
   useEffect(() => {
-    if (!isSidebarOpen && window.innerWidth >= 768) {
+    const mq = window.matchMedia("(max-width: 1047px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    if (!isSidebarOpen && window.innerWidth >= 1048) {
       setIsSidebarOpen(true);
     }
   }, []);
