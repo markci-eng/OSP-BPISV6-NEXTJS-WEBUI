@@ -42,7 +42,7 @@ next-env.d.ts
 /.vs/OSP-BPISV6-NEXTJS-WEBUI/CopilotIndices/17.14.1518.61961
 /.vs/OSP-BPISV6-NEXTJS-WEBUI/FileContentIndex
 /.vs/OSP-BPISV6-NEXTJS-WEBUI/v17
-*.json
+# *.json
 *.sqlite
 *.sqlite-journal
 

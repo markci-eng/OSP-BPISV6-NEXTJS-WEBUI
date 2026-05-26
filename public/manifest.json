@@ -1,0 +1,29 @@
+{
+  "name": "One St. Peter - Life Plan Operations",
+  "short_name": "1SP Life Plan",
+  "description": "Integrated system for life plan operations.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "purpose": "maskable",
+      "sizes": "520x520",
+      "src": "/images/logo/icon.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "520x520",
+      "src": "/images/logo/icon.png",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/logo/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
