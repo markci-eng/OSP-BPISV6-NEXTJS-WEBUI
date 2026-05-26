@@ -1,0 +1,131 @@
+"use client";
+import {
+  Badge,
+  Box,
+  Carousel,
+  Flex,
+  IconButton,
+  Separator,
+  Strong,
+  useBreakpointValue,
+} from "@chakra-ui/react";
+import { useState } from "react";
+import { LuArrowLeft, LuArrowRight, LuHistory } from "react-icons/lu";
+import { ProgressCard } from "../cards/pending-request-card";
+import RequestHistoryDrawer from "../drawers/request-history-drawer";
+import { Small } from "st-peter-ui";
+import Card from "@/components/cards/Card";
+
+export interface RequestProps {
+  type:
+    | "Reinstatement"
+    | "Change of Mode"
+    | "Transfer of Rights"
+    | "Returned of Premium";
+  title: string;
+  description: string;
+  transactionId: string;
+  currentStep: number;
+  totalSteps: number;
+  status: "Pending" | "In Progress" | "Approved" | "Denied";
+  date: string;
+  hyperlink: string;
+}
+
+export function PendingRequests({
+  requests,
+}: {
+  requests?: RequestProps[] | undefined;
+}) {
+  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const pendingRequests = requests?.filter((x) => x.status === "Pending");
+
+  const content = (
+    <Flex flexDir="column">
+      <Carousel.Root slideCount={2} maxW="full">
+        <Carousel.Control justifyContent="center" gap={2} w="full">
+          {!isMobile && pendingRequests && pendingRequests.length > 1 && (
+            <Carousel.PrevTrigger asChild>
+              <IconButton size="2xs" variant="outline">
+                <LuArrowLeft />
+              </IconButton>
+            </Carousel.PrevTrigger>
+          )}
+
+          <Carousel.ItemGroup w="full">
+            {!pendingRequests || pendingRequests.length === 0 ? (
+              <Carousel.Item index={0} minW={0}>
+                <Flex
+                  align={"center"}
+                  justify="center"
+                  flexDir="column"
+                  py={10}
+                  gap={2}
+                >
+                  <Small>No Pending Request</Small>
+                </Flex>
+              </Carousel.Item>
+            ) : (
+              pendingRequests.map((request, index) => (
+                <Carousel.Item index={index} minW={0}>
+                  <ProgressCard
+                    current={request.currentStep}
+                    total={request.totalSteps}
+                    title={request.title}
+                    description={request.description}
+                    transactionId={request.transactionId}
+                    onClick={() => (window.location.href = request.hyperlink)}
+                  />
+                </Carousel.Item>
+              ))
+            )}
+          </Carousel.ItemGroup>
+
+          {!isMobile && pendingRequests && pendingRequests.length > 1 && (
+            <Carousel.NextTrigger asChild>
+              <IconButton size={{ base: "2xs", md: "xs" }} variant="outline">
+                <LuArrowRight />
+              </IconButton>
+            </Carousel.NextTrigger>
+          )}
+        </Carousel.Control>
+
+        <Carousel.Indicators
+          transition="width 0.2s ease-in-out"
+          transformOrigin="center"
+          opacity="0.5"
+          boxSize="2"
+          _current={{
+            width: "10",
+            bg: "colorPalette.subtle",
+            opacity: 1,
+          }}
+        />
+      </Carousel.Root>
+    </Flex>
+  );
+  return (
+    <Card.Root title={"Pending Request(s)"}>
+      <Card.ButtonSection>
+        <IconButton
+          aria-label="View request history"
+          size="xs"
+          variant="ghost"
+          color="var(--chakra-colors-primary)"
+          onClick={() => setHistoryOpen(true)}
+        >
+          <LuHistory /> History
+        </IconButton>
+      </Card.ButtonSection>
+      <Card.MainContent>
+        <RequestHistoryDrawer
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+        />
+        {content}
+      </Card.MainContent>
+    </Card.Root>
+  );
+}

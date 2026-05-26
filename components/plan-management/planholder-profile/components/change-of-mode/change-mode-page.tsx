@@ -1,0 +1,179 @@
+import { Box } from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import type { CheckedPlanType } from "./change-mode.types";
+import { ChangeModeForm } from "./change-mode-form";
+import { PHPlans } from "./data";
+import { ChangeModeSummaryPage } from "./change-mode-summary";
+import { FaFileAlt } from "react-icons/fa";
+import { FaFileShield } from "react-icons/fa6";
+import { FormStepper } from "@/components/form-stepper/form-stepper";
+import { Page } from "@/components/page/page";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { BRAND_COLORS } from "@/lib/theme/brand-colors";
+import {
+  STANDARD_RADIUS,
+  STANDARD_SHADOWS,
+} from "@/lib/theme/standard-design-tokens";
+
+export function ChangeModePage({
+  breadcrumbItems,
+  onSuccess,
+  successLink,
+}: {
+  breadcrumbItems: { label: string; href?: string }[];
+  onSuccess: (transactionId: string, transactionAmount: number) => void;
+  successLink: string;
+}) {
+  const [checkedPlans, setCheckedPlans] = useState<
+    CheckedPlanType[] | undefined
+  >([]);
+  const [totalAmountDue, setTotalAmountDue] = useState(0);
+
+  const { messageBox } = useMessageDialog();
+
+  useEffect(() => {
+    if (!checkedPlans) return;
+    const totalCMFee = checkedPlans.reduce((sum) => sum + 100, 0);
+    const totalInstPayment = checkedPlans.reduce(
+      (sum, p) => sum + p.new_installment_amount + p.pending_installment_amount,
+      0,
+    );
+    const totalDue = totalCMFee + totalInstPayment;
+    setTotalAmountDue(totalDue);
+  }, [checkedPlans]);
+
+  const stepsData = [
+    {
+      title: "Select Plan",
+      icon: FaFileAlt,
+      content: (
+        <ChangeModeForm
+          activePlans={PHPlans}
+          onCheckedPlansChange={(checked) => setCheckedPlans(checked)}
+        />
+      ),
+      validateBeforeNext: () => {
+        if (!checkedPlans || (checkedPlans && checkedPlans.length === 0)) {
+          messageBox({
+            title: "Unable to proceed",
+            message: "Please select a plan",
+            confirmText: "Okay",
+            variant: "warning",
+          });
+          return false;
+        }
+        return true;
+      },
+    },
+    {
+      title: "Application Summary",
+      icon: FaFileShield,
+      content: (
+        <ChangeModeSummaryPage
+          selectedPlans={checkedPlans}
+          onSubmit={() => {}}
+          onBack={() => {}}
+        />
+      ),
+    },
+    // {
+    //   title: "Payment",
+    //   icon: FaCcMastercard,
+    //   content: <PaymentPage successLink={successLink} />,
+    // },
+  ];
+
+  return (
+    <Page
+      breadcrumbItems={breadcrumbItems}
+      title={"Change of Mode Application"}
+      description="Switch your payment mode anytime - Quarterly, Semi-Annual, or Annual."
+    >
+      <Box
+        bg={BRAND_COLORS.white}
+        borderWidth="1px"
+        borderColor="gray.200"
+        borderRadius={STANDARD_RADIUS.md}
+        boxShadow={STANDARD_SHADOWS.level1}
+        p={{ base: 4, md: 5 }}
+      >
+        <FormStepper
+          steps={stepsData}
+          onSubmit={() => onSuccess("CM-12345", totalAmountDue)}
+        />
+      </Box>
+    </Page>
+    // <Box maxW={"7xl"} mx={"auto"} py={3}>
+    //   <Container px={0}>
+    //     <H3>Change of Mode Application</H3>
+    //     <Body mt={1}>
+    //       Switch your payment mode anytime—Quarterly, Semi-Annual, or Annual.
+    //     </Body>
+    //   </Container>
+
+    //   <Steps.Root
+    //     step={step}
+    //     onStepChange={(e) => setStep(e.step)}
+    //     count={steps.length}
+    //     my={5}
+    //     onStepComplete={() => onSuccess("CM-12345", totalAmountDue)}
+    //   >
+    //     <Steps.List>
+    //       {steps.map((step, index) => (
+    //         <Steps.Item key={index} index={index} title={step}>
+    //           <Steps.Indicator
+    //             _current={{
+    //               backgroundColor: "var(--chakra-colors-primary-disabled)/50",
+    //               borderColor: "var(--chakra-colors-primary)",
+    //               color: "var(--chakra-colors-primary-hover)",
+    //             }}
+    //             _complete={{
+    //               backgroundColor: "var(--chakra-colors-primary)",
+    //               borderColor: "var(--chakra-colors-primary)",
+    //             }}
+    //           />
+    //           <Steps.Title display={{ base: "block", mdDown: "none" }}>
+    //             {step}
+    //           </Steps.Title>
+    //           <Steps.Separator
+    //             _complete={{
+    //               backgroundColor: "var(--chakra-colors-primary)",
+    //             }}
+    //           />
+    //         </Steps.Item>
+    //       ))}
+    //     </Steps.List>
+
+    //     <Separator />
+
+    //     <Steps.Content index={0}>
+    //       <ChangeModeForm activePlans={PHPlans} onCheckedPlansChange={(checked) => setCheckedPlans(checked)}/>
+    //     </Steps.Content>
+    //     <Steps.Content index={1}>
+    //       <ChangeModeSummaryPage selectedPlans={checkedPlans} onSubmit={function (): void {
+    //         throw new Error("Function not implemented.");
+    //       } } onBack={function (): void {
+    //         throw new Error("Function not implemented.");
+    //       } }/>
+    //     </Steps.Content>
+    //     <Steps.Content index={2}>
+    //       <PaymentPage/>
+    //     </Steps.Content>
+    //     <Steps.CompletedContent>
+
+    //     </Steps.CompletedContent>
+
+    //     <Flex justifyContent={"space-between"}>
+    //       <Steps.PrevTrigger asChild>
+    //         {step < 3 && <PreviousButton  onClick={() => window.scrollTo(0, 0)}/>}
+    //       </Steps.PrevTrigger>
+    //       <Steps.NextTrigger asChild>
+    //         {step < 2 && (
+    //           <NextButton disabled={step === 0 && checkedPlans && checkedPlans.length === 0} onClick={() => window.scrollTo(0, 0)}/>
+    //         )}
+    //       </Steps.NextTrigger>
+    //     </Flex>
+    //   </Steps.Root>
+    // </Box>
+  );
+}
