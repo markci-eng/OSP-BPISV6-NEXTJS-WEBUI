@@ -115,7 +115,7 @@ export default function Sidebar({
               />
             </Box>
             {/* <Show when={!isMobile}> */}
-              <Box
+            <Box
               overflow="hidden"
               transition="width 0.2s"
               // width={isSidebarOpen ? "80px" : "0px"}
@@ -129,7 +129,14 @@ export default function Sidebar({
               >
                 {appName}
               </Body>
-              <Small opacity={isSidebarOpen ? 1 : 0} mt={"-5px"} color={"primary"} fontStyle={"italic"}>Life Plan Operations</Small>
+              <Small
+                opacity={isSidebarOpen ? 1 : 0}
+                mt={"-5px"}
+                color={"primary"}
+                fontStyle={"italic"}
+              >
+                Life Plan Operations
+              </Small>
             </Box>
             {/* </Show> */}
           </Flex>
@@ -422,7 +429,10 @@ export default function Sidebar({
                               </Box>
                               <Box
                                 overflow="hidden"
-                                onClick={item.onClick}
+                                onClick={() => {
+                                  item.onClick;
+                                  isMobile && onClose?.();
+                                }}
                                 transition="max-width 0.2s, opacity 0.2s"
                                 maxWidth={isSidebarOpen ? "220px" : "0px"}
                               >

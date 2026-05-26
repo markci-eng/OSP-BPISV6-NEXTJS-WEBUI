@@ -1,70 +1,82 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-} from "@chakra-ui/react";
-import {
-  LuMenu,
-  LuUserPen,
-  LuReplace,
-  LuTrendingUpDown,
-  LuClipboardCheck,
-} from "react-icons/lu";
-import { NotificationDataProps } from "../app-layout.type";
+import React from "react";
 import { StickyNavbar } from "./sticky-navbar";
 import { StickyNavbarBtn } from "./sticky-navbar-btn";
-import { RiBookShelfLine, RiDashboardFill, RiDashboardLine } from "react-icons/ri";
-import { HiOutlineCurrencyDollar } from "react-icons/hi2";
+import {
+  RiDashboardLine, RiDashboardFill,
+  RiCheckboxCircleLine, RiCheckboxCircleFill,
+  RiBookShelfLine, RiBookShelfFill,
+  RiMoneyDollarCircleLine, RiMoneyDollarCircleFill,
+  RiMenuLine,
+} from "react-icons/ri";
+import { usePathname, useRouter } from "next/navigation";
+
+const NAV_ITEMS = [
+  {
+    Icon: RiDashboardLine,
+    activeIcon: RiDashboardFill,
+    title: "Home",
+    href: "/",
+    match: (p: string) => p === "/" || p.startsWith("/dashboard"),
+  },
+  {
+    Icon: RiCheckboxCircleLine,
+    activeIcon: RiCheckboxCircleFill,
+    title: "Approvals",
+    href: "/approvals",
+    match: (p: string) => p.startsWith("/approvals"),
+  },
+  {
+    Icon: RiBookShelfLine,
+    activeIcon: RiBookShelfFill,
+    title: "Docs",
+    href: "/document-management",
+    match: (p: string) => p.startsWith("/document-management"),
+  },
+  {
+    Icon: RiMoneyDollarCircleLine,
+    activeIcon: RiMoneyDollarCircleFill,
+    title: "Payment",
+    href: "/payment/encode-payment",
+    match: (p: string) => p.startsWith("/payment/encode-payment"),
+  },
+  {
+    Icon: RiMenuLine,
+    activeIcon: undefined,
+    title: "More",
+    href: null,
+    match: () => false,
+  },
+];
 
 export function AppBottomNavBar({
   onToggleSidebar,
-  notifications,
 }: {
   onToggleSidebar: () => void;
-  notifications: NotificationDataProps[];
+  notifications?: unknown[];
 }) {
-  const [notifOpen, setNotifOpen] = useState(false);
-  const [systemColorMode, setColorMode] = useState(
-    localStorage?.getItem("color-mode") ?? "light",
-  );
-
-  useEffect(() => {
-    localStorage.setItem("color-mode", systemColorMode);
-  }, [systemColorMode]);
+  const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <StickyNavbar>
-                  <StickyNavbarBtn
-                    onClickEvent={() => {}}
-                    btnChildren={RiDashboardLine}
-                    title="Dashboard"
-                  />
-    
-                  <StickyNavbarBtn
-                    onClickEvent={() => {}}
-                    btnChildren={LuClipboardCheck}
-                    title="Approvals"
-                  />
-    
-                  <StickyNavbarBtn
-                    onClickEvent={() => {}}
-                    btnChildren={RiBookShelfLine}
-                    title="Documents"
-                  />
-                  
-                  <StickyNavbarBtn
-                    onClickEvent={() => {}}
-                    btnChildren={RiBookShelfLine}
-                    title="Documents"
-                  />
-    
-                  <StickyNavbarBtn
-                    onClickEvent={onToggleSidebar}
-                    btnChildren={LuMenu}
-                    title="More"
-                  >
-                  </StickyNavbarBtn>
-                </StickyNavbar>
+      {NAV_ITEMS.map((item) => (
+        <StickyNavbarBtn
+          key={item.title}
+          btnChildren={item.Icon}
+          activeIcon={item.activeIcon}
+          title={item.title}
+          isActive={item.match(pathname)}
+          onClickEvent={() => {
+            if (item.href) {
+              router.push(item.href);
+            } else {
+              onToggleSidebar();
+            }
+          }}
+        />
+      ))}
+    </StickyNavbar>
   );
 }
