@@ -1,40 +1,52 @@
 import {
   Box,
   CheckboxCard,
+  CheckboxCheckedChangeDetails,
+  Container,
   createListCollection,
   Flex,
   Grid,
+  Heading,
+  HStack,
   Separator,
+  SimpleGrid,
   Span,
+  Stack,
+  Steps,
   Strong,
-  Button,
+  VStack,
 } from "@chakra-ui/react";
 import type { CheckedPlan } from "./reinstatement.types";
 import {
   Body,
+  Checkbox,
+  H3,
   InputFloatingLabel,
+  NextButton,
+  PreviousButton,
   PrimaryLgFlexButton,
   PrimaryMdFlexButton,
+  PrimarySmButton,
+  SaveButton,
+  SelectButton,
   SelectFloatingLabel,
+  Small,
+  UnselectSolidButton,
 } from "st-peter-ui";
 import { useState } from "react";
 import { ReinstatementForm } from "./reinstatement-form";
 import { lapsedPlans } from "./data";
 import { ReinstatementSummaryPage } from "./ri-summary";
 import PaymentPage from "./payment";
+import { FormSteps } from "osp.cis.nextjs.components";
 import { FaCcMastercard, FaFileShield, FaLock } from "react-icons/fa6";
 import { FaFileAlt, FaFileUpload } from "react-icons/fa";
 import DocumentUploader from "@/components/document-uploader/DragAndDrop";
+import { MdFileUpload } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import SingleFileUpload from "@/components/inputs/single-file-upload";
-import { Page } from "@/components/page/page";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_BUTTON_STYLES,
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
+import Page from "@/components/layout/page/Page";
 
 const steps = ["Select Lapsed Plan", "Review Reinstatement", "Payment"];
 
@@ -112,27 +124,6 @@ export function ReinstatementPage({
     ],
   });
 
-  const breadcrumbItems = [
-    {
-      label: "Home",
-      href: "/",
-    },
-
-    {
-      label: "Planholder",
-      href: "/plan-management/planholder",
-    },
-
-    {
-      label: "PI123453I",
-      href: "/plan-management/planholder/PI123453I",
-    },
-    {
-      label: "Reinstatement",
-      href: "#",
-    },
-  ];
-
   const { messageBox } = useMessageDialog();
 
   return (
@@ -143,108 +134,76 @@ export function ReinstatementPage({
     //     "Quickly bring your plan back on track by reactivating a lapsed plan."
     //   }
     // />
-    <Page
-      breadcrumbItems={breadcrumbItems}
+    <Page.Root
       title={"Reinstatement Application"}
       description="Quickly bring your plan back on track by reactivating a lapsed plan."
     >
-      <Box
-        my={{ base: 4, md: 5 }}
-        p={{ base: 4, md: 5 }}
-        bg={BRAND_COLORS.white}
-        borderWidth="1px"
-        borderColor="gray.200"
-        boxShadow={STANDARD_SHADOWS.level1}
-        borderRadius={STANDARD_RADIUS.md}
-      >
-        <Strong color={BRAND_COLORS.primaryGreen}>Basic Information</Strong>
-        <Separator my={3} />
-        <Grid
-          templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }}
-          gap={{ base: 0, md: 5 }}
+      <Page.MainContent>
+        <Box bg={"white"} my={1} p={5} boxShadow={"sm"} borderRadius={"lg"}>
+          <Strong color={"var(--chakra-colors-primary)"}>
+            Basic Information
+          </Strong>
+          <Separator my={3} />
+          <Grid
+            templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }}
+            gapX={5}
+          >
+            <SelectFloatingLabel
+              label={"RI Types"}
+              collection={riTypes}
+              required
+            />
+            <InputFloatingLabel label="Contact Number" type="number" required />
+          </Grid>
+        </Box>
+        <Box my={1} bg={"white"} p={5} boxShadow={"sm"} borderRadius={"lg"}>
+          <Strong color={"var(--chakra-colors-primary)"}>
+            Upload Required Documents
+          </Strong>
+          <Separator my={3} />
+          <Grid templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} gap={5}>
+            <SingleFileUpload
+              label={"Reinstatement Form"}
+              description={"Upload the Reinstatement Form"}
+              required={true}
+            />
+            <SingleFileUpload
+              label={"Life Plan Agreement Form"}
+              description={"Upload the Life Plan Agreement Form"}
+              required={true}
+            />
+            <SingleFileUpload
+              label={"Valid Government-Issued ID"}
+              description={"Upload a valid government-issued ID"}
+              required={true}
+            />
+            <SingleFileUpload
+              label={"Proof of Payment/Official Receipt"}
+              description={"Upload the Proof of Payment/Official Receipt"}
+              required={true}
+            />
+          </Grid>
+        </Box>
+        <CheckboxCard.Root
+          bg={"white"}
+          my={1}
+          variant={"surface"}
+          colorPalette="green"
         >
-          <SelectFloatingLabel
-            label={"RI Types"}
-            collection={riTypes}
-            required
-          />
-          <InputFloatingLabel label="Contact Number" type="number" required />
-        </Grid>
-      </Box>
-      <Box
-        my={{ base: 4, md: 5 }}
-        p={{ base: 4, md: 5 }}
-        bg={BRAND_COLORS.white}
-        borderWidth="1px"
-        borderColor="gray.200"
-        boxShadow={STANDARD_SHADOWS.level1}
-        borderRadius={STANDARD_RADIUS.md}
-      >
-        <Strong color={BRAND_COLORS.primaryGreen}>
-          Upload Required Documents
-        </Strong>
-        <Separator my={3} />
-        <Grid templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} gap={5}>
-          <SingleFileUpload
-            label={"Reinstatement Form"}
-            description={"Upload the Reinstatement Form"}
-            required={true}
-          />
-          <SingleFileUpload
-            label={"Life Plan Agreement Form"}
-            description={"Upload the Life Plan Agreement Form"}
-            required={true}
-          />
-          <SingleFileUpload
-            label={"Valid Government-Issued ID"}
-            description={"Upload a valid government-issued ID"}
-            required={true}
-          />
-          <SingleFileUpload
-            label={"Proof of Payment/Official Receipt"}
-            description={"Upload the Proof of Payment/Official Receipt"}
-            required={true}
-          />
-        </Grid>
-      </Box>
-      <CheckboxCard.Root
-        my={{ base: 4, md: 5 }}
-        variant={"surface"}
-        colorPalette="green"
-        borderRadius={STANDARD_RADIUS.md}
-      >
-        <CheckboxCard.HiddenInput />
-        <CheckboxCard.Control>
-          <CheckboxCard.Indicator />
-          <CheckboxCard.Label>
-            <Span>
-              I certify that all information provided is true and correct. I
-              understand that my application is subject to review and approval,
-              and that submission does not guarantee reinstatement.{" "}
-              <Span color="red.500">*</Span>
-            </Span>
-          </CheckboxCard.Label>
-        </CheckboxCard.Control>
-      </CheckboxCard.Root>
-      <Flex
-        justify={{ base: "stretch", sm: "flex-end" }}
-        direction={{ base: "column", sm: "row" }}
-        gap={2}
-      >
-        <Button
-          variant="outline"
-          w={{ base: "full", sm: "auto" }}
-          {...STANDARD_BUTTON_STYLES.md}
-          onClick={() => router.push("/plan-management/planholder")}
-        >
-          Cancel
-        </Button>
-        <Button
-          w={{ base: "full", sm: "auto" }}
-          {...STANDARD_BUTTON_STYLES.md}
-          bg={BRAND_COLORS.primaryGreen}
-          color="white"
-          _hover={{ bg: BRAND_COLORS.darkGreen }}
+          <CheckboxCard.HiddenInput />
+          <CheckboxCard.Control>
+            <CheckboxCard.Indicator />
+            <CheckboxCard.Label>
+              <Span>
+                I certify that all information provided is true and correct. I
+                understand that my application is subject to review and
+                approval, and that submission does not guarantee reinstatement.{" "}
+                <Span color="red.500">*</Span>
+              </Span>
+            </CheckboxCard.Label>
+          </CheckboxCard.Control>
+        </CheckboxCard.Root>
+        <PrimaryMdFlexButton
           onClick={async () => {
             const confirm = await messageBox({
               title: "CONFIRMATION",
@@ -260,8 +219,8 @@ export function ReinstatementPage({
           }}
         >
           Submit Reinstatement Application
-        </Button>
-      </Flex>
-    </Page>
+        </PrimaryMdFlexButton>
+      </Page.MainContent>
+    </Page.Root>
   );
 }

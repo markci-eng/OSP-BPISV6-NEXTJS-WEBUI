@@ -1,19 +1,22 @@
 import {
-  Flex,
-  Strong,
   Avatar,
-  Grid,
   Badge,
-  useBreakpointValue,
-  Show,
+  Box,
+  Flex,
+  IconButton,
+  Separator,
+  Strong,
+  Text,
 } from "@chakra-ui/react";
-import React from "react";
+import { useState } from "react";
 import { FaUser, FaTrash } from "react-icons/fa";
 import { HiOutlinePencilAlt } from "react-icons/hi";
 import { IoMdPersonAdd } from "react-icons/io";
-import { Box, Small } from "st-peter-ui";
+import { LuMapPin } from "react-icons/lu";
+import { Small } from "st-peter-ui";
 import { EmptyState } from "../components/empty-state/empty-state";
-import InfoItem from "../components/info-item/info-item";
+import { AddBeneficiaryDrawer } from "../drawers/add-beneficiary-drawer";
+import { EditBeneficiaryDrawer } from "../drawers/edit-beneficiary-drawer";
 
 export interface BeneficiaryProps {
   personId: string;
@@ -29,8 +32,10 @@ export interface BeneficiaryProps {
 
 export function Beneficiaries({
   beneficiaries,
+  planholderAddress,
 }: {
   beneficiaries: BeneficiaryProps[];
+  planholderAddress?: string;
 }) {
   const principalBeneficiaries = beneficiaries?.filter(
     (b) => b.beneficiaryClass === "PRINCIPAL",
@@ -38,242 +43,257 @@ export function Beneficiaries({
   const contingentBeneficiaries = beneficiaries?.filter(
     (b) => b.beneficiaryClass === "CONTINGENT",
   );
-  const isMobile = useBreakpointValue({ base: true, md: false });
 
   return (
-    <React.Fragment>
-      <Box width={"full"}>
-        <Box
-          my={3}
-          w={"full"}
-          borderRadius={"lg"}
-          borderWidth={1}
-          borderColor={isMobile ? "transparent" : "gray.300"}
-          p={isMobile ? 0 : 5}
-        >
-          <Flex align={"center"} gap={3} mb={3}>
-            <Box
-              p={4}
-              borderRadius={"xl"}
-              bg={"var(--chakra-colors-primary-disabled)/30"}
-            >
-              <FaUser
-                color="var(--chakra-colors-primary)"
-                size={isMobile ? 15 : 25}
-              />
-            </Box>
-            <Flex direction={"column"}>
-              <Strong>
-                Principal Beneficiaries{" "}
-                {principalBeneficiaries &&
-                  principalBeneficiaries.length > 0 && (
-                    <Badge
-                      size={isMobile ? "sm" : "md"}
-                      bg={"var(--chakra-colors-danger-hover)"}
-                      color={"white"}
-                    >
-                      {principalBeneficiaries.length}
-                    </Badge>
-                  )}
-              </Strong>
-              <Small>Receive benefits first</Small>
-            </Flex>
-          </Flex>
-          {!principalBeneficiaries ||
-            (principalBeneficiaries && principalBeneficiaries.length === 0 && (
-              <EmptyState
-                title={"No Principal Beneficiaries"}
-                description={"Click Add Principal Beneficiary button below."}
-              />
-            ))}
-
-          {principalBeneficiaries &&
-            principalBeneficiaries.map((beneficiary) => (
-              <Flex
-                key={beneficiary.personId}
-                my={2}
-                w={"full"}
-                borderRadius={"xl"}
-                borderWidth={1}
-                borderColor={"gray.300"}
-                justify={"space-between"}
-                p={5}
-              >
-                <Flex gap={3} align={"center"}>
-                  <Show when={!isMobile}>
-                    <Avatar.Root>
-                      <Avatar.Fallback
-                        name={
-                          beneficiary.firstName + " " + beneficiary.lastName
-                        }
-                      />
-                    </Avatar.Root>
-                  </Show>
-                  <Grid
-                    w={"full"}
-                    p={1}
-                    templateColumns={{
-                      base: "1fr",
-                      md: "repeat(4, 1fr)",
-                    }}
-                    gap={isMobile ? 1 : 8}
-                    justifyItems={"space-between"}
-                  >
-                    <InfoItem
-                      label="Name"
-                      value={
-                        beneficiary.firstName +
-                        " " +
-                        beneficiary.middleInitial +
-                        ". " +
-                        beneficiary.lastName
-                      }
-                    />
-                    <InfoItem
-                      label="Relationship"
-                      value={beneficiary.relationship}
-                    />
-                    <InfoItem label="Age" value={beneficiary.age.toString()} />
-                    <InfoItem label="Address" value={beneficiary.address} />
-                  </Grid>
-                </Flex>
-                <Flex align={"center"} gap={"3"}>
-                  <HiOutlinePencilAlt size={20} color="#444" />
-                  <FaTrash color="#db4b4bff" />
-                </Flex>
-              </Flex>
-            ))}
-          <Flex
-            my={2}
-            w={"full"}
-            borderRadius={"lg"}
-            borderWidth={1}
-            borderColor={"gray.300"}
-            justify={"center"}
-            p={5}
-            align={"center"}
-          >
-            <Box mx={2}>
-              <IoMdPersonAdd />
-            </Box>
-            Add Principal Beneficiary
-          </Flex>
-        </Box>
-        <Box
-          my={3}
-          w={"full"}
-          borderRadius={"lg"}
-          borderWidth={1}
-          borderColor={isMobile ? "transparent" : "gray.300"}
-          p={isMobile ? 0 : 5}
-        >
-          <Flex align={"center"} gap={3} mb={3}>
-            <Box
-              p={4}
-              borderRadius={"xl"}
-              bg={"var(--chakra-colors-primary-disabled)/30"}
-            >
-              <FaUser
-                color="var(--chakra-colors-primary)"
-                size={isMobile ? 15 : 25}
-              />
-            </Box>
-            <Flex direction={"column"}>
-              <Strong>
-                Contingent Beneficiaries{" "}
-                {contingentBeneficiaries &&
-                  contingentBeneficiaries.length > 0 && (
-                    <Badge
-                      size={"md"}
-                      bg={"var(--chakra-colors-danger-hover)"}
-                      color={"white"}
-                    >
-                      {contingentBeneficiaries.length}
-                    </Badge>
-                  )}
-              </Strong>
-              <Small>Receive benefits if principal is unavailable</Small>
-            </Flex>
-          </Flex>
-
-          {!contingentBeneficiaries ||
-            (contingentBeneficiaries &&
-              contingentBeneficiaries.length === 0 && (
-                <EmptyState
-                  title={"No Contingent Beneficiaries"}
-                  description={"Click Add Contingent Beneficiary button below."}
-                />
-              ))}
-
-          {contingentBeneficiaries &&
-            contingentBeneficiaries.map((beneficiary) => (
-              <Flex
-                key={beneficiary.personId}
-                my={2}
-                w={"full"}
-                borderRadius={"xl"}
-                borderWidth={1}
-                borderColor={"gray.300"}
-                justify={"space-between"}
-                p={5}
-              >
-                <Flex gap={3} align={"center"}>
-                  <Avatar.Root>
-                    <Avatar.Fallback
-                      name={beneficiary.firstName + " " + beneficiary.lastName}
-                    />
-                  </Avatar.Root>
-                  <Grid
-                    w={"full"}
-                    p={1}
-                    templateColumns={{
-                      base: "2fr",
-                      md: "repeat(4, 1fr)",
-                    }}
-                    gap={8}
-                    justifyItems={"space-between"}
-                  >
-                    <InfoItem
-                      label="Name"
-                      value={
-                        beneficiary.firstName +
-                        " " +
-                        beneficiary.middleInitial +
-                        ". " +
-                        beneficiary.lastName
-                      }
-                    />
-                    <InfoItem
-                      label="Relationship"
-                      value={beneficiary.relationship}
-                    />
-                    <InfoItem label="Age" value={beneficiary.age.toString()} />
-                    <InfoItem label="Address" value={beneficiary.address} />
-                  </Grid>
-                </Flex>
-                <Flex align={"center"} gap={"3"}>
-                  <HiOutlinePencilAlt size={20} color="#444" />
-                  <FaTrash color="#db4b4bff" />
-                </Flex>
-              </Flex>
-            ))}
-          <Flex
-            my={2}
-            w={"full"}
-            borderRadius={"lg"}
-            borderWidth={1}
-            borderColor={"gray.300"}
-            justify={"center"}
-            p={5}
-            align={"center"}
-          >
-            <Box mx={2}>
-              <IoMdPersonAdd />
-            </Box>
-            Add Contingent Beneficiary
-          </Flex>
-        </Box>
+    <Flex direction="column" gap={4}>
+      <Box
+        borderRadius="xl"
+        borderWidth={1}
+        borderColor="gray.100"
+        bg="white"
+        boxShadow="sm"
+        p={4}
+      >
+        <BeneficiarySection
+          title="Principal Beneficiaries"
+          subtitle="Receive benefits first"
+          beneficiaries={principalBeneficiaries}
+          beneficiaryClass="PRINCIPAL"
+          emptyTitle="No Principal Beneficiaries"
+          emptyDescription="No principal beneficiaries on record."
+          addLabel="Add Principal Beneficiary"
+          planholderAddress={planholderAddress}
+        />
       </Box>
-    </React.Fragment>
+
+      <Box
+        borderRadius="xl"
+        borderWidth={1}
+        borderColor="gray.100"
+        bg="white"
+        boxShadow="sm"
+        p={4}
+      >
+        <BeneficiarySection
+          title="Contingent Beneficiaries"
+          subtitle="Receive benefits if principal is unavailable"
+          beneficiaries={contingentBeneficiaries}
+          beneficiaryClass="CONTINGENT"
+          emptyTitle="No Contingent Beneficiaries"
+          emptyDescription="No contingent beneficiaries on record."
+          addLabel="Add Contingent Beneficiary"
+          planholderAddress={planholderAddress}
+        />
+      </Box>
+    </Flex>
+  );
+}
+
+function BeneficiarySection({
+  title,
+  subtitle,
+  beneficiaries: initialBeneficiaries,
+  beneficiaryClass,
+  emptyTitle,
+  emptyDescription,
+  addLabel,
+  planholderAddress,
+}: {
+  title: string;
+  subtitle: string;
+  beneficiaries: BeneficiaryProps[];
+  beneficiaryClass: "PRINCIPAL" | "CONTINGENT";
+  emptyTitle: string;
+  emptyDescription: string;
+  addLabel: string;
+  planholderAddress?: string;
+}) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingBeneficiary, setEditingBeneficiary] =
+    useState<BeneficiaryProps | null>(null);
+  const [beneficiaries, setBeneficiaries] =
+    useState<BeneficiaryProps[]>(initialBeneficiaries);
+
+  const handleAdd = (
+    data: Omit<BeneficiaryProps, "personId" | "lpaNumber">,
+  ) => {
+    setBeneficiaries((prev) => [
+      ...prev,
+      { ...data, personId: crypto.randomUUID(), lpaNumber: "" },
+    ]);
+  };
+
+  const handleEdit = (updated: BeneficiaryProps) => {
+    setBeneficiaries((prev) =>
+      prev.map((b) => (b.personId === updated.personId ? updated : b)),
+    );
+  };
+
+  return (
+    <Box w="full">
+      {/* Section header */}
+      <Flex align="center" gap={3} mb={3}>
+        <Box
+          p={2}
+          borderRadius="lg"
+          bg="var(--chakra-colors-primary-disabled)/30"
+          flexShrink={0}
+        >
+          <FaUser color="var(--chakra-colors-primary)" size={16} />
+        </Box>
+        <Box flex={1} minW={0}>
+          <Flex align="center" gap={2}>
+            <Strong fontSize="sm">{title}</Strong>
+            {beneficiaries && beneficiaries.length > 0 && (
+              <Badge
+                size="sm"
+                borderRadius="full"
+                bg="var(--chakra-colors-primary-disabled)/30"
+                color="var(--chakra-colors-primary)"
+                px={2}
+                border="none"
+              >
+                {beneficiaries.length}
+              </Badge>
+            )}
+          </Flex>
+          <Small color="gray.500">{subtitle}</Small>
+        </Box>
+      </Flex>
+
+      <Separator mb={3} />
+
+      {/* Empty state */}
+      {beneficiaries && beneficiaries.length === 0 && (
+        <EmptyState title={emptyTitle} description={emptyDescription} />
+      )}
+
+      {/* Beneficiary cards */}
+      <Flex direction="column" gap={2}>
+        {beneficiaries &&
+          beneficiaries.map((beneficiary) => (
+            <Box
+              key={beneficiary.personId}
+              w="full"
+              borderRadius="xl"
+              borderWidth={1}
+              borderColor="gray.100"
+              bg="white"
+              boxShadow="sm"
+              overflow="hidden"
+            >
+              <Flex align="center" gap={3} p={4}>
+                <Avatar.Root
+                  size="md"
+                  bg="var(--chakra-colors-primary-disabled)/30"
+                  display={{ base: "none", md: "flex" }}
+                  flexShrink={0}
+                >
+                  <Avatar.Fallback
+                    color="var(--chakra-colors-primary)"
+                    fontWeight="semibold"
+                    name={`${beneficiary.firstName} ${beneficiary.lastName}`}
+                  />
+                </Avatar.Root>
+
+                <Flex direction="column" gap={1} flex={1} minW={0}>
+                  <Text
+                    fontWeight="semibold"
+                    fontSize="sm"
+                    color="gray.800"
+                    lineClamp={1}
+                  >
+                    {beneficiary.firstName} {beneficiary.middleInitial}.{" "}
+                    {beneficiary.lastName}
+                  </Text>
+                  <Flex align="center" gap={2} flexWrap="wrap">
+                    <Box
+                      px={2}
+                      py="1px"
+                      borderRadius="full"
+                      bg="var(--chakra-colors-primary-disabled)/30"
+                      color="var(--chakra-colors-primary)"
+                      fontSize="xs"
+                      fontWeight="medium"
+                    >
+                      {beneficiary.relationship}
+                    </Box>
+                    <Text fontSize="xs" color="gray.400">
+                      {beneficiary.age} yrs old
+                    </Text>
+                  </Flex>
+                  <Flex align="center" gap={1} mt="1px">
+                    <LuMapPin size={11} color="var(--chakra-colors-gray-400)" />
+                    <Text fontSize="xs" color="gray.400" lineClamp={1}>
+                      {beneficiary.address}
+                    </Text>
+                  </Flex>
+                </Flex>
+
+                <Flex align="center" gap={1} flexShrink={0}>
+                  <IconButton
+                    size="sm"
+                    variant="ghost"
+                    aria-label="Edit beneficiary"
+                    color="gray.500"
+                    _hover={{ bg: "gray.100", color: "gray.700" }}
+                    onClick={() => setEditingBeneficiary(beneficiary)}
+                  >
+                    <HiOutlinePencilAlt />
+                  </IconButton>
+                  <IconButton
+                    size="sm"
+                    variant="ghost"
+                    aria-label="Delete beneficiary"
+                    color="red.400"
+                    _hover={{ bg: "red.50", color: "red.600" }}
+                  >
+                    <FaTrash />
+                  </IconButton>
+                </Flex>
+              </Flex>
+            </Box>
+          ))}
+      </Flex>
+
+      {/* Add button */}
+      <Flex
+        mt={3}
+        w="full"
+        borderRadius="xl"
+        border="1.5px dashed"
+        borderColor="var(--chakra-colors-primary-disabled)"
+        color="var(--chakra-colors-primary)"
+        cursor="pointer"
+        _hover={{ bg: "var(--chakra-colors-primary-disabled)/20" }}
+        py={3}
+        px={4}
+        align="center"
+        justify="center"
+        gap={2}
+        fontSize="sm"
+        fontWeight="medium"
+        transition="background 0.15s"
+        onClick={() => setDrawerOpen(true)}
+      >
+        <IoMdPersonAdd />
+        {addLabel}
+      </Flex>
+
+      <AddBeneficiaryDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        beneficiaryClass={beneficiaryClass}
+        planholderAddress={planholderAddress}
+        onAdd={handleAdd}
+      />
+      <EditBeneficiaryDrawer
+        open={editingBeneficiary !== null}
+        onOpenChange={(open) => { if (!open) setEditingBeneficiary(null); }}
+        beneficiary={editingBeneficiary}
+        planholderAddress={planholderAddress}
+        onEdit={handleEdit}
+      />
+    </Box>
   );
 }

@@ -5,12 +5,13 @@ import { Badge, Text } from "@chakra-ui/react";
 
 import { multiSelectFilter } from "@/components/common/reusable-tableV2/types";
 import { DRSWithDepositAndPayments } from "../types";
-import { formatApprovalDateTime, formatPeso } from "../../utils/formatters";
-import { getApprovalStatusBadgeStyle } from "../../utils/colors";
 
 function StatusBadge({ status }: { status: string }) {
+  const colorPalette =
+    status === "Approved" ? "green" : status === "Denied" ? "red" : "yellow";
+
   return (
-    <Badge {...getApprovalStatusBadgeStyle(status)}>
+    <Badge colorPalette={colorPalette} variant="subtle">
       {status}
     </Badge>
   );
@@ -49,9 +50,6 @@ export const drsColumns: ColumnDef<DRSWithDepositAndPayments>[] = [
     enableSorting: true,
     enableColumnFilter: true,
     filterFn: multiSelectFilter,
-    cell: ({ getValue }) => (
-      <Text fontSize="sm">{formatApprovalDateTime(getValue())}</Text>
-    ),
   },
   {
     id: "bankCode",
@@ -87,8 +85,11 @@ export const drsColumns: ColumnDef<DRSWithDepositAndPayments>[] = [
       const amount = getValue<number>();
 
       return (
-        <Text fontWeight="medium" textAlign="right">
-          {formatPeso(amount)}
+        <Text fontWeight="medium">
+          {amount.toLocaleString("en-PH", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </Text>
       );
     },

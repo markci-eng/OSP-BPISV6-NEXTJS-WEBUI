@@ -1,6 +1,5 @@
 "use client";
 
-import type * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import {
@@ -24,12 +23,6 @@ import { reassignmentColumns } from "../data/columns/reassignment-columns";
 import { movementColumns } from "../data/columns/movement-columns";
 import { sa2Columns } from "../data/columns/sa2-columns";
 import { drsColumns } from "../data/columns/drs-columns";
-import {
-  formatApprovalDate,
-  formatApprovalDateTime,
-  formatNumber,
-  formatPeso,
-} from "../utils/formatters";
 
 const DRS_DATA = mapDRSToDepositAndPayments(
   drsList,
@@ -74,7 +67,7 @@ export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
     getRowId: (row: ReassignmentRequest) => row.salesForceId,
 
     detailFields: [
-      { key: "salesForceId", label: "Sales Force ID" },
+      { key: "salesForceId", label: "SalesForce ID" },
       { key: "document", label: "Document" },
       { key: "series", label: "Series" },
       { key: "from", label: "From" },
@@ -90,7 +83,7 @@ export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
       badgeField: "status",
       visibleFields: ["series", "from", "to", "requestDate", "requester"],
       labelMap: {
-        salesForceId: "Sales Force ID",
+        salesForceId: "SalesForce ID",
         document: "Document",
         series: "Series",
         from: "From",
@@ -98,9 +91,6 @@ export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
         requestDate: "Request Date",
         requester: "Requester",
         status: "Status",
-      },
-      valueFormatter: {
-        requestDate: (value) => formatApprovalDate(value),
       },
     },
   },
@@ -152,11 +142,6 @@ export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
         siCount: "SI Count",
         status: "Status",
       },
-      valueFormatter: {
-        depositDateTime: (value) => formatApprovalDateTime(value),
-        amount: (value) => formatPeso(value),
-        siCount: (value) => formatNumber(value),
-      },
     },
   },
 
@@ -200,10 +185,6 @@ export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
         requestDate: "Request Date",
         requester: "Requester",
         status: "Status",
-      },
-      valueFormatter: {
-        date: (value) => formatApprovalDate(value),
-        requestDate: (value) => formatApprovalDate(value),
       },
     },
   },
@@ -249,10 +230,6 @@ export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
         requester: "Requester",
         status: "Status",
       },
-      valueFormatter: {
-        date: (value) => formatApprovalDate(value),
-        requestDate: (value) => formatApprovalDate(value),
-      },
     },
   },
 };
@@ -269,5 +246,4 @@ export type ApprovalMobileConfig = {
   badgeField: string;
   visibleFields: string[];
   labelMap: Record<string, string>;
-  valueFormatter?: Record<string, (value: unknown, row: any) => React.ReactNode>;
 };

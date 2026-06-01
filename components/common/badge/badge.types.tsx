@@ -14,32 +14,32 @@ interface OSPBadgeColorProps {
 export const OSPBadgeTypes: OSPBadgeColorProps[] = [
     {
         type: undefined,
-        background: "gray.100",
-        foreground: "gray.500",
-        border: "gray.100"
+        background: "#F8F9FA",
+        foreground: "#52525B",
+        border: "#E4E4E7",
     },
     {
         type: "success",
-        background: "green.50",
-        foreground: "green.600",
-        border: "green.300"
+        background: "#F0FDF4",
+        foreground: "#16A34A",
+        border: "#BBF7D0",
     },
     {
         type: "info",
-        background: "teal.50",
-        foreground: "teal.600",
-        border: "teal.100"
+        background: "#EFF6FF",
+        foreground: "#2563EB",
+        border: "#BFDBFE",
     },
     {
         type: "warning",
-        background: "yellow.100",
-        foreground: "orange.400",
-        border: "orange.400"
+        background: "#FFFBEB",
+        foreground: "#D97706",
+        border: "#FDE68A",
     },
     {
         type: "danger",
-        background: "red.50",
-        foreground: "red.600",
-        border: "red.100"
+        background: "#FFF1F2",
+        foreground: "#E11D48",
+        border: "#FECDD3",
     },
 ]

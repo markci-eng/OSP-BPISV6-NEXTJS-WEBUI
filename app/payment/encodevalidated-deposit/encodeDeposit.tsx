@@ -46,7 +46,7 @@ import { refBankBranch } from "@/app/Model/Types/global.types";
 import { refBankBranchData } from "@/app/Model/Data/rawData";
 import { useRouter } from "next/navigation";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { Page } from "@/components/page/page";
+import Page from "@/components/layout/page/Page";
 import Card from "@/components/cards/Card";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 
@@ -99,8 +99,7 @@ export default function EncodeDeposit() {
     const confirmed = await messageBox({
       title: "CONFIRMATION",
       message: "Do you want to Save Deposit?",
-      confirmText: "Save",
-      cancelText: "Cancel",
+      confirmText: "Ok",
       variant: "confirmation",
     });
 
@@ -118,196 +117,190 @@ export default function EncodeDeposit() {
     }
   };
 
-  const breadCrumb = [
-    {
-      label: "Home",
-    },
-    {
-      label: "Payment",
-    },
-    {
-      label: "Encode Validated Deposit Slip",
-    },
-  ];
   return (
-    <Page
-      breadcrumbItems={breadCrumb}
+    <Page.Root
       title={"Encode Validated Deposit"}
-      description="Encode validated deposit details against a digital remittance slip."
+      description="Encode your validated deposit"
     >
-      {/* SEARCH PANEL */}
+      <Page.MainContent>
+        {/* SEARCH PANEL */}
 
-      <Card.Root>
-        <Card.MainContent>
-          <Flex
-            direction={{ base: "column", lg: "row" }}
-            align={{ base: "flex-start", lg: "center" }}
-            justify="space-between"
-            gap={3}
-          >
-            {/* LEFT INFO */}
-            <Box w="full">
-              {selectedDRS && (
-                <Body>
-                  Reference#: <Strong>{selectedDRS?.name}</Strong> Amount:{" "}
-                  <Strong>{selectedDRS?.Amount}</Strong>
-                </Body>
-              )}
-            </Box>
+        <Card.Root>
+          <Card.MainContent>
+            <Flex
+              direction={{ base: "column", lg: "row" }}
+              align={{ base: "flex-start", lg: "center" }}
+              justify="space-between"
+              gap={4}
+            >
+              {/* LEFT INFO */}
+              <Box w="full">
+                {selectedDRS && (
+                  <Body>
+                    Reference#: <Strong>{selectedDRS?.name}</Strong> Amount:{" "}
+                    <Strong>{selectedDRS?.Amount}</Strong>
+                  </Body>
+                )}
+              </Box>
 
-            {/* SEARCH FIELD */}
-            <Box w="full" maxW={{ base: "full", md: "sm" }}>
-              <LookupField<DepositHdr>
-                label=""
-                placeholder="Search Digital Remittance Slip."
-                modalTitle="Search Digital Remittance Slip"
-                columns={drsColumns}
-                dataSource={drsItems}
-                searchKeys={["id", "name", "DepositDateTime"]}
-                onSelect={(e) => {
-                  if (!e) {
-                    setSelectedDRS(null);
-                    return;
-                  }
+              {/* SEARCH FIELD */}
+              <Box w="full" maxW={{ base: "full", md: "sm" }}>
+                <LookupField<DepositHdr>
+                  label=""
+                  placeholder="Search Digital Remittance Slip."
+                  modalTitle="Search Digital Remittance Slip"
+                  columns={drsColumns}
+                  dataSource={drsItems}
+                  searchKeys={["id", "name", "DepositDateTime"]}
+                  onSelect={(e) => {
+                    if (!e) {
+                      setSelectedDRS(null);
+                      return;
+                    }
 
-                  if (drsItems[0].id === e.id) {
-                    setSelectedDRS(e);
-                  } else {
-                    toast.error("Please encode the first created DRS");
-                  }
-                }}
-                renderDisplay={(x) => `${x.name} (${x.Amount})`}
-                value={selectedDRS}
-              />
-            </Box>
-          </Flex>
-        </Card.MainContent>
-      </Card.Root>
-
-      <Grid gap={4} mt={4}>
-        {/* DEPOSIT DETAILS */}
-        <GridItem bg="white" colSpan={{ base: 1 }} overflow="hidden" h={"full"}>
-          {/* HEADER */}
-          <Card.Root title={`Deposit Details ${selectedItem?.name || ""}`}>
-            <Card.MainContent>
-              {" "}
-              {!selectedDRS && (
-                <EmptyStateCard
-                  title={"No Digital Remittance Selected"}
-                  description="Search and select a Digital remittance to start entering Deposit
-                details."
+                    if (drsItems[0].id === e.id) {
+                      setSelectedDRS(e);
+                    } else {
+                      toast.error("Please encode the first created DRS");
+                    }
+                  }}
+                  renderDisplay={(x) => `${x.name} (${x.Amount})`}
+                  value={selectedDRS}
                 />
-              )}
-              {/* FORM */}
-              <Collapsible.Root open={selectedDRS != null}>
-                <Collapsible.Content>
-                  {/* FORM GRID */}
-                  <SimpleGrid
-                    columns={{
-                      base: 1,
-                      sm: 2,
-                      lg: 3,
-                    }}
-                    columnGap={4}
-                    rowGap={3}
-                  >
-                    <InputFloatingLabel
-                      type="datetime-local"
-                      id="depositdate"
-                      label="Deposit Date Time"
-                    />
+              </Box>
+            </Flex>
+          </Card.MainContent>
+        </Card.Root>
 
-                    <InputFloatingLabel
-                      type="number"
-                      id="AccountNo"
-                      label="Account number"
-                      value={"2010073262"}
-                    />
+        <Grid gap={4} mt={4}>
+          {/* DEPOSIT DETAILS */}
+          <GridItem
+            bg="white"
+            colSpan={{ base: 1 }}
+            overflow="hidden"
+            h={"full"}
+          >
+            {/* HEADER */}
+            <Card.Root title={`Deposit Details ${selectedItem?.name || ""}`}>
+              <Card.MainContent>
+                {!selectedDRS && (
+                  <EmptyStateCard
+                    title={"No Digital Remittance Selected"}
+                    description="Search and select a Digital remittance to start entering Deposit
+                details."
+                  />
+                )}
+                {/* FORM */}
+                <Collapsible.Root open={selectedDRS != null}>
+                  <Collapsible.Content>
+                    {/* FORM GRID */}
+                    <SimpleGrid
+                      columns={{
+                        base: 1,
+                        sm: 2,
+                        lg: 3,
+                      }}
+                      gapX={2}
+                    >
+                      <InputFloatingLabel
+                        type="datetime-local"
+                        id="depositdate"
+                        label="Deposit Date Time"
+                      />
 
-                    {/* <InputFloatingLabel
+                      <InputFloatingLabel
+                        type="number"
+                        id="AccountNo"
+                        label="Account number"
+                        value={"2010073262"}
+                      />
+
+                      {/* <InputFloatingLabel
                   id="BankBranch"
                   label="Bank Branch"
                   value={selectedItem?.BankBranch || ""}
                 /> */}
-                    <Flex alignItems={"center"}>
-                      <LookupField<refBankBranch>
-                        label=""
-                        placeholder="Bank Branch"
-                        modalTitle="Search Bank Branch"
-                        columns={bankBranchColumns}
-                        dataSource={refBankBranchData}
-                        searchKeys={["BankCode", "BankBranch"]}
-                        onSelect={setSelectedBank}
-                        renderDisplay={(b) => `${b.BankCode} (${b.BankBranch})`}
-                        value={selectedBank}
-                      />
-                    </Flex>
-                    {/* <InputFloatingLabel
+                      <Flex alignItems={"center"}>
+                        <LookupField<refBankBranch>
+                          label=""
+                          placeholder="Bank Branch"
+                          modalTitle="Search Bank Branch"
+                          columns={bankBranchColumns}
+                          dataSource={refBankBranchData}
+                          searchKeys={["BankCode", "BankBranch"]}
+                          onSelect={setSelectedBank}
+                          renderDisplay={(b) =>
+                            `${b.BankCode} (${b.BankBranch})`
+                          }
+                          value={selectedBank}
+                        />
+                      </Flex>
+                      {/* <InputFloatingLabel
                   id="BankCode"
                   label="Bank Code"
                   value={selectedItem?.BankCode || ""}
                 /> */}
 
-                    <InputFloatingLabel
-                      id="Amount"
-                      label="Amount"
-                      value={selectedItem?.Amount || "₱0.00"}
-                    />
-                    {/* 
+                      <InputFloatingLabel
+                        id="Amount"
+                        label="Amount"
+                        value={selectedItem?.Amount || "₱0.00"}
+                      />
+                      {/* 
                 <InputFloatingLabel
                   id="DepositedBy"
                   label="Deposited By"
                   value={selectedItem?.DepositedBy || ""}
                 /> */}
-                    <Flex alignItems={"center"}>
-                      <LookupField<Employee>
-                        label=""
-                        placeholder="Search by name or ID..."
-                        modalTitle="Search Employee"
-                        columns={employeeColumns}
-                        dataSource={EMPLOYEES}
-                        searchKeys={["id", "name", "branch"]}
-                        onSelect={setSelectedEmployee}
-                        renderDisplay={(emp) => `${emp.name} (${emp.id})`}
-                        value={selectedEmployee || defaultEmployee}
+                      <Flex alignItems={"center"}>
+                        <LookupField<Employee>
+                          label=""
+                          placeholder="Search by name or ID..."
+                          modalTitle="Search Employee"
+                          columns={employeeColumns}
+                          dataSource={EMPLOYEES}
+                          searchKeys={["id", "name", "branch"]}
+                          onSelect={setSelectedEmployee}
+                          renderDisplay={(emp) => `${emp.name} (${emp.id})`}
+                          value={selectedEmployee || defaultEmployee}
+                        />
+                      </Flex>
+                    </SimpleGrid>
+
+                    {/* TABLE */}
+                    <Box mt={4} borderRadius="md">
+                      <DrsDataTable
+                        payments={samplePayments}
+                        onRowClick={(row) => console.log("Clicked row:", row)}
                       />
+                      <Box display={{ base: "block", md: "none" }}>
+                        <DrsPaymentSummary totals={totals} displayProp={true} />
+                      </Box>
+                    </Box>
+
+                    {/* ACTION BUTTONS */}
+                    <Flex gap={3} mt={4} justify={"flex-end"} flexWrap="wrap">
+                      <Box
+                        w={{ base: "full", md: "1/12" }}
+                        minW={{ base: "full", md: "-webkit-fit-content" }}
+                      >
+                        <PrimaryMdFlexButton onClick={handleConfirm}>
+                          SAVE
+                        </PrimaryMdFlexButton>
+                      </Box>
                     </Flex>
-                  </SimpleGrid>
+                  </Collapsible.Content>
+                </Collapsible.Root>
+              </Card.MainContent>
+            </Card.Root>
 
-                  {/* TABLE */}
-                  <Box mt={4} borderRadius="md">
-                    <DrsDataTable
-                      payments={samplePayments}
-                      onRowClick={(row) => console.log("Clicked row:", row)}
-                    />
-                    <Box display={{ base: "block", md: "none" }}>
-                      <DrsPaymentSummary totals={totals} displayProp={true} />
-                    </Box>
-                  </Box>
-
-                  {/* ACTION BUTTONS */}
-                  <Flex gap={3} mt={4} justify={"flex-end"} flexWrap="wrap">
-                    <Box
-                      w={{ base: "full", md: "1/12" }}
-                      minW={{ base: "full", md: "-webkit-fit-content" }}
-                    >
-                      <PrimaryMdFlexButton onClick={handleConfirm}>
-                        SAVE
-                      </PrimaryMdFlexButton>
-                    </Box>
-                  </Flex>
-                </Collapsible.Content>
-              </Collapsible.Root>
-            </Card.MainContent>
-          </Card.Root>
-
-          {/* EMPTY STATE */}
-        </GridItem>
-        {/* </Grid>
+            {/* EMPTY STATE */}
+          </GridItem>
+          {/* </Grid>
 </Box> */}
 
-        {/* Digital Remittance Reference */}
-        {/* <GridItem
+          {/* Digital Remittance Reference */}
+          {/* <GridItem
           p={4}
           bg="white"
           boxShadow="sm"
@@ -371,8 +364,8 @@ export default function EncodeDeposit() {
           </Box>
         </GridItem> */}
 
-        {/* Deposit Summary */}
-        {/* <GridItem
+          {/* Deposit Summary */}
+          {/* <GridItem
           w={{ base: "auto", xl: "lg" }}
           colSpan={{ base: 2, lg: 1 }}
           p={4}
@@ -460,10 +453,11 @@ export default function EncodeDeposit() {
           </Table.Root>
           <Flex justify="flex-end" gap={4} mt={4}>
             {/* <DeleteSolidButton /> */}
-        {/* <SaveButton />
+          {/* <SaveButton />
           </Flex>
         </GridItem> */}
-      </Grid>
-    </Page>
+        </Grid>
+      </Page.MainContent>
+    </Page.Root>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 import {
-  Badge,
   Box,
   Carousel,
   Flex,
@@ -12,7 +11,9 @@ import {
 import { useState } from "react";
 import { LuArrowLeft, LuArrowRight, LuHistory } from "react-icons/lu";
 import { ProgressCard } from "../cards/pending-request-card";
-import RequestHistoryDrawer from "../drawers/request-history-drawer";
+import RequestHistoryDrawer, {
+  RequestHistoryItem,
+} from "../drawers/request-history-drawer";
 import { Small } from "st-peter-ui";
 import Card from "@/components/cards/Card";
 
@@ -37,14 +38,23 @@ export function PendingRequests({
 }: {
   requests?: RequestProps[] | undefined;
 }) {
-  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
+  const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
   const [historyOpen, setHistoryOpen] = useState(false);
 
   const pendingRequests = requests?.filter((x) => x.status === "Pending");
 
+  const historyItems: RequestHistoryItem[] = (requests ?? [])
+    .filter((x) => x.status !== "Pending")
+    .map((x) => ({
+      type: x.type,
+      description: x.description,
+      transactionId: x.transactionId,
+      date: x.date,
+    }));
+
   const content = (
     <Flex flexDir="column">
-      <Carousel.Root slideCount={2} maxW="full">
+      <Carousel.Root slideCount={pendingRequests?.length ?? 0} maxW="full">
         <Carousel.Control justifyContent="center" gap={2} w="full">
           {!isMobile && pendingRequests && pendingRequests.length > 1 && (
             <Carousel.PrevTrigger asChild>
@@ -69,13 +79,16 @@ export function PendingRequests({
               </Carousel.Item>
             ) : (
               pendingRequests.map((request, index) => (
-                <Carousel.Item index={index} minW={0}>
+                <Carousel.Item key={index} index={index} minW={0}>
                   <ProgressCard
                     current={request.currentStep}
                     total={request.totalSteps}
                     title={request.title}
                     description={request.description}
                     transactionId={request.transactionId}
+                    type={request.type}
+                    status={request.status}
+                    date={request.date}
                     onClick={() => (window.location.href = request.hyperlink)}
                   />
                 </Carousel.Item>
@@ -85,7 +98,7 @@ export function PendingRequests({
 
           {!isMobile && pendingRequests && pendingRequests.length > 1 && (
             <Carousel.NextTrigger asChild>
-              <IconButton size={{ base: "2xs", md: "xs" }} variant="outline">
+              <IconButton size={{ base: "2xs", lg: "xs" }} variant="outline">
                 <LuArrowRight />
               </IconButton>
             </Carousel.NextTrigger>
@@ -123,6 +136,7 @@ export function PendingRequests({
         <RequestHistoryDrawer
           open={historyOpen}
           onOpenChange={setHistoryOpen}
+          items={historyItems}
         />
         {content}
       </Card.MainContent>

@@ -9,7 +9,6 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
-import { STANDARD_ICON_BUTTON_STYLES } from "@/lib/theme/standard-design-tokens";
 
 type DataTablePaginationProps<TData> = {
   table: TanStackTable<TData>;
@@ -121,7 +120,6 @@ export function DataTablePagination<TData>({
             aria-label="First page"
             variant="outline"
             size="sm"
-            {...STANDARD_ICON_BUTTON_STYLES.md}
             flex={{ base: 1, sm: "unset" }}
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
@@ -133,7 +131,6 @@ export function DataTablePagination<TData>({
             aria-label="Previous page"
             variant="outline"
             size="sm"
-            {...STANDARD_ICON_BUTTON_STYLES.md}
             flex={{ base: 1, sm: "unset" }}
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
@@ -145,7 +142,6 @@ export function DataTablePagination<TData>({
             aria-label="Next page"
             variant="outline"
             size="sm"
-            {...STANDARD_ICON_BUTTON_STYLES.md}
             flex={{ base: 1, sm: "unset" }}
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
@@ -157,7 +153,6 @@ export function DataTablePagination<TData>({
             aria-label="Last page"
             variant="outline"
             size="sm"
-            {...STANDARD_ICON_BUTTON_STYLES.md}
             flex={{ base: 1, sm: "unset" }}
             onClick={() =>
               table.setPageIndex(Math.max(table.getPageCount() - 1, 0))

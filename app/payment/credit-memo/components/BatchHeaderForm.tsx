@@ -12,11 +12,6 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { BatchInfo, CREDIT_MEMO_TYPES, getDepositStatus } from "./types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 interface BatchHeaderFormProps {
   batch: BatchInfo;
@@ -38,14 +33,14 @@ export function BatchHeaderForm({ batch, onChange }: BatchHeaderFormProps) {
 
   return (
     <Box
-      bg={BRAND_COLORS.white}
+      bg="bg"
       borderWidth="1px"
-      borderColor={BRAND_COLORS.neutralBorder}
-      borderRadius={STANDARD_RADIUS.md}
-      p={{ base: 4, md: 5 }}
-      boxShadow={STANDARD_SHADOWS.level1}
+      borderColor="border.muted"
+      rounded="xl"
+      p={6}
+      boxShadow="sm"
     >
-      <HStack justify="space-between" align="center" mb={4} wrap="wrap" gap={3}>
+      <HStack justify="space-between" align="center" mb={6} wrap="wrap" gap={3}>
         <Text fontSize="lg" fontWeight="semibold" color="fg">
           Batch Header
         </Text>
@@ -70,8 +65,7 @@ export function BatchHeaderForm({ batch, onChange }: BatchHeaderFormProps) {
           md: "repeat(2, 1fr)",
           xl: "repeat(4, 1fr)",
         }}
-        columnGap={4}
-        rowGap={3}
+        gap={5}
       >
         <VStack align="stretch" gap={1.5}>
           <Text fontSize="sm" fontWeight="medium" color="fg">

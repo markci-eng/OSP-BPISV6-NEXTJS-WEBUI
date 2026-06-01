@@ -5,8 +5,6 @@ import { Box, Button, Icon, Table, Text } from "@chakra-ui/react";
 import { Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Payment } from "./types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
 
 interface PaymentTableProps {
   payments: Payment[];
@@ -25,7 +23,7 @@ const MotionTr = motion.create("tr");
 export function PaymentTable({ payments, onRemove }: PaymentTableProps) {
   if (payments.length === 0) {
     return (
-      <Text fontSize="sm" color="fg.muted" py={3}>
+      <Text fontSize="sm" color="fg.muted" py={4}>
         No payments added yet.
       </Text>
     );
@@ -33,13 +31,13 @@ export function PaymentTable({ payments, onRemove }: PaymentTableProps) {
 
   return (
     <Box
-      rounded={STANDARD_RADIUS.md}
+      rounded="lg"
       borderWidth="1px"
-      borderColor={BRAND_COLORS.neutralBorder}
+      borderColor="border.muted"
       overflow="hidden"
     >
       <Table.Root size="sm" variant="line">
-        <Table.Header bg={BRAND_COLORS.subtleBg}>
+        <Table.Header bg="bg.muted">
           <Table.Row>
             <Table.ColumnHeader fontWeight="medium">
               Planholder
@@ -115,10 +113,7 @@ export function PaymentTable({ payments, onRemove }: PaymentTableProps) {
                     variant="ghost"
                     size="xs"
                     color="fg.muted"
-                    _hover={{
-                      color: BRAND_COLORS.destructiveRed,
-                      bg: BRAND_COLORS.errorBg,
-                    }}
+                    _hover={{ color: "red.500", bg: "red.50" }}
                     onClick={() => onRemove(p.id)}
                   >
                     <Icon as={Trash2} boxSize={3.5} />

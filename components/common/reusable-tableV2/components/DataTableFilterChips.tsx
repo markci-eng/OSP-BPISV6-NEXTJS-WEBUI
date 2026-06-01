@@ -7,11 +7,6 @@ import type {
 } from "@tanstack/react-table";
 import { Box, Button, HStack, IconButton, Text } from "@chakra-ui/react";
 import { X } from "lucide-react";
-import {
-  STANDARD_BUTTON_STYLES,
-  STANDARD_ICON_BUTTON_STYLES,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 type DataTableFilterChipsProps<TData> = {
   table: TanStackTable<TData>;
@@ -53,7 +48,7 @@ export function DataTableFilterChips<TData>({
               fontSize="xs"
               fontWeight="600"
               gap={1}
-              boxShadow={STANDARD_SHADOWS.level1}
+              boxShadow="xs"
             >
               <Text color="gray.500" textTransform="capitalize">
                 {columnName}:
@@ -65,9 +60,8 @@ export function DataTableFilterChips<TData>({
                 aria-label="Remove filter"
                 variant="ghost"
                 size="2xs"
-                boxSize="24px"
-                minW="24px"
-                borderRadius={STANDARD_ICON_BUTTON_STYLES.sm.borderRadius}
+                minW="18px"
+                h="18px"
                 onClick={() => {
                   const next = values.filter((item) => item !== value);
                   const column = table.getColumn(filter.id);
@@ -84,7 +78,7 @@ export function DataTableFilterChips<TData>({
         <Button
           variant="ghost"
           size="xs"
-          {...STANDARD_BUTTON_STYLES.sm}
+          h="24px"
           fontSize="xs"
           color="gray.600"
           onClick={() => table.resetColumnFilters()}

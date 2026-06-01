@@ -17,7 +17,7 @@ import {
   LuTrendingUpDown,
   LuFileText,
 } from "react-icons/lu";
-import { Badge } from "../components/badge/badge";
+import { OSPBadge } from "@/components/common/badge/badge";
 
 export interface RequestHistoryItem {
   type:
@@ -118,7 +118,7 @@ export function RequestHistoryDrawer({
                           </Flex>
                           <Body color="gray.600">{item.description}</Body>
                           <Box mt={1}>
-                            <Badge type="info"># {item.transactionId}</Badge>
+                            <OSPBadge type="info"># {item.transactionId}</OSPBadge>
                           </Box>
                         </Box>
                       </Flex>

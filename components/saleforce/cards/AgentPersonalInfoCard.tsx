@@ -2,7 +2,7 @@ import Card from "@/components/cards/Card";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
 import LabelText from "@/components/texts/LabelText";
-import { Box, Grid } from "@chakra-ui/react";
+import { Box, Flex, Separator } from "@chakra-ui/react";
 
 interface AgentPersonalInfoCardProps {
   agent: SalesAgent | undefined | null;
@@ -13,19 +13,26 @@ const PersonalInfo = ({ agent }: AgentPersonalInfoCardProps) => {
   return (
     <>
       {agent ? (
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={1}>
+        <Flex direction="column" gap={2}>
           <LabelText label="Place of Birth" value={agent.placeOfBirth} />
+          <Separator />
           <LabelText label="Date of Birth" value={agent.birthDate} />
+          <Separator />
           <LabelText label="Gender" value={agent.gender} />
+          <Separator />
           <LabelText label="Civil Status" value={agent.civilStatus} />
+          <Separator />
           <LabelText label="Nationality" value={agent.nationality} />
+          <Separator />
           <LabelText
             label="Naturalization Date"
             value={agent.naturalizationDate ?? "N/A"}
           />
+          <Separator />
           <LabelText label="Height" value={agent.height ?? "N/A"} />
+          <Separator />
           <LabelText label="Weight" value={agent.weight ?? "N/A"} />
-        </Grid>
+        </Flex>
       ) : (
         <EmptyStateCard
           title="No Agent Selected"

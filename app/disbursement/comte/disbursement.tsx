@@ -14,7 +14,11 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  Body,
+  H3,
   H4,
+  DynamicButton,
+  SaveButton,
   SelectFloatingLabel,
   PrimaryMdFlexButton,
 } from "st-peter-ui";
@@ -28,15 +32,10 @@ import {
 } from "../../payment/data/paymentDetails";
 import InfoItem from "@/components/common/info-item/info-item";
 import { DepositHdr } from "@/app/payment/data/payment.types";
-import { Page } from "@/components/page/page";
+import Page from "@/components/layout/page/Page";
 import Card from "@/components/cards/Card";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import LabelText from "@/components/texts/LabelText";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 export default function Disbursement() {
   const [selectedId, setSelectedId] = useState<string>("");
@@ -112,25 +111,14 @@ export default function Disbursement() {
 
     return { com, te };
   }, [selectedItems]);
-  const breadCrumb = [
-    {
-      label: "Home",
-    },
-    {
-      label: "Disbursement",
-    },
-    {
-      label: "COM/TE",
-    },
-  ];
   return (
-    <Page
-      breadcrumbItems={breadCrumb}
+    <Page.Root
       title={"Disbursement"}
-      description="Manage commission and transportation expense releases from digital remittance slips."
+      description="Manage your Commission and Transportation Expense"
     >
+      <Page.MainContent>
       <Grid
-        gap={{ base: 4, lg: 5 }}
+        gap={{ base: 4, lg: 6 }}
         templateColumns={{
           base: "1fr",
           lg: "380px 1fr",
@@ -173,18 +161,16 @@ export default function Disbursement() {
                         <Table.Row
                           key={item.id}
                           cursor="pointer"
-                          bg={isSelected ? BRAND_COLORS.successBg : undefined}
+                          bg={isSelected ? "green.100" : undefined}
                           borderLeft={
-                            isSelected
-                              ? `4px solid ${BRAND_COLORS.primaryGreen}`
-                              : undefined
+                            isSelected ? "4px solid green" : undefined
                           }
                           onClick={() => {
                             setSelectedId(item.name);
                             setSelectedRows([]);
                             setSelectedItems([]);
                           }}
-                          _hover={{ bg: BRAND_COLORS.subtleBg }}
+                          _hover={{ bg: "gray.50" }}
                         >
                           <Table.Cell>{item.name}</Table.Cell>
                           <Table.Cell textAlign="end">{item.Amount}</Table.Cell>
@@ -213,21 +199,13 @@ export default function Disbursement() {
               <Collapsible.Root open={selectedId !== ""}>
                 <Collapsible.Content>
                   <Box>
-                    <Box
-                      bg={BRAND_COLORS.subtleBg}
-                      px={{ base: 3, md: 4 }}
-                      py={3}
-                      borderRadius={STANDARD_RADIUS.md}
-                      border="1px solid"
-                      borderColor={BRAND_COLORS.neutralBorder}
-                      boxShadow={STANDARD_SHADOWS.level1}
-                    >
+                    <Box bg="gray.100" px={4} py={2}>
                       <H4>DRS: {selectedId}</H4>
                     </Box>
 
                     <Separator />
 
-                    <Box py={{ base: 3, md: 4 }}>
+                    <Box p={4}>
                       <SelectFloatingLabel
                         label="Disbursement Type"
                         collection={disbursementType}
@@ -269,7 +247,7 @@ export default function Disbursement() {
                       <DataTable
                         data={selectedItems}
                         columns={tableColumns}
-                        title={`${selectedType || "Selected"} Details`}
+                        title={selectedType + " Details"}
                       />
 
                       <Separator my={4} />
@@ -304,6 +282,7 @@ export default function Disbursement() {
           </Card.Root>
         </GridItem>
       </Grid>
-    </Page>
+      </Page.MainContent>
+    </Page.Root>
   );
 }

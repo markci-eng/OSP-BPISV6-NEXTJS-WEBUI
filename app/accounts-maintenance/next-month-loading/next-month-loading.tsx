@@ -1,102 +1,37 @@
 "use client";
 
-import {
-  Box,
-  Flex,
-  Grid,
-  GridItem,
-  Separator,
-  Strong,
-  Text,
-} from "@chakra-ui/react";
-import { PrimaryMdButton, SelectFloatingLabel } from "st-peter-ui";
+import { Box, Flex, Grid, GridItem, Text } from "@chakra-ui/react";
+import { PrimaryMdFlexButton, SelectFloatingLabel } from "st-peter-ui";
 import { TrxMonth } from "../data/transaction-month";
 import { useState } from "react";
-
-import { ReusableProgressBar } from "@/components/common/progressbar/progress-bar";
+import { PremiumCircularProgress } from "@/components/common/progressbar/dynamic-progress-bar";
 import { useProgressController } from "@/components/common/progressbar/progress-bar-controller";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { Page } from "@/components/page/page";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
-
-const bcrumb = [
-  {
-    label: "Home",
-  },
-  {
-    label: "Accounts Maintenance",
-  },
-  {
-    label: "Next Month Loading",
-  },
-];
+import Page from "@/components/layout/page/Page";
+import Card from "@/components/cards/Card";
 
 const accounts = [
-  { id: 1 },
-  { id: 2 },
-  { id: 3 },
-  { id: 4 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 2 },
-  { id: 3 },
-  { id: 4 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 1 },
-  { id: 2 },
-  { id: 3 },
-  { id: 4 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 2 },
-  { id: 3 },
-  { id: 4 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
-  { id: 5 },
+  { id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 },
+  { id: 5 }, { id: 5 }, { id: 5 }, { id: 5 }, { id: 5 },
+  { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 5 },
+  { id: 5 }, { id: 5 }, { id: 5 }, { id: 5 }, { id: 1 },
+  { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 5 },
+  { id: 5 }, { id: 5 }, { id: 5 }, { id: 5 }, { id: 2 },
+  { id: 3 }, { id: 4 }, { id: 5 }, { id: 5 }, { id: 5 },
+  { id: 5 }, { id: 5 }, { id: 5 },
 ];
 
 export default function NextMonthLoadingPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [disableButton, setDisableButton] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
   const { messageBox } = useMessageDialog();
 
-  const progress = useProgressController({
-    total: accounts.length,
-    onComplete: () => {
-      setDisableButton(false);
-    },
-  });
+  const selectedMonthLabel =
+    TrxMonth.items.find((i) => i.value === selectedMonth)?.label ?? "";
 
-  const sectionCardProps = {
-    p: { base: 4, md: 5 },
-    bg: BRAND_COLORS.white,
-    boxShadow: STANDARD_SHADOWS.level1,
-    borderRadius: STANDARD_RADIUS.md,
-    borderWidth: "1px",
-    borderColor: BRAND_COLORS.neutralBorder,
-  } as const;
+  const progress = useProgressController({ total: accounts.length });
 
   const handleConfirm = async () => {
     if (!selectedMonth) {
@@ -118,16 +53,18 @@ export default function NextMonthLoadingPage() {
   };
 
   const nextMonthLoad = async () => {
-    setDisableButton(true);
+    setIsProcessing(true);
+    setIsComplete(false);
     progress.start();
 
     for (const account of accounts) {
-      await new Promise((res) => setTimeout(res, 500));
-
+      await new Promise((res) => setTimeout(res, 200));
       console.log("Processing account:", account.id);
-
       progress.increment();
     }
+
+    setIsProcessing(false);
+    setIsComplete(true);
 
     messageBox({
       title: "SUCCESS",
@@ -138,64 +75,97 @@ export default function NextMonthLoadingPage() {
   };
 
   return (
-    <Page
-      breadcrumbItems={bcrumb}
+    <Page.Root
       title="Next Month Loading"
-      description="Process account loading for the selected transaction month."
+      description="Process the next billing cycle for all active accounts"
     >
-      <Box display="flex" flexDirection="column" gap={{ base: 4, md: 5 }}>
-        <Box {...sectionCardProps}>
-          <Strong color={BRAND_COLORS.primaryGreen}>Transaction Month</Strong>
-          <Separator my={2} />
+      <Page.MainContent>
+        <Page.Row>
+          <Card.Root title="Transaction Month">
+            <Card.MainContent>
+              <Grid
+                templateColumns={{ base: "1fr", md: "380px 1fr" }}
+                gap={4}
+                alignItems="start"
+                mt={2}
+              >
+                <GridItem>
+                  <SelectFloatingLabel
+                    label="Select Transaction Month"
+                    collection={TrxMonth}
+                    w="full"
+                    onValueChanged={(value) => {
+                      setSelectedMonth(value[0]);
+                      setErrorMessage("");
+                    }}
+                  />
+                  {errorMessage && (
+                    <Text color="red.500" fontSize="sm" mt="6px">
+                      {errorMessage}
+                    </Text>
+                  )}
+                </GridItem>
 
-          <Grid
-            templateColumns={{
-              base: "1fr",
-              md: "1fr auto",
-            }}
-            alignItems="start"
-            gap={4}
-          >
-            <GridItem>
-              <SelectFloatingLabel
-                label="Select Transaction Month"
-                collection={TrxMonth}
-                w={{ base: "100%", md: "360px" }}
-                onValueChanged={(value) => setSelectedMonth(value[0])}
-              />
+                {selectedMonth && (
+                  <GridItem>
+                    <Box
+                      p={3}
+                      bg="gray.50"
+                      borderRadius="md"
+                      borderWidth={1}
+                      borderColor="gray.200"
+                    >
+                      <Text
+                        fontSize="10px"
+                        color="gray.500"
+                        fontWeight={700}
+                        letterSpacing="0.06em"
+                        textTransform="uppercase"
+                        mb={1}
+                      >
+                        Selected Month
+                      </Text>
+                      <Text fontSize="md" fontWeight={600} color="gray.700">
+                        {selectedMonthLabel}
+                      </Text>
+                    </Box>
+                  </GridItem>
+                )}
+              </Grid>
+            </Card.MainContent>
+          </Card.Root>
+        </Page.Row>
 
-              {errorMessage && (
-                <Text color={BRAND_COLORS.errorRed} mt={2} fontSize="sm">
-                  {errorMessage}
-                </Text>
-              )}
-            </GridItem>
+        {(isProcessing || isComplete) && (
+          <Page.Row>
+            <Card.Root title="Processing Status">
+              <Card.MainContent>
+                <Flex direction="column" align="center" py={8}>
+                  <PremiumCircularProgress
+                    value={progress.percentage}
+                    size={200}
+                    loadingLabel={`${progress.current} of ${progress.total} accounts processed`}
+                    completeLabel="All accounts processed successfully"
+                  />
+                </Flex>
+              </Card.MainContent>
+            </Card.Root>
+          </Page.Row>
+        )}
 
-            <GridItem justifySelf={{ base: "stretch", md: "end" }}>
-              <PrimaryMdButton onClick={handleConfirm} disabled={disableButton}>
+        <Page.Row>
+          <Flex justify="flex-end">
+            <Box w={{ base: "full", md: "auto" }}>
+              <PrimaryMdFlexButton
+                onClick={handleConfirm}
+                disabled={isProcessing}
+              >
                 Process Next Month Load
-              </PrimaryMdButton>
-            </GridItem>
-          </Grid>
-        </Box>
-
-        <Flex
-          justifyContent="center"
-          p={{ base: 4, md: 5 }}
-          borderRadius={STANDARD_RADIUS.md}
-          border="1px solid"
-          borderColor={BRAND_COLORS.neutralBorder}
-          bg={BRAND_COLORS.white}
-          boxShadow={STANDARD_SHADOWS.level1}
-        >
-          <ReusableProgressBar
-            value={progress.percentage}
-            size={250}
-            loadingLabel={`Processing next month loading. (${progress.current} / ${progress.total})`}
-            completeLabel="Next month load successfully processed."
-          />
-        </Flex>
-      </Box>
-    </Page>
+              </PrimaryMdFlexButton>
+            </Box>
+          </Flex>
+        </Page.Row>
+      </Page.MainContent>
+    </Page.Root>
   );
 }

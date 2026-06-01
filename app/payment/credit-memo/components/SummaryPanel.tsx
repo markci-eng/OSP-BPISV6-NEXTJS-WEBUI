@@ -3,11 +3,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Box, Button, HStack, Text, VStack, Badge } from "@chakra-ui/react";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 interface SummaryPanelProps {
   totalDeposits: number;
@@ -65,15 +60,15 @@ export function SummaryPanel({
 
   return (
     <MotionBox position="sticky" top="6" layout>
-      <VStack gap={4} align="stretch">
+      <VStack gap={6} align="stretch">
         {/* Summary Card */}
         <Box
-          bg={BRAND_COLORS.white}
+          bg="bg"
           borderWidth="1px"
-          borderColor={BRAND_COLORS.neutralBorder}
-          borderRadius={STANDARD_RADIUS.md}
-          p={{ base: 4, md: 5 }}
-          boxShadow={STANDARD_SHADOWS.level1}
+          borderColor="border.muted"
+          rounded="xl"
+          p={5}
+          boxShadow="sm"
         >
           <Text
             fontSize="xs"
@@ -95,11 +90,7 @@ export function SummaryPanel({
               value={formatCurrency(totalPayments)}
             />
 
-            <Box
-              pt={3}
-              borderTopWidth="1px"
-              borderColor={BRAND_COLORS.neutralBorder}
-            >
+            <Box pt={3} borderTopWidth="1px" borderColor="border.muted">
               <HStack justify="space-between" align="end">
                 <Box>
                   <HStack gap={2}>
@@ -123,11 +114,7 @@ export function SummaryPanel({
                   fontSize="xl"
                   fontWeight="bold"
                   fontVariantNumeric="tabular-nums"
-                  color={
-                    isBalanced
-                      ? BRAND_COLORS.primaryGreen
-                      : BRAND_COLORS.destructiveRed
-                  }
+                  color={isBalanced ? "green.600" : "red.500"}
                 >
                   {formatCurrency(Math.abs(net))}
                 </Text>
@@ -138,37 +125,24 @@ export function SummaryPanel({
 
         {/* Actions */}
         <Box
-          bg={BRAND_COLORS.white}
+          bg="bg"
           borderWidth="1px"
-          borderColor={BRAND_COLORS.neutralBorder}
-          borderRadius={STANDARD_RADIUS.md}
+          borderColor="border.muted"
+          rounded="xl"
           p={4}
-          boxShadow={STANDARD_SHADOWS.level1}
+          boxShadow="sm"
         >
           <VStack gap={2}>
-            <Button w="full" variant="ghost" color="fg.muted" onClick={onReset}>
-              Reset
+            <Button w="full" colorPalette="blue" onClick={onSubmit}>
+              Submit Credit Memo
             </Button>
 
-            <Button
-              w="full"
-              variant="outline"
-              borderColor={BRAND_COLORS.primaryGreen}
-              color={BRAND_COLORS.primaryGreen}
-              _hover={{ bg: BRAND_COLORS.successBg }}
-              onClick={onSave}
-            >
+            <Button w="full" variant="outline" onClick={onSave}>
               Save Batch
             </Button>
 
-            <Button
-              w="full"
-              bg={BRAND_COLORS.primaryGreen}
-              color={BRAND_COLORS.white}
-              _hover={{ bg: BRAND_COLORS.darkGreen }}
-              onClick={onSubmit}
-            >
-              Submit Credit Memo
+            <Button w="full" variant="ghost" color="fg.muted" onClick={onReset}>
+              Reset
             </Button>
           </VStack>
         </Box>

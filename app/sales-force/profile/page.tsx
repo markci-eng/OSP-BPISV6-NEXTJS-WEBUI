@@ -12,35 +12,19 @@ export const SalesForcePage = () => {
     SalesAgent | undefined
   >(undefined);
 
-  const breadItem = [
-    {
-      label: "Home",
-      href: "/",
-    },
-    {
-      label: "Sale Agent Management",
-      href: "",
-    },
-    {
-      label: "Sales Agent Profile",
-    },
-  ];
-
   return (
     <>
-      <Box display={{ base: "none", md: "block" }}>
+      <Box display={{ base: "none", md: "block" }} h="100%">
         <AgentDetails
           selectedAgent={selectedAgent}
           onAgentSelect={setSelectedAgent}
-          breadItem={breadItem}
         />
       </Box>
 
-      <Box display={{ base: "block", md: "none" }}>
+      <Box display={{ base: "block", md: "none" }} h="100%">
         <AgentDetailsMobile
           selectedAgent={selectedAgent}
           onAgentSelect={setSelectedAgent}
-          breadItem={breadItem}
         />
       </Box>
     </>

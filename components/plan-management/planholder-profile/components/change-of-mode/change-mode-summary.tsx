@@ -1,10 +1,9 @@
-import { LuClipboardCheck } from "react-icons/lu";
+import { Box, Separator } from "@chakra-ui/react";
 import type { CheckedPlanType } from "./change-mode.types";
 import SummaryForm from "@/components/common/text/SummaryForm";
-import { Box } from "@chakra-ui/react";
-import SummaryBox from "@/components/common/text/SummaryBox";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
-// import { GrandSummary, type SummaryItems, SummarySection } from "../../components/summary-component/summary-section";
+import SummaryHeader from "@/components/common/text/SummaryHeader";
+import LabelText from "@/components/texts/LabelText";
+import React from "react";
 
 interface RevRIProps {
   selectedPlans: CheckedPlanType[] | undefined;
@@ -14,59 +13,44 @@ interface RevRIProps {
 
 export function ChangeModeSummaryPage({ selectedPlans }: RevRIProps) {
   if (!selectedPlans) return;
-  const totalCMFee = selectedPlans.reduce((sum) => sum + 100, 0);
-  const totalInstPayment = selectedPlans.reduce(
-    (sum, p) => sum + p.new_installment_amount + p.pending_installment_amount,
-    0,
-  );
-  const totalDue = totalCMFee + totalInstPayment;
-
-  // const summaryItems = (): SummaryItems[] => {
-  //   return selectedPlans.flatMap((item) => [
-  //     { label: "LPA Number", value: item.lpa_no },
-  //     { label: "New Plan Code", value: item.new_plan_code },
-  //     { label: "Installment Payment", value: item.new_installment_amount, type: "currency"},
-  //     { label: "Change of Mode Fee", value: 100, type: "currency" },
-  //   ]);
-  // };
 
   return (
     <>
       <SummaryForm title={"Change of Mode Summary"} data={[]} />
-      <Box mt={{ base: 0, md: -10 }}>
-        {selectedPlans.map((plan, index) => (
-          <Box key={index} my={{ base: 3, md: 5 }} borderRadius={STANDARD_RADIUS.md}>
-            <SummaryBox
-              key={index}
-              title={`LPA #: ${plan.lpa_no}`}
-              data={[
-                { label: "New Plan Code", value: plan.new_plan_code },
-                {
-                  label: "Installment Payment",
-                  value: plan.new_installment_amount.toLocaleString("en-US", {
-                    style: "currency",
-                    currency: "PHP",
-                  }),
-                },
-                { label: "Change of Mode Fee", value: "PHP 100.00" },
-              ]}
-            />
-          </Box>
-        ))}
+      <Box mt={-10}>
+        {selectedPlans.map((plan, index) => {
+          const items = [
+            { label: "New Plan Code", value: plan.new_plan_code },
+            { label: "New Mode", value: plan.new_mode },
+            {
+              label: "Installment Payment",
+              value: plan.new_installment_amount.toLocaleString("en-US", {
+                style: "currency",
+                currency: "PHP",
+              }),
+            },
+            { label: "Change of Mode Fee", value: "PHP 100.00" },
+          ];
+
+          return (
+            <Box key={index} my={5}>
+              <SummaryHeader>{`LPA #: ${plan.lpa_no}`}</SummaryHeader>
+              <Box pt={{ base: 3, md: 5 }}>
+                {items.map((item, idx) => (
+                  <React.Fragment key={idx}>
+                    <LabelText label={item.label} value={item.value} />
+                    {idx < items.length - 1 && (
+                      <Box display={{ base: "block", lg: "none" }}>
+                        <Separator my={2} />
+                      </Box>
+                    )}
+                  </React.Fragment>
+                ))}
+              </Box>
+            </Box>
+          );
+        })}
       </Box>
     </>
-    // <SummarySection
-    //   columns={4}
-    //   icon={<LuClipboardCheck />}
-    //   title={"Change of Mode Summary"}
-    //   items={summaryItems()}
-    //   grandSummary={
-    //     <GrandSummary
-    //       label={"Total Amount Payable"}
-    //       value={totalDue}
-    //       type="currency"
-    //     />
-    //   }
-    // />
   );
 }

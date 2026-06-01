@@ -82,9 +82,7 @@ const ClickableUpload = ({ doc }: { doc: DocReqLabel }) => {
 
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).closest("button")) return;
-    ref.current
-      ?.querySelector<HTMLInputElement>('input[type="file"]')
-      ?.click();
+    ref.current?.querySelector<HTMLInputElement>('input[type="file"]')?.click();
   };
 
   return (
@@ -149,44 +147,44 @@ const ClaimInfoForm = ({
           <Grid
             templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
             gapX={{
-              base: 2
+              base: 2,
             }}
           >
-          <InputFloatingLabel
-            label="LPA Number"
-            value={planholder?.lpaNumber ?? ""}
-            readOnly
-          />
-          <InputFloatingLabel
-            label="Planholder Name"
-            value={planholderName}
-            readOnly
-          />
-          <InputFloatingLabel
-            label="Date of Birth"
-            type="date"
-            value={
-              planholder?.dateOfBirth
-                ? new Date(planholder.dateOfBirth).toISOString().split("T")[0]
-                : ""
-            }
-            readOnly
-          />
-          <InputFloatingLabel
-            label="Gender"
-            value={planholder?.gender ?? ""}
-            readOnly
-          />
-          <InputFloatingLabel
-            label="Civil Status"
-            value={planholder?.civilStatus ?? ""}
-            readOnly
-          />
-          <InputFloatingLabel
-            label="Nationality"
-            value={planholder?.nationality ?? ""}
-            readOnly
-          />
+            <InputFloatingLabel
+              label="LPA Number"
+              value={planholder?.lpaNumber ?? ""}
+              readOnly
+            />
+            <InputFloatingLabel
+              label="Planholder Name"
+              value={planholderName}
+              readOnly
+            />
+            <InputFloatingLabel
+              label="Date of Birth"
+              type="date"
+              value={
+                planholder?.dateOfBirth
+                  ? new Date(planholder.dateOfBirth).toISOString().split("T")[0]
+                  : ""
+              }
+              readOnly
+            />
+            <InputFloatingLabel
+              label="Gender"
+              value={planholder?.gender ?? ""}
+              readOnly
+            />
+            <InputFloatingLabel
+              label="Civil Status"
+              value={planholder?.civilStatus ?? ""}
+              readOnly
+            />
+            <InputFloatingLabel
+              label="Nationality"
+              value={planholder?.nationality ?? ""}
+              readOnly
+            />
           </Grid>
         </Card.MainContent>
       </Card.Root>
@@ -194,35 +192,35 @@ const ClaimInfoForm = ({
       {/* Claim Info */}
       <Card.Root title="Incident Details">
         <Card.MainContent>
-          <Caption value="Provide the incident details for this claim." />
+          <Caption>Provide the incident details for this claim.</Caption>
           <Grid
             templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
             gapX={{
-              base: 2
+              base: 2,
             }}
           >
-          <InputFloatingLabel
-            label="Incident Date"
-            type="date"
-            value={claimInfo.incidentDate}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              onClaimInfoChange({
-                ...claimInfo,
-                incidentDate: e.target.value,
-              })
-            }
-          />
-          <SelectFloatingLabel
-            label="Incident Type"
-            collection={incidentTypes}
-            value={claimInfo.incidentType ? [claimInfo.incidentType] : []}
-            onValueChange={(e: { value: string[] }) =>
-              onClaimInfoChange({
-                ...claimInfo,
-                incidentType: e.value[0] ?? "",
-              })
-            }
-          />
+            <InputFloatingLabel
+              label="Incident Date"
+              type="date"
+              value={claimInfo.incidentDate}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                onClaimInfoChange({
+                  ...claimInfo,
+                  incidentDate: e.target.value,
+                })
+              }
+            />
+            <SelectFloatingLabel
+              label="Incident Type"
+              collection={incidentTypes}
+              value={claimInfo.incidentType ? [claimInfo.incidentType] : []}
+              onValueChange={(e: { value: string[] }) =>
+                onClaimInfoChange({
+                  ...claimInfo,
+                  incidentType: e.value[0] ?? "",
+                })
+              }
+            />
           </Grid>
         </Card.MainContent>
       </Card.Root>
@@ -231,12 +229,11 @@ const ClaimInfoForm = ({
       <Card.Root title="Required Documents">
         <Card.MainContent>
           <Box mb={2}>
-            <Caption value="Upload one document per item. PDF, PNG or JPG up to 20MB." />
+            <Caption>
+              Upload one document per item. PDF, PNG or JPG up to 20MB.
+            </Caption>
           </Box>
-          <Grid
-            templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
-            gap={2}
-          >
+          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={2}>
             {requiredDocs.map((doc, index) => (
               <ClickableUpload key={index} doc={doc} />
             ))}

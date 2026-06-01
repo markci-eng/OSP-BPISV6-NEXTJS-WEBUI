@@ -46,16 +46,10 @@ import { EMPLOYEES } from "@/data/doc-management/documenttype";
 import DrsDataTable from "../components/drsDataTable";
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
-import { Page } from "@/components/page/page";
+import Page from "@/components/layout/page/Page";
 import Card from "@/components/cards/Card";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import LabelText from "@/components/texts/LabelText";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_BUTTON_STYLES,
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 export default function ViewDeposit() {
   const { rows, totals } = DrsFunction(samplePayments);
@@ -79,193 +73,181 @@ export default function ViewDeposit() {
     null,
   );
 
-  const breadCrumb = [
-    {
-      label: "Home",
-    },
-    {
-      label: "Payment",
-    },
-    {
-      label: "View Encode Validated Deposit Slip",
-    },
-  ];
   return (
-    <Page
-      breadcrumbItems={breadCrumb}
+    <Page.Root
       title={"View Validated Deposit"}
-      description="Review encoded validated deposit slips and related remittance details."
+      description="Review your validated deposit"
     >
-      <Grid
-        gap={{ base: 4, lg: 5 }}
-        templateColumns={{
-          base: "1fr",
-          lg: "380px 1fr",
-          xl: "420px 1fr",
-        }}
-        alignItems="start"
-      >
-        {/* LEFT TABLE */}
-        <GridItem minW={0} overflow="hidden" h={"full"}>
-          <Card.Root>
-            <Card.MainContent>
-              <Box mb={3}>
-                <LookupField<Employee>
-                  label=""
-                  placeholder="Search by name or ID..."
-                  modalTitle="Search Employee"
-                  columns={employeeColumns}
-                  dataSource={EMPLOYEES}
-                  searchKeys={["id", "name", "branch"]}
-                  onSelect={setSelectedEmployee}
-                  renderDisplay={(emp) => `${emp.name} (${emp.id})`}
-                  value={selectedEmployee}
-                />
-              </Box>
+      <Page.MainContent>
+        <Grid
+          gap={{ base: 4, lg: 6 }}
+          templateColumns={{
+            base: "1fr",
+            lg: "380px 1fr",
+            xl: "420px 1fr",
+          }}
+          alignItems="start"
+        >
+          {/* LEFT TABLE */}
+          <GridItem minW={0} overflow="hidden" h={"full"}>
+            <Card.Root>
+              <Card.MainContent>
+                <Box my={2}>
+                  <LookupField<Employee>
+                    label=""
+                    placeholder="Search by name or ID..."
+                    modalTitle="Search Employee"
+                    columns={employeeColumns}
+                    dataSource={EMPLOYEES}
+                    searchKeys={["id", "name", "branch"]}
+                    onSelect={setSelectedEmployee}
+                    renderDisplay={(emp) => `${emp.name} (${emp.id})`}
+                    value={selectedEmployee}
+                  />
+                </Box>
 
-              <TableScrollArea
-                maxH={{ base: "350px", md: "420px", lg: "500px" }}
-              >
-                <Table.Root
-                  size="sm"
-                  variant="outline"
-                  interactive
-                  stickyHeader
+                <TableScrollArea
+                  maxH={{ base: "350px", md: "420px", lg: "500px" }}
                 >
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.ColumnHeader>Deposit Date Time</Table.ColumnHeader>
-                      <Table.ColumnHeader>DRS Reference No</Table.ColumnHeader>
-                      <Table.ColumnHeader textAlign="end">
-                        Amount
-                      </Table.ColumnHeader>
-                    </Table.Row>
-                  </Table.Header>
-
-                  <Table.Body>
-                    {sortedDrsItems.map((item) => (
-                      <Table.Row
-                        key={item.id}
-                        cursor="pointer"
-                        data-selected={selectedId === item.id ? "" : undefined}
-                        onClick={() => setSelectedId(item.id)}
-                        _selected={{
-                          bg: BRAND_COLORS.successBg,
-                          borderLeft: "4px solid",
-                          borderColor: BRAND_COLORS.primaryGreen,
-                        }}
-                      >
-                        <Table.Cell>{item.DepositDateTime}</Table.Cell>
-                        <Table.Cell>{item.name}</Table.Cell>
-                        <Table.Cell textAlign="end">{item.Amount}</Table.Cell>
-                      </Table.Row>
-                    ))}
-                  </Table.Body>
-                </Table.Root>
-              </TableScrollArea>
-            </Card.MainContent>
-          </Card.Root>
-        </GridItem>
-
-        {/* RIGHT DETAILS */}
-        <GridItem h="full" overflow="hidden">
-          <Card.Root>
-            <Card.MainContent>
-              {!selectedItem && (
-                <EmptyStateCard
-                  title={"No Deposit Selected"}
-                  description="  Select a Deposit from the left to view details"
-                />
-              )}
-
-              <Collapsible.Root open={selectedItem != null}>
-                <Collapsible.Content>
-                  {/* INFO GRID */}
-                  <SimpleGrid
-                    columns={{
-                      base: 1,
-                      sm: 2,
-                      md: 3,
-                      lg: 4,
-                    }}
-                    gap={3}
+                  <Table.Root
+                    size="sm"
+                    variant="outline"
+                    interactive
+                    stickyHeader
                   >
-                    <LabelText
-                      label="Deposit Date Time"
-                      value={selectedItem?.DepositDateTime.toString() ?? ""}
-                    />
-                    <LabelText
-                      label="DRS Reference No"
-                      value={selectedItem?.name ?? ""}
-                    />
-                    <LabelText
-                      label="Account No"
-                      value={selectedItem?.AccountNo ?? ""}
-                    />
-                    <LabelText
-                      label="Bank Branch"
-                      value={selectedItem?.BankBranch ?? ""}
-                    />
-                    <LabelText
-                      label="Bank Code"
-                      value={selectedItem?.BankCode ?? ""}
-                    />
-                    <LabelText
-                      label="Amount"
-                      value={selectedItem?.Amount ?? "0"}
-                    />
-                    <LabelText
-                      label="Deposited By"
-                      value={selectedItem?.DepositedBy || "-"}
-                    />
-                  </SimpleGrid>
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeader>
+                          Deposit Date Time
+                        </Table.ColumnHeader>
+                        <Table.ColumnHeader>
+                          DRS Reference No
+                        </Table.ColumnHeader>
+                        <Table.ColumnHeader textAlign="end">
+                          Amount
+                        </Table.ColumnHeader>
+                      </Table.Row>
+                    </Table.Header>
 
-                  <Flex justify={{ base: "stretch", md: "end" }} mt={4}>
-                    <Button
-                      w={{ base: "full", md: "auto" }}
-                      bg={BRAND_COLORS.primaryGreen}
-                      color={BRAND_COLORS.white}
-                      _hover={{ bg: BRAND_COLORS.darkGreen }}
-                      {...STANDARD_BUTTON_STYLES.md}
-                      onClick={() => setOpen(true)}
+                    <Table.Body>
+                      {sortedDrsItems.map((item) => (
+                        <Table.Row
+                          key={item.id}
+                          cursor="pointer"
+                          data-selected={
+                            selectedId === item.id ? "" : undefined
+                          }
+                          onClick={() => setSelectedId(item.id)}
+                          _selected={{
+                            bg: "green.100",
+                            borderLeft: "4px solid",
+                            borderColor: "green.500",
+                          }}
+                        >
+                          <Table.Cell>{item.DepositDateTime}</Table.Cell>
+                          <Table.Cell>{item.name}</Table.Cell>
+                          <Table.Cell textAlign="end">{item.Amount}</Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Root>
+                </TableScrollArea>
+              </Card.MainContent>
+            </Card.Root>
+          </GridItem>
+
+          {/* RIGHT DETAILS */}
+          <GridItem h="full" overflow="hidden">
+            <Card.Root>
+              <Card.MainContent>
+                {!selectedItem && (
+                  <EmptyStateCard
+                    title={"No Deposit Selected"}
+                    description="  Select a Deposit from the left to view details"
+                  />
+                )}
+
+                <Collapsible.Root open={selectedItem != null}>
+                  <Collapsible.Content>
+                    {/* INFO GRID */}
+                    <SimpleGrid
+                      columns={{
+                        base: 1,
+                        // sm: 2,
+                        // md: 3,
+                        lg: 2,
+                      }}
+                      // gap={2}
                     >
-                      Encode Supplementary
-                    </Button>
-                  </Flex>
+                      <LabelText
+                        label="Deposit Date Time"
+                        value={selectedItem?.DepositDateTime.toString() ?? ""}
+                      />
+                      <LabelText
+                        label="DRS Reference No"
+                        value={selectedItem?.name ?? ""}
+                      />
+                      <LabelText
+                        label="Account No"
+                        value={selectedItem?.AccountNo ?? ""}
+                      />
+                      <LabelText
+                        label="Bank Branch"
+                        value={selectedItem?.BankBranch ?? ""}
+                      />
+                      <LabelText
+                        label="Bank Code"
+                        value={selectedItem?.BankCode ?? ""}
+                      />
+                      <LabelText
+                        label="Amount"
+                        value={selectedItem?.Amount ?? "0"}
+                      />
+                      <LabelText
+                        label="Deposited By"
+                        value={selectedItem?.DepositedBy || "-"}
+                      />
+                    </SimpleGrid>
 
-                  <Box my={{ base: 4, md: 5 }}>
-                    <DrsDataTable
-                      payments={samplePayments}
-                      onRowClick={(row) => console.log("Clicked row:", row)}
-                    />
+                    <Flex justify={{ base: "stretch", md: "end" }} mt={4}>
+                      <Button
+                        w={{ base: "full", md: "auto" }}
+                        onClick={() => setOpen(true)}
+                      >
+                        Encode Supplementary
+                      </Button>
+                    </Flex>
 
-                    {/* Mobile summary */}
-                    <Box display={{ base: "block", md: "none" }}>
-                      <DrsPaymentSummary totals={totals} displayProp />
+                    <Box my={{ base: 6, md: 8 }}>
+                      <DrsDataTable
+                        payments={samplePayments}
+                        onRowClick={(row) => console.log("Clicked row:", row)}
+                      />
+
+                      {/* Mobile summary */}
+                      <Box display={{ base: "block", md: "none" }}>
+                        <DrsPaymentSummary totals={totals} displayProp />
+                      </Box>
                     </Box>
-                  </Box>
 
-                  <Separator my={4} />
+                    <Separator my={4} />
 
-                  <Flex justify="end">
-                    <DeleteSolidButton />
-                  </Flex>
-                </Collapsible.Content>
-              </Collapsible.Root>
-            </Card.MainContent>
-          </Card.Root>
-        </GridItem>
-      </Grid>
+                    <Flex justify="end">
+                      <DeleteSolidButton />
+                    </Flex>
+                  </Collapsible.Content>
+                </Collapsible.Root>
+              </Card.MainContent>
+            </Card.Root>
+          </GridItem>
+        </Grid>
 
       {/* Dialog */}
-      <Dialog.Root open={open} size="xl" placement="center">
+      <Dialog.Root open={open} size={{ base: "full", md: "xl" }} placement="center">
         <Portal>
           <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content
-              borderRadius={STANDARD_RADIUS.lg}
-              boxShadow={STANDARD_SHADOWS.level3}
-            >
+          <Dialog.Positioner p={{ base: 0, md: undefined }}>
+            <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
               <Dialog.Header>
                 <Dialog.Title>Encode Supplementary - {selectedId}</Dialog.Title>
               </Dialog.Header>
@@ -279,8 +261,7 @@ export default function ViewDeposit() {
                     sm: 2,
                     md: 3,
                   }}
-                  columnGap={4}
-                  rowGap={3}
+                  gap={4}
                 >
                   <InputFloatingLabel
                     type="date"
@@ -306,13 +287,14 @@ export default function ViewDeposit() {
                 <SaveButton />
               </Dialog.Footer>
 
-              <Dialog.CloseTrigger asChild>
-                <CloseButton onClick={() => setOpen(false)} />
-              </Dialog.CloseTrigger>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
-    </Page>
+                <Dialog.CloseTrigger asChild>
+                  <CloseButton onClick={() => setOpen(false)} />
+                </Dialog.CloseTrigger>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        </Dialog.Root>
+      </Page.MainContent>
+    </Page.Root>
   );
 }

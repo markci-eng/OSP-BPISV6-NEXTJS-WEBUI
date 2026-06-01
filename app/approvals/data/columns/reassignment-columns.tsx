@@ -1,16 +1,18 @@
 "use client";
 
+import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge, Text } from "@chakra-ui/react";
 
 import type { ReassignmentRequest } from "../types";
 import { multiSelectFilter } from "@/components/common/reusable-tableV2/types";
-import { formatApprovalDate } from "../../utils/formatters";
-import { getApprovalStatusBadgeStyle } from "../../utils/colors";
 
 function ApprovalStatusBadge({ status }: { status: string }) {
+  const colorPalette =
+    status === "Approved" ? "green" : status === "Denied" ? "red" : "yellow";
+
   return (
-    <Badge {...getApprovalStatusBadgeStyle(status)}>
+    <Badge colorPalette={colorPalette} variant="subtle">
       {status}
     </Badge>
   );
@@ -19,7 +21,7 @@ function ApprovalStatusBadge({ status }: { status: string }) {
 export const reassignmentColumns: ColumnDef<ReassignmentRequest>[] = [
   {
     accessorKey: "salesForceId",
-    header: "Sales Force ID",
+    header: "SalesForce ID",
     enableSorting: true,
     enableColumnFilter: true,
     filterFn: multiSelectFilter,
@@ -79,9 +81,6 @@ export const reassignmentColumns: ColumnDef<ReassignmentRequest>[] = [
     enableSorting: true,
     enableColumnFilter: true,
     filterFn: multiSelectFilter,
-    cell: ({ getValue }) => (
-      <Text fontSize="sm">{formatApprovalDate(getValue())}</Text>
-    ),
   },
   {
     accessorKey: "requester",

@@ -1,18 +1,12 @@
 import type { ColumnDef, FilterFn } from "@tanstack/react-table";
-import type * as React from "react";
-import type { DisplayStatusStyle } from "@/lib/theme/status-display-tokens";
-
-export type DataTableIcon = React.ElementType<{
-  size?: number;
-  style?: React.CSSProperties;
-}>;
+import type { LucideIcon } from "lucide-react";
 
 export type TableSize = "sm" | "md" | "lg";
 
 export type RowAction<T> = {
   id: string;
   label: string;
-  icon?: DataTableIcon;
+  icon?: LucideIcon;
   variant?: "default" | "destructive";
   separator?: boolean;
   hidden?: (row: T) => boolean;
@@ -79,7 +73,7 @@ export const SIZE_STYLES = {
 export interface HeaderButton {
   label: string;
   onClick: () => void;
-  icon?: DataTableIcon;
+  icon?: LucideIcon;
 }
 
 export type DataTableSummaryAggregation = "sum" | "average" | "count" | "min" | "max";
@@ -144,13 +138,13 @@ export type DataTableProps<TData> = {
   summaryRows?: DataTableSummaryRow<TData>[];
 
   mobileConfig?: DataTableMobileConfig<TData>;
+
+  toolbarTop?: string | number;
 };
 
 export type DataTableMobileViewMode = "scroll" | "card" | "accordion";
 
 export type DataTableMobileField<TData> = keyof TData & string;
-
-export type DataTableBadgeStyle = DisplayStatusStyle;
 
 export type DataTableMobileConfig<TData> = {
   /**
@@ -209,12 +203,6 @@ export type DataTableMobileConfig<TData> = {
    * Example: { "Expired": "red", "Expiring Soon": "yellow", "Valid": "green" }
    */
   badgeColorMap?: Record<string, string>;
-
-  /**
-   * Optional exact style map for badge colors based on the badgeField value.
-   * Use when a feature must match approved brand hex values instead of a Chakra color palette.
-   */
-  badgeStyleMap?: Record<string, DataTableBadgeStyle>;
 
   /**
    * Fully custom mobile card renderer.

@@ -1,4 +1,4 @@
-import { Box, Flex, Grid } from "@chakra-ui/react";
+import { Box, Flex, Grid, Strong } from "@chakra-ui/react";
 import { Body } from "st-peter-ui";
 
 export interface LabelTextProps {
@@ -8,22 +8,10 @@ export interface LabelTextProps {
 
 const WebViewLabelText = ({ label, value }: LabelTextProps) => {
   return (
-    <Grid
-      templateColumns="max-content minmax(0, 1fr)"
-      columnGap={4}
-      rowGap={1}
-      h="fit-content"
-      alignItems="start"
-      minW={0}
-    >
-      <Body color="gray.700">{label}</Body>
+    <Grid templateColumns="1fr 1fr" gap={1} h="fit-content">
+      <Body truncate>{label}</Body>
 
-      <Body
-        fontWeight="semibold"
-        wordBreak="break-word"
-        overflowWrap="anywhere"
-        textAlign="left"
-      >
+      <Body fontWeight="semibold" wordBreak="break-word" textAlign="left">
         {value}
       </Body>
     </Grid>
@@ -32,37 +20,24 @@ const WebViewLabelText = ({ label, value }: LabelTextProps) => {
 
 const MobileLabelText = ({ label, value }: LabelTextProps) => {
   return (
-    <Grid
-      templateColumns="minmax(96px, 40%) minmax(0, 1fr)"
-      gap={2}
-      h="fit-content"
-      alignItems="start"
-      minW={0}
-    >
-      <Body color="gray.700">{label}</Body>
+    <Flex gap={1} justify={"space-between"} h="fit-content">
+      <Body>{label}</Body>
 
-      <Flex justify="flex-end" minW={0}>
-        <Body
-          fontWeight="semibold"
-          wordBreak="break-word"
-          overflowWrap="anywhere"
-          textAlign="right"
-        >
+        <Body fontWeight="semibold" wordBreak="break-word" textAlign="right">
           {value}
         </Body>
-      </Flex>
-    </Grid>
+    </Flex>
   );
 };
 
 const LabelText = ({ label, value }: LabelTextProps) => {
   return (
     <>
-      <Box display={{ base: "none", md: "block" }}>
+      <Box display={{ base: "none", lg: "block" }} py={1}>
         <WebViewLabelText label={label} value={value} />
       </Box>
 
-      <Box display={{ base: "block", md: "none" }}>
+      <Box display={{ base: "block", lg: "none" }} py={0}>
         <MobileLabelText label={label} value={value} />
       </Box>
     </>

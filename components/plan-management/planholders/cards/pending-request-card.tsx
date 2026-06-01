@@ -101,10 +101,10 @@ export function ProgressCard({
           {title}
         </Strong>
         <Body
-          // fontSize={{
-          //   base: "11.5px",
-          //   md: "1rem",
-          // }}
+          fontSize={{
+            base: "xs",
+            md: "md",
+          }}
           color="gray.500"
         >
           {description}

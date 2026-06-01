@@ -1,5 +1,3 @@
-import { PaymentRecord } from "../data/payment.types";
-
 export type PaymentComputation = {
   comCBI: number;
   ncomCBI: number;
@@ -23,35 +21,45 @@ export type PaymentComputation = {
   totalAmountDue: number;
 };
 
-export function computePayments(payments: PaymentRecord[], baseAmount = 0): PaymentComputation {
-  const sum = (key: keyof PaymentRecord) =>
-    payments.reduce((acc, p) => acc + Number(p[key] ?? 0), 0);
+const VAT_RATE = 0.12;
 
-  const totalCom = sum("COMPCV");
-  const net = sum("ComDue");
-  const te = sum("TEPCV");
+/**
+ * Per-planholder payment computation.
+ *
+ * Values are derived from the currently selected planholder only, so they do
+ * not accumulate as more payments are added to the list. The installment
+ * amount is treated as the VAT-inclusive total, hence Total Amount Due equals
+ * the installment amount.
+ */
+export function computePayments(
+  amount = 0,
+  commission = 0,
+  transportationExpense = 0,
+): PaymentComputation {
+  const totalSales = amount;
 
-  const vatableSales = baseAmount;
-  const vat = vatableSales * 0.12;
+  const vatableSales = amount / (1 + VAT_RATE);
+  const vat = vatableSales * VAT_RATE;
 
-  const totalSales = vatableSales + vat;
   const vatExemptSales = 0;
   const zeroRatedSales = 0;
 
-  const amountNetOfVat = vatableSales;
   const lessVat = vat;
+  const subTotal = vatableSales;
+  const amountNetOfVat = vatableSales;
 
-  const subTotal = totalSales;
-  const withholdingTax = totalCom * 0.02;
+  const withholdingTax = commission * 0.02;
 
-  const amountDue = subTotal - withholdingTax;
+  // Commission and transportation expense are deducted from the installment
+  // (VAT-inclusive) amount to arrive at the net amount due.
+  const amountDue = amount - commission - transportationExpense;
   const totalAmountDue = amountDue;
 
   return {
-    comCBI: totalCom,
-    ncomCBI: totalCom * 0.5,
-    commission: totalCom,
-    transportationExpense: te,
+    comCBI: commission,
+    ncomCBI: commission * 0.5,
+    commission,
+    transportationExpense,
 
     vatableSales,
     totalSales,

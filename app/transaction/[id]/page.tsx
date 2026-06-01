@@ -10,7 +10,7 @@ const page = async ({ params }: PageProps) => {
   const resolvedParams = await params;
   console.log("Transaction ID:", resolvedParams.id);
   return (
-    <Box w="full">
+    <Box w="full" pb={{base: "100px", lg: 0}}>
       <TrackMyRequest requestId={resolvedParams.id} />
       {/* <Text>{resolvedParams.id} </Text> */}
     </Box>

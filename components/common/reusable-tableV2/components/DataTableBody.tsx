@@ -15,7 +15,6 @@ import type {
   DataTableSummaryRow,
   TableSize,
 } from "../types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 
 type DataTableBodyProps<TData> = {
   table: TanStackTable<TData>;
@@ -164,10 +163,10 @@ export function DataTableBody<TData>({
             {summaryRows?.map((summaryRow, index) => (
               <Table.Row
                 key={summaryRow.id ?? `summary-${index}`}
-                bg={BRAND_COLORS.successBg}
+                bg="green.50"
                 borderTopWidth="1px"
                 borderBottomWidth="1px"
-                borderColor={BRAND_COLORS.softGreen}
+                borderColor="green.100"
               >
                 {features.draggable && (
                   <Table.Cell px={2} py={2.5} w="32px" minW="32px" />
@@ -216,10 +215,10 @@ export function DataTableBody<TData>({
                       position={isActionsColumn ? "sticky" : undefined}
                       right={isActionsColumn ? 0 : undefined}
                       zIndex={isActionsColumn ? 2 : undefined}
-                      bg={isActionsColumn ? BRAND_COLORS.successBg : undefined}
+                      bg={isActionsColumn ? "green.50" : undefined}
                       borderLeftWidth={isActionsColumn ? "1px" : undefined}
                       borderLeftColor={
-                        isActionsColumn ? BRAND_COLORS.softGreen : undefined
+                        isActionsColumn ? "green.100" : undefined
                       }
                     >
                       {value}

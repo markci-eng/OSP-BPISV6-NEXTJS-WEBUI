@@ -3,10 +3,6 @@
 import * as React from "react";
 import { Box, Text } from "@chakra-ui/react";
 import Drawer from "@/components/drawers/Drawer";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 type DataTableDetailDrawerProps<TData> = {
   title?: React.ReactNode;
@@ -46,12 +42,12 @@ export function DataTableDetailDrawer<TData>({
           </Text>
 
           <Box
-            borderRadius={STANDARD_RADIUS.md}
+            rounded="md"
             borderWidth="1px"
             borderColor="border.muted"
             bg="bg"
             p={{ base: 3, md: 4 }}
-            boxShadow={STANDARD_SHADOWS.level2}
+            boxShadow="sm"
             mt={2}
           >
             <Box

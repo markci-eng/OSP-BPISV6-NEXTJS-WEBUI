@@ -11,14 +11,11 @@ import {
 } from "../../common/agent-lookup/agent-lookup.type";
 import SuperiorLookup from "../pickers/superior-lookup";
 import RequestSubmittedDialog from "../dialogs/request-submitted-dialog";
+import Card from "@/components/cards/Card";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
 import FormTitle from "@/components/texts/FormTitle";
 import Caption from "@/components/texts/Caption";
 import SectionTitle from "@/components/texts/SectionTitle";
-import ProfileSectionCard from "@/components/saleforce/components/profile-section-card";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { CARD_LAYOUT } from "@/lib/theme/layout-tokens";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
 
 interface AgentReassignFormProps {
   selectedAgent: SalesAgent;
@@ -65,120 +62,137 @@ export function AgentReassignForm({
         direction="column"
         gap={2}
         mb={{
-          base: 3,
+          base: 2,
           md: 4,
         }}
       >
-        <FormTitle label="Re-Organized Agent" />
-        <Caption value="Assign a new superior for this sales agent. The request will be submitted for approval." />
+        <Flex align="center" gap={2}>
+          <FormTitle label={"Re-Organized Agent"} />
+        </Flex>
+
+        <Caption>
+          Assign a new superior for this sales agent. The request will be
+          submitted for approval.
+        </Caption>
       </Flex>
 
-      <Flex
-        gap={{ base: CARD_LAYOUT.gap.base, md: CARD_LAYOUT.gap.md }}
-        alignItems="stretch"
-        direction="column"
-      >
+      <Flex gap={6} alignItems="start" direction="column">
+        {/* LEFT — agent + current superior details */}
         <AgentProfileHeaderCard agent={selectedAgent} />
 
-        <ProfileSectionCard
-          title="Select New Superior"
-          description="Search and pick a superior who ranks one level above this agent."
-        >
-          <Flex direction="column" gap={{ base: 4, md: 6 }}>
-            <SuperiorLookup
-              currentAgent={selectedAgent}
-              value={newSuperior}
-              onSelect={setNewSuperior}
-            />
-
-            {isSame ? (
+        {/* RIGHT — the form */}
+        <Card.Root>
+          <Card.MainContent>
+            <Flex direction="column" gap={6}>
               <Flex
-                gap={2}
-                align="center"
-                p={3}
-                bg={BRAND_COLORS.warningBg}
-                borderWidth={1}
-                borderColor={BRAND_COLORS.warningBorder}
-                borderRadius={STANDARD_RADIUS.md}
-                color={BRAND_COLORS.warningText}
-              >
-                <LuTriangleAlert />
-                <Body>
-                  The selected superior is the same as the current one. Pick a
-                  different one.
-                </Body>
-              </Flex>
-            ) : null}
-
-            <Box
-              borderWidth={1}
-              borderColor={BRAND_COLORS.neutralBorder}
-              borderRadius={STANDARD_RADIUS.md}
-              bg={BRAND_COLORS.subtleBg}
-              p={{ base: 3, md: 4 }}
-            >
-              <SectionTitle>Summary</SectionTitle>
-
-              <Grid
-                mt={3}
-                templateColumns={{
-                  base: "1fr",
-                  sm: "1fr auto 1fr",
-                }}
+                direction="column"
                 gap={{
-                  base: 3,
-                  md: 4,
+                  base: 2,
                 }}
-                alignItems="center"
               >
-                <SummaryEndpoint
-                  label="From"
-                  name={currentSuperior ? currentSuperior.name : "No superior"}
-                  sub={
-                    currentSuperior
-                      ? `${getPositionDesc(currentSuperior.position)} - ${
-                          currentSuperior.id
-                        }`
-                      : "Not assigned"
-                  }
-                  tone="muted"
-                />
-                <Box
-                  display={{ base: "none", sm: "flex" }}
-                  color="gray.400"
-                  justifyContent="center"
-                >
-                  <LuArrowRight size={20} />
-                </Box>
-                <SummaryEndpoint
-                  label="To"
-                  name={newSuperior?.name ?? "Not selected"}
-                  sub={
-                    newSuperior
-                      ? `${getPositionDesc(newSuperior.position)} - ${
-                          newSuperior.id
-                        }`
-                      : "Pick a superior above"
-                  }
-                  tone={newSuperior && !isSame ? "primary" : "muted"}
-                />
-              </Grid>
-            </Box>
+                <Flex flexDir="column">
+                  <SectionTitle>Select New Superior</SectionTitle>
 
-            {hideActions ? null : (
-              <Flex
-                justify={{ base: "stretch", md: "flex-end" }}
-                direction={{ base: "column", sm: "row" }}
-                gap={2}
-              >
-                <SecondaryMdButton onClick={onCancel}>Cancel</SecondaryMdButton>
-                <PrimaryMdButton onClick={handleSubmit} disabled={!canSubmit}>
-                  Submit
-                </PrimaryMdButton>
+                  <Caption>
+                    Search and pick a superior who ranks one level above this
+                    agent.
+                  </Caption>
+                </Flex>
+
+                <SuperiorLookup
+                  currentAgent={selectedAgent}
+                  value={newSuperior}
+                  onSelect={setNewSuperior}
+                />
               </Flex>
-            )}
-          </Flex>
-        </ProfileSectionCard>
+
+              {isSame ? (
+                <Flex
+                  gap={2}
+                  align="center"
+                  p={3}
+                  bg="yellow.50"
+                  borderWidth={1}
+                  borderColor="yellow.200"
+                  borderRadius="md"
+                  color="yellow.700"
+                >
+                  <LuTriangleAlert />
+                  <Body>
+                    The selected superior is the same as the current one. Pick a
+                    different one.
+                  </Body>
+                </Flex>
+              ) : null}
+
+              <Box
+                borderWidth={1}
+                borderColor="gray.200"
+                borderRadius="md"
+                bg="gray.50"
+                p={4}
+              >
+                <Body fontWeight="bold" color="gray.500" letterSpacing="wide">
+                  SUMMARY
+                </Body>
+
+                <Grid
+                  mt={3}
+                  templateColumns={{
+                    base: "1fr",
+                    sm: "1fr auto 1fr",
+                  }}
+                  gap={{
+                    base: 2,
+                    md: 3,
+                  }}
+                  alignItems="center"
+                >
+                  <SummaryEndpoint
+                    label="From"
+                    name={
+                      currentSuperior ? currentSuperior.name : "No superior"
+                    }
+                    sub={
+                      currentSuperior
+                        ? `${getPositionDesc(currentSuperior.position)} · ${currentSuperior.id}`
+                        : "Not assigned"
+                    }
+                    tone="muted"
+                  />
+                  <Box
+                    display={{ base: "none", sm: "flex" }}
+                    color="gray.400"
+                    justifyContent="center"
+                  >
+                    <LuArrowRight size={20} />
+                  </Box>
+                  <SummaryEndpoint
+                    label="To"
+                    name={newSuperior?.name ?? "Not selected"}
+                    sub={
+                      newSuperior
+                        ? `${getPositionDesc(newSuperior.position)} · ${newSuperior.id}`
+                        : "Pick a superior above"
+                    }
+                    tone={newSuperior && !isSame ? "primary" : "muted"}
+                  />
+                </Grid>
+              </Box>
+
+              {hideActions ? null : (
+                <Flex justify="flex-end" gap={2}>
+                  <SecondaryMdButton onClick={onCancel}>
+                    Cancel
+                  </SecondaryMdButton>
+                  <PrimaryMdButton onClick={handleSubmit} disabled={!canSubmit}>
+                    Submit
+                  </PrimaryMdButton>
+                </Flex>
+              )}
+            </Flex>
+          </Card.MainContent>
+        </Card.Root>
       </Flex>
 
       <RequestSubmittedDialog
@@ -217,7 +231,7 @@ const SummaryEndpoint = ({
 
       <Body
         fontWeight="bold"
-        color={isPrimary ? BRAND_COLORS.primaryGreen : BRAND_COLORS.neutralText}
+        color={isPrimary ? "var(--chakra-colors-primary)" : "gray.700"}
         truncate
       >
         {name}

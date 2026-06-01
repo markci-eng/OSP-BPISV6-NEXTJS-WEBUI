@@ -1,6 +1,5 @@
 import SectionTitle from "@/components/texts/SectionTitle";
-import { FORM_LAYOUT } from "@/lib/theme/layout-tokens";
-import { Grid, Box } from "@chakra-ui/react";
+import { Grid, Box, Separator, Text, Strong } from "@chakra-ui/react";
 import { InputFloatingLabel } from "st-peter-ui";
 
 interface AgentContactFormProps {
@@ -10,17 +9,19 @@ interface AgentContactFormProps {
 }
 
 const AgentContactForm = (props: AgentContactFormProps) => {
-  const { email, mobileNumber, landlineNumber } = props;
+  const { email, mobileNumber, landlineNumber, ...rest } = props;
   return (
     <Box>
       <SectionTitle>Contact</SectionTitle>
       <Grid
-        mt={2}
         templateColumns={{
           base: "1fr",
           md: "repeat(2, 1fr)",
         }}
-        gap={{ base: FORM_LAYOUT.fieldGap, md: FORM_LAYOUT.fieldGap }}
+        gap={{
+          base: 0,
+          md: 2,
+        }}
       >
         <InputFloatingLabel label="Email" value={email} />
         <InputFloatingLabel label="Mobile Number" value={mobileNumber} />

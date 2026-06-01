@@ -10,6 +10,7 @@ import {
   ChevronUp,
   ChevronDown,
   ListFilter,
+  CornerDownLeft,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -27,8 +28,8 @@ import {
 
 import {
   Box,
-  CloseButton,
   Dialog,
+  Flex,
   HStack,
   IconButton,
   Input,
@@ -40,6 +41,7 @@ import {
   Checkbox,
   VStack,
   Popover,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 
 // ---------------------------------------------------------------------------
@@ -49,11 +51,8 @@ import {
 export interface LookupColumn<T> {
   key: keyof T & string;
   header: string;
-  /** Opt-in: render a custom cell. */
   render?: (value: T[keyof T], row: T) => React.ReactNode;
-  /** Enable the multi-value filter dropdown for this column. */
   enableColumnFilter?: boolean;
-  /** Enable sorting for this column (default: true). */
   enableSorting?: boolean;
 }
 
@@ -67,6 +66,7 @@ interface LookupFieldProps<T> {
   onSelect: (item: T | null) => void;
   renderDisplay: (item: T) => string;
   value: T | null;
+  mobileFullscreen?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -75,11 +75,10 @@ interface LookupFieldProps<T> {
 
 const springTransition = {
   type: "spring" as const,
-  duration: 0.3,
+  duration: 0.25,
   bounce: 0,
 };
 
-/** Multi-value filter: passes when the cell value is in the selected set (or set is empty / ["ALL"]). */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const multiValueFilter: FilterFn<any> = (
   row: Row<any>,
@@ -92,6 +91,55 @@ const multiValueFilter: FilterFn<any> = (
 };
 multiValueFilter.autoRemove = (val: string[]) =>
   !val || val.length === 0 || val.includes("ALL");
+
+// ---------------------------------------------------------------------------
+// Shortcut key badge
+// ---------------------------------------------------------------------------
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <Box
+      as="kbd"
+      display="inline-flex"
+      alignItems="center"
+      justifyContent="center"
+      px="5px"
+      py="1px"
+      border="1px solid"
+      borderColor="gray.200"
+      borderBottomWidth="2px"
+      borderRadius="md"
+      bg="white"
+      fontSize="10px"
+      fontWeight="semibold"
+      color="gray.500"
+      lineHeight="1.6"
+      fontFamily="mono"
+      minW="18px"
+    >
+      {children}
+    </Box>
+  );
+}
+
+function ShortcutHint({
+  keys,
+  label,
+}: {
+  keys: React.ReactNode[];
+  label: string;
+}) {
+  return (
+    <HStack gap={1} align="center">
+      {keys.map((k, i) => (
+        <Kbd key={i}>{k}</Kbd>
+      ))}
+      <Text fontSize="10px" color="gray.400" ml="1px">
+        {label}
+      </Text>
+    </HStack>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Column-filter dropdown
@@ -118,7 +166,6 @@ function ColumnFilterDropdown({
 
   const handleOpenChange = (details: { open: boolean }) => {
     if (details.open) {
-      // Sync pending state when opening
       setPending(filterValue?.length ? [...filterValue] : ["ALL"]);
     }
     setOpen(details.open);
@@ -155,15 +202,15 @@ function ColumnFilterDropdown({
           aria-label="Filter column"
           size="xs"
           variant="solid"
-          bg={isActive ? "green.600" : "green.700"}
-          color="white"
-          _hover={{ bg: "green.600" }}
-          boxShadow={
-            isActive ? "0 0 0 2px var(--chakra-colors-green-200)" : undefined
-          }
+          bg={isActive ? "var(--chakra-colors-primary)" : "gray.100"}
+          color={isActive ? "white" : "gray.500"}
+          _hover={{
+            bg: isActive ? "var(--chakra-colors-primary)" : "gray.200",
+          }}
+          borderRadius="md"
           onClick={(e) => e.stopPropagation()}
         >
-          <ListFilter size={12} />
+          <ListFilter size={11} />
         </IconButton>
       </Popover.Trigger>
 
@@ -172,13 +219,14 @@ function ColumnFilterDropdown({
           <Popover.Content
             w="220px"
             p={0}
-            borderRadius="lg"
-            boxShadow="lg"
+            borderRadius="xl"
+            boxShadow="xl"
+            border="1px solid"
+            borderColor="gray.100"
             onClick={(e) => e.stopPropagation()}
           >
             <Popover.Body p={0}>
               <VStack align="stretch" gap={0} py={2}>
-                {/* ALL option */}
                 <HStack
                   px={4}
                   py={2}
@@ -192,9 +240,11 @@ function ColumnFilterDropdown({
                     size="sm"
                   >
                     <Checkbox.HiddenInput />
-                    <Checkbox.Control />
+                    <Checkbox.Control borderRadius="sm" />
                   </Checkbox.Root>
-                  <Text fontSize="sm">All</Text>
+                  <Text fontSize="sm" color="gray.700">
+                    All
+                  </Text>
                 </HStack>
 
                 {allValues.map((val) => (
@@ -212,9 +262,13 @@ function ColumnFilterDropdown({
                       size="sm"
                     >
                       <Checkbox.HiddenInput />
-                      <Checkbox.Control />
+                      <Checkbox.Control borderRadius="sm" />
                     </Checkbox.Root>
-                    <Text fontSize="sm" textTransform="capitalize">
+                    <Text
+                      fontSize="sm"
+                      color="gray.600"
+                      textTransform="capitalize"
+                    >
                       {val.toLowerCase()}
                     </Text>
                   </HStack>
@@ -228,15 +282,22 @@ function ColumnFilterDropdown({
                 borderTopWidth="1px"
                 borderColor="gray.100"
               >
-                <Button flex={1} size="sm" variant="outline" onClick={cancel}>
+                <Button
+                  flex={1}
+                  size="sm"
+                  variant="outline"
+                  borderRadius="lg"
+                  onClick={cancel}
+                >
                   Cancel
                 </Button>
                 <Button
                   flex={1}
                   size="sm"
-                  bg="green.700"
+                  bg="var(--chakra-colors-primary)"
                   color="white"
-                  _hover={{ bg: "green.600" }}
+                  borderRadius="lg"
+                  _hover={{ opacity: 0.9 }}
                   onClick={apply}
                 >
                   Apply
@@ -255,9 +316,9 @@ function ColumnFilterDropdown({
 // ---------------------------------------------------------------------------
 
 function SortIcon({ direction }: { direction: "asc" | "desc" | false }) {
-  if (direction === "asc") return <ChevronUp size={13} />;
-  if (direction === "desc") return <ChevronDown size={13} />;
-  return <ChevronsUpDown size={13} opacity={0.4} />;
+  if (direction === "asc") return <ChevronUp size={12} />;
+  if (direction === "desc") return <ChevronDown size={12} />;
+  return <ChevronsUpDown size={12} opacity={0.35} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -274,7 +335,10 @@ export function LookupField<T extends object>({
   onSelect,
   renderDisplay,
   value,
+  mobileFullscreen = false,
 }: LookupFieldProps<T>) {
+  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
+  const isFullscreen = isMobile;
   const [open, setOpen] = React.useState(false);
   const [searchText, setSearchText] = React.useState("");
   const [modalQuery, setModalQuery] = React.useState("");
@@ -283,11 +347,30 @@ export function LookupField<T extends object>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
   );
+  const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
+  const [isTriggerFocused, setIsTriggerFocused] = React.useState(false);
+  const [suggestionIndex, setSuggestionIndex] = React.useState(-1);
 
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const rowRefs = React.useRef<Map<number, HTMLTableRowElement>>(new Map());
   const pageSize = 10;
 
-  // Pre-compute unique values per filterable column
+  // Suggestions — filtered from dataSource while typing in the trigger input
+  const allSuggestions = React.useMemo(() => {
+    if (!searchText.trim() || !!value) return [];
+    const q = searchText.trim().toLowerCase();
+    return dataSource.filter((item) =>
+      searchKeys.some((key) =>
+        String((item as Record<string, unknown>)[key] ?? "")
+          .toLowerCase()
+          .includes(q),
+      ),
+    );
+  }, [searchText, dataSource, searchKeys, value]);
+
+  const suggestions = allSuggestions.slice(0, 8);
+  const showSuggestions = isTriggerFocused && !value && suggestions.length > 0;
+
   const uniqueColumnValues = React.useMemo(() => {
     const map: Record<string, string[]> = {};
     columns.forEach((col) => {
@@ -305,7 +388,6 @@ export function LookupField<T extends object>({
     return map;
   }, [columns, dataSource]);
 
-  // Build TanStack column defs
   const tanstackColumns = React.useMemo<ColumnDef<T>[]>(() => {
     return columns.map((col) => ({
       id: col.key,
@@ -324,7 +406,6 @@ export function LookupField<T extends object>({
     }));
   }, [columns]);
 
-  // Global search filter applied on top of TanStack
   const globallyFiltered = React.useMemo(() => {
     const q = modalQuery.trim().toLowerCase();
     if (!q) return dataSource;
@@ -356,14 +437,28 @@ export function LookupField<T extends object>({
   const startRow = allRows.length === 0 ? 0 : (page - 1) * pageSize + 1;
   const endRow = Math.min(page * pageSize, allRows.length);
 
-  // Reset page when filters / sort / query change
+  // Reset page + highlight when filters / sort / query change
   React.useEffect(() => {
     setPage(1);
+    setHighlightedIndex(-1);
   }, [modalQuery, sorting, columnFilters]);
+
+  // Reset highlight when page changes
   React.useEffect(() => {
-    if (open) setPage(1);
+    setHighlightedIndex(-1);
+    rowRefs.current.clear();
+  }, [page]);
+
+  // Reset everything when modal opens
+  React.useEffect(() => {
+    if (open) {
+      setPage(1);
+      setHighlightedIndex(-1);
+      rowRefs.current.clear();
+    }
   }, [open]);
 
+  // Focus search input when modal opens
   React.useEffect(() => {
     if (open) {
       const timer = setTimeout(() => inputRef.current?.focus(), 50);
@@ -371,7 +466,24 @@ export function LookupField<T extends object>({
     }
   }, [open]);
 
+  // Auto-scroll highlighted row into view
+  React.useEffect(() => {
+    if (highlightedIndex >= 0) {
+      rowRefs.current.get(highlightedIndex)?.scrollIntoView({
+        block: "nearest",
+        behavior: "smooth",
+      });
+    }
+  }, [highlightedIndex]);
+
+  // Reset suggestion highlight when text changes
+  React.useEffect(() => {
+    setSuggestionIndex(-1);
+  }, [searchText]);
+
   const openModal = React.useCallback(() => {
+    setIsTriggerFocused(false);
+    setSuggestionIndex(-1);
     setModalQuery(searchText.trim());
     setOpen(true);
   }, [searchText]);
@@ -383,6 +495,7 @@ export function LookupField<T extends object>({
     setSorting([]);
     setColumnFilters([]);
     setPage(1);
+    setHighlightedIndex(-1);
     setOpen(false);
   };
 
@@ -394,79 +507,353 @@ export function LookupField<T extends object>({
     setSorting([]);
     setColumnFilters([]);
     setPage(1);
+    setHighlightedIndex(-1);
+  };
+
+  const handleSelectSuggestion = (item: T) => {
+    onSelect(item);
+    setSearchText("");
+    setSuggestionIndex(-1);
+    setIsTriggerFocused(false);
+  };
+
+  // Keyboard navigation inside the modal search input
+  const handleModalKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const lastIdx = paginatedRows.length - 1;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHighlightedIndex((prev) => {
+          if (prev < lastIdx) return prev + 1;
+          // Advance to next page if available
+          if (page < totalPages) {
+            setPage((p) => p + 1);
+            return 0;
+          }
+          return prev;
+        });
+        break;
+
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlightedIndex((prev) => {
+          if (prev > 0) return prev - 1;
+          // Go back to previous page if available
+          if (prev === 0 && page > 1) {
+            setPage((p) => p - 1);
+            return pageSize - 1;
+          }
+          return prev;
+        });
+        break;
+
+      case "Enter":
+        e.preventDefault();
+        if (highlightedIndex >= 0 && paginatedRows[highlightedIndex]) {
+          handleSelect(paginatedRows[highlightedIndex].original);
+        } else if (paginatedRows.length === 1) {
+          // Auto-select when only one result
+          handleSelect(paginatedRows[0].original);
+        }
+        break;
+
+      case "Escape":
+        e.preventDefault();
+        setOpen(false);
+        break;
+
+      case "Home":
+        e.preventDefault();
+        setHighlightedIndex(0);
+        break;
+
+      case "End":
+        e.preventDefault();
+        setHighlightedIndex(lastIdx);
+        break;
+
+      case "PageDown":
+        e.preventDefault();
+        if (page < totalPages) {
+          setPage((p) => p + 1);
+        } else {
+          setHighlightedIndex(lastIdx);
+        }
+        break;
+
+      case "PageUp":
+        e.preventDefault();
+        if (page > 1) {
+          setPage((p) => p - 1);
+        } else {
+          setHighlightedIndex(0);
+        }
+        break;
+    }
   };
 
   const triggerValue = value ? renderDisplay(value) : searchText;
 
   return (
-    <Box minW="0" w="full">
+    <Box minW="0" w="full" position="relative">
       {label && (
         <Text mb={1.5} fontSize="sm" fontWeight="medium" color="gray.600">
           {label}
         </Text>
       )}
 
-      <HStack w="full" gap={0}>
-        <InputGroup
-          flex="1"
-          endElement={
-            value || searchText ? (
-              <IconButton
-                aria-label="Clear"
-                variant="ghost"
-                size="sm"
-                onClick={handleClearSelection}
-              >
-                <X size={14} />
-              </IconButton>
-            ) : undefined
-          }
+      {/* ── Trigger ── */}
+      <HStack
+        w="full"
+        gap={0}
+        border="1.5px solid"
+        borderColor={
+          value ? "var(--chakra-colors-primary-disabled)" : "gray.200"
+        }
+        borderRadius="lg"
+        bg="white"
+        boxShadow="xs"
+        overflow="hidden"
+        transition="border-color 0.15s, box-shadow 0.15s"
+        _hover={{
+          borderColor: value ? "var(--chakra-colors-primary)" : "gray.300",
+          boxShadow: "sm",
+        }}
+        _focusWithin={{
+          borderColor: "var(--chakra-colors-primary)",
+          boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
+        }}
+        minH="10"
+      >
+        <Flex
+          align="center"
+          pl={3}
+          color={value ? "var(--chakra-colors-primary)" : "gray.400"}
+          flexShrink={0}
+          pointerEvents="none"
         >
+          <Search size={14} />
+        </Flex>
+
+        <Box flex={1}>
           <Input
-            borderLeftRadius="sm"
-            borderRightRadius="0"
             value={triggerValue}
             onChange={(e) => {
               if (value) onSelect(null);
               setSearchText(e.target.value);
             }}
+            onFocus={() => setIsTriggerFocused(true)}
+            onBlur={() => {
+              setTimeout(() => {
+                setIsTriggerFocused(false);
+                setSuggestionIndex(-1);
+              }, 150);
+            }}
             onKeyDown={(e) => {
+              if (showSuggestions) {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setSuggestionIndex((p) =>
+                    Math.min(p + 1, suggestions.length - 1),
+                  );
+                  return;
+                }
+                if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setSuggestionIndex((p) => Math.max(p - 1, -1));
+                  return;
+                }
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+                    handleSelectSuggestion(suggestions[suggestionIndex]);
+                  } else {
+                    openModal();
+                  }
+                  return;
+                }
+                if (e.key === "Escape") {
+                  e.preventDefault();
+                  setIsTriggerFocused(false);
+                  setSuggestionIndex(-1);
+                  return;
+                }
+              }
               if (e.key === "Enter") {
                 e.preventDefault();
                 openModal();
               }
             }}
+            onClick={() => {
+              if (value) openModal();
+            }}
             placeholder={placeholder}
-            boxShadow="sm"
-            pr={value || searchText ? "2.5rem" : undefined}
+            readOnly={!!value}
+            cursor={value ? "pointer" : "text"}
+            border="none"
+            bg="transparent"
+            boxShadow="none"
+            borderRadius="0"
+            px={2}
+            fontSize="sm"
+            color={value ? "gray.800" : "gray.700"}
+            fontWeight={value ? "medium" : "normal"}
+            _placeholder={{ color: "gray.400" }}
+            _focus={{ boxShadow: "none", outline: "none" }}
           />
-        </InputGroup>
+        </Box>
 
-        <IconButton
-          aria-label="Open search"
-          variant="outline"
-          size="md"
-          onClick={openModal}
-          borderRightRadius="sm"
-          borderLeftRadius="0"
-          bg="green.700"
-          _hover={{ bg: "green.600" }}
-          boxShadow="sm"
-          color="white"
-        >
-          <Search size={16} />
-        </IconButton>
+        <Flex align="center" pr={2} flexShrink={0}>
+          {value || searchText ? (
+            <IconButton
+              aria-label="Clear selection"
+              variant="ghost"
+              size="xs"
+              borderRadius="full"
+              color="gray.400"
+              _hover={{ bg: "gray.100", color: "gray.600" }}
+              onClick={handleClearSelection}
+            >
+              <X size={12} />
+            </IconButton>
+          ) : (
+            <Box
+              display="flex"
+              alignItems="center"
+              color="gray.300"
+              cursor="pointer"
+              px={1}
+              onClick={openModal}
+            >
+              <ChevronsUpDown size={14} />
+            </Box>
+          )}
+        </Flex>
       </HStack>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Modal                                                               */}
-      {/* ------------------------------------------------------------------ */}
+      {/* ── Suggestions dropdown ── */}
+      <AnimatePresence>
+        {showSuggestions && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.12, ease: "easeOut" }}
+            style={{
+              position: "absolute",
+              top: "calc(100% + 6px)",
+              left: 0,
+              right: 0,
+              zIndex: 1500,
+            }}
+          >
+            <Box
+              bg="white"
+              borderRadius="xl"
+              border="1px solid"
+              borderColor="gray.100"
+              boxShadow="xl"
+              overflow="hidden"
+            >
+              {suggestions.map((item, index) => {
+                const isActive = index === suggestionIndex;
+                return (
+                  <Flex
+                    key={index}
+                    px={4}
+                    py={2.5}
+                    align="center"
+                    gap={3}
+                    cursor="pointer"
+                    bg={
+                      isActive
+                        ? "var(--chakra-colors-primary-disabled)/15"
+                        : "white"
+                    }
+                    borderLeft="3px solid"
+                    borderLeftColor={
+                      isActive ? "var(--chakra-colors-primary)" : "transparent"
+                    }
+                    borderBottomWidth="1px"
+                    borderBottomColor="gray.50"
+                    transition="all 0.08s"
+                    _hover={{
+                      bg: "var(--chakra-colors-primary-disabled)/10",
+                      borderLeftColor: "var(--chakra-colors-primary)",
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelectSuggestion(item);
+                    }}
+                    onMouseEnter={() => setSuggestionIndex(index)}
+                  >
+                    <Box
+                      color={
+                        isActive ? "var(--chakra-colors-primary)" : "gray.300"
+                      }
+                      flexShrink={0}
+                    >
+                      <Search size={12} />
+                    </Box>
+                    <Text
+                      fontSize="sm"
+                      color={
+                        isActive ? "var(--chakra-colors-primary)" : "gray.700"
+                      }
+                      fontWeight={isActive ? "medium" : "normal"}
+                      lineClamp={1}
+                      flex={1}
+                      transition="color 0.08s"
+                    >
+                      {renderDisplay(item)}
+                    </Text>
+                  </Flex>
+                );
+              })}
+
+              {/* "See all" footer when there are more results */}
+              {allSuggestions.length > 8 && (
+                <Flex
+                  px={4}
+                  py={2.5}
+                  borderTopWidth="1px"
+                  borderColor="gray.100"
+                  bg="gray.50"
+                  cursor="pointer"
+                  align="center"
+                  justify="space-between"
+                  _hover={{ bg: "gray.100" }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    openModal();
+                  }}
+                >
+                  <Text
+                    fontSize="xs"
+                    color="var(--chakra-colors-primary)"
+                    fontWeight="medium"
+                  >
+                    See all {allSuggestions.length} results
+                  </Text>
+                  <ChevronRight
+                    size={12}
+                    color="var(--chakra-colors-primary)"
+                  />
+                </Flex>
+              )}
+            </Box>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Modal ── */}
       <Dialog.Root
         open={open}
         onOpenChange={(e) => setOpen(e.open)}
-        placement="center"
+        placement={isFullscreen ? "top" : "center"}
         motionPreset="none"
-        size="xl"
+        size={isFullscreen ? "full" : "xl"}
       >
         <Portal>
           <AnimatePresence>
@@ -477,251 +864,574 @@ export function LookupField<T extends object>({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={{ duration: 0.15 }}
+                    style={{
+                      position: "fixed",
+                      inset: 0,
+                      background: "rgba(15, 23, 42, 0.45)",
+                      backdropFilter: "blur(3px)",
+                    }}
                   />
                 </Dialog.Backdrop>
 
                 <Dialog.Positioner asChild>
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                    initial={{
+                      opacity: 0,
+                      scale: isFullscreen ? 1 : 0.96,
+                      y: isFullscreen ? 16 : 0,
+                    }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{
+                      opacity: 0,
+                      scale: isFullscreen ? 1 : 0.96,
+                      y: isFullscreen ? 16 : 0,
+                    }}
                     transition={springTransition}
-                    style={{ width: "100%", padding: "1rem" }}
+                    style={{
+                      width: "100%",
+                      padding: isFullscreen ? "0" : "1rem",
+                    }}
                   >
                     <Dialog.Content
-                      maxW="2xl"
+                      maxW={isFullscreen ? "100vw" : "2xl"}
                       w="full"
-                      maxH="80vh"
-                      borderRadius="2xl"
+                      h={isFullscreen ? "100dvh" : "auto"}
+                      maxH={isFullscreen ? "100dvh" : "80vh"}
+                      borderRadius={isFullscreen ? "0" : "2xl"}
                       overflow="hidden"
+                      boxShadow="2xl"
+                      bg="white"
                     >
+                      {/* Header */}
                       <Dialog.Header
-                        px={6}
-                        py={5}
+                        px={5}
+                        py={4}
                         borderBottomWidth="1px"
-                        w="full"
+                        borderColor="gray.100"
+                        bg="white"
                       >
-                        <HStack justify="space-between" w="full">
-                          <Dialog.Title fontSize="xl" fontWeight="semibold">
+                        <HStack gap={3} flex={1} minW={0}>
+                          <Box
+                            p={2}
+                            bg="var(--chakra-colors-primary-disabled)/20"
+                            borderRadius="lg"
+                            flexShrink={0}
+                          >
+                            <Search
+                              size={15}
+                              color="var(--chakra-colors-primary)"
+                            />
+                          </Box>
+                          <Dialog.Title
+                            fontSize="md"
+                            fontWeight="semibold"
+                            color="gray.800"
+                            lineClamp={1}
+                          >
                             {modalTitle}
                           </Dialog.Title>
-                          <Dialog.CloseTrigger asChild>
-                            <CloseButton
-                              position="absolute"
-                              top={3}
-                              right={3}
-                              aria-label="Close"
-                            />
-                          </Dialog.CloseTrigger>
                         </HStack>
+                        <Dialog.CloseTrigger asChild>
+                          <IconButton
+                            aria-label="Close"
+                            variant="ghost"
+                            size="sm"
+                            borderRadius="full"
+                            position="absolute"
+                            top={3}
+                            right={3}
+                            color="gray.400"
+                            _hover={{ bg: "gray.100", color: "gray.700" }}
+                          >
+                            <X size={15} />
+                          </IconButton>
+                        </Dialog.CloseTrigger>
                       </Dialog.Header>
 
-                      <Dialog.Body p={0}>
-                        {/* Global search */}
-                        <Box px={6} py={4}>
-                          <InputGroup
-                            startElement={<Search size={16} />}
-                            endElement={
-                              modalQuery ? (
-                                <IconButton
-                                  aria-label="Clear search"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setModalQuery("")}
-                                >
-                                  <X size={14} />
-                                </IconButton>
-                              ) : undefined
-                            }
-                          >
-                            <Input
-                              ref={inputRef}
-                              value={modalQuery}
-                              onChange={(e) => setModalQuery(e.target.value)}
-                              placeholder={placeholder}
-                              borderRadius="md"
-                              boxShadow="sm"
-                              pr={modalQuery ? "2.5rem" : undefined}
-                            />
-                          </InputGroup>
-                        </Box>
-
-                        {/* Table */}
-                        <Box
-                          px={6}
-                          overflowY="auto"
-                          overflowX="auto"
-                          maxH="calc(80vh - 140px)"
+                      {/* Search toolbar */}
+                      <Box
+                        px={5}
+                        py={3}
+                        bg="gray.50"
+                        borderBottomWidth="1px"
+                        borderColor="gray.100"
+                      >
+                        <InputGroup
+                          startElement={
+                            <Box
+                              color="gray.400"
+                              display="flex"
+                              alignItems="center"
+                            >
+                              <Search size={14} />
+                            </Box>
+                          }
+                          endElement={
+                            modalQuery ? (
+                              <IconButton
+                                aria-label="Clear search"
+                                variant="ghost"
+                                size="xs"
+                                borderRadius="full"
+                                color="gray.400"
+                                _hover={{ bg: "gray.200" }}
+                                onClick={() => setModalQuery("")}
+                              >
+                                <X size={12} />
+                              </IconButton>
+                            ) : undefined
+                          }
                         >
-                          <Table.Root size="sm" width="max-content" minW="full">
-                            <Table.Header position="sticky" top={0} zIndex={1}>
-                              {table.getHeaderGroups().map((hg) => (
-                                <Table.Row key={hg.id}>
-                                  {hg.headers.map((header) => {
-                                    const col = columns.find(
-                                      (c) => c.key === header.id,
-                                    );
-                                    const canSort = header.column.getCanSort();
-                                    const sortDir = header.column.getIsSorted();
-                                    const filterVal =
-                                      (header.column.getFilterValue() as string[]) ?? [
-                                        "ALL",
-                                      ];
+                          <Input
+                            ref={inputRef}
+                            value={modalQuery}
+                            onChange={(e) => setModalQuery(e.target.value)}
+                            onKeyDown={handleModalKeyDown}
+                            placeholder={placeholder}
+                            borderRadius="lg"
+                            bg="white"
+                            borderColor="gray.200"
+                            fontSize="sm"
+                            _focus={{
+                              borderColor: "var(--chakra-colors-primary)",
+                              boxShadow:
+                                "0 0 0 3px var(--chakra-colors-primary-disabled)",
+                            }}
+                            pr={modalQuery ? "2.5rem" : undefined}
+                          />
+                        </InputGroup>
+                      </Box>
 
-                                    return (
-                                      <Table.ColumnHeader
-                                        key={header.id}
-                                        p={4}
-                                        textAlign="left"
-                                        fontSize="xs"
-                                        fontWeight="medium"
-                                        color="gray.500"
-                                        textTransform="uppercase"
-                                        letterSpacing="wide"
-                                        whiteSpace="nowrap"
-                                        bg="white"
-                                      >
-                                        <HStack gap={1.5} align="center">
-                                          {/* Sort trigger */}
+                      {/* Table */}
+                      <Dialog.Body p={0}>
+                        <Box
+                          overflowY="auto"
+                          overflowX={isMobile ? "hidden" : "auto"}
+                          maxH={
+                            isFullscreen
+                              ? "calc(100dvh - 220px)"
+                              : "calc(80vh - 220px)"
+                          }
+                        >
+                          {/* ── Empty state (shared) ── */}
+                          {paginatedRows.length === 0 && (
+                            <Flex
+                              direction="column"
+                              align="center"
+                              justify="center"
+                              gap={2}
+                              py={14}
+                            >
+                              <Box
+                                p={3}
+                                borderRadius="full"
+                                bg="gray.100"
+                                color="gray.400"
+                              >
+                                <Search size={22} />
+                              </Box>
+                              <Text
+                                fontSize="sm"
+                                fontWeight="medium"
+                                color="gray.500"
+                              >
+                                No results found
+                              </Text>
+                              <Text fontSize="xs" color="gray.400">
+                                Try a different search term
+                              </Text>
+                            </Flex>
+                          )}
+
+                          {/* ── Mobile: card list ── */}
+                          {isMobile && paginatedRows.length > 0 && (
+                            <Flex direction="column" gap={2} p={3}>
+                              {paginatedRows.map((row, index) => {
+                                const isHighlighted =
+                                  index === highlightedIndex;
+                                const cells = row.getVisibleCells();
+                                return (
+                                  <Box
+                                    key={row.id}
+                                    ref={(el: any) => {
+                                      if (el)
+                                        rowRefs.current.set(
+                                          index,
+                                          el as HTMLTableRowElement,
+                                        );
+                                      else rowRefs.current.delete(index);
+                                    }}
+                                    borderRadius="xl"
+                                    borderWidth="1.5px"
+                                    borderColor={
+                                      isHighlighted
+                                        ? "var(--chakra-colors-primary-disabled)"
+                                        : "gray.100"
+                                    }
+                                    borderLeftWidth="3px"
+                                    borderLeftColor={
+                                      isHighlighted
+                                        ? "var(--chakra-colors-primary)"
+                                        : "gray.100"
+                                    }
+                                    bg={
+                                      isHighlighted
+                                        ? "var(--chakra-colors-primary-disabled)/15"
+                                        : "white"
+                                    }
+                                    boxShadow="sm"
+                                    px={4}
+                                    py={3}
+                                    cursor="pointer"
+                                    transition="all 0.1s"
+                                    _active={{ transform: "scale(0.99)" }}
+                                    _hover={{
+                                      borderLeftColor:
+                                        "var(--chakra-colors-primary)",
+                                      bg: "var(--chakra-colors-primary-disabled)/10",
+                                    }}
+                                    onClick={() => handleSelect(row.original)}
+                                    onMouseEnter={() =>
+                                      setHighlightedIndex(index)
+                                    }
+                                  >
+                                    {/* First cell as card title */}
+                                    <Text
+                                      fontSize="sm"
+                                      fontWeight="semibold"
+                                      color={
+                                        isHighlighted
+                                          ? "var(--chakra-colors-primary)"
+                                          : "gray.800"
+                                      }
+                                      mb={2}
+                                      lineClamp={1}
+                                    >
+                                      {flexRender(
+                                        cells[0].column.columnDef.cell,
+                                        cells[0].getContext(),
+                                      )}
+                                    </Text>
+
+                                    {/* Remaining cells as label–value rows */}
+                                    <Flex direction="column" gap={1}>
+                                      {cells.slice(1).map((cell) => {
+                                        const col = columns.find(
+                                          (c) => c.key === cell.column.id,
+                                        );
+                                        return (
                                           <HStack
-                                            gap={1}
-                                            cursor={
-                                              canSort ? "pointer" : "default"
-                                            }
-                                            userSelect="none"
-                                            onClick={
-                                              canSort
-                                                ? header.column.getToggleSortingHandler()
-                                                : undefined
-                                            }
-                                            _hover={
-                                              canSort
-                                                ? { color: "gray.700" }
-                                                : undefined
-                                            }
+                                            key={cell.id}
+                                            gap={2}
+                                            align="baseline"
                                           >
-                                            <Text as="span">
+                                            <Text
+                                              fontSize="xs"
+                                              color="gray.400"
+                                              flexShrink={0}
+                                              w="80px"
+                                            >
+                                              {col?.header}
+                                            </Text>
+                                            <Text
+                                              fontSize="xs"
+                                              color={
+                                                isHighlighted
+                                                  ? "var(--chakra-colors-primary)"
+                                                  : "gray.600"
+                                              }
+                                              lineClamp={1}
+                                            >
                                               {flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext(),
+                                                cell.column.columnDef.cell,
+                                                cell.getContext(),
                                               )}
                                             </Text>
-                                            {canSort && (
-                                              <SortIcon direction={sortDir} />
+                                          </HStack>
+                                        );
+                                      })}
+                                    </Flex>
+                                  </Box>
+                                );
+                              })}
+                            </Flex>
+                          )}
+
+                          {/* ── Desktop: table ── */}
+                          {!isMobile && (
+                            <Table.Root
+                              size="sm"
+                              width="max-content"
+                              minW="full"
+                            >
+                              <Table.Header
+                                position="sticky"
+                                top={0}
+                                zIndex={1}
+                              >
+                                {table.getHeaderGroups().map((hg) => (
+                                  <Table.Row
+                                    key={hg.id}
+                                    bg="white"
+                                    borderBottomWidth="2px"
+                                    borderColor="gray.100"
+                                  >
+                                    {hg.headers.map((header) => {
+                                      const col = columns.find(
+                                        (c) => c.key === header.id,
+                                      );
+                                      const canSort =
+                                        header.column.getCanSort();
+                                      const sortDir =
+                                        header.column.getIsSorted();
+                                      const filterVal =
+                                        (header.column.getFilterValue() as string[]) ?? [
+                                          "ALL",
+                                        ];
+
+                                      return (
+                                        <Table.ColumnHeader
+                                          key={header.id}
+                                          px={4}
+                                          py={3}
+                                          textAlign="left"
+                                          fontSize="xs"
+                                          fontWeight="semibold"
+                                          color="gray.400"
+                                          textTransform="uppercase"
+                                          letterSpacing="wider"
+                                          whiteSpace="nowrap"
+                                          bg="white"
+                                        >
+                                          <HStack gap={1.5} align="center">
+                                            <HStack
+                                              gap={1}
+                                              cursor={
+                                                canSort ? "pointer" : "default"
+                                              }
+                                              userSelect="none"
+                                              onClick={
+                                                canSort
+                                                  ? header.column.getToggleSortingHandler()
+                                                  : undefined
+                                              }
+                                              _hover={
+                                                canSort
+                                                  ? { color: "gray.600" }
+                                                  : undefined
+                                              }
+                                              transition="color 0.1s"
+                                            >
+                                              <Text as="span">
+                                                {flexRender(
+                                                  header.column.columnDef
+                                                    .header,
+                                                  header.getContext(),
+                                                )}
+                                              </Text>
+                                              {canSort && (
+                                                <SortIcon direction={sortDir} />
+                                              )}
+                                            </HStack>
+
+                                            {col?.enableColumnFilter && (
+                                              <ColumnFilterDropdown
+                                                columnId={header.id}
+                                                allValues={
+                                                  uniqueColumnValues[
+                                                    header.id
+                                                  ] ?? []
+                                                }
+                                                filterValue={filterVal}
+                                                onChange={(next) =>
+                                                  header.column.setFilterValue(
+                                                    next,
+                                                  )
+                                                }
+                                              />
                                             )}
                                           </HStack>
+                                        </Table.ColumnHeader>
+                                      );
+                                    })}
+                                  </Table.Row>
+                                ))}
+                              </Table.Header>
 
-                                          {/* Column filter dropdown */}
-                                          {col?.enableColumnFilter && (
-                                            <ColumnFilterDropdown
-                                              columnId={header.id}
-                                              allValues={
-                                                uniqueColumnValues[header.id] ??
-                                                []
-                                              }
-                                              filterValue={filterVal}
-                                              onChange={(next) =>
-                                                header.column.setFilterValue(
-                                                  next,
-                                                )
-                                              }
-                                            />
-                                          )}
-                                        </HStack>
-                                      </Table.ColumnHeader>
+                              <Table.Body>
+                                {paginatedRows.length > 0 &&
+                                  paginatedRows.map((row, index) => {
+                                    const isHighlighted =
+                                      index === highlightedIndex;
+                                    return (
+                                      <Table.Row
+                                        key={row.id}
+                                        ref={(el) => {
+                                          if (el)
+                                            rowRefs.current.set(
+                                              index,
+                                              el as HTMLTableRowElement,
+                                            );
+                                          else rowRefs.current.delete(index);
+                                        }}
+                                        cursor="pointer"
+                                        bg={
+                                          isHighlighted
+                                            ? "var(--chakra-colors-primary-disabled)/20"
+                                            : undefined
+                                        }
+                                        borderLeft={
+                                          isHighlighted
+                                            ? "3px solid"
+                                            : "3px solid transparent"
+                                        }
+                                        borderLeftColor={
+                                          isHighlighted
+                                            ? "var(--chakra-colors-primary)"
+                                            : "transparent"
+                                        }
+                                        transition="background-color 0.08s"
+                                        _hover={{
+                                          bg: isHighlighted
+                                            ? "var(--chakra-colors-primary-disabled)/25"
+                                            : "var(--chakra-colors-primary-disabled)/10",
+                                        }}
+                                        onClick={() =>
+                                          handleSelect(row.original)
+                                        }
+                                        onMouseEnter={() =>
+                                          setHighlightedIndex(index)
+                                        }
+                                        borderBottomWidth="1px"
+                                        borderColor="gray.50"
+                                      >
+                                        {row.getVisibleCells().map((cell) => (
+                                          <Table.Cell
+                                            key={cell.id}
+                                            px={4}
+                                            py={3}
+                                            textAlign="left"
+                                            fontSize="sm"
+                                            color={
+                                              isHighlighted
+                                                ? "var(--chakra-colors-primary)"
+                                                : "gray.700"
+                                            }
+                                            fontWeight={
+                                              isHighlighted
+                                                ? "medium"
+                                                : "normal"
+                                            }
+                                            whiteSpace="nowrap"
+                                            transition="color 0.08s"
+                                          >
+                                            {flexRender(
+                                              cell.column.columnDef.cell,
+                                              cell.getContext(),
+                                            )}
+                                          </Table.Cell>
+                                        ))}
+                                      </Table.Row>
                                     );
                                   })}
-                                </Table.Row>
-                              ))}
-                            </Table.Header>
+                              </Table.Body>
+                            </Table.Root>
+                          )}
+                        </Box>
 
-                            <Table.Body>
-                              {paginatedRows.length === 0 ? (
-                                <Table.Row>
-                                  <Table.Cell
-                                    colSpan={columns.length}
-                                    p={10}
-                                    textAlign="center"
-                                    fontSize="sm"
-                                    color="gray.500"
-                                  >
-                                    No results found
-                                  </Table.Cell>
-                                </Table.Row>
-                              ) : (
-                                paginatedRows.map((row) => (
-                                  <Table.Row
-                                    key={row.id}
-                                    cursor="pointer"
-                                    transition="background-color 0.15s"
-                                    _hover={{ bg: "gray.50" }}
-                                    onClick={() => handleSelect(row.original)}
-                                  >
-                                    {row.getVisibleCells().map((cell) => (
-                                      <Table.Cell
-                                        key={cell.id}
-                                        p={4}
-                                        textAlign="left"
-                                        fontSize="sm"
-                                        color="gray.800"
-                                        whiteSpace="nowrap"
-                                      >
-                                        {flexRender(
-                                          cell.column.columnDef.cell,
-                                          cell.getContext(),
-                                        )}
-                                      </Table.Cell>
-                                    ))}
-                                  </Table.Row>
-                                ))
-                              )}
-                            </Table.Body>
-                          </Table.Root>
+                        {/* Shortcut hints + Pagination */}
+                        <Box
+                          borderTopWidth="1px"
+                          borderColor="gray.100"
+                          bg="gray.50"
+                        >
+                          {/* Shortcut bar */}
+                          <HStack
+                            px={5}
+                            py={2}
+                            gap={4}
+                            borderBottomWidth="1px"
+                            borderColor="gray.100"
+                            flexWrap="wrap"
+                          >
+                            <ShortcutHint keys={["↑", "↓"]} label="Navigate" />
+                            <ShortcutHint
+                              keys={[<CornerDownLeft key="enter" size={10} />]}
+                              label="Select"
+                            />
+                            <ShortcutHint keys={["Esc"]} label="Close" />
+                            <ShortcutHint
+                              keys={["PgDn", "PgUp"]}
+                              label="Page"
+                            />
+                            <ShortcutHint keys={["Home", "End"]} label="Jump" />
+                          </HStack>
 
                           {/* Pagination */}
                           {allRows.length > 0 && (
                             <HStack
                               justify="space-between"
                               align="center"
-                              position="sticky"
-                              bottom={0}
-                              bg="white"
-                              pt={4}
-                              pb={5}
-                              px={4}
+                              px={5}
+                              py={3}
                             >
-                              <Text fontSize="sm" color="gray.500">
-                                {startRow}–{endRow} of {allRows.length}
+                              <Text fontSize="xs" color="gray.400">
+                                {startRow}–{endRow}{" "}
+                                <Text as="span" color="gray.300">
+                                  of
+                                </Text>{" "}
+                                {allRows.length} results
                               </Text>
 
-                              <HStack gap={2}>
+                              <HStack gap={1}>
                                 <IconButton
                                   aria-label="Previous page"
                                   size="sm"
-                                  variant="outline"
+                                  variant="ghost"
+                                  borderRadius="full"
+                                  color="gray.500"
+                                  _hover={{ bg: "gray.200" }}
                                   onClick={() =>
                                     setPage((p) => Math.max(1, p - 1))
                                   }
                                   disabled={page === 1}
                                 >
-                                  <ChevronLeft size={16} />
+                                  <ChevronLeft size={15} />
                                 </IconButton>
 
-                                <Text fontSize="sm" color="gray.600">
-                                  {page} / {totalPages}
-                                </Text>
+                                <Box
+                                  px={3}
+                                  py={1}
+                                  borderRadius="full"
+                                  bg="white"
+                                  border="1px solid"
+                                  borderColor="gray.200"
+                                  minW="60px"
+                                  textAlign="center"
+                                >
+                                  <Text
+                                    fontSize="xs"
+                                    fontWeight="medium"
+                                    color="gray.600"
+                                  >
+                                    {page} / {totalPages}
+                                  </Text>
+                                </Box>
 
                                 <IconButton
                                   aria-label="Next page"
                                   size="sm"
-                                  variant="outline"
+                                  variant="ghost"
+                                  borderRadius="full"
+                                  color="gray.500"
+                                  _hover={{ bg: "gray.200" }}
                                   onClick={() =>
                                     setPage((p) => Math.min(totalPages, p + 1))
                                   }
                                   disabled={page === totalPages}
                                 >
-                                  <ChevronRight size={16} />
+                                  <ChevronRight size={15} />
                                 </IconButton>
                               </HStack>
                             </HStack>

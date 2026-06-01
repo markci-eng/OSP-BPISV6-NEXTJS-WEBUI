@@ -1,9 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, HStack, Text } from "@chakra-ui/react";
 import React from "react";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import { DISPLAY_STATUS_STYLES } from "@/lib/theme/status-display-tokens";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
 
 export type AccountList = {
   LPANo: string;
@@ -214,47 +212,18 @@ const columns: ColumnDef<AccountList>[] = [
     accessorKey: "AccountStatus",
     header: "Account Status",
     enableColumnFilter: true,
-    cell: (info) => {
-      const status = info.getValue<string>();
-      const style =
-        status === "Active"
-          ? DISPLAY_STATUS_STYLES.approved
-          : status === "Pending"
-            ? DISPLAY_STATUS_STYLES.pending
-            : status === "Closed"
-              ? DISPLAY_STATUS_STYLES.denied
-              : DISPLAY_STATUS_STYLES.fallback;
-
-      return (
-        <Box
-          as="span"
-          display="inline-flex"
-          alignItems="center"
-          px={2}
-          py={1}
-          borderRadius={STANDARD_RADIUS.sm}
-          bg={style.bg}
-          color={style.color}
-          border={`${style.borderWidth} solid ${style.borderColor}`}
-          fontSize="xs"
-          fontWeight={style.fontWeight}
-          lineHeight="1"
-        >
-          {status}
-        </Box>
-      );
-    },
+    cell: (info) => <Text>{info.getValue<string>()}</Text>,
   },
 ];
 
 export default function TransferAccountList() {
   return (
-    <Box py={{ base: 2, md: 3 }} color="black" minW={0}>
+    <Box py={{ base: 2, sm: 4 }} color="black">
       <DataTable
         columns={columns}
         data={accountListData}
         title="Account List"
-        description="Select the accounts to include in the transfer request."
+        description=""
         size="sm"
         features={{
           search: true,

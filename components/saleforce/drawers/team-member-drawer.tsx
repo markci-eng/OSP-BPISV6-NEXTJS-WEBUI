@@ -1,17 +1,22 @@
 "use client";
 
-import { Box, Flex, Grid, Text, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Grid,
+  Separator,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import { Body, Small } from "st-peter-ui";
 import {
   SalesAgent,
   getAgentNameById,
   getPositionDesc,
 } from "../../common/agent-lookup/agent-lookup.type";
-import { LuBriefcase, LuCalendar, LuIdCard, LuUsers } from "react-icons/lu";
+import { LuIdCard, LuCalendar, LuUsers, LuBriefcase } from "react-icons/lu";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
 import Drawer from "@/components/drawers/Drawer";
-import ProfileSectionCard from "@/components/saleforce/components/profile-section-card";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 
 interface TeamMemberDrawerProps {
   agent: SalesAgent | null;
@@ -28,13 +33,13 @@ const DetailRow = ({
   label: string;
   value: string;
 }) => (
-  <Flex align="start" gap={3} minW={0}>
-    <Box color={BRAND_COLORS.primaryGreen} pt={1}>
+  <Flex align="start" gap={3}>
+    <Box color="var(--chakra-colors-primary)" pt={1}>
       {icon}
     </Box>
-    <VStack align="start" gap={0} minW={0}>
+    <VStack align="start" gap={0}>
       <Small color="gray.500">{label}</Small>
-      <Body color={BRAND_COLORS.neutralText}>{value}</Body>
+      <Body>{value}</Body>
     </VStack>
   </Flex>
 );
@@ -51,11 +56,28 @@ export function TeamMemberDrawer({
       onOpenChange={onOpenChange}
     >
       {agent ? (
-        <Flex direction="column" gap={{ base: 4, md: 5 }} pt={2}>
+        <Flex direction="column" gap={6} pt={2}>
           <AgentProfileHeaderCard agent={agent} />
 
-          <ProfileSectionCard title="Basic Information">
-            <Grid templateColumns={{ base: "1fr", sm: "1fr 1fr" }} gap={4}>
+          <Box
+            p={4}
+            borderRadius="md"
+            borderWidth={1}
+            borderColor="gray.200"
+          >
+            <Text
+              fontSize="sm"
+              fontWeight="bold"
+              color="var(--chakra-colors-primary)"
+              mb={2}
+            >
+              Basic Information
+            </Text>
+            <Separator mb={4} />
+            <Grid
+              templateColumns={{ base: "1fr", sm: "1fr 1fr" }}
+              gap={4}
+            >
               <DetailRow
                 icon={<LuIdCard size={16} />}
                 label="Agent ID"
@@ -74,32 +96,43 @@ export function TeamMemberDrawer({
               <DetailRow
                 icon={<LuUsers size={16} />}
                 label="Superior"
-                value={getAgentNameById(agent.superiorId ?? "") ?? "-"}
+                value={getAgentNameById(agent.superiorId ?? "") ?? "—"}
               />
             </Grid>
-          </ProfileSectionCard>
+          </Box>
 
-          <ProfileSectionCard title="Document Status">
-            <Grid templateColumns={{ base: "1fr", sm: "1fr 1fr" }} gap={4}>
+          <Box
+            p={4}
+            borderRadius="md"
+            borderWidth={1}
+            borderColor="gray.200"
+          >
+            <Text
+              fontSize="sm"
+              fontWeight="bold"
+              color="var(--chakra-colors-primary)"
+              mb={2}
+            >
+              Document Status
+            </Text>
+            <Separator mb={4} />
+            <Grid
+              templateColumns={{ base: "1fr", sm: "1fr 1fr" }}
+              gap={4}
+            >
               <VStack align="start" gap={0}>
                 <Small color="gray.500">Contract Printed</Small>
-                <Body color={BRAND_COLORS.neutralText}>
-                  {agent.isContractPrinted ? "Yes" : "No"}
-                </Body>
+                <Body>{agent.isContractPrinted ? "Yes" : "No"}</Body>
               </VStack>
               <VStack align="start" gap={0}>
                 <Small color="gray.500">SFID Printed</Small>
-                <Body color={BRAND_COLORS.neutralText}>
-                  {agent.isSFIDPrinted ? "Yes" : "No"}
-                </Body>
+                <Body>{agent.isSFIDPrinted ? "Yes" : "No"}</Body>
               </VStack>
             </Grid>
-          </ProfileSectionCard>
+          </Box>
         </Flex>
       ) : (
-        <Text color="gray.500" py={4}>
-          No agent selected.
-        </Text>
+        <Text color="gray.500">No agent selected.</Text>
       )}
     </Drawer>
   );

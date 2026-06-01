@@ -63,7 +63,7 @@ const Title = ({ title, subtitle, bg, color }: SummaryTitleProps) => (
     <Flex>
       <Flex flexDir="column" gap={1} width="full">
         <FormTitle label={title} />
-        <Caption value={subtitle ?? ""} />
+        <Caption>{subtitle ?? ""}</Caption>
       </Flex>
     </Flex>
   </Box>

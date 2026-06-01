@@ -1,16 +1,15 @@
 "use client";
 
-import { Badge, Box, Flex, Separator, Text, VStack } from "@chakra-ui/react";
+import { Box, Flex, Separator, Text, VStack } from "@chakra-ui/react";
 import { Body, Small } from "st-peter-ui";
+import { OSPBadge } from "../../common/badge/badge";
 import {
   LuFileCheck,
-  LuFileText,
   LuReplace,
   LuTrendingUpDown,
+  LuFileText,
 } from "react-icons/lu";
 import Drawer from "@/components/drawers/Drawer";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
 
 export interface RequestHistoryItem {
   type: "Contract Renewal" | "Movement" | "Re-Assignment";
@@ -22,7 +21,7 @@ export interface RequestHistoryItem {
 export const mockRequestHistory: RequestHistoryItem[] = [
   {
     type: "Contract Renewal",
-    description: "Approved - contract extended for 12 months.",
+    description: "Approved — contract extended for 12 months.",
     transactionId: "CR-202-5821",
     date: "2025-12-18",
   },
@@ -40,7 +39,7 @@ export const mockRequestHistory: RequestHistoryItem[] = [
   },
   {
     type: "Contract Renewal",
-    description: "Approved - contract extended for 12 months.",
+    description: "Approved — contract extended for 12 months.",
     transactionId: "CR-202-3910",
     date: "2024-12-20",
   },
@@ -79,31 +78,20 @@ export function RequestHistoryDrawer({
   return (
     <Drawer title="Request History" open={open} onOpenChange={onOpenChange}>
       {items.length === 0 ? (
-        <Flex
-          direction="column"
-          align="center"
-          gap={2}
-          py={8}
-          px={4}
-          color="gray.500"
-          textAlign="center"
-        >
-          <LuFileText size={28} />
-          <Text>No history to show.</Text>
-        </Flex>
+        <Text color="gray.500" py={4}>
+          No history to show.
+        </Text>
       ) : (
         <VStack align="stretch" gap={0} py={2}>
           {items.map((item, idx) => (
             <Box key={item.transactionId}>
               <Flex gap={3} py={3} align="start">
                 <Flex
-                  w="32px"
-                  h="32px"
-                  borderRadius={STANDARD_RADIUS.full}
-                  bg={BRAND_COLORS.successBg}
-                  color={BRAND_COLORS.primaryGreen}
-                  borderWidth="1px"
-                  borderColor={BRAND_COLORS.softGreen}
+                  w={8}
+                  h={8}
+                  borderRadius="full"
+                  bg="var(--chakra-colors-primary-disabled)"
+                  color="var(--chakra-colors-primary)"
                   align="center"
                   justify="center"
                   flexShrink={0}
@@ -119,7 +107,7 @@ export function RequestHistoryDrawer({
                   >
                     <Text
                       fontWeight="semibold"
-                      color={BRAND_COLORS.neutralText}
+                      color="gray.700"
                       fontSize="sm"
                     >
                       {item.type}
@@ -127,17 +115,9 @@ export function RequestHistoryDrawer({
                     <Small color="gray.500">{item.date}</Small>
                   </Flex>
                   <Body color="gray.600">{item.description}</Body>
-                  <Badge
-                    mt={2}
-                    bg={BRAND_COLORS.subtleBg}
-                    color={BRAND_COLORS.neutralText}
-                    borderColor={BRAND_COLORS.neutralBorder}
-                    borderWidth="1px"
-                    borderRadius={STANDARD_RADIUS.full}
-                    px={2}
-                  >
-                    # {item.transactionId}
-                  </Badge>
+                  <Box mt={1}>
+                    <OSPBadge type="info"># {item.transactionId}</OSPBadge>
+                  </Box>
                 </Box>
               </Flex>
               {idx < items.length - 1 && <Separator />}

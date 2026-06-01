@@ -18,12 +18,6 @@ import { Checkbox } from "@chakra-ui/react";
 import { Columns3, Search, X } from "lucide-react";
 import { H4 } from "st-peter-ui";
 import { DataTableFeatures, HeaderButton } from "../types";
-import {
-  STANDARD_BUTTON_STYLES,
-  STANDARD_ICON_BUTTON_STYLES,
-  STANDARD_RADIUS,
-  STANDARD_SIZES,
-} from "@/lib/theme/standard-design-tokens";
 
 type DataTableToolbarProps<TData> = {
   table: TanStackTable<TData>;
@@ -39,6 +33,8 @@ type DataTableToolbarProps<TData> = {
 
   headerButton?: HeaderButton;
   headerActions?: React.ReactNode;
+
+  top?: string | number;
 };
 
 export function DataTableToolbar<TData>({
@@ -51,9 +47,17 @@ export function DataTableToolbar<TData>({
   setGlobalFilter,
   headerButton,
   headerActions,
+  top = "var(--sticky-header-h, 0px)",
 }: DataTableToolbarProps<TData>) {
   return (
-    <Box p={{ base: 4, md: 5 }} borderBottomWidth="1px" bg="white">
+    <Box
+      position="sticky"
+      top={top}
+      zIndex={3}
+      p={{ base: 4, md: 5 }}
+      borderBottomWidth="1px"
+      bg="white"
+    >
       <Grid
         templateColumns={{
           base: "1fr",
@@ -65,7 +69,9 @@ export function DataTableToolbar<TData>({
         gap={4}
       >
         <Box minW={0} w="full">
-          {title || description ? (
+          {headerContent ? (
+            headerContent
+          ) : (
             <>
               {title && (typeof title === "string" ? <H4>{title}</H4> : title)}
 
@@ -77,11 +83,7 @@ export function DataTableToolbar<TData>({
                 ) : (
                   description
                 ))}
-
-              {headerContent && <Box mt={3}>{headerContent}</Box>}
             </>
-          ) : (
-            headerContent
           )}
         </Box>
 
@@ -97,9 +99,9 @@ export function DataTableToolbar<TData>({
           {features.search && (
             <Box
               position="relative"
-              flex={{ base: "none", md: "1 1 240px" }}
-              minW={{ base: "full", md: "240px" }}
-              maxW={{ base: "full", md: "320px" }}
+              flex={{ base: "none", md: "1 1 220px" }}
+              minW={{ base: "full", md: "200px" }}
+              maxW={{ base: "full", md: "340px" }}
               w="full"
             >
               <Box
@@ -122,11 +124,10 @@ export function DataTableToolbar<TData>({
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 ps="34px"
                 pe="34px"
-                h={STANDARD_SIZES.searchInput.height}
+                h="36px"
                 w="full"
                 fontSize="sm"
                 bg="white"
-                borderRadius={STANDARD_RADIUS.md}
               />
 
               {globalFilter && (
@@ -134,7 +135,6 @@ export function DataTableToolbar<TData>({
                   aria-label="Clear search"
                   variant="ghost"
                   size="xs"
-                  {...STANDARD_ICON_BUTTON_STYLES.sm}
                   position="absolute"
                   right="6px"
                   top="50%"
@@ -153,7 +153,7 @@ export function DataTableToolbar<TData>({
                 <Button
                   variant="outline"
                   size="sm"
-                  {...STANDARD_BUTTON_STYLES.md}
+                  h="36px"
                   flexShrink={0}
                   display={{ base: "none", md: "inline-flex" }}
                 >
@@ -201,7 +201,7 @@ export function DataTableToolbar<TData>({
             <Button
               variant="solid"
               size="sm"
-              {...STANDARD_BUTTON_STYLES.md}
+              h="36px"
               flexShrink={0}
               w={{ base: "full", md: "auto" }}
               onClick={headerButton.onClick}

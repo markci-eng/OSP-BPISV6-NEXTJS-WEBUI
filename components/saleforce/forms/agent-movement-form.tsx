@@ -119,10 +119,10 @@ export function AgentMovementForm({
         <Flex align="center" gap={2}>
           <FormTitle label="Agent Movement" />
         </Flex>
-        <Caption
-          value="Submit a promotion, demotion, or lateral movement request for this
-          sales agent. The request will be subject to approval."
-        />
+        <Caption>
+          Submit a promotion, demotion, or lateral movement request for this
+          sales agent. The request will be subject to approval.
+        </Caption>
       </Flex>
 
       <Flex gap={6} alignItems="start" direction="column">
@@ -133,10 +133,10 @@ export function AgentMovementForm({
             <Flex direction="column" gap={6}>
               <Flex direction="column" gap={2}>
                 <SectionTitle>Select New Position</SectionTitle>
-                <Caption
-                  value="Pick a target position. The system will determine whether the
-                  movement is a promotion or a demotion."
-                />
+                <Caption>
+                  Pick a target position. The system will determine whether the
+                  movement is a promotion or a demotion.
+                </Caption>
 
                 <Box w={{ base: "full", sm: "320px" }}>
                   <SelectFloatingLabel

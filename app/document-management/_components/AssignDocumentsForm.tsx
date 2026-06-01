@@ -9,14 +9,12 @@ import {
   Field,
   Flex,
   Grid,
+  Input,
 } from "@chakra-ui/react";
 import { DocumentType } from "@/data/doc-management/documenttype";
 import { Employee } from "@/data/doc-management/employeeSelector";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { FORM_LAYOUT } from "@/lib/theme/layout-tokens";
-import { STANDARD_BUTTON_STYLES } from "@/lib/theme/standard-design-tokens";
 
 const springTransition = {
   type: "spring" as const,
@@ -97,7 +95,7 @@ export default function AssignDocumentsForm({ employee, onAssigned }: Props) {
           md: "repeat(2, minmax(0, 1fr))",
           lg: "repeat(3, minmax(0, 1fr))",
         }}
-        gap={FORM_LAYOUT.fieldGap}
+        gap={4}
         alignItems="end"
       >
         <Field.Root>
@@ -136,11 +134,6 @@ export default function AssignDocumentsForm({ employee, onAssigned }: Props) {
 
       <Flex justify="flex-end" mt={4}>
         <MotionButton
-          {...STANDARD_BUTTON_STYLES.md}
-          bg={BRAND_COLORS.primaryGreen}
-          color={BRAND_COLORS.white}
-          _hover={{ bg: BRAND_COLORS.darkGreen }}
-          _active={{ bg: BRAND_COLORS.darkGreen }}
           onClick={handleSubmit}
           disabled={isSubmitDisabled}
           whileHover={{ scale: 1.02 }}

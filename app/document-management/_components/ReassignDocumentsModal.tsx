@@ -2,15 +2,8 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import {
-  Button,
-  Field,
-  Flex,
-  Input,
-  Portal,
-  Select,
-  createListCollection,
-} from "@chakra-ui/react";
+import { Button, Flex, createListCollection } from "@chakra-ui/react";
+import { InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
 import { EMPLOYEES } from "@/data/doc-management/documenttype";
 import type { AssignedDocRow, ReassignDocumentPayload } from "./types";
 import {
@@ -18,8 +11,6 @@ import {
   ModalFormField,
 } from "@/components/common/modal-form/modal-form";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_BUTTON_STYLES } from "@/lib/theme/standard-design-tokens";
 
 const springTransition = {
   type: "spring" as const,
@@ -91,33 +82,19 @@ export default function ReassignDocumentModal({
       onOpenChange={(d) => {
         if (!d.open) onClose();
       }}
+      backButton
       title="Reassign Document"
       footer={
         <Flex
           w="full"
           gap={3}
           gridColumn={{ base: "span 2", sm: "span 1" }}
-          direction={{ base: "column", sm: "row" }}
-          justify="flex-end"
+          direction={{ base: "column", sm: "row-reverse" }}
         >
-          <Button
-            {...STANDARD_BUTTON_STYLES.md}
-            variant="outline"
-            onClick={onClose}
-            w={{ base: "full", sm: "auto" }}
-          >
-            Cancel
-          </Button>
-
           <MotionButton
-            {...STANDARD_BUTTON_STYLES.md}
             // type="submit"
             onClick={handleSubmit}
             disabled={!newEmployeeId}
-            bg={BRAND_COLORS.primaryGreen}
-            color={BRAND_COLORS.white}
-            _hover={{ bg: BRAND_COLORS.darkGreen }}
-            _active={{ bg: BRAND_COLORS.darkGreen }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             transition={springTransition}
@@ -125,77 +102,58 @@ export default function ReassignDocumentModal({
           >
             Save
           </MotionButton>
+
+          <Button
+            variant="outline"
+            onClick={onClose}
+            w={{ base: "full", sm: "auto" }}
+          >
+            Cancel
+          </Button>
         </Flex>
       }
     >
-      {/* Read-only info */}
       <ModalFormField>
-        <Field.Root>
-          <Field.Label>Employee ID</Field.Label>
-          <Input value={employeeID ?? row?.salesForceId ?? ""} readOnly />
-        </Field.Root>
+        <InputFloatingLabel
+          label="Employee ID"
+          value={employeeID ?? row?.salesForceId ?? ""}
+          readOnly
+        />
       </ModalFormField>
 
       <ModalFormField>
-        <Field.Root>
-          <Field.Label>Document Code</Field.Label>
-          <Input value={row?.documentCode ?? ""} readOnly />
-        </Field.Root>
+        <InputFloatingLabel
+          label="Document Code"
+          value={row?.documentCode ?? ""}
+          readOnly
+        />
       </ModalFormField>
 
       <ModalFormField fullWidth>
-        <Field.Root>
-          <Field.Label>Current Assignee</Field.Label>
-          <Input value={row?.employeeName ?? ""} readOnly />
-        </Field.Root>
+        <InputFloatingLabel
+          label="Current Assignee"
+          value={row?.employeeName ?? ""}
+          readOnly
+        />
       </ModalFormField>
 
-      {/* Reassign To — spans both columns */}
       <ModalFormField fullWidth>
-        <Field.Root>
-          <Field.Label>Reassign To</Field.Label>
-          <Select.Root
-            collection={employeeCollection}
-            value={newEmployeeId ? [newEmployeeId] : []}
-            onValueChange={(details) =>
-              setNewEmployeeId(details.value[0] ?? "")
-            }
-          >
-            <Select.HiddenSelect />
-            <Select.Control>
-              <Select.Trigger>
-                <Select.ValueText placeholder="Select employee" />
-              </Select.Trigger>
-              <Select.IndicatorGroup>
-                <Select.Indicator />
-              </Select.IndicatorGroup>
-            </Select.Control>
-            <Portal>
-              <Select.Positioner>
-                <Select.Content>
-                  {employeeCollection.items.map((item) => (
-                    <Select.Item item={item} key={item.value}>
-                      {item.label}
-                      <Select.ItemIndicator />
-                    </Select.Item>
-                  ))}
-                </Select.Content>
-              </Select.Positioner>
-            </Portal>
-          </Select.Root>
-        </Field.Root>
+        <SelectFloatingLabel
+          label="Reassign To"
+          collection={employeeCollection}
+          value={newEmployeeId ? [newEmployeeId] : []}
+          onValueChanged={(vals) => setNewEmployeeId(vals[0] ?? "")}
+          required
+        />
       </ModalFormField>
 
-      {/* Remarks — spans both columns */}
       <ModalFormField fullWidth>
-        <Field.Root>
-          <Field.Label>Remarks</Field.Label>
-          <Input
-            placeholder="Enter remarks"
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-          />
-        </Field.Root>
+        <InputFloatingLabel
+          label="Remarks"
+          placeholder="Enter remarks"
+          value={remarks}
+          onChange={(e) => setRemarks(e.target.value)}
+        />
       </ModalFormField>
     </ModalForm>
   );

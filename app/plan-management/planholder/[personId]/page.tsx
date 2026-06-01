@@ -3,8 +3,6 @@ import { PlanholderPageProps } from "@/components/new-planholder-profile/planhol
 
 import { PlanholderInfoProps } from "@/components/new-planholder-profile/sections/planholder-info";
 
-import { BreadcrumbItemType } from "st-peter-ui";
-
 import { planholderLookup } from "../../data/planholder-lookup";
 import { PlanholderAddress } from "../../data/planholder-address.data";
 import { Address } from "@/components/new-planholder-profile/sections/address-info";
@@ -26,23 +24,7 @@ export default async function Page({
     redirect("/plan-management/planholder");
   }
 
-  const breadcrumbItems: BreadcrumbItemType[] = [
-    {
-      label: "Home",
-      href: "/",
-    },
-    {
-      label: "Planholder",
-      href: "/plan-management/planholder/",
-    },
-    {
-      label: personId,
-      href: `/plan-management/planholder/${personId}`,
-    },
-  ];
-
   const planholderProfileData: PlanholderPageProps = {
-    breadcrumbItems,
     hyperlinks: {
       payMyPlan: `/plan-management/planholder/${personId}/pay-my-plan`,
       returnedOfPremium: `/plan-management/planholder/${personId}/rop`,

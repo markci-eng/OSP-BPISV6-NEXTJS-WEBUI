@@ -14,12 +14,6 @@ import { H4, Small, Body, Checkbox } from "st-peter-ui";
 import type { CheckedPlan, PhLapsedPlan } from "./reinstatement.types";
 import { RITableRow } from "./ri-table-row";
 import { LuSearch } from "react-icons/lu";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_ICON_BUTTON_STYLES,
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 export function ReinstatementForm({
   lapsedPlans,
@@ -97,38 +91,31 @@ export function ReinstatementForm({
   const [searchVal, setSearchVal] = useState<string>("");
 
   return (
-    <Box py={{ base: 3, md: 4 }}>
-      <Flex
-        justify="space-between"
-        align={{ base: "stretch", md: "center" }}
-        direction={{ base: "column", md: "row" }}
-        gap={3}
-        mb={4}
-      >
+    <Box py={3}>
+      <Flex justify="space-between">
         <Box>
           <H4>Lapsed Plans</H4>
-          <Small color="gray.600" fontStyle="italic">
+          <Small mb="4" fontStyle="italic">
             Kindly select plans you want to reinstate.
           </Small>
         </Box>
-        <Group attached w={{ base: "full", md: "360px" }}>
+        <Group attached w="360px">
           <Input
-            borderLeftRadius={STANDARD_RADIUS.md}
+            borderLeftRadius="sm"
             borderRightRadius="0"
-            boxShadow={STANDARD_SHADOWS.level1}
+            boxShadow="sm"
             placeholder="Search LPA Number . . ."
             value={searchVal}
             onChange={(e) => setSearchVal(e.currentTarget.value)}
             onKeyDown={(e) => {}}
           />
           <IconButton
-            borderRightRadius={STANDARD_RADIUS.md}
+            borderRightRadius="sm"
             borderLeftRadius="0"
-            bg={BRAND_COLORS.primaryGreen}
-            _hover={{ bg: BRAND_COLORS.darkGreen }}
-            boxShadow={STANDARD_SHADOWS.level1}
+            bg="green.700"
+            _hover={{ bg: "green.600" }}
+            boxShadow="sm"
             color="white"
-            {...STANDARD_ICON_BUTTON_STYLES.md}
             onClick={() => {}}
           >
             <LuSearch />
@@ -136,16 +123,10 @@ export function ReinstatementForm({
         </Group>
       </Flex>
 
-      <Table.ScrollArea
-        maxH="450px"
-        borderWidth="1px"
-        borderColor="gray.200"
-        borderRadius={STANDARD_RADIUS.md}
-        boxShadow={STANDARD_SHADOWS.level1}
-      >
+      <Table.ScrollArea maxH="450px">
         <Table.Root size="sm" stickyHeader interactive>
           <Table.Header>
-            <Table.Row bg={BRAND_COLORS.subtleBg}>
+            <Table.Row bg="bg.subtle">
               <Table.ColumnHeader w={6}>
                 <Checkbox
                   checked={
@@ -201,13 +182,7 @@ export function ReinstatementForm({
           </Table.Body>
         </Table.Root>
       </Table.ScrollArea>
-      <Flex
-        justify={"space-between"}
-        align={{ base: "stretch", md: "flex-start" }}
-        direction={{ base: "column", md: "row" }}
-        gap={3}
-        mt={4}
-      >
+      <Flex justify={"space-between"} mt={3}>
         <Box>
           <Body fontSize="sm" fontStyle="italic">
             No. of plans selected:
@@ -219,12 +194,11 @@ export function ReinstatementForm({
         {/* Totals */}
         <Box
           p={3}
-          width={{ base: "full", md: "420px" }}
-          bg={BRAND_COLORS.subtleBg}
+          mt={3}
+          width={{ base: "md", mdDown: "full" }}
+          bg="gray.100"
           ml={"auto"}
-          borderWidth="1px"
-          borderColor="gray.200"
-          borderRadius={STANDARD_RADIUS.md}
+          borderRadius={"sm"}
           display={"flex"}
           justifyContent={"space-between"}
         >

@@ -1,6 +1,6 @@
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import { Box, Text } from "@chakra-ui/react";
-import { ColumnDef } from "@tanstack/react-table";
+import { Box, HStack, Text } from "@chakra-ui/react";
+import { ColumnDef, StringOrTemplateHeader } from "@tanstack/react-table";
 import React from "react";
 
 export type FloatingAccounts = {
@@ -272,12 +272,12 @@ const columns: ColumnDef<FloatingAccounts>[] = [
 
 export default function FloatingAccountList() {
   return (
-    <Box py={{ base: 2, md: 3 }} color="black" minW={0}>
+    <Box py={{ base: 2, sm: 4 }} color="black">
       <DataTable
         columns={columns}
         data={floatingAccountsData}
         title="Floating Account List"
-        description="Select and review floating accounts before loading."
+        description=""
         size="sm"
         features={{
           search: true,

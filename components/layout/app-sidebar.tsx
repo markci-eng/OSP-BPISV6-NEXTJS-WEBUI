@@ -6,6 +6,7 @@ import {
   Text,
   Box,
   IconButton,
+  useBreakpointValue,
   Collapsible,
   ScrollArea,
   Image,
@@ -24,6 +25,267 @@ import { NavItem, SidebarProps } from "./app-layout.type";
 import logoIcon from "@/public/images/logo/icon.png";
 import { Body, Small } from "st-peter-ui";
 
+interface NavItemRowProps {
+  item: NavItem;
+  index: number;
+  isSidebarOpen: boolean;
+  isMobile: boolean;
+  pathname: string;
+  navItemExpanded: string;
+  setNavItemExpanded: (label: string) => void;
+  hoveredIndex: number | null;
+  setHoveredIndex: (i: number | null) => void;
+  onClose?: () => void;
+}
+
+function NavItemRow({
+  item,
+  index,
+  isSidebarOpen,
+  isMobile,
+  pathname,
+  navItemExpanded,
+  setNavItemExpanded,
+  hoveredIndex,
+  setHoveredIndex,
+  onClose,
+}: NavItemRowProps) {
+  const isHovered = hoveredIndex === index;
+  const isActive =
+    pathname === item.href ||
+    item.subItems?.findLast(
+      (itm) => itm.href === pathname.substring(0, itm.href.length),
+    ) != null ||
+    (item.subItems?.some((sub) => sub.href === pathname) ?? false);
+
+  const [isExpanded, setIsExpanded] = useState(isActive);
+
+  const Icon = isActive ? (item.activeIcon ?? item.icon) : item.icon;
+
+  useEffect(() => {
+    if (navItemExpanded === item.label) {
+      setIsExpanded(true);
+    } else if (!isActive) {
+      setIsExpanded(false);
+    }
+  }, [navItemExpanded]);
+
+  useEffect(() => {
+    setIsExpanded(isActive);
+  }, [isActive]);
+
+  return (
+    <Tooltip
+      content={item.label}
+      positioning={{ placement: "right" }}
+      disabled={isSidebarOpen}
+    >
+      {item.subItems ? (
+        <Collapsible.Root
+          open={isExpanded}
+          onOpenChange={(e) => {
+            setIsExpanded(e.open);
+            setNavItemExpanded(e.open ? item.label : "");
+          }}
+        >
+          <Collapsible.Trigger asChild>
+            <Flex
+              align="center"
+              justify={isSidebarOpen ? "flex-start" : "justify-between"}
+              p={2}
+              py={3}
+              borderRadius="md"
+              gap={isSidebarOpen ? 3 : 0}
+              bg={
+                isActive && !isSidebarOpen
+                  ? "primary"
+                  : isHovered || (isExpanded && isSidebarOpen)
+                    ? "gray.border"
+                    : "transparent"
+              }
+              cursor="pointer"
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+              transition="background 0.2s"
+            >
+              <Flex
+                align={"center"}
+                justify={"flex-start"}
+                borderRadius="md"
+                gap={isSidebarOpen ? 3 : 0}
+                width={"full"}
+              >
+                <Box
+                  w="24px"
+                  display="flex"
+                  justifyContent="center"
+                  alignItems="center"
+                >
+                  <Icon
+                    size={20}
+                    color={
+                      isActive && !isSidebarOpen
+                        ? "white"
+                        : "var(--chakra-colors-primary)"
+                    }
+                  />
+                </Box>
+                <Box
+                  overflow="hidden"
+                  onClick={item.onClick}
+                  transition="max-width 0.2s, opacity 0.2s"
+                  maxWidth={isSidebarOpen ? "220px" : "0px"}
+                >
+                  <Small
+                    color={"gray.fg"}
+                    whiteSpace="nowrap"
+                    fontWeight={"regular"}
+                    fontSize={"sm"}
+                    transition="opacity 0.2s"
+                  >
+                    {item.label}
+                  </Small>
+                </Box>
+              </Flex>
+              {isSidebarOpen && (
+                <Box p={1}>
+                  {isExpanded ? (
+                    <BiChevronUp color={"gray.solid"} />
+                  ) : (
+                    <BiChevronDown color={"gray.solid"} />
+                  )}
+                </Box>
+              )}
+            </Flex>
+          </Collapsible.Trigger>
+          {isSidebarOpen && (
+            <Collapsible.Content>
+              <Grid templateColumns={"repeat(10, 1fr)"} my={2}>
+                <Separator
+                  orientation="vertical"
+                  ml={5}
+                  borderColor={"primary"}
+                />
+                <GridItem colSpan={9}>
+                  <Box>
+                    {item.subItems.map((subItem) => {
+                      const isItemActive =
+                        pathname.substring(0, subItem.href.length) ===
+                        subItem.href;
+                      return (
+                        <Link key={subItem.label} href={subItem.href ?? "#"} passHref>
+                          <Flex
+                            align="center"
+                            p={3}
+                            borderRadius="md"
+                            gap={isSidebarOpen ? 3 : 0}
+                            bg={isItemActive ? "primary" : "transparent"}
+                            _hover={{
+                              bg: isItemActive ? "primaryHover" : "gray.subtle",
+                            }}
+                            cursor="pointer"
+                            onMouseEnter={() => setHoveredIndex(index)}
+                            onMouseLeave={() => setHoveredIndex(null)}
+                            onClick={() => isMobile && onClose?.()}
+                            transition="background 0.2s"
+                          >
+                            <Box
+                              overflow="hidden"
+                              onClick={subItem.onClick}
+                              transition="max-width 0.2s, opacity 0.2s"
+                              maxWidth={isSidebarOpen ? "220px" : "0px"}
+                            >
+                              <Text
+                                color={
+                                  isItemActive
+                                    ? "white"
+                                    : isHovered
+                                      ? "gray.solid"
+                                      : "gray.fg"
+                                }
+                                whiteSpace="nowrap"
+                                fontSize={"sm"}
+                                opacity={isSidebarOpen ? 1 : 0}
+                                transition="opacity 0.2s"
+                              >
+                                {subItem.label}
+                              </Text>
+                            </Box>
+                          </Flex>
+                        </Link>
+                      );
+                    })}
+                  </Box>
+                </GridItem>
+              </Grid>
+            </Collapsible.Content>
+          )}
+        </Collapsible.Root>
+      ) : (
+        <Link href={item.href ?? "#"} passHref>
+          <Flex
+            align="center"
+            justify={isSidebarOpen ? "flex-start" : "justify-between"}
+            p={2}
+            py={3}
+            borderRadius="md"
+            gap={isSidebarOpen ? 3 : 0}
+            bg={
+              isActive
+                ? "primary"
+                : isHovered
+                  ? "gray.border"
+                  : "transparent"
+            }
+            cursor="pointer"
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
+            onClick={() => isMobile && onClose?.()}
+            transition="background 0.2s"
+          >
+            <Flex
+              align={"center"}
+              justify={"flex-start"}
+              borderRadius="md"
+              gap={isSidebarOpen ? 3 : 0}
+              width={"full"}
+            >
+              <Box
+                w="24px"
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Icon
+                  size={20}
+                  color={isActive ? "white" : "var(--chakra-colors-primary)"}
+                />
+              </Box>
+              <Box
+                overflow="hidden"
+                onClick={item.onClick}
+                transition="max-width 0.2s, opacity 0.2s"
+                maxWidth={isSidebarOpen ? "220px" : "0px"}
+              >
+                <Text
+                  color={isActive ? "white" : "gray.fg"}
+                  whiteSpace="nowrap"
+                  fontWeight={isActive ? "semibold" : "regular"}
+                  fontSize={"sm"}
+                  opacity={isSidebarOpen ? 1 : 0}
+                  transition="opacity 0.2s"
+                >
+                  {item.label}
+                </Text>
+              </Box>
+            </Flex>
+          </Flex>
+        </Link>
+      )}
+    </Tooltip>
+  );
+}
+
 export default function Sidebar({
   isOpen,
   onClose,
@@ -34,14 +296,9 @@ export default function Sidebar({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [navItemExpanded, setNavItemExpanded] = useState<string>("");
 
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 1047px)");
-    setIsMobile(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
+  // Detect mobile safely
+  const isMobileRaw = useBreakpointValue({ base: true, lg: false });
+  const isMobile = isMobileRaw ?? false; // stable boolean
 
   const pathname = usePathname();
 
@@ -70,6 +327,7 @@ export default function Sidebar({
         className="no-print"
         direction="column"
         bg="bg"
+        _dark={{ bg: "rgba(20, 24, 36, 0.88)" }}
         color="fg"
         h="100vh"
         w={`${sidebarWidth}px`}
@@ -119,7 +377,7 @@ export default function Sidebar({
               />
             </Box>
             {/* <Show when={!isMobile}> */}
-            <Box
+              <Box
               overflow="hidden"
               transition="width 0.2s"
               // width={isSidebarOpen ? "80px" : "0px"}
@@ -133,14 +391,7 @@ export default function Sidebar({
               >
                 {appName}
               </Body>
-              <Small
-                opacity={isSidebarOpen ? 1 : 0}
-                mt={"-5px"}
-                color={"primary"}
-                fontStyle={"italic"}
-              >
-                Life Plan Operations
-              </Small>
+              <Small opacity={isSidebarOpen ? 1 : 0} mt={"-5px"} color={"primary"} fontStyle={"italic"}>Life Plan Operations</Small>
             </Box>
             {/* </Show> */}
           </Flex>
@@ -186,278 +437,21 @@ export default function Sidebar({
           >
             <ScrollArea.Content spaceY="4" textStyle="sm">
               <VStack align="stretch" gap={2} mt={2}>
-                {navItems.map((item, index) => {
-                  const isHovered = hoveredIndex === index;
-                  const isActive =
-                    pathname === item.href ||
-                    item.subItems?.findLast(
-                      (itm) =>
-                        itm.href === pathname.substring(0, itm.href.length),
-                    ) != null ||
-                    (item.subItems?.some((sub) => sub.href === pathname) ??
-                      false);
-                  const [isExpanded, setIsExpanded] = useState(isActive);
-
-                  const Icon = isActive
-                    ? (item.activeIcon ?? item.icon)
-                    : item.icon;
-
-                  useEffect(() => {
-                    if (navItemExpanded === item.label) {
-                      setIsExpanded(true);
-                    } else if (!isActive) {
-                      setIsExpanded(false);
-                    }
-                  }, [navItemExpanded]);
-
-                  useEffect(() => {
-                    setIsExpanded(isActive);
-                  }, [isActive]);
-
-                  return (
-                    <Tooltip
-                      key={item.label}
-                      content={item.label}
-                      positioning={{ placement: "right" }}
-                      disabled={isSidebarOpen}
-                    >
-                      {item.subItems ? (
-                        <Collapsible.Root
-                          open={isExpanded}
-                          onOpenChange={(e) => {
-                            setIsExpanded(e.open);
-                            setNavItemExpanded(e.open ? item.label : "");
-                          }}
-                        >
-                          <Collapsible.Trigger asChild>
-                            <Flex
-                              align="center"
-                              justify={
-                                isSidebarOpen ? "flex-start" : "justify-between"
-                              }
-                              p={2}
-                              py={3}
-                              borderRadius="md"
-                              gap={isSidebarOpen ? 3 : 0}
-                              bg={
-                                isActive && !isSidebarOpen
-                                  ? "primary"
-                                  : isHovered || (isExpanded && isSidebarOpen)
-                                    ? "gray.border"
-                                    : "transparent"
-                              }
-                              cursor="pointer"
-                              onMouseEnter={() => setHoveredIndex(index)}
-                              onMouseLeave={() => setHoveredIndex(null)}
-                              transition="background 0.2s"
-                            >
-                              <Flex
-                                align={"center"}
-                                justify={"flex-start"}
-                                borderRadius="md"
-                                gap={isSidebarOpen ? 3 : 0}
-                                width={"full"}
-                              >
-                                <Box
-                                  w="24px"
-                                  display="flex"
-                                  justifyContent="center"
-                                  alignItems="center"
-                                >
-                                  <Icon
-                                    size={20}
-                                    color={
-                                      isActive && !isSidebarOpen
-                                        ? "white"
-                                        : "var(--chakra-colors-primary)"
-                                    }
-                                  />
-                                </Box>
-                                <Box
-                                  overflow="hidden"
-                                  onClick={item.onClick}
-                                  transition="max-width 0.2s, opacity 0.2s"
-                                  maxWidth={isSidebarOpen ? "220px" : "0px"}
-                                >
-                                  <Small
-                                    color={"gray.fg"}
-                                    whiteSpace="nowrap"
-                                    fontWeight={"regular"}
-                                    fontSize={"sm"}
-                                    // opacity={isSidebarOpen ? 1 : 0}
-                                    transition="opacity 0.2s"
-                                  >
-                                    {item.label}
-                                  </Small>
-                                </Box>
-                              </Flex>
-                              {isSidebarOpen && (
-                                <Box p={1}>
-                                  {isExpanded ? (
-                                    <BiChevronUp color={"gray.solid"} />
-                                  ) : (
-                                    <BiChevronDown color={"gray.solid"} />
-                                  )}
-                                </Box>
-                              )}
-                            </Flex>
-                          </Collapsible.Trigger>
-                          {isSidebarOpen && (
-                            <Collapsible.Content>
-                              <Grid templateColumns={"repeat(10, 1fr)"} my={2}>
-                                <Separator
-                                  orientation="vertical"
-                                  ml={5}
-                                  borderColor={"primary"}
-                                />
-                                <GridItem colSpan={9}>
-                                  <Box>
-                                    {item.subItems.map((subItem) => {
-                                      const isItemActive =
-                                        pathname.substring(
-                                          0,
-                                          subItem.href.length,
-                                        ) === subItem.href;
-
-                                      return (
-                                        <Link
-                                          key={subItem.label}
-                                          href={subItem.href ?? "#"}
-                                          passHref
-                                        >
-                                          <Flex
-                                            align="center"
-                                            p={3}
-                                            borderRadius="md"
-                                            gap={isSidebarOpen ? 3 : 0}
-                                            bg={
-                                              isItemActive
-                                                ? "primary"
-                                                : "transparent"
-                                            }
-                                            _hover={{
-                                              bg: isItemActive
-                                                ? "primaryHover"
-                                                : "gray.subtle",
-                                            }}
-                                            cursor="pointer"
-                                            onMouseEnter={() =>
-                                              setHoveredIndex(index)
-                                            }
-                                            onMouseLeave={() =>
-                                              setHoveredIndex(null)
-                                            }
-                                            onClick={() =>
-                                              isMobile && onClose?.()
-                                            }
-                                            transition="background 0.2s"
-                                          >
-                                            <Box
-                                              overflow="hidden"
-                                              onClick={subItem.onClick}
-                                              transition="max-width 0.2s, opacity 0.2s"
-                                              maxWidth={
-                                                isSidebarOpen ? "220px" : "0px"
-                                              }
-                                            >
-                                              <Text
-                                                color={
-                                                  isItemActive
-                                                    ? "white"
-                                                    : isHovered
-                                                      ? "gray.solid"
-                                                      : "gray.fg"
-                                                }
-                                                whiteSpace="nowrap"
-                                                fontSize={"sm"}
-                                                opacity={isSidebarOpen ? 1 : 0}
-                                                transition="opacity 0.2s"
-                                              >
-                                                {subItem.label}
-                                              </Text>
-                                            </Box>
-                                          </Flex>
-                                        </Link>
-                                      );
-                                    })}
-                                  </Box>
-                                </GridItem>
-                              </Grid>
-                            </Collapsible.Content>
-                          )}
-                        </Collapsible.Root>
-                      ) : (
-                        <Link href={item.href ?? "#"} passHref>
-                          <Flex
-                            align="center"
-                            justify={
-                              isSidebarOpen ? "flex-start" : "justify-between"
-                            }
-                            p={2}
-                            py={3}
-                            borderRadius="md"
-                            gap={isSidebarOpen ? 3 : 0}
-                            bg={
-                              isActive
-                                ? "primary"
-                                : isHovered
-                                  ? "gray.border"
-                                  : "transparent"
-                            }
-                            cursor="pointer"
-                            onMouseEnter={() => setHoveredIndex(index)}
-                            onMouseLeave={() => setHoveredIndex(null)}
-                            transition="background 0.2s"
-                          >
-                            <Flex
-                              align={"center"}
-                              justify={"flex-start"}
-                              borderRadius="md"
-                              gap={isSidebarOpen ? 3 : 0}
-                              width={"full"}
-                            >
-                              <Box
-                                w="24px"
-                                display="flex"
-                                justifyContent="center"
-                                alignItems="center"
-                              >
-                                <Icon
-                                  size={20}
-                                  color={
-                                    isActive
-                                      ? "white"
-                                      : "var(--chakra-colors-primary)"
-                                  }
-                                />
-                              </Box>
-                              <Box
-                                overflow="hidden"
-                                onClick={() => {
-                                  item.onClick;
-                                  isMobile && onClose?.();
-                                }}
-                                transition="max-width 0.2s, opacity 0.2s"
-                                maxWidth={isSidebarOpen ? "220px" : "0px"}
-                              >
-                                <Text
-                                  color={isActive ? "white" : "gray.fg"}
-                                  whiteSpace="nowrap"
-                                  fontWeight={isActive ? "semibold" : "regular"}
-                                  fontSize={"sm"}
-                                  opacity={isSidebarOpen ? 1 : 0}
-                                  transition="opacity 0.2s"
-                                >
-                                  {item.label}
-                                </Text>
-                              </Box>
-                            </Flex>
-                          </Flex>
-                        </Link>
-                      )}
-                    </Tooltip>
-                  );
-                })}
+                {navItems.map((item, index) => (
+                  <NavItemRow
+                    key={item.label}
+                    item={item}
+                    index={index}
+                    isSidebarOpen={isSidebarOpen}
+                    isMobile={isMobile ?? false}
+                    pathname={pathname}
+                    navItemExpanded={navItemExpanded}
+                    setNavItemExpanded={setNavItemExpanded}
+                    hoveredIndex={hoveredIndex}
+                    setHoveredIndex={setHoveredIndex}
+                    onClose={onClose}
+                  />
+                ))}
               </VStack>
             </ScrollArea.Content>
           </ScrollArea.Viewport>

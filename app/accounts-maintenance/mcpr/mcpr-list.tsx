@@ -1,5 +1,5 @@
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, HStack, Text } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
 
@@ -353,12 +353,12 @@ const columns: ColumnDef<MCPR>[] = [
 
 export default function MCPRList() {
   return (
-    <Box py={{ base: 2, md: 3 }} color="black" minW={0}>
+    <Box py={{ base: 2, sm: 4 }} color="black">
       <DataTable
         columns={columns}
         data={mcprData}
         title="Account List"
-        description="Collection and performance account records for the selected criteria."
+        description=""
         size="sm"
         features={{
           search: true,

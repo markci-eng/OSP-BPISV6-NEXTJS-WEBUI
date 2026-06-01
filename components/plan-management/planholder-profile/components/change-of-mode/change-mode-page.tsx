@@ -1,26 +1,24 @@
-import { Box } from "@chakra-ui/react";
+import { Box, Container, Flex, Separator, Steps } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import { Body, H3, NextButton, PreviousButton } from "st-peter-ui";
 import type { CheckedPlanType } from "./change-mode.types";
 import { ChangeModeForm } from "./change-mode-form";
 import { PHPlans } from "./data";
 import { ChangeModeSummaryPage } from "./change-mode-summary";
+// import PaymentPage from "../reinstatement-page/payment";
 import { FaFileAlt } from "react-icons/fa";
-import { FaFileShield } from "react-icons/fa6";
+import { FaCcMastercard, FaFileShield } from "react-icons/fa6";
+import { FormSteps } from "osp.cis.nextjs.components";
 import { FormStepper } from "@/components/form-stepper/form-stepper";
-import { Page } from "@/components/page/page";
+import Page from "@/components/layout/page/Page";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
+
+const steps = ["Select Plan", "Application Summary"];
 
 export function ChangeModePage({
-  breadcrumbItems,
   onSuccess,
   successLink,
 }: {
-  breadcrumbItems: { label: string; href?: string }[];
   onSuccess: (transactionId: string, transactionAmount: number) => void;
   successLink: string;
 }) {
@@ -84,25 +82,17 @@ export function ChangeModePage({
   ];
 
   return (
-    <Page
-      breadcrumbItems={breadcrumbItems}
+    <Page.Root
       title={"Change of Mode Application"}
-      description="Switch your payment mode anytime - Quarterly, Semi-Annual, or Annual."
+      description="Switch your payment mode anytime—Quarterly, Semi-Annual, or Annual."
     >
-      <Box
-        bg={BRAND_COLORS.white}
-        borderWidth="1px"
-        borderColor="gray.200"
-        borderRadius={STANDARD_RADIUS.md}
-        boxShadow={STANDARD_SHADOWS.level1}
-        p={{ base: 4, md: 5 }}
-      >
+      <Page.MainContent>
         <FormStepper
           steps={stepsData}
           onSubmit={() => onSuccess("CM-12345", totalAmountDue)}
         />
-      </Box>
-    </Page>
+      </Page.MainContent>
+    </Page.Root>
     // <Box maxW={"7xl"} mx={"auto"} py={3}>
     //   <Container px={0}>
     //     <H3>Change of Mode Application</H3>

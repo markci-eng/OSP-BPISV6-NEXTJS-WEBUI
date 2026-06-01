@@ -1,5 +1,10 @@
+import { Box, Breadcrumb } from "st-peter-ui";
 import Disbursement from "./disbursement";
 
 export default function Page() {
-  return <Disbursement />;
+  return (
+    <Box>
+      <Disbursement />
+    </Box>
+  );
 }

@@ -1,7 +1,9 @@
 "use client";
+import { Box } from "@chakra-ui/react";
+// import { ReinstatementPage } from "@splpi/operations";
 import { useRouter } from "next/navigation";
+import { Breadcrumb } from "st-peter-ui";
 import { ReinstatementPage } from "./reinstatement-page";
-import { Page } from "@/components/page/page";
 
 export default function Reinstatement() {
   const router = useRouter();
@@ -28,11 +30,8 @@ export default function Reinstatement() {
   ];
 
   return (
-    <Page
-      breadcrumbItems={breadcrumbItems}
-      title="Reinstatement Application"
-      description="Quickly bring your plan back on track by reactivating a lapsed plan."
-    >
+    <Box mx="auto" p={4}>
+      <Breadcrumb items={breadcrumbItems} />
       <ReinstatementPage
         onSuccess={(transactionId, transactionAmt) => {
           alert(
@@ -45,6 +44,6 @@ export default function Reinstatement() {
         }}
         successLink={"/plan-management/reinstatement/success"}
       />
-    </Page>
+    </Box>
   );
 }

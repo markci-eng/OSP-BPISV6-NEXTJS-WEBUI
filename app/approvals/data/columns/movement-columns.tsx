@@ -6,15 +6,13 @@ import { Badge, Text } from "@chakra-ui/react";
 
 import { multiSelectFilter } from "@/components/common/reusable-tableV2/types";
 import { EmployeeMovement } from "../types";
-import { formatApprovalDate } from "../../utils/formatters";
-import {
-  getApprovalStatusBadgeStyle,
-  getMovementTypeBadgeStyle,
-} from "../../utils/colors";
 
 function StatusBadge({ status }: { status: string }) {
+  const colorPalette =
+    status === "Approved" ? "green" : status === "Denied" ? "red" : "yellow";
+
   return (
-    <Badge {...getApprovalStatusBadgeStyle(status)}>
+    <Badge colorPalette={colorPalette} variant="subtle">
       {status}
     </Badge>
   );
@@ -25,8 +23,10 @@ function MovementTypeBadge({
 }: {
   movementType: EmployeeMovement["movementType"];
 }) {
+  const colorPalette = movementType === "Promotion" ? "green" : "orange";
+
   return (
-    <Badge {...getMovementTypeBadgeStyle(movementType)}>
+    <Badge colorPalette={colorPalette} variant="subtle">
       {movementType}
     </Badge>
   );
@@ -88,23 +88,10 @@ export const movementColumns: ColumnDef<EmployeeMovement>[] = [
   },
   {
     accessorKey: "date",
-    header: "Effective Date",
+    header: "Date",
     enableSorting: true,
     enableColumnFilter: true,
     filterFn: multiSelectFilter,
-    cell: ({ getValue }) => (
-      <Text fontSize="sm">{formatApprovalDate(getValue())}</Text>
-    ),
-  },
-  {
-    accessorKey: "requestDate",
-    header: "Request Date",
-    enableSorting: true,
-    enableColumnFilter: true,
-    filterFn: multiSelectFilter,
-    cell: ({ getValue }) => (
-      <Text fontSize="sm">{formatApprovalDate(getValue())}</Text>
-    ),
   },
   {
     accessorKey: "requester",

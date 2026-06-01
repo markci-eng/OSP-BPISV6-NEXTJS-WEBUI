@@ -1,17 +1,17 @@
-import { Box } from "@chakra-ui/react";
+import { Box, Container, Flex, Separator, Steps } from "@chakra-ui/react";
 import type { CheckedPlan } from "./reinstatement.types";
+import { Body, H3, NextButton, PreviousButton } from "st-peter-ui";
 import { useState } from "react";
 import { ReinstatementForm } from "./reinstatement-form";
 import { lapsedPlans } from "./data";
 import { ReinstatementSummaryPage } from "./ri-summary";
-import { FaFileShield } from "react-icons/fa6";
+import PaymentPage from "./payment";
+import { FormSteps } from "osp.cis.nextjs.components";
+import { FaCcMastercard, FaFileShield, FaLock } from "react-icons/fa6";
 import { FaFileAlt } from "react-icons/fa";
 import { FormStepper } from "@/components/form-stepper/form-stepper";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
+
+const steps = ["Select Lapsed Plan", "Review Reinstatement", "Payment"];
 
 export function ReinstatementPage({
   onSuccess,
@@ -22,10 +22,6 @@ export function ReinstatementPage({
 }) {
   const [checkedPlans, setCheckedPlans] = useState<CheckedPlan[]>([]);
   const requestId = "";
-  const totalAmountDue = checkedPlans.reduce(
-    (sum, plan) => sum + plan.reinstatementFee + plan.reinstatementPayment,
-    0,
-  );
 
   const stepsData = [
     {
@@ -64,18 +60,12 @@ export function ReinstatementPage({
   ];
 
   return (
-    <Box
-      bg={BRAND_COLORS.white}
-      borderWidth="1px"
-      borderColor="gray.200"
-      borderRadius={STANDARD_RADIUS.md}
-      boxShadow={STANDARD_SHADOWS.level1}
-      p={{ base: 4, md: 5 }}
-    >
-      <FormStepper
-        steps={stepsData}
-        onSubmit={() => onSuccess("RI-12345", totalAmountDue)}
-      />
-    </Box>
+    <FormSteps
+      stepsData={stepsData}
+      title={"Reinstatement Application"}
+      description={
+        "Quickly bring your plan back on track by reactivating a lapsed plan."
+      }
+    />
   );
 }

@@ -1,32 +1,18 @@
 // import LifePlanApplication from "@/components/plan-management/lifeplan-application/lifeplan-application";
 "use client";
-import { Page } from "@/components/page/page";
+import Page from "@/components/layout/page/Page";
 import { LifePlanApplicationFormWrapper } from "new-sales-page-component";
 
 export default function NewSalePage() {
-  const breadcrumbItems = [
-    {
-      label: "Home",
-      href: "/",
-    },
-    {
-      label: "Plan Management",
-      href: "#",
-    },
-    {
-      label: "Add New Sale",
-      href: "#",
-    },
-  ];
-
   return (
-    <Page
-      breadcrumbItems={breadcrumbItems}
+    <Page.Root
       title={"Add New Sales"}
       description="Quick sales entry."
     >
-      <LifePlanApplicationFormWrapper />
-      {/* <FormStepper steps={[]} /> */}
-    </Page>
+      <Page.MainContent>
+        <LifePlanApplicationFormWrapper />
+        {/* <FormStepper steps={[]} /> */}
+      </Page.MainContent>
+    </Page.Root>
   );
 }

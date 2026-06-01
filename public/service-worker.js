@@ -8,7 +8,7 @@ let requestQueueProcessed = false;
 
 async function cacheCoreAssets() {
   const cache = await caches.open(CACHE_NAME);
-  return await cache.addAll(["/"]);
+  return await cache.addAll(["/", "/profile"]);
 }
 
 self.addEventListener("install", (event) => {

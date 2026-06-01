@@ -5,12 +5,15 @@ import {
   Dialog,
   Separator,
   Box,
+  Flex,
   Grid,
+  IconButton,
   Text,
   Heading,
   Stack,
   Button,
 } from "@chakra-ui/react";
+import { BiChevronLeft } from "react-icons/bi";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -25,6 +28,10 @@ type ModalFormProps = {
   footer?: React.ReactNode;
   children: React.ReactNode;
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
+  /** @deprecated Always fullscreen on mobile now. Has no effect. */
+  fullSizeOnMobile?: boolean;
+  /** Show a chevron-left close button on the left of the modal header. */
+  backButton?: boolean;
   /** Customize the confirmation dialog. Set to false to disable confirmation entirely. */
   confirmation?:
     | true
@@ -106,6 +113,8 @@ export function ModalForm({
   footer,
   children,
   onSubmit,
+  fullSizeOnMobile,
+  backButton,
   confirmation,
 }: ModalFormProps) {
   // Holds the captured submit event so we can replay it after confirmation.
@@ -147,22 +156,39 @@ export function ModalForm({
       <Dialog.Root
         open={open}
         onOpenChange={onOpenChange}
-        size="xl"
+        size={{ base: "full", md: "xl" }}
         placement={"center"}
       >
         <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
+        <Dialog.Positioner p={{ base: 0, md: undefined }}>
+          <Dialog.Content
+            borderRadius={{ base: "0", md: undefined }}
+          >
             <Dialog.CloseTrigger position="absolute" top={3} insetEnd={3} />
 
             {/* Header ------------------------------------------------------- */}
             {header ??
               ((title || description) && (
                 <Dialog.Header>
-                  {title && <Dialog.Title>{title}</Dialog.Title>}
-                  {description && (
-                    <Dialog.Description>{description}</Dialog.Description>
-                  )}
+                  <Flex align="center" gap={2}>
+                    {backButton && (
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        aria-label="Close"
+                        onClick={() => onOpenChange({ open: false })}
+                        flexShrink={0}
+                      >
+                        <BiChevronLeft size={22} />
+                      </IconButton>
+                    )}
+                    <Box>
+                      {title && <Dialog.Title>{title}</Dialog.Title>}
+                      {description && (
+                        <Dialog.Description>{description}</Dialog.Description>
+                      )}
+                    </Box>
+                  </Flex>
                 </Dialog.Header>
               ))}
 

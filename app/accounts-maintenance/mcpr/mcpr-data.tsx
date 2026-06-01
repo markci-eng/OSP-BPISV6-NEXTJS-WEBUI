@@ -1,9 +1,10 @@
 import React from "react";
-import { Body, Small } from "st-peter-ui";
+import { Body, Box, PrimaryMdButton, Small } from "st-peter-ui";
 import MCPRList from "./mcpr-list";
 import {
-  Box,
   Flex,
+  Grid,
+  GridItem,
   Separator,
   SimpleGrid,
   Span,
@@ -11,36 +12,19 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 export default function MCPRDataPage() {
-  const summaryCardProps = {
-    bg: BRAND_COLORS.white,
-    boxShadow: STANDARD_SHADOWS.level1,
-    borderRadius: STANDARD_RADIUS.md,
-    borderWidth: "1px",
-    borderColor: BRAND_COLORS.neutralBorder,
-    p: { base: 4, md: 5 },
-  } as const;
-
   return (
     <>
-      <Box flex="1" minW={0} overflow="hidden">
+      <Box flex="1" overflow="auto">
         <MCPRList />
       </Box>
       
       {/* Summary Section */}
-      <SimpleGrid
-        columns={{ base: 1, md: 2, lg: 3 }}
-        gap={{ base: 4, md: 5 }}
-      >
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
         {/* No Of Accounts */}
-        <Box {...summaryCardProps}>
-          <Strong color={BRAND_COLORS.primaryGreen}>No Of Accounts</Strong>
+        <Box bg="white" boxShadow="sm" borderRadius="lg" borderWidth="0.5px" p={4}>
+          <Strong color="var(--chakra-colors-primary)">No Of Accounts</Strong>
           <Separator my={2} />
           <Flex justify="center">
             <Text fontSize={{ base: "xl", md: "2xl" }}>150</Text>
@@ -48,8 +32,8 @@ export default function MCPRDataPage() {
         </Box>
 
         {/* Quota */}
-        <Box {...summaryCardProps}>
-          <Strong color={BRAND_COLORS.primaryGreen}>Quota:</Strong>
+        <Box bg="white" boxShadow="sm" borderRadius="lg" borderWidth="0.5px" p={4}>
+          <Strong color="var(--chakra-colors-primary)">Quota:</Strong>
           <Separator my={2} />
           <SimpleGrid columns={{ base: 1, sm: 2 }} gap={4}>
             <InfoItem label="Commission" value="50,000" />
@@ -58,8 +42,8 @@ export default function MCPRDataPage() {
         </Box>
 
         {/* Collection */}
-        <Box {...summaryCardProps}>
-          <Strong color={BRAND_COLORS.primaryGreen}>Collection:</Strong>
+        <Box bg="white" boxShadow="sm" borderRadius="lg" borderWidth="0.5px" p={4}>
+          <Strong color="var(--chakra-colors-primary)">Collection:</Strong>
           <Separator my={2} />
           <SimpleGrid columns={{ base: 1, sm: 2 }} gap={4}>
             <InfoItem label="Commission" value="50,000" />

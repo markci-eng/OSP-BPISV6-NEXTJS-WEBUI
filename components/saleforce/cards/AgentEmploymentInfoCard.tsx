@@ -1,10 +1,8 @@
 import Card from "@/components/cards/Card";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
-import InfoItem from "@/components/common/info-item/info-item";
 import LabelText from "@/components/texts/LabelText";
-import { salesAgents } from "@/data/saleforce/sales-agent-data";
-import { Box, CardDescription, Grid } from "@chakra-ui/react";
+import { Box, Flex, Separator } from "@chakra-ui/react";
 
 interface AgentEmploymentInfoCardProps {
   agent: SalesAgent | undefined | null;
@@ -19,19 +17,23 @@ const InfoDetail = ({ value }: Agent) => {
   return (
     <>
       {value ? (
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={1}>
+        <Flex direction="column" gap={2}>
           <LabelText label="Position" value={value?.position ?? "N/A"} />
+          <Separator />
           <LabelText label="Date Hired" value={value?.hireDate ?? "N/A"} />
-          <LabelText
-            label="Employee Status"
-            value={value?.employeeStatus ?? "N/A"}
-          />
+          <Separator />
+          <LabelText label="Employee Status" value={value?.employeeStatus ?? "N/A"} />
+          <Separator />
           <LabelText label="Branch" value={value?.branch ?? "N/A"} />
+          <Separator />
           <LabelText label="Supervisor" value={value?.superiorId ?? "N/A"} />
+          <Separator />
           <LabelText label="SSS No." value={value?.sssNumber ?? "N/A"} />
+          <Separator />
           <LabelText label="NBI No." value={value?.nbiNumber ?? "N/A"} />
+          <Separator />
           <LabelText label="TIN No." value={value?.tinNumber ?? "N/A"} />
-        </Grid>
+        </Flex>
       ) : (
         <EmptyStateCard
           title="No Agent Selected"

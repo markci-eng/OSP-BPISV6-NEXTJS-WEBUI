@@ -1,24 +1,38 @@
 import Card from "@/components/cards/Card";
 import {
   Box,
+  Carousel,
+  CloseButton,
+  Drawer,
   Flex,
   Grid,
   GridItem,
+  IconButton,
   Input,
   InputGroup,
+  Portal,
   Separator,
   Show,
   Button,
+  Text,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import { Badge } from "../components/badge/badge";
+import { OSPBadge } from "@/components/common/badge/badge";
 import { FaRegFileAlt } from "react-icons/fa";
-import { LuSearch, LuTrash, LuUsersRound } from "react-icons/lu";
+import {
+  LuArrowLeft,
+  LuArrowRight,
+  LuPointer,
+  LuSearch,
+  LuTrash,
+  LuUsersRound,
+} from "react-icons/lu";
 import { useEffect, useState } from "react";
+import { OnboardingTutorial } from "../onboarding-tutorial";
 import { PlanDetailType } from "@/components/plan-management/planholder-profile/planholder-profile-page";
 import { EmptyState } from "../components/empty-state/empty-state";
 import { LPANumberButton } from "../components/buttons/lpa-button";
-import { H4, Small } from "st-peter-ui";
+import { H4, PrimaryMdButton, PrimarySmButton, Small } from "st-peter-ui";
 import { HiRefresh } from "react-icons/hi";
 import { Tab } from "../components/tab/tab";
 import { FiFileText } from "react-icons/fi";
@@ -31,21 +45,24 @@ import { useMessageDialog } from "@/components/common/message-box/message-box-pr
 import { Beneficiaries } from "../pages/beneficiaries";
 import { StatementOfAccount } from "../pages/statement-of-accounts";
 import { HealthDeclaration } from "../pages/health-declaration";
-import { PlanSelectionDropdown } from "../components/plan-selection-dropdown/plan-selection-dropdown";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_BUTTON_STYLES,
-  STANDARD_RADIUS,
-} from "@/lib/theme/standard-design-tokens";
 
-function getPlanBadgeType(
-  status: string,
-): "success" | "info" | "warning" | "danger" | undefined {
-  if (status === "LAPSED") return "warning";
-  if (status === "NOT YET TERMINATED" || status === "ACTIVE") return "success";
-  if (status.includes("SERVICED")) return "info";
-  return undefined;
-}
+const PLAN_DETAIL_STEPS = [
+  {
+    targetId: "tour-plan-lpa-header",
+    title: "Plan Overview",
+    body: "This shows the selected plan's LPA number and its current status — Active or Lapsed.",
+  },
+  {
+    targetId: "tour-plan-actions",
+    title: "Plan Actions",
+    body: "Reinstate a lapsed plan, transfer rights to another person, or delete the plan from here.",
+  },
+  {
+    targetId: "tour-plan-tabs",
+    title: "Plan Information",
+    body: "Browse plan details, beneficiaries, statement of accounts, health declaration, loan records, and more from these tabs.",
+  },
+];
 
 export interface PhBeneficiaries {
   lpaNumber: string;
@@ -56,50 +73,260 @@ export interface PhBeneficiaries {
   type: "principal" | "contingent";
 }
 
+function PlanTabs({
+  planDetails,
+  planholderAddress,
+}: {
+  planDetails: PlanDetailType;
+  planholderAddress?: string;
+}) {
+  return (
+    <Tab
+      tabItems={[
+        {
+          icon: FiFileText,
+          label: "Plan Details",
+          value: "plan-details",
+          page: <PlanDetailsPage planDetails={planDetails} />,
+        },
+        {
+          icon: LuUsersRound,
+          label: "Beneficiaries",
+          value: "beneficiaries",
+          page: (
+            <Beneficiaries
+              beneficiaries={[
+                {
+                  personId: "PI10001",
+                  lpaNumber: "L25053226I",
+                  beneficiaryClass: "PRINCIPAL",
+                  lastName: "DELA ROSA",
+                  firstName: "ROLAND",
+                  middleInitial: "C",
+                  relationship: "SON",
+                  age: 23,
+                  address: "CALOOCAN CITY",
+                },
+              ]}
+              planholderAddress={planholderAddress}
+            />
+          ),
+        },
+        {
+          icon: HiOutlineDocumentCurrencyDollar,
+          label: "Statement of Accounts",
+          value: "statement-of-accounts",
+          page: (
+            <StatementOfAccount
+              props={{
+                lpaNumber: planDetails.lpaNumber,
+                dueDate: new Date("2026-05-23"),
+                term: planDetails.term,
+                mode: planDetails.mode,
+                installmentNumber: 7,
+                installmentAmount: planDetails.installmentAmount,
+                totalAmountPayable: planDetails.totalAmountPayable,
+                totalPayments: planDetails.installmentAmount * 7,
+                balance:
+                  planDetails.totalAmountPayable -
+                  planDetails.installmentAmount * 7,
+                terminationValue: 600,
+                paymentRecords: [],
+              }}
+            />
+          ),
+        },
+        {
+          icon: MdHealthAndSafety,
+          label: "Health Declaration",
+          value: "health-declaration",
+          page: <HealthDeclaration />,
+        },
+        {
+          icon: LiaHandHoldingUsdSolid,
+          label: "Loan",
+          value: "loan",
+          page: (
+            <EmptyState
+              title={"No Record Found"}
+              description={"Loan details displays here."}
+            />
+          ),
+        },
+        {
+          icon: GiMartyrMemorial,
+          label: "Service",
+          value: "service",
+          page: (
+            <EmptyState
+              title={"No Record Found"}
+              description={"Service Information displays here."}
+            />
+          ),
+        },
+        {
+          icon: FiFileText,
+          label: "ROP History",
+          value: "rop-history",
+          page: (
+            <EmptyState
+              title={"No Record Found"}
+              description={"ROP history displays here."}
+            />
+          ),
+        },
+        {
+          icon: LuUsersRound,
+          label: "Transfer History",
+          value: "transfer-history",
+          page: (
+            <EmptyState
+              title={"No Record Found"}
+              description={"Transfer history displays here."}
+            />
+          ),
+        },
+      ]}
+    />
+  );
+}
+
 export function ListOfPlans({
   plans,
   deletePlanFunction,
+  personId,
+  planholderAddress,
 }: {
   plans: PlanDetailType[];
   deletePlanFunction?: (lpaNumber: string) => void;
+  personId?: string;
+  planholderAddress?: string;
 }) {
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  const isMobile = useBreakpointValue({ base: true, lg: false });
   const [searchVal, setSearchVal] = useState<string>("");
-  const [planDetails, setPlanDetails] = useState<PlanDetailType>(
-    plans.find((plan) => plan.lpaNumber === plans[0]?.lpaNumber) ??
-      ({} as PlanDetailType),
+  const [planDetails, setPlanDetails] = useState<PlanDetailType | null>(
+    plans[0] ?? null,
   );
   const [filteredPlans, setFilteredPlans] = useState<PlanDetailType[]>(plans);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { messageBox } = useMessageDialog();
 
   useEffect(() => {
     setFilteredPlans(
-      plans.filter((e) =>
-        e.lpaNumber.toLocaleLowerCase().includes(searchVal.toLocaleLowerCase()),
-      ),
+      plans.filter((e) => e.lpaNumber.toLocaleLowerCase().includes(searchVal)),
     );
-  }, [plans, searchVal]);
+  }, [searchVal]);
+
+  const actionButtons = planDetails ? (
+    <Flex gap={2} w={{ base: "full", lg: "auto" }}>
+      {planDetails.accountStatus === "LAPSED" &&
+        planDetails.terminationStatus === "NOT YET TERMINATED" && (
+          <Box flex={1}>
+            <Show when={!isMobile}>
+              <PrimaryMdButton
+                w="full"
+                onClick={() =>
+                  (window.location.href =
+                    "/plan-management/planholder/" +
+                    planDetails.lpaNumber +
+                    "/reinstatement")
+                }
+              >
+                <HiRefresh /> Reinstate Plan
+              </PrimaryMdButton>
+            </Show>
+            <Show when={isMobile}>
+              <PrimarySmButton
+                w="full"
+                onClick={() =>
+                  (window.location.href =
+                    "/plan-management/planholder/" +
+                    planDetails.lpaNumber +
+                    "/reinstatement")
+                }
+              >
+                <HiRefresh /> Reinstate Plan
+              </PrimarySmButton>
+            </Show>
+          </Box>
+        )}
+
+      {planDetails.accountStatus !== "LAPSED" &&
+        planDetails.terminationStatus === "NOT YET TERMINATED" && (
+          <Box flex={1}>
+            <Show when={!isMobile}>
+              <PrimaryMdButton
+                w="full"
+                onClick={() =>
+                  (window.location.href =
+                    "/plan-management/planholder/" +
+                    planDetails.lpaNumber +
+                    "/transfer-of-rights")
+                }
+              >
+                <HiRefresh /> Transfer Plan
+              </PrimaryMdButton>
+            </Show>
+            <Show when={isMobile}>
+              <PrimarySmButton
+                w="full"
+                onClick={() =>
+                  (window.location.href =
+                    "/plan-management/planholder/" +
+                    planDetails.lpaNumber +
+                    "/transfer-of-rights")
+                }
+              >
+                <HiRefresh /> Transfer Plan
+              </PrimarySmButton>
+            </Show>
+          </Box>
+        )}
+
+      {deletePlanFunction && (
+        <Button
+          flex={1}
+          size={{ base: "sm", lg: "md" }}
+          bg={"var(--chakra-colors-danger-hover)"}
+          _hover={{ bg: "var(--chakra-colors-danger)" }}
+          color={"white"}
+          onClick={async () => {
+            const confirmed = await messageBox({
+              title: "Delete Plan",
+              message:
+                "Are you sure you want to delete this plan? (" +
+                planDetails.lpaNumber +
+                ")",
+              confirmText: "Delete",
+              cancelText: "Cancel",
+              variant: "confirmation",
+            });
+            if (confirmed) {
+              deletePlanFunction(planDetails.lpaNumber);
+            }
+          }}
+        >
+          <LuTrash /> Delete Plan
+        </Button>
+      )}
+    </Flex>
+  ) : null;
 
   return (
-    <Box my={{ base: 4, md: 5 }}>
+    <Box my={{ base: 0, lg: 5 }}>
       <Card.Root title={"List of Plan(s)"}>
         {plans.length > 0 ? (
           <Card.MainContent>
-            <Grid
-              templateColumns={{ base: "1fr", lg: "minmax(260px, 320px) 1fr" }}
-              gap={{ base: 4, md: 5 }}
-              alignItems="start"
-            >
-              <GridItem minW={0}>
+            <Grid templateColumns={"repeat(4, 1fr)"} gap={2}>
+              {/* Plan list / carousel column */}
+              <GridItem colSpan={isMobile ? 4 : 1}>
                 <Show when={!isMobile}>
                   <InputGroup startElement={<LuSearch />}>
                     <Input
                       placeholder="Search LPA Number"
                       value={searchVal}
                       onChange={(e) => setSearchVal(e.currentTarget.value)}
-                      h="40px"
-                      borderRadius={STANDARD_RADIUS.md}
                     />
                   </InputGroup>
                   <Separator my={3} />
@@ -114,255 +341,166 @@ export function ListOfPlans({
                       <LPANumberButton
                         key={plan.lpaNumber}
                         plan={plan}
-                        isSelected={planDetails.lpaNumber === plan.lpaNumber}
+                        isSelected={planDetails?.lpaNumber === plan.lpaNumber}
                         onClick={() => setPlanDetails(plan)}
+                        personId={personId}
                       />
                     ))}
                   </Flex>
                 </Show>
+
                 <Show when={isMobile}>
-                  <PlanSelectionDropdown
-                    plans={plans}
-                    onChange={(pln) => setPlanDetails(pln)}
-                  />
+                  <Carousel.Root
+                    slideCount={plans.length}
+                    onPageChange={(details) =>
+                      setPlanDetails(plans[details.page])
+                    }
+                  >
+                    <Box
+                      position="relative"
+                      mx={plans.length > 1 ? 4 : 0}
+                      overflow="visible"
+                    >
+                      <Carousel.ItemGroup w="full">
+                        {plans.map((plan, index) => (
+                          <Carousel.Item
+                            key={plan.lpaNumber}
+                            index={index}
+                            minW={0}
+                          >
+                            <LPANumberButton
+                              plan={plan}
+                              isSelected={true}
+                              onClick={() => {
+                                setPlanDetails(plan);
+                                setModalOpen(true);
+                              }}
+                              personId={personId}
+                            />
+                          </Carousel.Item>
+                        ))}
+                      </Carousel.ItemGroup>
+
+                      {/* View Details — sibling of ItemGroup so carousel clipping doesn't affect it */}
+                      <Box
+                        position="absolute"
+                        bottom={0}
+                        left="50%"
+                        zIndex={2}
+                        style={{ transform: "translate(-50%, 50%)" }}
+                      >
+                        <Button
+                          size="xs"
+                          bg="white"
+                          border="1px solid"
+                          borderColor="gray.200"
+                          boxShadow="sm"
+                          borderRadius="full"
+                          fontSize="xs"
+                          fontWeight="semibold"
+                          color="var(--chakra-colors-primary)"
+                          px={3}
+                          gap={1}
+                          onClick={() => setModalOpen(true)}
+                        >
+                          <LuPointer size={11} />
+                          View Details
+                        </Button>
+                      </Box>
+
+                      {plans.length > 1 && (
+                        <Carousel.PrevTrigger asChild>
+                          <IconButton
+                            size="xs"
+                            variant="outline"
+                            position="absolute"
+                            left={0}
+                            top="50%"
+                            bg="white"
+                            boxShadow="sm"
+                            borderRadius="full"
+                            zIndex={1}
+                            style={{ transform: "translate(-50%, -50%)" }}
+                          >
+                            <LuArrowLeft />
+                          </IconButton>
+                        </Carousel.PrevTrigger>
+                      )}
+
+                      {plans.length > 1 && (
+                        <Carousel.NextTrigger asChild>
+                          <IconButton
+                            size="xs"
+                            variant="outline"
+                            position="absolute"
+                            right={0}
+                            top="50%"
+                            bg="white"
+                            boxShadow="sm"
+                            borderRadius="full"
+                            zIndex={1}
+                            style={{ transform: "translate(50%, -50%)" }}
+                          >
+                            <LuArrowRight />
+                          </IconButton>
+                        </Carousel.NextTrigger>
+                      )}
+                    </Box>
+
+                    {plans.length > 1 && (
+                      <Carousel.Indicators
+                        mt={6}
+                        transition="width 0.2s ease-in-out"
+                        boxSize="2"
+                        opacity="0.5"
+                        _current={{
+                          width: "10",
+                          bg: "colorPalette.subtle",
+                          opacity: 1,
+                        }}
+                      />
+                    )}
+                  </Carousel.Root>
                 </Show>
               </GridItem>
-              <GridItem minW={0}>
+
+              {/* Tabs panel — desktop only */}
+              <GridItem colSpan={3} display={{ base: "none", lg: "block" }}>
                 <Box
-                  p={{ base: 3, md: 4 }}
-                  borderRadius={STANDARD_RADIUS.md}
+                  p={3}
+                  borderRadius={"sm"}
                   border={"1px solid"}
-                  borderColor="gray.200"
-                  bg={BRAND_COLORS.white}
+                  borderColor={"gray.200"}
                 >
-                  <Flex
-                    align={{ base: "stretch", md: "center" }}
-                    justify={"space-between"}
-                    direction={{ base: "column", md: "row" }}
-                    gap={3}
-                  >
-                    <Flex gap={3} my={{ base: 0, md: 2 }} align={"center"}>
-                      <Box
-                        p={3}
-                        borderRadius={STANDARD_RADIUS.md}
-                        bg={BRAND_COLORS.successBg}
-                        flexShrink={0}
-                      >
-                        <FaRegFileAlt
-                          size={24}
-                          color={BRAND_COLORS.primaryGreen}
-                        />
-                      </Box>
-                      <Flex direction={"column"} minW={0}>
+                  <Flex align={"center"} justify={"space-between"}>
+                    <Flex gap={2} my={2} align={"center"}>
+                      <FaRegFileAlt
+                        size={40}
+                        color="var(--chakra-colors-primary)"
+                      />
+                      <Flex direction={"column"}>
                         <Small mb={-1}>LPA Number</Small>
-                        <H4>{planDetails.lpaNumber}</H4>
-                        <Flex gap={2} mt={2} wrap="wrap">
-                          <Badge
-                            type={getPlanBadgeType(planDetails.accountStatus)}
+                        <H4>{planDetails!.lpaNumber}</H4>
+                        <Flex gap={2} mt={2}>
+                          <OSPBadge
+                            type={
+                              planDetails!.accountStatus === "LAPSED"
+                                ? "warning"
+                                : "success"
+                            }
                           >
-                            {planDetails.accountStatus}
-                          </Badge>
-                          <Badge
-                            type={getPlanBadgeType(
-                              planDetails.terminationStatus,
-                            )}
-                          >
-                            {planDetails.terminationStatus}
-                          </Badge>
+                            {planDetails!.accountStatus}
+                          </OSPBadge>
+                          <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
                         </Flex>
                       </Flex>
                     </Flex>
-                    <Flex
-                      align={"stretch"}
-                      justify={{ base: "stretch", md: "flex-end" }}
-                      direction={{ base: "column", sm: "row" }}
-                      gap={2}
-                    >
-                      {deletePlanFunction && (
-                        <Button
-                          width={{ base: "full", sm: "auto" }}
-                          size="sm"
-                          variant="outline"
-                          {...STANDARD_BUTTON_STYLES.md}
-                          color={BRAND_COLORS.destructiveRed}
-                          borderColor={BRAND_COLORS.destructiveRed}
-                          _hover={{
-                            bg: BRAND_COLORS.errorBg,
-                          }}
-                          onClick={async () => {
-                            const confirmed = await messageBox({
-                              title: "Delete Plan",
-                              message:
-                                "Are you sure you want to delete this plan? (" +
-                                planDetails.lpaNumber +
-                                ")",
-                              confirmText: "Delete",
-                              cancelText: "Cancel",
-                              variant: "confirmation",
-                            });
-
-                            if (confirmed) {
-                              deletePlanFunction(planDetails.lpaNumber);
-                            }
-                          }}
-                        >
-                          <LuTrash /> Delete Plan
-                        </Button>
-                      )}
-                      {planDetails.accountStatus === "LAPSED" &&
-                        planDetails.terminationStatus ===
-                          "NOT YET TERMINATED" && (
-                          <>
-                            <Button
-                              size="sm"
-                              w={{ base: "full", sm: "auto" }}
-                              {...STANDARD_BUTTON_STYLES.md}
-                              bg={BRAND_COLORS.primaryGreen}
-                              color="white"
-                              _hover={{ bg: BRAND_COLORS.darkGreen }}
-                              onClick={() =>
-                                (window.location.href =
-                                  "/plan-management/planholder/" +
-                                  planDetails.lpaNumber +
-                                  "/reinstatement")
-                              }
-                            >
-                              <HiRefresh /> Reinstate Plan
-                            </Button>
-                          </>
-                        )}
-
-                      {planDetails.accountStatus != "LAPSED" &&
-                        planDetails.terminationStatus ===
-                          "NOT YET TERMINATED" && (
-                          <>
-                            <Button
-                              size="sm"
-                              w={{ base: "full", sm: "auto" }}
-                              {...STANDARD_BUTTON_STYLES.md}
-                              bg={BRAND_COLORS.primaryGreen}
-                              color="white"
-                              _hover={{ bg: BRAND_COLORS.darkGreen }}
-                              onClick={() =>
-                                (window.location.href =
-                                  "/plan-management/planholder/" +
-                                  planDetails.lpaNumber +
-                                  "/transfer-of-rights")
-                              }
-                            >
-                              <HiRefresh /> Transfer Plan
-                            </Button>
-                          </>
-                        )}
-                    </Flex>
+                    {actionButtons}
                   </Flex>
                   <Separator my={2} />
-                  <Tab
-                    tabItems={[
-                      {
-                        icon: FiFileText,
-                        label: "Plan Details",
-                        value: "plan-details",
-                        page: <PlanDetailsPage planDetails={planDetails} />,
-                      },
-                      {
-                        icon: LuUsersRound,
-                        label: "Beneficiaries",
-                        value: "beneficiaries",
-                        page: (
-                          <Beneficiaries
-                            beneficiaries={[
-                              {
-                                personId: "PI10001",
-                                lpaNumber: "L25053226I",
-                                beneficiaryClass: "PRINCIPAL",
-                                lastName: "DELA ROSA",
-                                firstName: "ROLAND",
-                                middleInitial: "C",
-                                relationship: "SON",
-                                age: 23,
-                                address: "CALOOCAN CITY",
-                              },
-                            ]}
-                          />
-                        ),
-                      },
-                      {
-                        icon: HiOutlineDocumentCurrencyDollar,
-                        label: "Statement of Accounts",
-                        value: "statement-of-accounts",
-                        page: (
-                          <StatementOfAccount
-                            props={{
-                              lpaNumber: planDetails.lpaNumber,
-                              dueDate: new Date("2026-05-23"),
-                              term: planDetails.term,
-                              mode: planDetails.mode,
-                              installmentNumber: 7,
-                              installmentAmount: planDetails.installmentAmount,
-                              totalAmountPayable:
-                                planDetails.totalAmountPayable,
-                              totalPayments: planDetails.installmentAmount * 7,
-                              balance:
-                                planDetails.totalAmountPayable -
-                                planDetails.installmentAmount * 7,
-                              terminationValue: 600,
-                              paymentRecords: [],
-                            }}
-                          />
-                        ),
-                      },
-                      {
-                        icon: MdHealthAndSafety,
-                        label: "Health Declaration",
-                        value: "health-declaration",
-                        page: <HealthDeclaration />,
-                      },
-                      {
-                        icon: LiaHandHoldingUsdSolid,
-                        label: "Loan",
-                        value: "loan",
-                        page: (
-                          <EmptyState
-                            title={"No Record Found"}
-                            description={"Loan details displays here."}
-                          />
-                        ),
-                      },
-                      {
-                        icon: GiMartyrMemorial,
-                        label: "Service",
-                        value: "service",
-                        page: (
-                          <EmptyState
-                            title={"No Record Found"}
-                            description={"Service Information displays here."}
-                          />
-                        ),
-                      },
-                      {
-                        icon: FiFileText,
-                        label: "ROP History",
-                        value: "rop-history",
-                        page: (
-                          <EmptyState
-                            title={"No Record Found"}
-                            description={"ROP history displays here."}
-                          />
-                        ),
-                      },
-                      {
-                        icon: LuUsersRound,
-                        label: "Transfer History",
-                        value: "transfer-history",
-                        page: (
-                          <EmptyState
-                            title={"No Record Found"}
-                            description={"Transfer history displays here."}
-                          />
-                        ),
-                      },
-                    ]}
+                  <PlanTabs
+                    planDetails={planDetails!}
+                    planholderAddress={planholderAddress}
                   />
                 </Box>
               </GridItem>
@@ -377,6 +515,86 @@ export function ListOfPlans({
           </Card.MainContent>
         )}
       </Card.Root>
+
+      {/* Mobile full-screen plan detail drawer */}
+      <Drawer.Root
+        open={modalOpen}
+        onOpenChange={(e) => setModalOpen(e.open)}
+        size="full"
+      >
+        <Portal>
+          <Drawer.Backdrop />
+          <Drawer.Positioner>
+            <Drawer.Content>
+              <Drawer.Header
+                borderBottomWidth={1}
+                borderColor="gray.100"
+                px={4}
+                py={3}
+              >
+                <Flex id="tour-plan-lpa-header" align="center" gap={3} flex={1} minW={0}>
+                  <FaRegFileAlt
+                    size={28}
+                    color="var(--chakra-colors-primary)"
+                  />
+                  <Box flex={1} minW={0}>
+                    <Text fontSize="xs" color="gray.400" lineHeight="short">
+                      LPA Number
+                    </Text>
+                    <Text
+                      fontSize="md"
+                      fontWeight="bold"
+                      color="var(--chakra-colors-primary)"
+                      lineHeight="short"
+                    >
+                      {planDetails?.lpaNumber}
+                    </Text>
+                    <Flex gap={2} mt={1} flexWrap="wrap">
+                      <OSPBadge
+                        type={
+                          planDetails?.accountStatus === "LAPSED"
+                            ? "warning"
+                            : "success"
+                        }
+                      >
+                        {planDetails?.accountStatus}
+                      </OSPBadge>
+                      <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
+                    </Flex>
+                  </Box>
+                </Flex>
+                <Drawer.CloseTrigger asChild>
+                  <CloseButton size="sm" />
+                </Drawer.CloseTrigger>
+              </Drawer.Header>
+
+              {actionButtons && (
+                <Box id="tour-plan-actions" px={4} py={2} borderBottomWidth={1} borderColor="gray.100">
+                  {actionButtons}
+                </Box>
+              )}
+
+              <Drawer.Body px={3} py={3}>
+                {planDetails && (
+                  <Box id="tour-plan-tabs">
+                    <PlanTabs
+                      planDetails={planDetails}
+                      planholderAddress={planholderAddress}
+                    />
+                  </Box>
+                )}
+              </Drawer.Body>
+            </Drawer.Content>
+          </Drawer.Positioner>
+        </Portal>
+      </Drawer.Root>
+
+      {modalOpen && (
+        <OnboardingTutorial
+          steps={PLAN_DETAIL_STEPS}
+          storageKey="osp-plan-detail-tour-v1"
+        />
+      )}
     </Box>
   );
 }

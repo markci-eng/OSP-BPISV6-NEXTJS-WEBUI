@@ -8,7 +8,7 @@ import {
   createListCollection,
   FileUpload,
   Field,
-  Separator,
+  Separator
 } from "@chakra-ui/react";
 import { InputFloatingLabel } from "st-peter-ui";
 import { Body, SecondaryMdButton, SecondarySmButton } from "st-peter-ui";
@@ -120,7 +120,7 @@ const LifePlanApplication1 = () => {
           </Field.Root>
 
           <Field.Root>
-            <Field.Label>Date of Test</Field.Label>
+            <Field.Label>Date of Neutralization</Field.Label>
 
             <Input id="dateOfNeutralization" type="date" />
           </Field.Root>

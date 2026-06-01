@@ -1,27 +1,18 @@
 "use client";
 import { useState } from "react";
+import { CheckedPlan } from "./transfer-of-rights.types";
 import { TransferDocumentsPage } from "./tf-documents-page";
 import { NewPlanHolderInfoForm } from "./new-ph-form";
 import { LuFileText, LuUserRound } from "react-icons/lu";
 import TFReviewApplicationPage from "./tf-review-application-page";
 import { FaFileShield } from "react-icons/fa6";
-import { Page } from "@/components/page/page";
-import { BreadcrumbItemType } from "st-peter-ui";
+import Page from "@/components/layout/page/Page";
 import { FormStepper } from "@/components/form-stepper/form-stepper";
 import { UploadedFile } from "@/components/document-uploader/DragAndDrop";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { Box } from "@chakra-ui/react";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
-export function TransferOfRightsPage({
-  breadcrumbItems,
-}: {
-  breadcrumbItems: BreadcrumbItemType[];
-}) {
+export function TransferOfRightsPage() {
+  const [checkedPlans, setCheckedPlans] = useState<CheckedPlan[]>([]);
   const [selectedDocuments, setSelectedDocuments] = useState<UploadedFile[]>(
     [],
   );
@@ -80,21 +71,13 @@ export function TransferOfRightsPage({
     // <FormSteps
     //   stepsData={stepsData}
     //   title={"Transfer of Rights"}
-    //   description={"Transfer your plan to your loved ones - simple and seamless."}
+    //   description={"Transfer your plan to your loved ones—simple and seamless."}
     // />
-    <Page
-      breadcrumbItems={breadcrumbItems}
+    <Page.Root
       title={"Transfer of Rights Application"}
-      description="Transfer your plan to your loved ones - simple and seamless."
+      description="Transfer your plan to your loved ones—simple and seamless."
     >
-      <Box
-        bg={BRAND_COLORS.white}
-        border="1px solid"
-        borderColor={BRAND_COLORS.neutralBorder}
-        borderRadius={STANDARD_RADIUS.md}
-        boxShadow={STANDARD_SHADOWS.level1}
-        p={{ base: 4, md: 5 }}
-      >
+      <Page.MainContent>
         <FormStepper
           steps={stepsData}
           onSubmit={async () => {
@@ -102,7 +85,7 @@ export function TransferOfRightsPage({
               title: "Proceed Application",
               message: "Are you sure you want to proceed?",
               confirmText: "Proceed",
-              cancelText: "Cancel",
+              cancelText: "No",
               variant: "warning",
             });
 
@@ -111,7 +94,7 @@ export function TransferOfRightsPage({
             }
           }}
         />
-      </Box>
-    </Page>
+      </Page.MainContent>
+    </Page.Root>
   );
 }
