@@ -1,29 +1,17 @@
 "use client";
 import {
   Box,
+  Flex,
   Grid,
   GridItem,
-  Separator,
+  IconButton,
   Show,
-  Span,
-  useBreakpointValue,
 } from "@chakra-ui/react";
-import {
-  BaseHeading,
-  Body,
-  Breadcrumb,
-  BreadcrumbItemType,
-  H3,
-  H4,
-  Small,
-} from "st-peter-ui";
-import {
-  PAGE_PADDING,
-  RESPONSIVE_LAYOUT_TOKENS,
-} from "@/lib/theme/layout-tokens";
+import { Body, H3 } from "st-peter-ui";
+import { ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export interface PageProps {
-  breadcrumbItems: BreadcrumbItemType[];
   actionComponent?: React.ReactNode;
   title: string;
   description?: string;
@@ -31,32 +19,43 @@ export interface PageProps {
 }
 
 export function Page(props: PageProps) {
-  const isMobile = useBreakpointValue({ base: true, md: false });
+  const router = useRouter();
   return (
     <Box
       w={"full"}
       mx="auto"
-      px={{ base: PAGE_PADDING.base, md: PAGE_PADDING.md, lg: PAGE_PADDING.lg }}
-      my={{
-        base: RESPONSIVE_LAYOUT_TOKENS.navigationOffset.base,
-        md: RESPONSIVE_LAYOUT_TOKENS.navigationOffset.md,
-      }}
+      px={{ base: 0, lg: 6 }}
+      pb={{ base: "50px", lg: 0 }}
+      my={{ base: 0, lg: 6 }}
     >
-      <Breadcrumb items={props.breadcrumbItems} />
-      {props.actionComponent && (
+      {props.actionComponent ? (
         <Grid templateColumns={{ base: "1fr", lg: "repeat(3, 1fr)" }} gap="2">
           <GridItem width={"full"} colSpan={2}>
-            <Span
-              py={isMobile ? PAGE_PADDING.base : PAGE_PADDING.md}
-              display={"block"}
-            >
-              <H3 color="gray.solid">{props.title}</H3>
-              <Show when={props.description}>
-                <Body color={"gray.fg"} mt={2}>
-                  {props.description}
-                </Body>
-              </Show>
-            </Span>
+            <Flex align="center" gap={2} py={{ base: 2, lg: 4 }}>
+              <IconButton
+                display={{ base: "flex", lg: "none" }}
+                variant="ghost"
+                size="md"
+                aria-label="Go back"
+                onClick={() => router.back()}
+                borderRadius="full"
+                bg="whiteAlpha.600"
+                backdropFilter="blur(8px)"
+                border="1px solid"
+                borderColor="whiteAlpha.400"
+                boxShadow="0 2px 8px rgba(0,0,0,0.08)"
+                _hover={{ bg: "whiteAlpha.800" }}
+                flexShrink={0}
+              >
+                <ChevronLeft />
+              </IconButton>
+              <Box>
+                <H3 color="gray.solid">{props.title}</H3>
+                <Show when={props.description}>
+                  <Body color={"gray.fg"}>{props.description}</Body>
+                </Show>
+              </Box>
+            </Flex>
           </GridItem>
           <GridItem
             colSpan={1}
@@ -68,19 +67,34 @@ export function Page(props: PageProps) {
             {props.actionComponent}
           </GridItem>
         </Grid>
-      )}
-      {!props.actionComponent && (
-        <Span
-          py={isMobile ? PAGE_PADDING.base : PAGE_PADDING.md}
-          display={"block"}
-        >
-          <H3 color="gray.solid">{props.title}</H3>
-          <Show when={props.description}>
-            <Body color={"gray.fg"} mt={2}>
-              {props.description}
-            </Body>
-          </Show>
-        </Span>
+      ) : (
+        <Flex align="center" gap={2} py={{ base: 2, lg: 4 }}>
+          <IconButton
+            display={{ base: "flex", lg: "none" }}
+            variant="ghost"
+            size="md"
+            aria-label="Go back"
+            onClick={() => router.back()}
+            borderRadius="full"
+            bg="whiteAlpha.600"
+            backdropFilter="blur(8px)"
+            border="1px solid"
+            borderColor="whiteAlpha.400"
+            boxShadow="0 2px 8px rgba(0,0,0,0.08)"
+            _hover={{ bg: "whiteAlpha.800" }}
+            flexShrink={0}
+          >
+            <ChevronLeft />
+          </IconButton>
+          <Box>
+            <H3 color="gray.solid">{props.title}</H3>
+            <Show when={props.description}>
+              <Body color={"gray.fg"} mt={2}>
+                {props.description}
+              </Body>
+            </Show>
+          </Box>
+        </Flex>
       )}
       {props.children}
     </Box>

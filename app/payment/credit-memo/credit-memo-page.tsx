@@ -26,23 +26,17 @@ import {
   BatchInfo,
   Deposit,
   Payment,
+  Attachment,
   Planholder,
   getDepositStatus,
 } from "./components/types";
 import DocumentUploader from "@/components/document-uploader/DragAndDrop";
-import { Page } from "@/components/page/page";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_BUTTON_STYLES,
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 const MotionBox = motion.create(Box);
 
 const sectionVariants = {
   hidden: { opacity: 0, height: 0, marginTop: 0 },
-  visible: { opacity: 1, height: "auto", marginTop: 0 },
+  visible: { opacity: 1, height: "auto", marginTop: 24 },
 };
 
 const PAY_CLASSES = ["Monthly", "Quarterly", "Semi-Annual", "Annual"] as const;
@@ -60,7 +54,7 @@ export default function CreditMemoPage() {
     string | null
   >(null);
   const [payments, setPayments] = React.useState<Payment[]>([]);
-  const [attachments, setAttachments] = React.useState([]);
+  const [attachments, setAttachments] = React.useState<Attachment[]>([]);
   const [lookupOpen, setLookupOpen] = React.useState(false);
   const [selectedPlanholder, setSelectedPlanholder] =
     React.useState<Planholder | null>(null);
@@ -180,42 +174,12 @@ export default function CreditMemoPage() {
   };
 
   const selectedDeposit = deposits.find((d) => d.id === selectedDepositId);
-  const breadcrumbItems = [
-    { label: "Home" },
-    { label: "Payment" },
-    { label: "Request Credit Memo" },
-  ];
 
   return (
-    <Page
-      breadcrumbItems={breadcrumbItems}
-      title="Request Credit Memo"
-      description="Prepare special remittances, deposits, payments, and supporting attachments."
-      actionComponent={
-        <Badge
-          bg={batch.batchNo ? BRAND_COLORS.successBg : BRAND_COLORS.mutedBg}
-          color={
-            batch.batchNo ? BRAND_COLORS.primaryGreen : BRAND_COLORS.neutralText
-          }
-          border="1px solid"
-          borderColor={
-            batch.batchNo
-              ? BRAND_COLORS.primaryGreen
-              : BRAND_COLORS.neutralBorder
-          }
-          borderRadius={STANDARD_RADIUS.full}
-          px={3}
-          py={1}
-          fontVariantNumeric="tabular-nums"
-        >
-          {batch.batchNo || "No Batch No"}
-        </Badge>
-      }
-    >
+    <Box minH="100vh" bg="bg.subtle">
       {/* Top Bar */}
       <Box
         as="header"
-        display="none"
         borderBottomWidth="1px"
         borderColor="border.muted"
         bg="bg"
@@ -247,11 +211,11 @@ export default function CreditMemoPage() {
         </HStack>
       </Box>
 
-      <Box maxW="1440px" mx="auto">
-        <Grid templateColumns={{ base: "1fr", lg: "repeat(12, 1fr)" }} gap={5}>
+      <Box maxW="1440px" mx="auto" px={{ base: 4, md: 6 }} py={6}>
+        <Grid templateColumns={{ base: "1fr", lg: "repeat(12, 1fr)" }} gap={6}>
           {/* Main Column */}
           <GridItem colSpan={{ base: 1, lg: 8 }}>
-            <VStack align="stretch" gap={4}>
+            <VStack align="stretch" gap={6}>
               <BatchHeaderForm batch={batch} onChange={setBatch} />
 
               <AnimatePresence>
@@ -269,12 +233,12 @@ export default function CreditMemoPage() {
                     overflow="hidden"
                   >
                     <Box
-                      bg={BRAND_COLORS.white}
+                      bg="bg"
                       borderWidth="1px"
-                      borderColor={BRAND_COLORS.neutralBorder}
-                      borderRadius={STANDARD_RADIUS.md}
-                      p={{ base: 4, md: 5 }}
-                      boxShadow={STANDARD_SHADOWS.level1}
+                      borderColor="border.muted"
+                      rounded="xl"
+                      p={6}
+                      boxShadow="sm"
                     >
                       <HStack
                         justify="space-between"
@@ -288,13 +252,7 @@ export default function CreditMemoPage() {
 
                         {depositStatus === "required" &&
                           deposits.length === 0 && (
-                            <Badge
-                              bg={BRAND_COLORS.warningBg}
-                              color={BRAND_COLORS.warningText}
-                              border="1px solid"
-                              borderColor={BRAND_COLORS.warningBorder}
-                              variant="subtle"
-                            >
+                            <Badge colorPalette="blue" variant="subtle">
                               Required
                             </Badge>
                           )}
@@ -311,7 +269,7 @@ export default function CreditMemoPage() {
                         mt={4}
                         pt={4}
                         borderTopWidth="1px"
-                        borderColor={BRAND_COLORS.neutralBorder}
+                        borderColor="border.muted"
                       >
                         <Text fontSize="sm" fontWeight="medium" mb={3}>
                           New Deposit
@@ -325,12 +283,12 @@ export default function CreditMemoPage() {
 
               {/* Payment Entry */}
               <Box
-                bg={BRAND_COLORS.white}
+                bg="bg"
                 borderWidth="1px"
-                borderColor={BRAND_COLORS.neutralBorder}
-                borderRadius={STANDARD_RADIUS.md}
-                p={{ base: 4, md: 5 }}
-                boxShadow={STANDARD_SHADOWS.level1}
+                borderColor="border.muted"
+                rounded="xl"
+                p={6}
+                boxShadow="sm"
               >
                 <Text fontSize="lg" fontWeight="semibold" mb={4}>
                   Payment Entry
@@ -364,8 +322,8 @@ export default function CreditMemoPage() {
                       transition={{ duration: 0.15 }}
                       mt={2}
                       p={3}
-                      rounded={STANDARD_RADIUS.md}
-                      bg={BRAND_COLORS.subtleBg}
+                      rounded="lg"
+                      bg="bg.muted"
                       fontSize="sm"
                     >
                       <Text>
@@ -384,8 +342,8 @@ export default function CreditMemoPage() {
                           as="span"
                           color={
                             selectedPlanholder.status === "Active"
-                              ? BRAND_COLORS.primaryGreen
-                              : BRAND_COLORS.destructiveRed
+                              ? "green.600"
+                              : "red.500"
                           }
                           fontWeight="medium"
                         >
@@ -403,8 +361,7 @@ export default function CreditMemoPage() {
                     md: "repeat(2, 1fr)",
                     xl: "repeat(3, 1fr)",
                   }}
-                  columnGap={4}
-                  rowGap={3}
+                  gap={4}
                   mb={4}
                 >
                   <Field label="SI Number">
@@ -513,14 +470,7 @@ export default function CreditMemoPage() {
                   </Text>
                 )}
 
-                <Button
-                  onClick={handleAddPayment}
-                  size="sm"
-                  bg={BRAND_COLORS.primaryGreen}
-                  color={BRAND_COLORS.white}
-                  _hover={{ bg: BRAND_COLORS.darkGreen }}
-                  {...STANDARD_BUTTON_STYLES.sm}
-                >
+                <Button onClick={handleAddPayment} size="sm">
                   <Plus size={16} />
                   Add to List
                 </Button>
@@ -537,12 +487,12 @@ export default function CreditMemoPage() {
 
               {/* Attachments */}
               <Box
-                bg={BRAND_COLORS.white}
+                bg="bg"
                 borderWidth="1px"
-                borderColor={BRAND_COLORS.neutralBorder}
-                borderRadius={STANDARD_RADIUS.md}
-                p={{ base: 4, md: 5 }}
-                boxShadow={STANDARD_SHADOWS.level1}
+                borderColor="border.muted"
+                rounded="xl"
+                p={6}
+                boxShadow="sm"
               >
                 <Text fontSize="lg" fontWeight="semibold" mb={4}>
                   Attachments
@@ -580,7 +530,7 @@ export default function CreditMemoPage() {
         onClose={() => setLookupOpen(false)}
         onSelect={setSelectedPlanholder}
       />
-    </Page>
+    </Box>
   );
 }
 

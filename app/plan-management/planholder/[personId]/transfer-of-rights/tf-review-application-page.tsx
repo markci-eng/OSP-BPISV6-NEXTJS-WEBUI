@@ -1,7 +1,13 @@
 import SummaryForm from "@/components/common/text/SummaryForm";
-import { Box, Flex, Text } from "@chakra-ui/react";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { Body } from "st-peter-ui";
+import { Flex } from "@chakra-ui/react";
+import { SummaryItems, SummarySection } from "@splpi/operations";
+import {
+  LuCircleUserRound,
+  LuClipboardCheck,
+  LuUser,
+  LuUsersRound,
+} from "react-icons/lu";
+import { PrimaryMdButton } from "st-peter-ui";
 
 export default function TFReviewApplicationPage() {
   const summaryItems = () => [
@@ -48,15 +54,7 @@ export default function TFReviewApplicationPage() {
   ];
 
   return (
-    <Flex direction={"column"} gap={3}>
-      <Box>
-        <Body fontWeight="semibold" color={BRAND_COLORS.primaryGreen}>
-          Review Application
-        </Body>
-        <Text color="gray.600" fontSize={{ base: "sm", md: "md" }} mt={1}>
-          Confirm the transfer details before submitting the application.
-        </Text>
-      </Box>
+    <Flex direction={"column"} gap={5}>
       <SummaryForm
         title="Transfer of Rights Summary"
         subtitle="Verify the information below before creating transfer request."
@@ -75,6 +73,27 @@ export default function TFReviewApplicationPage() {
           },
         ]}
       />
+      {/* <SummarySection
+        columns={4}
+        items={summaryItems()}
+        icon={<LuClipboardCheck />}
+        title={"Transfer of Rights Summary"}
+      />
+
+      <SummarySection
+        columns={4}
+        items={summaryItems1()}
+        icon={<LuCircleUserRound />}
+        title={"New Planholder Information"}
+      />
+
+      <SummarySection
+        columns={4}
+        items={summaryItems2()}
+        icon={<LuUsersRound />}
+        title={"Beneficiaries"}
+      /> */}
+      {/* <PrimaryMdButton>Submit Application</PrimaryMdButton> */}
     </Flex>
   );
 }

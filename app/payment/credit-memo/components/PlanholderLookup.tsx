@@ -15,8 +15,6 @@ import {
 } from "@chakra-ui/react";
 import { Search, User } from "lucide-react";
 import { Planholder } from "./types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
 
 interface PlanholderLookupProps {
   open: boolean;
@@ -95,13 +93,14 @@ export function PlanholderLookup({
       }}
       placement="center"
       motionPreset="scale"
+      size={{ base: "full", md: "lg" }}
     >
       <Portal>
         <Dialog.Backdrop />
-        <Dialog.Positioner>
+        <Dialog.Positioner p={{ base: 0, md: undefined }}>
           <Dialog.Content
-            maxW="lg"
-            rounded={STANDARD_RADIUS.lg}
+            maxW={{ base: "100dvw", md: "lg" }}
+            borderRadius={{ base: 0, md: "xl" }}
             overflow="hidden"
           >
             <Dialog.Header>
@@ -138,9 +137,9 @@ export function PlanholderLookup({
                         textAlign="left"
                         px={3}
                         py={2.5}
-                        rounded={STANDARD_RADIUS.md}
+                        rounded="lg"
                         transition="background-color 0.2s"
-                        _hover={{ bg: BRAND_COLORS.subtleBg }}
+                        _hover={{ bg: "bg.muted" }}
                         onClick={() => handleSelect(p)}
                       >
                         <HStack align="start" gap={3}>
@@ -148,17 +147,13 @@ export function PlanholderLookup({
                             h="8"
                             w="8"
                             rounded="full"
-                            bg={BRAND_COLORS.successBg}
+                            bg="blue.subtle"
                             display="flex"
                             alignItems="center"
                             justifyContent="center"
                             flexShrink={0}
                           >
-                            <Icon
-                              as={User}
-                              boxSize={4}
-                              color={BRAND_COLORS.primaryGreen}
-                            />
+                            <Icon as={User} boxSize={4} color="blue.solid" />
                           </Box>
 
                           <Box minW="0" flex="1">
@@ -172,8 +167,8 @@ export function PlanholderLookup({
                                 as="span"
                                 color={
                                   p.status === "Active"
-                                    ? BRAND_COLORS.primaryGreen
-                                    : BRAND_COLORS.destructiveRed
+                                    ? "green.600"
+                                    : "red.500"
                                 }
                               >
                                 {p.status}

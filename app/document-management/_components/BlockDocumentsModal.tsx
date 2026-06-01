@@ -2,15 +2,8 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import {
-  Button,
-  Field,
-  Flex,
-  Input,
-  Portal,
-  Select,
-  createListCollection,
-} from "@chakra-ui/react";
+import { Button, Flex, createListCollection } from "@chakra-ui/react";
+import { InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
 import type { AssignedDocRow, BlockDocumentPayload } from "./types";
 import {
   ModalForm,
@@ -18,8 +11,6 @@ import {
   ModalFormSection,
 } from "@/components/common/modal-form/modal-form";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_BUTTON_STYLES } from "@/lib/theme/standard-design-tokens";
 
 const blockTypeCollection = createListCollection({
   items: [
@@ -97,32 +88,19 @@ export default function BlockDocumentModal({
       onOpenChange={(d) => {
         if (!d.open) onClose();
       }}
+      backButton
       title="Block Document"
       footer={
         <Flex
           w="full"
           gap={3}
           gridColumn={{ base: "span 2", sm: "span 1" }}
-          direction={{ base: "column", sm: "row" }}
-          justify="flex-end"
+          direction={{ base: "column", sm: "row-reverse" }}
         >
-          <Button
-            {...STANDARD_BUTTON_STYLES.md}
-            variant="outline"
-            onClick={onClose}
-            w={{ base: "full", sm: "auto" }}
-          >
-            Cancel
-          </Button>
           <MotionButton
-            {...STANDARD_BUTTON_STYLES.md}
             // type="submit"
             onClick={handleSubmit}
             disabled={!blockType}
-            bg={BRAND_COLORS.primaryGreen}
-            color={BRAND_COLORS.white}
-            _hover={{ bg: BRAND_COLORS.darkGreen }}
-            _active={{ bg: BRAND_COLORS.darkGreen }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             transition={springTransition}
@@ -130,98 +108,75 @@ export default function BlockDocumentModal({
           >
             Save
           </MotionButton>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            w={{ base: "full", sm: "auto" }}
+          >
+            Cancel
+          </Button>
         </Flex>
       }
     >
-      {/* Read-only info fields */}
       <ModalFormField>
-        <Field.Root>
-          <Field.Label>Employee ID</Field.Label>
-          <Input value={employeeID ?? row?.salesForceId ?? ""} readOnly />
-        </Field.Root>
+        <InputFloatingLabel
+          label="Employee ID"
+          value={employeeID ?? row?.salesForceId ?? ""}
+          readOnly
+        />
       </ModalFormField>
 
       <ModalFormField>
-        <Field.Root>
-          <Field.Label>Document Code</Field.Label>
-          <Input value={row?.documentCode ?? ""} readOnly />
-        </Field.Root>
+        <InputFloatingLabel
+          label="Document Code"
+          value={row?.documentCode ?? ""}
+          readOnly
+        />
       </ModalFormField>
 
       <ModalFormField fullWidth>
-        <Field.Root>
-          <Field.Label>Document Type</Field.Label>
-          <Input value={row?.documentType ?? ""} readOnly />
-        </Field.Root>
+        <InputFloatingLabel
+          label="Document Type"
+          value={row?.documentType ?? ""}
+          readOnly
+        />
       </ModalFormField>
 
-      {/* Block type — spans both columns */}
       <ModalFormField fullWidth>
-        <Field.Root>
-          <Field.Label>Block Type</Field.Label>
-          <Select.Root
-            collection={blockTypeCollection}
-            value={blockType ? [blockType] : []}
-            onValueChange={(details) => setBlockType(details.value[0] ?? "")}
-          >
-            <Select.HiddenSelect />
-            <Select.Control>
-              <Select.Trigger>
-                <Select.ValueText placeholder="Select block type" />
-              </Select.Trigger>
-              <Select.IndicatorGroup>
-                <Select.Indicator />
-              </Select.IndicatorGroup>
-            </Select.Control>
-            <Portal>
-              <Select.Positioner>
-                <Select.Content>
-                  {blockTypeCollection.items.map((item) => (
-                    <Select.Item item={item} key={item.value}>
-                      {item.label}
-                      <Select.ItemIndicator />
-                    </Select.Item>
-                  ))}
-                </Select.Content>
-              </Select.Positioner>
-            </Portal>
-          </Select.Root>
-        </Field.Root>
+        <SelectFloatingLabel
+          label="Block Type"
+          collection={blockTypeCollection}
+          value={blockType ? [blockType] : []}
+          onValueChanged={(vals) => setBlockType(vals[0] ?? "")}
+          required
+        />
       </ModalFormField>
 
-      {/* Document range section */}
       <ModalFormSection title="Document Range" fullWidth>
         <ModalFormField>
-          <Field.Root>
-            <Field.Label>Document Start</Field.Label>
-            <Input
-              value={documentStart}
-              onChange={(e) => setDocumentStart(e.target.value)}
-            />
-          </Field.Root>
+          <InputFloatingLabel
+            label="Document Start"
+            value={documentStart}
+            onChange={(e) => setDocumentStart(e.target.value)}
+          />
         </ModalFormField>
 
         <ModalFormField>
-          <Field.Root>
-            <Field.Label>Document End</Field.Label>
-            <Input
-              value={documentEnd}
-              onChange={(e) => setDocumentEnd(e.target.value)}
-            />
-          </Field.Root>
+          <InputFloatingLabel
+            label="Document End"
+            value={documentEnd}
+            onChange={(e) => setDocumentEnd(e.target.value)}
+          />
         </ModalFormField>
       </ModalFormSection>
 
-      {/* Remarks — spans both columns */}
       <ModalFormField fullWidth>
-        <Field.Root>
-          <Field.Label>Remarks</Field.Label>
-          <Input
-            placeholder="Enter remarks"
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-          />
-        </Field.Root>
+        <InputFloatingLabel
+          label="Remarks"
+          placeholder="Enter remarks"
+          value={remarks}
+          onChange={(e) => setRemarks(e.target.value)}
+        />
       </ModalFormField>
     </ModalForm>
   );

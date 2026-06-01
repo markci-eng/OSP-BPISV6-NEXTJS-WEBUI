@@ -31,12 +31,6 @@ import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import { ColumnDef } from "@tanstack/react-table";
 import { TblLoanHdrData } from "@/app/Model/Data/rawData";
 import LabelText from "@/components/texts/LabelText";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_ICON_BUTTON_STYLES,
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 type Props = {
   payments: PaymentRecord[];
@@ -54,8 +48,8 @@ export default function PrepareDRS({ payments }: Props) {
   const Lafcolumns: ColumnDef<LafRowData>[] = [
     { accessorKey: "LAFNo", header: "LAF" },
     { accessorKey: "LPANo", header: "LPA" },
-    { accessorKey: "Name", header: "Name" },
-    { accessorKey: "InstNo", header: "IntsNo", meta: { numeric: true } },
+    { accessorKey: "name", header: "Planholder" },
+    { accessorKey: "InstNo", header: "InstNo", meta: { numeric: true } },
     { accessorKey: "PayClass", header: "PayClass" },
     { accessorKey: "ARDate", header: "AR Date" },
     { accessorKey: "ARNo", header: "AR Number", meta: { numeric: true } },
@@ -63,19 +57,154 @@ export default function PrepareDRS({ payments }: Props) {
   ];
   const LPColumns: ColumnDef<LafRowData>[] = columns;
   const isLaf = TblLoanHdrData.some((a) => a.LAFNo === payments[0]?.LPANo);
-  const drsColumns = isLaf ? [...LPColumns, ...Lafcolumns] : LPColumns;
+  const drsColumns = isLaf ? Lafcolumns : LPColumns;
+
+  // For LOAN entries the source PaymentRecord stores the LAF number in LPANo,
+  // the AR number in SI, the AR date in SIDate, and the AR amount in GrossCom.
+  const lafRows: LafRowData[] = useMemo(() => {
+    if (!isLaf) return [];
+    return rows.map((row) => {
+      const loanHdr = TblLoanHdrData.find((a) => a.LAFNo === row.LPANo);
+      return {
+        ...row,
+        LAFNo: row.LPANo,
+        LPANo: loanHdr?.LPANo ?? row.LPANo,
+        ARDate: row.SIDate,
+        ARNo: Number(row.SI) || undefined,
+        ARAmount: row.GrossCom,
+      };
+    });
+  }, [isLaf, rows]);
+
+  const drsRows: LafRowData[] = isLaf ? lafRows : rows;
+  const totalARAmount = useMemo(
+    () => lafRows.reduce((sum, r) => sum + (r.ARAmount ?? 0), 0),
+    [lafRows],
+  );
+  const [drsNo] = useState(
+    () => `DRS${Math.floor(100000000000 + Math.random() * 900000000000)}`,
+  );
+
+  const handlePrint = () => {
+    const escapeHtml = (value: unknown) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+    type PrintColumn = {
+      accessorKey: string;
+      header: string;
+      numeric?: boolean;
+    };
+    const printColumns = drsColumns.reduce<PrintColumn[]>((acc, col) => {
+      const accessorKey = (col as { accessorKey?: string }).accessorKey;
+      if (!accessorKey) return acc;
+      const header = typeof col.header === "string" ? col.header : accessorKey;
+      const numeric = (col.meta as { numeric?: boolean } | undefined)?.numeric;
+      acc.push({ accessorKey, header, numeric });
+      return acc;
+    }, []);
+
+    const formatCell = (value: unknown, numeric?: boolean) => {
+      if (numeric && typeof value === "number") {
+        return value.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      }
+      return escapeHtml(value);
+    };
+
+    const headerCells = printColumns
+      .map(
+        (c) =>
+          `<th style="text-align:${c.numeric ? "right" : "left"}">${escapeHtml(c.header)}</th>`,
+      )
+      .join("");
+
+    const bodyRows = drsRows
+      .map((row) => {
+        const cells = printColumns
+          .map(
+            (c) =>
+              `<td style="text-align:${c.numeric ? "right" : "left"}">${formatCell(
+                (row as Record<string, unknown>)[c.accessorKey],
+                c.numeric,
+              )}</td>`,
+          )
+          .join("");
+        return `<tr>${cells}</tr>`;
+      })
+      .join("");
+
+    const totalsMap: Record<string, number> = {
+      ...(totals as Record<string, number>),
+      ARAmount: totalARAmount,
+    };
+    const totalCells = printColumns
+      .map((c, idx) => {
+        if (idx === 0) return `<td><strong>Total</strong></td>`;
+        const total = totalsMap[c.accessorKey];
+        if (typeof total === "number") {
+          return `<td style="text-align:right"><strong>${total.toLocaleString(
+            undefined,
+            { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+          )}</strong></td>`;
+        }
+        return `<td></td>`;
+      })
+      .join("");
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<title>Digital Remittance Slip - ${escapeHtml(drsNo)}</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 24px; color: #1a1a1a; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .meta { font-size: 12px; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th, td { border: 1px solid #ccc; padding: 4px 6px; }
+  thead th { background: #f0f0f0; }
+  tfoot td { background: #f7f7f7; }
+  @media print { body { margin: 0; } }
+</style>
+</head>
+<body>
+  <h1>REMITTANCE (HEAD OFFICE)</h1>
+  <div class="meta">
+    <div><strong>KIRK PATRICK OLIVAR</strong></div>
+    <div>DRS No: ${escapeHtml(drsNo)}</div>
+    <div>Payment Type: CASH</div>
+  </div>
+  <table>
+    <thead><tr>${headerCells}</tr></thead>
+    <tbody>${bodyRows}</tbody>
+    <tfoot><tr>${totalCells}</tr></tfoot>
+  </table>
+  <script>
+    window.onload = function () { window.print(); };
+  </script>
+</body>
+</html>`;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Unable to open print window. Please allow pop-ups.");
+      return;
+    }
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   return (
     <Box mx="auto">
       <Card.Root title={"Digital Remittance"}>
         <Card.ButtonSection>
-          <IconButton
-            aria-label="Print digital remittance"
-            variant="outline"
-            borderColor={BRAND_COLORS.primaryGreen}
-            color={BRAND_COLORS.primaryGreen}
-            _hover={{ bg: BRAND_COLORS.successBg }}
-            {...STANDARD_ICON_BUTTON_STYLES.sm}
-          >
+          <IconButton onClick={handlePrint} aria-label="Print DRS report">
             <BsPrinter />
           </IconButton>
         </Card.ButtonSection>
@@ -83,10 +212,10 @@ export default function PrepareDRS({ payments }: Props) {
           {/* <Separator my={4} /> */}
 
           {/* TABLE */}
-          <Box overflowX="auto" mt={3}>
+          <Box overflowX="auto" mt={5}>
             <DataTable
               columns={drsColumns}
-              data={rows}
+              data={drsRows}
               features={{
                 search: false,
                 sorting: false,
@@ -96,11 +225,9 @@ export default function PrepareDRS({ payments }: Props) {
                 columnToggle: false,
               }}
               headerContent={
-                <Flex justify="space-between" wrap="wrap" gap={4}>
+                <Flex justify="space-between" wrap="wrap" gap="6">
                   <Box>
-                    <Heading size="md" color={BRAND_COLORS.neutralText}>
-                      REMITTANCE (HEAD OFFICE)
-                    </Heading>
+                    <Heading size="md">REMITTANCE (HEAD OFFICE)</Heading>
 
                     <Text mt={1} fontWeight="bold">
                       KIRK PATRICK OLIVAR
@@ -115,25 +242,34 @@ export default function PrepareDRS({ payments }: Props) {
                   </Heading>
 
                   <Text mt={1} fontWeight="bold">
-                    {`DRS${Math.floor(100000000000 + Math.random() * 900000000000)}`}
+                    {drsNo}
                   </Text>
                 </Box>
               }
               summaryRows={[
-                {
-                  id: "assigned-documents-summary",
-                  label: "Total",
-                  labelColumnId: "SI",
-                  aggregations: {
-                    GrossCom: "sum",
-                    ncom: "sum",
-                    ComDue: "sum",
-                    others: "sum",
-                    TEPCV: "sum",
-                    COMPCV: "sum",
-                    net: "sum",
-                  },
-                },
+                isLaf
+                  ? {
+                      id: "assigned-documents-summary",
+                      label: "Total",
+                      labelColumnId: "name",
+                      aggregations: {
+                        ARAmount: "sum",
+                      },
+                    }
+                  : {
+                      id: "assigned-documents-summary",
+                      label: "Total",
+                      labelColumnId: "SI",
+                      aggregations: {
+                        GrossCom: "sum",
+                        ncom: "sum",
+                        ComDue: "sum",
+                        others: "sum",
+                        TEPCV: "sum",
+                        COMPCV: "sum",
+                        net: "sum",
+                      },
+                    },
               ]}
               renderDetail={(row) => (
                 <Card.Root title={`${row.SI} - ${row.LPANo}`}>
@@ -192,7 +328,14 @@ export default function PrepareDRS({ payments }: Props) {
               onRowClick={(row) => console.log(row)}
             /> */}
             <Box display={{ base: "block", md: "none" }}>
-              <DrsPaymentSummary totals={totals} />
+              <DrsPaymentSummary
+                totals={totals}
+                items={
+                  isLaf
+                    ? [{ label: "AR Total Amount", value: totalARAmount }]
+                    : undefined
+                }
+              />
             </Box>
             {/* <Flex justify="flex-end" mt={2}>
             <SaveButton onClick={handleConfirm} />
@@ -200,14 +343,11 @@ export default function PrepareDRS({ payments }: Props) {
           </Box>
 
           {/* CONFIRM DIALOG */}
-          <Dialog.Root open={open} size="md" placement="center">
+          <Dialog.Root open={open} size={{ base: "full", md: "md" }} placement="center">
             <Portal>
               <Dialog.Backdrop />
-              <Dialog.Positioner>
-                <Dialog.Content
-                  borderRadius={STANDARD_RADIUS.lg}
-                  boxShadow={STANDARD_SHADOWS.level3}
-                >
+              <Dialog.Positioner p={{ base: 0, md: undefined }}>
+                <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
                   <Dialog.Header>
                     <Dialog.Title>Confirmation</Dialog.Title>
                   </Dialog.Header>
@@ -219,17 +359,6 @@ export default function PrepareDRS({ payments }: Props) {
                   </Dialog.Body>
 
                   <Dialog.Footer>
-                    <Button
-                      variant="outline"
-                      borderColor={BRAND_COLORS.destructiveRed}
-                      color={BRAND_COLORS.destructiveRed}
-                      w="120px"
-                      _hover={{ bg: BRAND_COLORS.errorBg }}
-                      onClick={() => setOpen(false)}
-                    >
-                      NO
-                    </Button>
-
                     <DynamicButton
                       label="YES"
                       onClick={() => {
@@ -237,6 +366,14 @@ export default function PrepareDRS({ payments }: Props) {
                         setOpen(false);
                       }}
                     />
+
+                    <Button
+                      bg="red.600"
+                      w="120px"
+                      onClick={() => setOpen(false)}
+                    >
+                      NO
+                    </Button>
                   </Dialog.Footer>
 
                   <Dialog.CloseTrigger asChild>

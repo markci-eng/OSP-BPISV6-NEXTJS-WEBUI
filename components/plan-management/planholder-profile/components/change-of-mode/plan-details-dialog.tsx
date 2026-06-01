@@ -23,23 +23,15 @@ import {
 import type { CheckedPlanType, PlanDetails } from "./change-mode.types";
 import { PlanTypes } from "./data";
 import { useEffect, useMemo, useState } from "react";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
 
 const modes = ["Monthly", "Quarterly", "Semi-Annual", "Annual"];
 
 const PlanDetailRow = ({ label, value }: { label: string; value: string }) => {
   return (
-    <Box width={"full"} my={2} minW={0}>
-      <Small color="gray.600">{label}</Small>
-      <Box border={"none"} py={0} borderRadius={STANDARD_RADIUS.sm}>
-        <Body
-          fontWeight={"semibold"}
-          wordBreak="break-word"
-          overflowWrap="anywhere"
-        >
-          {value}
-        </Body>
+    <Box width={"full"} my={2}>
+      <Small>{label}</Small>
+      <Box border={"none"} py={0} borderRadius={"sm"}>
+        <Body fontWeight={"semibold"}>{value}</Body>
       </Box>
     </Box>
   );
@@ -155,8 +147,8 @@ export function PlanDetailsDialog({
   return (
     <Portal>
       <Dialog.Backdrop zIndex={1000} />
-      <Dialog.Positioner zIndex={1001}>
-        <Dialog.Content zIndex={1001} borderRadius={STANDARD_RADIUS.lg}>
+      <Dialog.Positioner zIndex={1001} p={{ base: 0, md: undefined }}>
+        <Dialog.Content zIndex={1001} borderRadius={{ base: 0, md: undefined }}>
           <Dialog.Header>
             <Dialog.Title>Plan Details</Dialog.Title>
           </Dialog.Header>
@@ -173,9 +165,8 @@ export function PlanDetailsDialog({
               <RadioCard.Label>Mode of Payment</RadioCard.Label>
               <Grid
                 templateColumns={{
-                    base: "1fr",
-                    sm: "repeat(2,1fr)",
-                    md: "repeat(4,1fr)",
+                  base: "repeat(2,1fr)",
+                  md: "repeat(4,1fr)",
                 }}
                 gap={2}
               >
@@ -188,10 +179,11 @@ export function PlanDetailsDialog({
                     <RadioCard.ItemHiddenInput />
                     <RadioCard.ItemControl
                       _checked={{
-                        backgroundColor: BRAND_COLORS.successBg,
-                        borderColor: BRAND_COLORS.primaryGreen,
+                        backgroundColor:
+                          "var(--chakra-colors-primary-disabled)/50",
+                        borderColor: "var(--chakra-colors-primary)",
                         borderWidth: "1px",
-                        color: BRAND_COLORS.darkGreen,
+                        color: "var(--chakra-colors-primary-hover)",
                       }}
                       _disabled={{
                         borderColor: "dangerHover",
@@ -199,18 +191,18 @@ export function PlanDetailsDialog({
                         color: "danger",
                         _checked: {
                           backgroundColor:
-                            BRAND_COLORS.successBg,
-                          borderColor: BRAND_COLORS.primaryGreen,
+                            "var(--chakra-colors-primary-disabled)/50",
+                          borderColor: "var(--chakra-colors-primary)",
                           borderWidth: "1px",
-                          color: BRAND_COLORS.darkGreen,
+                          color: "var(--chakra-colors-primary-hover)",
                         },
                       }}
                     >
                       <RadioCard.ItemText>{item}</RadioCard.ItemText>
                       <RadioCard.ItemIndicator
                         _checked={{
-                          color: BRAND_COLORS.primaryGreen,
-                          borderColor: BRAND_COLORS.primaryGreen,
+                          color: "var(--chakra-colors-primary)",
+                          borderColor: "var(--chakra-colors-primary)",
                         }}
                       />
                     </RadioCard.ItemControl>
@@ -221,28 +213,16 @@ export function PlanDetailsDialog({
 
             {/* Plan details layout */}
             <Stack direction={{ base: "column", md: "row" }} pt={3}>
-              <SimpleGrid
-                columns={{ base: 1, md: 2 }}
-                px={0}
-                w="full"
-                gap={4}
-              >
+              <SimpleGrid columns={{ base: 1, md: 2 }} px={0} w="full">
                 {/* LEFT COLUMN */}
-                <Box
-                  px={{ base: 3, md: 4 }}
-                  py={{ base: 3, md: 4 }}
-                  borderWidth="1px"
-                  borderColor="gray.200"
-                  borderRadius={STANDARD_RADIUS.md}
-                >
-                  <Heading size="md" color={BRAND_COLORS.neutralText}>
+                <Box px={3} py={3}>
+                  <Heading size="lg" textAlign="center">
                     Current Mode
                   </Heading>
 
                   <Flex
-                    direction={{ base: "column", sm: "row" }}
                     justifyContent={"space-between"}
-                    alignItems={"flex-start"}
+                    alignItems={"center"}
                     gap={2}
                   >
                     <PlanDetailRow label="Mode" value={plan.mode} />
@@ -252,9 +232,8 @@ export function PlanDetailsDialog({
                     />
                   </Flex>
                   <Flex
-                    direction={{ base: "column", sm: "row" }}
                     justifyContent={"space-between"}
-                    alignItems={"flex-start"}
+                    alignItems={"center"}
                     gap={2}
                   >
                     <PlanDetailRow
@@ -267,9 +246,8 @@ export function PlanDetailsDialog({
                     />
                   </Flex>
                   <Flex
-                    direction={{ base: "column", sm: "row" }}
                     justifyContent={"space-between"}
-                    alignItems={"flex-start"}
+                    alignItems={"center"}
                     gap={2}
                   >
                     <PlanDetailRow
@@ -288,18 +266,16 @@ export function PlanDetailsDialog({
                   px={3}
                   py={3}
                   bg="gray.50"
-                  border="1px solid"
-                  borderColor={BRAND_COLORS.primaryGreen}
-                  borderRadius={STANDARD_RADIUS.md}
+                  border="1px solid #ddd"
+                  borderRadius="md"
                 >
-                  <Heading size="md" color={BRAND_COLORS.primaryGreen}>
+                  <Heading size="lg" textAlign="center">
                     After Change of Mode
                   </Heading>
 
                   <Flex
-                    direction={{ base: "column", sm: "row" }}
                     justifyContent={"space-between"}
-                    alignItems={"flex-start"}
+                    alignItems={"center"}
                     gap={2}
                   >
                     <PlanDetailRow label="New Mode" value={newMode} />
@@ -309,9 +285,8 @@ export function PlanDetailsDialog({
                     />
                   </Flex>
                   <Flex
-                    direction={{ base: "column", sm: "row" }}
                     justifyContent={"space-between"}
-                    alignItems={"flex-start"}
+                    alignItems={"center"}
                     gap={2}
                   >
                     <PlanDetailRow
@@ -324,9 +299,8 @@ export function PlanDetailsDialog({
                     />
                   </Flex>
                   <Flex
-                    direction={{ base: "column", sm: "row" }}
                     justifyContent={"space-between"}
-                    alignItems={"flex-start"}
+                    alignItems={"center"}
                     gap={2}
                   >
                     <PlanDetailRow

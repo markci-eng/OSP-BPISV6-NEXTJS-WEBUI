@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { StPeterProvider } from "st-peter-ui";
 import { Toaster } from "sonner";
 import { MessageDialogProvider } from "@/components/common/message-box/message-box-provider";
 import { RenderPage } from "./render-page";
 import RootLayoutClient from "./root-layout-client";
+import { NavigationLoadingOverlay } from "@/components/common/loading-overlay/navigation-loading-overlay";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +16,10 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: "One St. Peter",
@@ -29,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={{ fontSize: "100%" }}>
+    <html lang="en" style={{ fontSize: "100%" }} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable}`}
         style={{ background: "#fff" }}
@@ -40,6 +44,7 @@ export default function RootLayout({
               <RenderPage>{children}</RenderPage>
               {/* <AppLayout>{children}</AppLayout> */}
               <Toaster position="top-right" richColors />
+              <NavigationLoadingOverlay />
             </MessageDialogProvider>
           </StPeterProvider>
         </RootLayoutClient>

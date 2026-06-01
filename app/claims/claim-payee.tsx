@@ -60,7 +60,10 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
   return (
     <Flex flexDir="column" gap={4} marginX="auto" w="full">
       <Flex flexDir="column">
-        <Caption value="We've pre-filled the form using the uploaded claimant documents. Please review and correct if needed." />
+        <Caption>
+          We've pre-filled the form using the uploaded claimant documents.
+          Please review and correct if needed.
+        </Caption>
       </Flex>
 
       {overSoftLimit ? (
@@ -75,9 +78,7 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
           borderColor="yellow.200"
         >
           <LuTriangleAlert />
-          <Caption
-            value={`More than ${SOFT_PAYEE_LIMIT} claimants have been added. This is allowed only for special cases and may require additional review.`}
-          />
+          <Caption>{`More than ${SOFT_PAYEE_LIMIT} claimants have been added. This is allowed only for special cases and may require additional review.`}</Caption>
         </Flex>
       ) : null}
 
@@ -115,7 +116,9 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
                     gap={{ base: 0, md: 2 }}
                     textAlign="start"
                   >
-                    <FormTitle label={hasName ? name : `Claimant ${index + 1}`} />
+                    <FormTitle
+                      label={hasName ? name : `Claimant ${index + 1}`}
+                    />
                     {payee.relToPh ? (
                       <Badge size="sm" colorPalette="blue" variant="subtle">
                         {payee.relToPh}
@@ -153,84 +156,60 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
                         gapY={0}
                         pt={1}
                       >
-                          <InputFloatingLabel
-                            label="Last Name"
-                            value={payee.lastName}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) =>
-                              updateField(payee.id, "lastName", e.target.value)
-                            }
-                          />
-                          <InputFloatingLabel
-                            label="First Name"
-                            value={payee.firstName}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) =>
-                              updateField(
-                                payee.id,
-                                "firstName",
-                                e.target.value,
-                              )
-                            }
-                          />
-                          <InputFloatingLabel
-                            label="Middle Name"
-                            value={payee.middleName}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) =>
-                              updateField(
-                                payee.id,
-                                "middleName",
-                                e.target.value,
-                              )
-                            }
-                          />
-                          <InputFloatingLabel
-                            label="Suffix"
-                            value={payee.suffix}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) =>
-                              updateField(payee.id, "suffix", e.target.value)
-                            }
-                          />
-                          <InputFloatingLabel
-                            label="Email"
-                            value={payee.email}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) =>
-                              updateField(payee.id, "email", e.target.value)
-                            }
-                          />
-                          <InputFloatingLabel
-                            label="Contact Number"
-                            value={payee.contactNumber}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) =>
-                              updateField(
-                                payee.id,
-                                "contactNumber",
-                                e.target.value,
-                              )
-                            }
-                          />
-                          <SelectFloatingLabel
-                            label="Relationship to Planholder"
-                            value={payee.relToPh ? [payee.relToPh] : []}
-                            collection={relationshipOptions}
-                            onValueChange={(e: { value: string[] }) =>
-                              updateField(
-                                payee.id,
-                                "relToPh",
-                                e.value[0] ?? "",
-                              )
-                            }
-                          />
+                        <InputFloatingLabel
+                          label="Last Name"
+                          value={payee.lastName}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField(payee.id, "lastName", e.target.value)
+                          }
+                        />
+                        <InputFloatingLabel
+                          label="First Name"
+                          value={payee.firstName}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField(payee.id, "firstName", e.target.value)
+                          }
+                        />
+                        <InputFloatingLabel
+                          label="Middle Name"
+                          value={payee.middleName}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField(payee.id, "middleName", e.target.value)
+                          }
+                        />
+                        <InputFloatingLabel
+                          label="Suffix"
+                          value={payee.suffix}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField(payee.id, "suffix", e.target.value)
+                          }
+                        />
+                        <InputFloatingLabel
+                          label="Email"
+                          value={payee.email}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField(payee.id, "email", e.target.value)
+                          }
+                        />
+                        <InputFloatingLabel
+                          label="Contact Number"
+                          value={payee.contactNumber}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField(
+                              payee.id,
+                              "contactNumber",
+                              e.target.value,
+                            )
+                          }
+                        />
+                        <SelectFloatingLabel
+                          label="Relationship to Planholder"
+                          value={payee.relToPh ? [payee.relToPh] : []}
+                          collection={relationshipOptions}
+                          onValueChange={(e: { value: string[] }) =>
+                            updateField(payee.id, "relToPh", e.value[0] ?? "")
+                          }
+                        />
                       </Grid>
                     </Flex>
 
@@ -247,53 +226,35 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
                         gapY={0}
                         pt={1}
                       >
-                          <SelectFloatingLabel
-                            label="Payout Channel"
-                            value={payee.channel ? [payee.channel] : []}
-                            collection={channelList}
-                            onValueChange={(e: { value: string[] }) =>
-                              updateField(
-                                payee.id,
-                                "channel",
-                                e.value[0] ?? "",
-                              )
-                            }
-                          />
-                          <InputFloatingLabel
-                            label="Bank Name"
-                            value={payee.bankName}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) =>
-                              updateField(payee.id, "bankName", e.target.value)
-                            }
-                          />
-                          <InputFloatingLabel
-                            label="Account Name"
-                            value={payee.accountName}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) =>
-                              updateField(
-                                payee.id,
-                                "accountName",
-                                e.target.value,
-                              )
-                            }
-                          />
-                          <InputFloatingLabel
-                            label="Account No."
-                            value={payee.accountNo}
-                            onChange={(
-                              e: React.ChangeEvent<HTMLInputElement>,
-                            ) =>
-                              updateField(
-                                payee.id,
-                                "accountNo",
-                                e.target.value,
-                              )
-                            }
-                          />
+                        <SelectFloatingLabel
+                          label="Payout Channel"
+                          value={payee.channel ? [payee.channel] : []}
+                          collection={channelList}
+                          onValueChange={(e: { value: string[] }) =>
+                            updateField(payee.id, "channel", e.value[0] ?? "")
+                          }
+                        />
+                        <InputFloatingLabel
+                          label="Bank Name"
+                          value={payee.bankName}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField(payee.id, "bankName", e.target.value)
+                          }
+                        />
+                        <InputFloatingLabel
+                          label="Account Name"
+                          value={payee.accountName}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField(payee.id, "accountName", e.target.value)
+                          }
+                        />
+                        <InputFloatingLabel
+                          label="Account No."
+                          value={payee.accountNo}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField(payee.id, "accountNo", e.target.value)
+                          }
+                        />
                       </Grid>
                     </Flex>
                   </Flex>

@@ -2,7 +2,8 @@
 import SummaryBox from "@/components/common/text/SummaryBox";
 import SummaryForm from "@/components/common/text/SummaryForm";
 import { Box } from "@chakra-ui/react";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
+import { GrandSummary, SummaryItems, SummarySection } from "@splpi/summary";
+import { LuClipboardCheck } from "react-icons/lu";
 
 interface CheckedPlan {
   lpaNo: string;
@@ -32,9 +33,9 @@ export function ReinstatementSummaryPage({ selectedPlans }: RevRIProps) {
   return (
     <>
       <SummaryForm title={"Reinstatement Summary"} data={[]} />
-      <Box mt={{ base: 0, md: -8 }}>
+      <Box mt={-10}>
         {selectedPlans.map((plan, index) => (
-          <Box key={index} my={{ base: 2, md: 3 }} borderRadius={STANDARD_RADIUS.md}>
+          <Box key={index} my={5}>
             <SummaryBox
               key={index}
               title={`LPA #: ${plan.lpaNo}`}

@@ -5,24 +5,29 @@ import { planholderLookup } from "@/app/plan-management/data/planholder-lookup";
 import { Box } from "@chakra-ui/react";
 
 const salesAgentColumns: LookupColumn<PlanholderLookupType>[] = [
-  { key: "personId", header: "Person ID" },
   { key: "lpaNumber", header: "LPA Number" },
-  { key: "lastName", header: "Last Name" },
-  { key: "firstName", header: "First Name" },
-  { key: "middleName", header: "Middle Name" },
+  {
+    key: "lastName",
+    header: "Full Name",
+    render: (_, row) =>
+      `${row.lastName}, ${row.firstName}${row.middleName ? " " + row.middleName : ""}`,
+  },
+  { key: "planDescription", header: "Plan" },
 ];
 
 export function PlanholderLookup({
   value,
   onSelectChange,
+  mobileFullscreen = false,
 }: {
   value?: PlanholderLookupType | undefined;
   onSelectChange?: (agent: PlanholderLookupType | undefined) => void;
+  mobileFullscreen?: boolean;
 }) {
   const [selectAgent, setSelectAgent] =
     React.useState<PlanholderLookupType | null>(value ?? null);
   return (
-    <Box w={{ base: "full", sm: "330px" }}>
+    <Box w={{ base: "full", lg: "330px" }}>
       <LookupField<PlanholderLookupType>
         label=""
         placeholder="Search by LPA Number or Name..."
@@ -34,8 +39,11 @@ export function PlanholderLookup({
           onSelectChange?.(e ?? undefined);
           setSelectAgent(e);
         }}
-        renderDisplay={(emp) => `${emp.lpaNumber}`}
+        renderDisplay={(emp) =>
+          `${emp.firstName}${emp.middleName ? " " + emp.middleName : ""} ${emp.lastName}`
+        }
         value={selectAgent}
+        mobileFullscreen={mobileFullscreen}
       />
     </Box>
   );

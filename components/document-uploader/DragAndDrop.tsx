@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   Box,
   VStack,
@@ -59,6 +59,9 @@ const getFileIconColor = (name: string) => {
   return colors[ext] ?? "gray.500";
 };
 
+const generateId = () =>
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+
 const FILE_ITEM_HEIGHT = 72;
 const MAX_VISIBLE_FILES = 5;
 
@@ -76,6 +79,12 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const onFilesChangeRef = useRef(onFilesChange);
+  useEffect(() => { onFilesChangeRef.current = onFilesChange; });
+
+  useEffect(() => {
+    if (files.length > 0) onFilesChangeRef.current?.(files);
+  }, [files]);
 
   const simulateUpload = useCallback(
     (uploadFile: UploadedFile) => {
@@ -87,8 +96,8 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
         elapsed += interval;
         const progress = Math.min(100, Math.round((elapsed / duration) * 100));
 
-        setFiles((prev) => {
-          const updated = prev.map((f) =>
+        setFiles((prev) =>
+          prev.map((f) =>
             f.id === uploadFile.id
               ? {
                   ...f,
@@ -99,16 +108,13 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
                       : ("uploading" as const),
                 }
               : f,
-          );
-
-          if (progress === 100) onFilesChange?.(updated);
-          return updated;
-        });
+          ),
+        );
 
         if (elapsed >= duration) clearInterval(timer);
       }, interval);
     },
-    [onFilesChange],
+    [],
   );
 
   const addFiles = useCallback(
@@ -120,7 +126,7 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
       const newFiles: UploadedFile[] = valid
         .filter((f) => f.size <= maxSizeMB * 1024 * 1024)
         .map((f) => ({
-          id: crypto.randomUUID(),
+          id: generateId(),
           file: f,
           progress: 0,
           status: "uploading" as const,
@@ -130,7 +136,7 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
       const oversized: UploadedFile[] = valid
         .filter((f) => f.size > maxSizeMB * 1024 * 1024)
         .map((f) => ({
-          id: crypto.randomUUID(),
+          id: generateId(),
           file: f,
           progress: 0,
           status: "error" as const,
@@ -148,18 +154,10 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
   const removeFile = useCallback(
     (id: string) => {
-      setFiles((prev) => {
-        const updated = prev.filter((f) => f.id !== id);
-        onFilesChange?.(updated);
-
-        if (previewFile?.id === id) {
-          setPreviewFile(null);
-        }
-
-        return updated;
-      });
+      if (previewFile?.id === id) setPreviewFile(null);
+      setFiles((prev) => prev.filter((f) => f.id !== id));
     },
-    [onFilesChange, previewFile],
+    [previewFile],
   );
 
   const handleDrop = useCallback(
@@ -257,7 +255,7 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
               variant="ghost"
               size="sm"
               flexShrink={0}
-              opacity={0}
+              opacity={{ base: 1, md: 0 }}
               _groupHover={{ opacity: 1 }}
               transition="opacity 0.2s"
               onClick={(e) => {
@@ -276,14 +274,13 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
   return (
     <Box w="full" maxW="2xl" mx="auto" className={className}>
       <Box
+        position="relative"
         onDragOver={(e) => {
           e.preventDefault();
           setIsDragActive(true);
         }}
         onDragLeave={() => setIsDragActive(false)}
         onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-        cursor="pointer"
         rounded="xl"
         borderWidth="2px"
         borderStyle="dashed"
@@ -300,11 +297,19 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
           type="file"
           accept={accept}
           multiple
-          hidden
           onChange={(e) => e.target.files && addFiles(e.target.files)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            cursor: "pointer",
+            zIndex: 1,
+          }}
         />
 
-        <VStack gap={3}>
+        <VStack gap={3} pointerEvents="none">
           <Box
             rounded="full"
             p={4}
@@ -331,20 +336,23 @@ const DocumentUploader: React.FC<DocumentUploaderProps> = ({
       </Box>
       {canPicture && (
         <Box mt={3} display="flex" justifyContent="center">
-          {/* <input
-          ref={cameraRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          hidden
-          onChange={(e) => e.target.files && addFiles(e.target.files)}
-        /> */}
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => cameraRef.current?.click()}
-          >
+          <Button variant="outline" size="sm" position="relative" overflow="hidden">
+            <input
+              ref={cameraRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => e.target.files && addFiles(e.target.files)}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                opacity: 0,
+                cursor: "pointer",
+                zIndex: 1,
+              }}
+            />
             <Camera size={16} />
             <Text ml={2}>Take a photo</Text>
           </Button>

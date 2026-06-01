@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Box, Text, Badge, HStack, Flex, Grid } from "@chakra-ui/react";
-import { Trash2, Ban, ArrowRightLeft } from "lucide-react";
+import { Box, Text, Badge, HStack, Separator } from "@chakra-ui/react";
+import { Plus, Trash2, Ban, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -29,13 +29,7 @@ import {
 import AssignDocumentsForm, {
   AssignDocumentPayload,
 } from "./AssignDocumentsForm";
-import ProfileSectionCard from "@/components/saleforce/components/profile-section-card";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
-import {
-  DISPLAY_STATUS_STYLES,
-  type DisplayStatusStyle,
-} from "@/lib/theme/status-display-tokens";
+import { H4 } from "st-peter-ui";
 
 function createEmployeeMap(employees: Employee[]) {
   return new Map(employees.map((employee) => [employee.id, employee]));
@@ -73,51 +67,11 @@ function buildAssignedDocumentRows(
   });
 }
 
-function getAssignedStatusStyle(status: AssignedDocRow["assignedStatus"]) {
-  if (status === "Assigned") return DISPLAY_STATUS_STYLES.approved;
-  if (status === "Unknown Employee") return DISPLAY_STATUS_STYLES.pending;
-  return DISPLAY_STATUS_STYLES.fallback;
-}
-
-function getRemainingStyle(value: number) {
-  if (value <= 0) return DISPLAY_STATUS_STYLES.denied;
-  if (value <= 5) return DISPLAY_STATUS_STYLES.pending;
-  return DISPLAY_STATUS_STYLES.approved;
-}
-
-function StandardBadge({
-  children,
-  style,
-}: {
-  children: React.ReactNode;
-  style: DisplayStatusStyle;
-}) {
-  return (
-    <Badge
-      bg={style.bg}
-      color={style.color}
-      borderColor={style.borderColor}
-      borderWidth={style.borderWidth}
-      borderRadius={STANDARD_RADIUS.full}
-      fontWeight={style.fontWeight}
-      px={2}
-      py={0.5}
-    >
-      {children}
-    </Badge>
-  );
-}
-
 const assignedDocumentColumns: ColumnDef<AssignedDocRow>[] = [
   {
     accessorKey: "documentType",
     header: "Document Type",
     filterFn: multiSelectFilter,
-    cell: ({ getValue }) => (
-      <StandardBadge style={DISPLAY_STATUS_STYLES.fallback}>
-        {getValue<string>()}
-      </StandardBadge>
-    ),
     meta: {
       filterVariant: "multiSelect",
       responsivePriority: 1,
@@ -130,14 +84,6 @@ const assignedDocumentColumns: ColumnDef<AssignedDocRow>[] = [
     accessorKey: "assignedStatus",
     header: "Status",
     filterFn: multiSelectFilter,
-    cell: ({ getValue }) => {
-      const value = getValue<AssignedDocRow["assignedStatus"]>();
-      return (
-        <StandardBadge style={getAssignedStatusStyle(value)}>
-          {value}
-        </StandardBadge>
-      );
-    },
     meta: {
       filterVariant: "multiSelect",
       width: "90px",
@@ -165,9 +111,15 @@ const assignedDocumentColumns: ColumnDef<AssignedDocRow>[] = [
     },
     cell: ({ getValue }) => {
       const value = getValue<number>();
-      const style = getRemainingStyle(value);
+      const color = value <= 0 ? "red" : value <= 5 ? "orange" : "green";
+      const variant = value <= 0 ? "outline" : "surface";
+      const bgColor = variant === "outline" ? "transparent" : `${color}.100`;
 
-      return <StandardBadge style={style}>{value}</StandardBadge>;
+      return (
+        <Badge color={color} variant={variant} bgColor={bgColor} size="sm">
+          {value}
+        </Badge>
+      );
     },
   },
   {
@@ -200,21 +152,20 @@ function AssignedDocumentDetail({ row }: { row: AssignedDocRow }) {
 
   return (
     <Box
-      borderRadius={STANDARD_RADIUS.md}
+      rounded="xl"
       borderWidth="1px"
-      borderColor={BRAND_COLORS.neutralBorder}
-      bg={BRAND_COLORS.white}
+      borderColor="border.muted"
+      bg="bg"
       p={4}
+      boxShadow="md"
     >
       <HStack gap={3} align="center">
         <Box
           w="48px"
           h="48px"
-          borderRadius={STANDARD_RADIUS.full}
-          borderWidth="1px"
-          borderColor={BRAND_COLORS.softGreen}
-          bg={BRAND_COLORS.successBg}
-          color={BRAND_COLORS.primaryGreen}
+          borderRadius="full"
+          borderColor={"black"}
+          bg="darkgrey"
           display="flex"
           alignItems="center"
           justifyContent="center"
@@ -225,9 +176,7 @@ function AssignedDocumentDetail({ row }: { row: AssignedDocRow }) {
         </Box>
 
         <Box>
-          <Text fontWeight="semibold" color={BRAND_COLORS.neutralText}>
-            {row.employeeName}
-          </Text>
+          <Text fontWeight="semibold">{row.employeeName}</Text>
           <Text fontSize="12px" color="fg.muted">
             {row.salesForceId || "(no salesForceId)"}
           </Text>
@@ -237,10 +186,7 @@ function AssignedDocumentDetail({ row }: { row: AssignedDocRow }) {
       <Box
         mt={6}
         display="grid"
-        gridTemplateColumns={{
-          base: "1fr",
-          sm: "repeat(2, minmax(0, 1fr))",
-        }}
+        gridTemplateColumns="repeat(2, minmax(0, 1fr))"
         gap={4}
       >
         {detailItems.map(([label, value]) => (
@@ -248,11 +194,7 @@ function AssignedDocumentDetail({ row }: { row: AssignedDocRow }) {
             <Text fontSize="11px" color="fg.muted" mb="0.5">
               {label}
             </Text>
-            <Text
-              fontSize="sm"
-              fontWeight="medium"
-              color={BRAND_COLORS.neutralText}
-            >
+            <Text fontSize="sm" fontWeight="medium" color="fg">
               {value}
             </Text>
           </Box>
@@ -423,42 +365,39 @@ export default function DocumentTable({
   );
 
   return (
-    <Flex direction="column" gap={4}>
+    <>
       {employee && (
-        <ProfileSectionCard
-          title="Assign Documents"
-          description="Assign a document type, quantity, and series to the selected employee."
+        <Box
+          borderWidth="1px"
+          borderColor="gray.200"
+          borderRadius="lg"
+          bg="white"
+          p={{ base: 4, md: 5 }}
+          mb={4}
         >
-          <Flex direction="column" gap={4}>
-            {topContent ? (
-              <Grid
-                templateColumns={{
-                  base: "1fr",
-                  sm: "repeat(2, 1fr)",
-                  lg: "repeat(3, 1fr)",
-                }}
-                gap={4}
-              >
-                {topContent}
-              </Grid>
-            ) : null}
+          <Box mb={2}>
+            <H4>Assign Documents</H4>
+            <Separator mt={2} mb={5} />
+          </Box>
+
+          {topContent}
+          <Box
+            mt={topContent ? 5 : 0}
+            pt={topContent ? 5 : 0}
+            borderTopWidth={topContent ? "1px" : "0"}
+            borderColor="gray.100"
+          >
             <AssignDocumentsForm
               employee={employee}
               onAssigned={handleAssignSubmit}
             />
-          </Flex>
-        </ProfileSectionCard>
+          </Box>
+        </Box>
       )}
-      <ProfileSectionCard
-        title="Assigned Documents"
-        description={
-          employee
-            ? "Documents assigned to the selected employee."
-            : "All assigned and unassigned document series."
-        }
-      >
+      <Box maxW="full">
         <DataTable<AssignedDocRow>
           columns={assignedDocumentColumns}
+          title="Assigned Documents"
           data={tableData}
           getRowId={(row) => row.documentCode}
           size="sm"
@@ -521,7 +460,7 @@ export default function DocumentTable({
             },
           }}
         />
-      </ProfileSectionCard>
+      </Box>
 
       <BlockDocumentModal
         open={modalType === "block"}
@@ -538,6 +477,6 @@ export default function DocumentTable({
         employeeID={selectedEmployeeId}
         onSubmit={handleReassignSubmit}
       />
-    </Flex>
+    </>
   );
 }

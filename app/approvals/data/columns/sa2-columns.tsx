@@ -5,12 +5,13 @@ import { Badge, Text } from "@chakra-ui/react";
 
 import { multiSelectFilter } from "@/components/common/reusable-tableV2/types";
 import { SA2Reassignment } from "../types";
-import { formatApprovalDate } from "../../utils/formatters";
-import { getApprovalStatusBadgeStyle } from "../../utils/colors";
 
 function StatusBadge({ status }: { status: string }) {
+  const colorPalette =
+    status === "Approved" ? "green" : status === "Denied" ? "red" : "yellow";
+
   return (
-    <Badge {...getApprovalStatusBadgeStyle(status)}>
+    <Badge colorPalette={colorPalette} variant="subtle">
       {status}
     </Badge>
   );
@@ -67,23 +68,10 @@ export const sa2Columns: ColumnDef<SA2Reassignment>[] = [
   },
   {
     accessorKey: "date",
-    header: "Effective Date",
+    header: "Date",
     enableSorting: true,
     enableColumnFilter: true,
     filterFn: multiSelectFilter,
-    cell: ({ getValue }) => (
-      <Text fontSize="sm">{formatApprovalDate(getValue())}</Text>
-    ),
-  },
-  {
-    accessorKey: "requestDate",
-    header: "Request Date",
-    enableSorting: true,
-    enableColumnFilter: true,
-    filterFn: multiSelectFilter,
-    cell: ({ getValue }) => (
-      <Text fontSize="sm">{formatApprovalDate(getValue())}</Text>
-    ),
   },
   {
     accessorKey: "requester",

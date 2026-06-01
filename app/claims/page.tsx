@@ -32,7 +32,7 @@ import {
   initialClaimInfo,
   initialPayees,
 } from "./claims.types";
-import { Page } from "@/components/page/page";
+import Page from "@/components/layout/page/Page";
 
 const PLANHOLDER_STORAGE_KEY = "claim:planholder-lpa";
 
@@ -77,12 +77,6 @@ const ClaimsPage = () => {
     router.push("/claims/success");
   };
 
-  const breadItem = [
-    { label: "Home" },
-    { label: "Planholder" },
-    { label: "Claim Application", isCurrent: true },
-  ];
-
   const steps: StepItem[] = [
     {
       title: "Claim Info",
@@ -115,23 +109,23 @@ const ClaimsPage = () => {
 
   return (
     <>
-      <Page
+      <Page.Root
         title="Claim Application"
         description="Please fill out the following details."
-        breadcrumbItems={breadItem}
       >
+        <Page.MainContent>
         <FormStepper steps={steps} onSubmit={handleSubmitClick} />
 
         <Dialog.Root
           open={confirmOpen}
           onOpenChange={(e) => setConfirmOpen(e.open)}
-          size={{ base: "sm", md: "md" }}
+          size={{ base: "full", md: "md" }}
           lazyMount
         >
           <Portal>
             <Dialog.Backdrop />
-            <Dialog.Positioner>
-              <Dialog.Content>
+            <Dialog.Positioner p={{ base: 0, md: undefined }}>
+              <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
                 <Dialog.Header>
                   <Flex align="center" gap={2}>
                     <LuTriangleAlert color="var(--chakra-colors-orange-500)" />
@@ -170,7 +164,8 @@ const ClaimsPage = () => {
             </Dialog.Positioner>
           </Portal>
         </Dialog.Root>
-      </Page>
+        </Page.MainContent>
+      </Page.Root>
     </>
   );
 };

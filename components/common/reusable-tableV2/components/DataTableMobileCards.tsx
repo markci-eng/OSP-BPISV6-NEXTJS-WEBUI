@@ -19,12 +19,6 @@ import type {
   RowAction,
 } from "../types";
 import { DataTableRowActions } from "./DataTableRowActions";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_ICON_BUTTON_STYLES,
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 type DataTableMobileCardsProps<TData> = {
   table: TanStackTable<TData>;
@@ -152,10 +146,6 @@ export function DataTableMobileCards<TData>({
             : typeof badgeValue === "number" && badgeValue <= 0
               ? "red"
               : "green");
-        const badgeStyle =
-          badgeValue === undefined || badgeValue === null
-            ? undefined
-            : mobileConfig.badgeStyleMap?.[String(badgeValue)];
 
         const visibleFields =
           mobileConfig.visibleFields?.filter(
@@ -170,12 +160,10 @@ export function DataTableMobileCards<TData>({
             key={row.id}
             bg="white"
             borderWidth="1px"
-            borderColor={
-              row.getIsSelected() ? BRAND_COLORS.primaryGreen : "gray.200"
-            }
-            borderRadius={STANDARD_RADIUS.md}
+            borderColor={row.getIsSelected() ? "blue.300" : "gray.200"}
+            borderRadius="md"
             overflow="hidden"
-            boxShadow={STANDARD_SHADOWS.level1}
+            boxShadow="xs"
             onClick={() => onRowActivate(row.id, original)}
           >
             <HStack
@@ -237,12 +225,7 @@ export function DataTableMobileCards<TData>({
 
               <HStack gap={1} flexShrink={0}>
                 {mobileConfig.badgeField && (
-                  <Badge
-                    size="sm"
-                    variant={badgeStyle ? undefined : "surface"}
-                    colorPalette={badgeStyle ? undefined : badgeColor}
-                    {...badgeStyle}
-                  >
+                  <Badge size="sm" variant="surface" colorPalette={badgeColor}>
                     {getDisplayValue(
                       original,
                       mobileConfig.badgeField,
@@ -260,7 +243,6 @@ export function DataTableMobileCards<TData>({
                     aria-label="Open details"
                     variant="ghost"
                     size="xs"
-                    {...STANDARD_ICON_BUTTON_STYLES.sm}
                     flexShrink={0}
                   >
                     <ChevronRight size={16} />

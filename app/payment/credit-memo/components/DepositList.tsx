@@ -13,11 +13,6 @@ import {
 import { Trash2, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Deposit } from "./types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 interface DepositListProps {
   deposits: Deposit[];
@@ -43,7 +38,7 @@ export function DepositList({
 }: DepositListProps) {
   if (deposits.length === 0) {
     return (
-      <Text fontSize="sm" color="fg.muted" py={3}>
+      <Text fontSize="sm" color="fg.muted" py={4}>
         No deposits added yet.
       </Text>
     );
@@ -64,25 +59,15 @@ export function DepositList({
               maxW="340px"
               w="full"
               p="4"
-              rounded={STANDARD_RADIUS.md}
-              bg={BRAND_COLORS.white}
+              rounded="xl"
+              bg="bg"
               borderWidth="1px"
-              borderColor={
-                selectedId === d.id
-                  ? BRAND_COLORS.primaryGreen
-                  : BRAND_COLORS.neutralBorder
-              }
-              boxShadow={
-                selectedId === d.id
-                  ? STANDARD_SHADOWS.level2
-                  : STANDARD_SHADOWS.level1
-              }
+              borderColor={selectedId === d.id ? "blue.200" : "border.muted"}
+              boxShadow={selectedId === d.id ? "md" : "sm"}
               cursor="pointer"
-              _hover={{ boxShadow: STANDARD_SHADOWS.level2 }}
+              _hover={{ boxShadow: "md" }}
               outline={selectedId === d.id ? "2px solid" : "none"}
-              outlineColor={
-                selectedId === d.id ? BRAND_COLORS.primaryGreen : "transparent"
-              }
+              outlineColor={selectedId === d.id ? "blue.200" : "transparent"}
               onClick={() => onSelect(d.id)}
             >
               <Flex align="start" justify="space-between" gap="2">
@@ -91,12 +76,12 @@ export function DepositList({
                     h="8"
                     w="8"
                     rounded="lg"
-                    bg={BRAND_COLORS.successBg}
+                    bg="blue.subtle"
                     align="center"
                     justify="center"
                     flexShrink={0}
                   >
-                    <Icon as={Building2} boxSize="4" color={BRAND_COLORS.primaryGreen} />
+                    <Icon as={Building2} boxSize="4" color="blue.solid" />
                   </Flex>
 
                   <Box>
@@ -113,10 +98,7 @@ export function DepositList({
                   variant="ghost"
                   size="xs"
                   color="fg.muted"
-                  _hover={{
-                    color: BRAND_COLORS.destructiveRed,
-                    bg: BRAND_COLORS.errorBg,
-                  }}
+                  _hover={{ color: "red.500", bg: "red.50" }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onRemove(d.id);

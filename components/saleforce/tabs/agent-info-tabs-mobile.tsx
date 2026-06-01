@@ -11,6 +11,7 @@ import AgentEmploymentInfoCard from "../cards/AgentEmploymentInfoCard";
 import SectionTitle from "@/components/texts/SectionTitle";
 import AgentPersonalInfoCard from "../cards/AgentPersonalInfoCard";
 import AgentContactInfoCard from "../cards/AgentContactInfoCard";
+import { PlanholderAddressCard } from "@/components/new-planholder-profile/sections/address-info";
 
 interface AgentInfoTabsMobileProps {
   agent?: SalesAgent;
@@ -71,7 +72,7 @@ const AgentInfoTabsMobile = ({ agent }: AgentInfoTabsMobileProps) => {
 
             <Separator marginY={1} />
 
-            <Box p={1}>
+            <Box p={1} mt={5}>
               <SectionTitle>Employment</SectionTitle>
               <Box p={1}>
                 <AgentEmploymentInfoCard removeCard agent={agent} />
@@ -90,9 +91,33 @@ const AgentInfoTabsMobile = ({ agent }: AgentInfoTabsMobileProps) => {
 
       <Tabs.Content value="contact-address-info">
         {agent ? (
-          <>
+          <Flex direction="column" gap={4}>
             <AgentContactInfoCard removeCard agent={agent} />
-          </>
+            <Separator />
+            <PlanholderAddressCard
+            noBorder
+              phAddress={
+                agent.address
+                  ? [
+                      {
+                        id: "1",
+                        addressType: "RESIDENCE",
+                        addressNo: agent.address.unit || null,
+                        street: agent.address.street || null,
+                        barangay: agent.address.barangay || null,
+                        district: agent.address.district || null,
+                        city: agent.address.city,
+                        province: agent.address.province,
+                        zipCode: agent.address.zipCode
+                          ? parseInt(agent.address.zipCode)
+                          : null,
+                        isMailAddress: true,
+                      },
+                    ]
+                  : undefined
+              }
+            />
+          </Flex>
         ) : (
           <>
             <EmptyStateCard

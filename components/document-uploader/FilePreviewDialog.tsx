@@ -158,12 +158,16 @@ const FilePreviewDialog: React.FC<FilePreviewDialogProps> = ({
     <Dialog.Root
       open={open}
       onOpenChange={(details) => onOpenChange(details.open)}
-      size="lg"
+      size={{ base: "full", md: "lg" }}
       placement="center"
     >
       <Dialog.Backdrop />
-      <Dialog.Positioner>
-        <Dialog.Content maxH="90vh" overflow="hidden">
+      <Dialog.Positioner p={{ base: 0, md: undefined }}>
+        <Dialog.Content
+          maxH={{ base: "100dvh", md: "90vh" }}
+          borderRadius={{ base: 0, md: undefined }}
+          overflow="hidden"
+        >
           <Dialog.Header>
             <Dialog.Title>
               <HStack gap={2} minW={0} pr={8}>

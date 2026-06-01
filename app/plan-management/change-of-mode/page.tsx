@@ -7,25 +7,9 @@ export default function Page() {
   const router = useRouter();
   const { messageBox } = useMessageDialog();
 
-  const breadcrumbItems = [
-    {
-      label: "Home",
-      href: "/",
-    },
-    {
-      label: "Plan Management",
-      href: "#",
-    },
-    {
-      label: "Change of Mode",
-      href: "/plan-management/change-of-mode",
-    },
-  ];
-
   return (
     <>
       <ChangeModePage
-        breadcrumbItems={breadcrumbItems}
         onSuccess={async function (
           transactionId: string,
           transactionAmount: number,

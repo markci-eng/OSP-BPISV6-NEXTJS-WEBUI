@@ -29,11 +29,9 @@ import { EMPLOYEES } from "@/data/doc-management/documenttype";
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { Page } from "@/components/page/page";
+import Page from "@/components/layout/page/Page";
 import Card from "@/components/cards/Card";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_RADIUS } from "@/lib/theme/standard-design-tokens";
 
 export default function ViewDrs() {
   const { rows, totals } = DrsFunction(samplePayments);
@@ -58,26 +56,14 @@ export default function ViewDrs() {
     { key: "name", header: "Name" },
     { key: "branch", header: "Department" },
   ];
-  const breadCrumb = [
-    {
-      label: "Home",
-    },
-    {
-      label: "Payment",
-    },
-    {
-      label: "View Digital Remittance Slip",
-    },
-  ];
-
   //delete function
   const { messageBox } = useMessageDialog();
   const handleDelete = async (item: any) => {
     const confirmed = await messageBox({
       title: "CONFIRMATION",
       message: "Do you want to delete DRS?",
-      confirmText: "Delete",
-      cancelText: "Cancel",
+      confirmText: "Yes",
+      cancelText: "No",
       variant: "confirmation",
     });
 
@@ -95,21 +81,21 @@ export default function ViewDrs() {
       title: "SUCCESS",
       message: "DRS successfully deleted.",
       confirmText: "OK",
-      variant: "success",
+      variant: "error",
     });
 
     toast.success(`Deleted ${item.name}`);
   };
 
   return (
-    <Page
-      breadcrumbItems={breadCrumb}
+    <Page.Root
       title={"Digital Remittance Slip"}
-      description="Search, review, and process digital remittance slips."
+      description="Manage your digital remittance slip"
     >
+      <Page.MainContent>
       {/* MAIN GRID */}
       <Grid
-        gap={{ base: 4, lg: 5 }}
+        gap={{ base: 4, lg: 6 }}
         templateColumns={{
           base: "1fr",
           lg: "380px 1fr",
@@ -121,7 +107,7 @@ export default function ViewDrs() {
         <Card.Root>
           <Card.MainContent>
             <GridItem minW={0} bg="white" overflow="hidden" h={"full"}>
-              <Box mb={3}>
+              <Box my={2}>
                 <LookupField<Employee>
                   label=""
                   placeholder="Search by name or ID..."
@@ -166,9 +152,9 @@ export default function ViewDrs() {
                         data-selected={selectedId === item.id ? "" : undefined}
                         onClick={() => setSelectedId(item.id)}
                         _selected={{
-                          bg: BRAND_COLORS.successBg,
+                          bg: "green.100",
                           borderLeft: "4px solid",
-                          borderColor: BRAND_COLORS.primaryGreen,
+                          borderColor: "green.500",
                         }}
                       >
                         <Table.Cell>{item.name}</Table.Cell>
@@ -181,11 +167,11 @@ export default function ViewDrs() {
                               <Button
                                 size="xs"
                                 variant="outline"
-                                color={BRAND_COLORS.destructiveRed}
-                                borderColor={BRAND_COLORS.destructiveRed}
-                                borderRadius={STANDARD_RADIUS.md}
+                                color="red.500"
+                                borderColor="red.500"
                                 _hover={{
-                                  bg: BRAND_COLORS.errorBg,
+                                  bg: "red.500",
+                                  color: "white",
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -232,7 +218,7 @@ export default function ViewDrs() {
                     direction={{ base: "column", md: "row" }}
                     justify={{ base: "flex-end" }}
                     mt={4}
-                    gap={{ base: 3, xl: 4 }}
+                    gap={{ base: 2, xl: 4 }}
                     width="full"
                   >
                     <Box width={{ base: "full", md: "auto" }}>
@@ -290,6 +276,7 @@ export default function ViewDrs() {
           </Card.Root>
         </GridItem>
       </Grid>
-    </Page>
+      </Page.MainContent>
+    </Page.Root>
   );
 }

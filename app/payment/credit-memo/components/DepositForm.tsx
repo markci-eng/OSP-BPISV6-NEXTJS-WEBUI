@@ -13,8 +13,6 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { Deposit } from "./types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_BUTTON_STYLES } from "@/lib/theme/standard-design-tokens";
 
 interface DepositFormProps {
   onAdd: (deposit: Deposit) => void;
@@ -75,8 +73,7 @@ export function DepositForm({ onAdd }: DepositFormProps) {
           md: "repeat(2, 1fr)",
           xl: "repeat(3, 1fr)",
         }}
-        columnGap={4}
-        rowGap={3}
+        gap={4}
       >
         <Field label="Deposit Date">
           <Input
@@ -191,15 +188,8 @@ export function DepositForm({ onAdd }: DepositFormProps) {
         </Field>
       </Grid>
 
-      <HStack mt={3}>
-        <Button
-          onClick={handleSubmit}
-          size="sm"
-          bg={BRAND_COLORS.primaryGreen}
-          color={BRAND_COLORS.white}
-          _hover={{ bg: BRAND_COLORS.darkGreen }}
-          {...STANDARD_BUTTON_STYLES.sm}
-        >
+      <HStack mt={4}>
+        <Button onClick={handleSubmit} size="sm">
           <Plus size={16} />
           Add Deposit
         </Button>

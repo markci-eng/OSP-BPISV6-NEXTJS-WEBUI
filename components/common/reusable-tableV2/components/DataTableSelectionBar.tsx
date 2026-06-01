@@ -4,8 +4,6 @@ import * as React from "react";
 import { Box, Button, Flex, HStack, Text } from "@chakra-ui/react";
 import { X } from "lucide-react";
 import type { RowAction } from "../types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_BUTTON_STYLES } from "@/lib/theme/standard-design-tokens";
 
 type DataTableSelectionBarProps<TData> = {
   selectedCount: number;
@@ -45,7 +43,6 @@ export function DataTableSelectionBar<TData>({
           display={{ base: "inline-flex", sm: "none" }}
           variant="ghost"
           size="xs"
-          {...STANDARD_BUTTON_STYLES.sm}
           onClick={onClearSelection}
         >
           Clear
@@ -59,32 +56,7 @@ export function DataTableSelectionBar<TData>({
             size="sm"
             flex={{ base: 1, sm: "unset" }}
             variant={action.variant === "destructive" ? "outline" : "solid"}
-            {...STANDARD_BUTTON_STYLES.md}
-            bg={
-              action.variant === "destructive"
-                ? undefined
-                : BRAND_COLORS.primaryGreen
-            }
-            color={
-              action.variant === "destructive"
-                ? BRAND_COLORS.destructiveRed
-                : "white"
-            }
-            borderColor={
-              action.variant === "destructive"
-                ? BRAND_COLORS.destructiveRed
-                : BRAND_COLORS.primaryGreen
-            }
-            _hover={{
-              bg:
-                action.variant === "destructive"
-                  ? BRAND_COLORS.errorBg
-                  : BRAND_COLORS.darkGreen,
-              borderColor:
-                action.variant === "destructive"
-                  ? BRAND_COLORS.destructiveRed
-                  : BRAND_COLORS.darkGreen,
-            }}
+            colorPalette={action.variant === "destructive" ? "red" : "green"}
             onClick={() => {
               action.onClick(selectedRows);
               onClearSelection();
@@ -99,8 +71,6 @@ export function DataTableSelectionBar<TData>({
           display={{ base: "none", sm: "inline-flex" }}
           variant="ghost"
           size="sm"
-          {...STANDARD_BUTTON_STYLES.md}
-          minW="80px"
           onClick={onClearSelection}
         >
           Clear

@@ -1,9 +1,10 @@
 import React from "react";
 import { DrsTotals } from "../data/payment.types";
-import { Box, Grid, Text } from "@chakra-ui/react";
+import { Box, Flex, Grid, Separator, Text } from "@chakra-ui/react";
+import { InfoItem } from "@splpi/summary";
+import { H3, H4 } from "st-peter-ui";
 import Card from "@/components/cards/Card";
 import LabelText from "@/components/texts/LabelText";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 
 interface TotalSummaryCardProps {
   totals: DrsTotals;
@@ -12,10 +13,16 @@ interface TotalSummaryCardProps {
   receivedKey?: keyof DrsTotals;
   expectedKey?: keyof DrsTotals;
   displayProp?: boolean;
+  /**
+   * Optional override for the displayed summary rows. When provided these
+   * label/value pairs are rendered instead of iterating over `totals`
+   * (e.g. showing "AR Total Amount" for LOAN/LAF entries).
+   */
+  items?: { label: string; value: number }[];
 }
 export default function DrsPaymentSummary({
   totals,
-  title = "Total Summary",
+  title = "Summary",
   format = (v) =>
     (v ?? 0).toLocaleString(undefined, {
       minimumFractionDigits: 2,
@@ -24,13 +31,14 @@ export default function DrsPaymentSummary({
   receivedKey = "net",
   expectedKey = "net",
   displayProp = false,
+  items,
 }: TotalSummaryCardProps) {
   if (!totals) return null;
   const received = totals[receivedKey] ?? 0;
   const expected = totals[expectedKey] ?? 0;
   const excessShort = received - expected;
   return (
-    <Box mt={{ base: 3, md: 4 }}>
+    <Box mt={{ base: 4, md: 6 }}>
       <Card.Root title={title}>
         <Card.MainContent>
           <Grid
@@ -42,15 +50,23 @@ export default function DrsPaymentSummary({
             }}
             gap={{ base: 2, md: 3 }}
           >
-            {Object.entries(totals)
-              .filter(([_, val]) => typeof val === "number")
-              .map(([key, val]) => (
-                <LabelText
-                  key={key}
-                  label={key.toUpperCase()}
-                  value={format(val as number)}
-                />
-              ))}
+            {items
+              ? items.map((item) => (
+                  <LabelText
+                    key={item.label}
+                    label={item.label}
+                    value={format(item.value)}
+                  />
+                ))
+              : Object.entries(totals)
+                  .filter(([_, val]) => typeof val === "number")
+                  .map(([key, val]) => (
+                    <LabelText
+                      key={key}
+                      label={key.toUpperCase()}
+                      value={format(val as number)}
+                    />
+                  ))}
           </Grid>
 
           {/* Excess / Short */}
@@ -64,7 +80,7 @@ export default function DrsPaymentSummary({
             mt={{ base: 3, md: 4 }}
             pt={{ base: 2, md: 3 }}
             borderTop="1px solid"
-            borderColor={BRAND_COLORS.neutralBorder}
+            borderColor="gray.200"
           >
             <Text
               color="gray.700"

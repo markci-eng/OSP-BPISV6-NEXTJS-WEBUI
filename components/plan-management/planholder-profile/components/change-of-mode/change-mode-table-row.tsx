@@ -7,9 +7,11 @@ import {
 } from "@chakra-ui/react";
 import type { CheckedPlanType, PlanDetails } from "./change-mode.types";
 import { useEffect, useState } from "react";
-import { Checkbox, SecondarySmButton } from "st-peter-ui";
+import {
+  Checkbox,
+  SecondarySmButton,
+} from "st-peter-ui";
 import { PlanDetailsDialog } from "./plan-details-dialog";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 
 interface ChangeModeTableRowProps extends TableRowProps {
   checked: boolean;
@@ -33,7 +35,7 @@ export function ChangeModeTableRow({
 
   const handleClick = useBreakpointValue({
     base: onOpen,
-    md: () => {},
+    md: () => {}
   });
 
   return (
@@ -41,11 +43,11 @@ export function ChangeModeTableRow({
       data-selected={isChecked ? "" : undefined}
       {...rowProps}
       _selected={{
-        bg: BRAND_COLORS.successBg,
-        color: BRAND_COLORS.darkGreen,
+        bg: "var(--chakra-colors-primary-disabled)",
+        color: "var(--chakra-colors-primary-hover)",
       }}
       onClick={handleClick}
-      py={{ base: 0, mdDown: 4 }}
+      py={{base: 0, mdDown: 4}}
     >
       <Table.Cell>
         <Checkbox
@@ -56,11 +58,11 @@ export function ChangeModeTableRow({
         />
       </Table.Cell>
 
-      <Table.Cell py={{ base: 0, mdDown: 4 }}>{plan.lpa_no}</Table.Cell>
+      <Table.Cell py={{base: 0, mdDown: 4}}>{plan.lpa_no}</Table.Cell>
       <Table.Cell>{plan.plan_type}</Table.Cell>
       <Table.Cell>{plan.plan_code}</Table.Cell>
       <Table.Cell>{plan.mode}</Table.Cell>
-      <Table.Cell textAlign="end" display={{ base: "block", mdDown: "none" }}>
+      <Table.Cell textAlign="end" display={{base: "block", mdDown: "none"}}>
         <SecondarySmButton onClick={onOpen}>Change Mode</SecondarySmButton>
       </Table.Cell>
       {/* ------------------- MODAL ------------------- */}
@@ -69,7 +71,7 @@ export function ChangeModeTableRow({
         onOpenChange={(isOpen) => {
           if (!isOpen.open) onClose();
         }}
-        size="xl"
+        size={{ base: "full", md: "xl" }}
         placement={"center"}
       >
         <PlanDetailsDialog

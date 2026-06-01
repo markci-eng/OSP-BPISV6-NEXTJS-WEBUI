@@ -9,9 +9,8 @@ import {
   Flex,
   Portal,
 } from "@chakra-ui/react";
-import { FiPrinter } from "react-icons/fi";
+import { Printer } from "lucide-react";
 import { DRSPrintLayout } from "./DRSPrintLayout";
-import { brandButtonStyle } from "../utils/colors";
 
 type DRSPrintModalProps = {
   open: boolean;
@@ -30,21 +29,25 @@ export function DRSPrintModal({ open, onClose, row }: DRSPrintModalProps) {
       onOpenChange={(details) => {
         if (!details.open) onClose();
       }}
-      size="cover"
+      size={{ base: "full", md: "cover" }}
       placement="center"
     >
       <Portal>
         <Dialog.Backdrop />
 
-        <Dialog.Positioner>
-          <Dialog.Content maxW="1100px" mx="auto">
+        <Dialog.Positioner p={{ base: 0, md: undefined }}>
+          <Dialog.Content
+            maxW={{ base: "100dvw", md: "1100px" }}
+            borderRadius={{ base: 0, md: undefined }}
+            mx="auto"
+          >
             <Dialog.Header borderBottomWidth="1px" className="no-print">
               <Flex w="full" align="center" justify="space-between">
                 <Dialog.Title>DRS Print Preview</Dialog.Title>
 
                 <Flex align="center" gap={2}>
-                  <Button size="sm" {...brandButtonStyle} onClick={handlePrint}>
-                    <FiPrinter size={16} />
+                  <Button size="sm" onClick={handlePrint}>
+                    <Printer size={16} />
                     Print
                   </Button>
 

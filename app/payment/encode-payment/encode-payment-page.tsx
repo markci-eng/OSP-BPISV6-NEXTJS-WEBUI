@@ -13,8 +13,9 @@ import {
   Portal,
   Separator,
   Spinner,
+  Text,
 } from "@chakra-ui/react";
-import { Repeat, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Receipt, Repeat, Trash2 } from "lucide-react";
 import {
   Body,
   Box,
@@ -23,9 +24,15 @@ import {
   PrimaryMdFlexButton,
   SaveButton,
   SelectFloatingLabel,
+  Small,
 } from "st-peter-ui";
 
-import { PayClass, PayType, tableColumns } from "../data/paymentDetails";
+import {
+  LoanPayClass,
+  PayClass,
+  PayType,
+  tableColumns,
+} from "../data/paymentDetails";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -48,11 +55,7 @@ import LabelText from "@/components/texts/LabelText";
 import { TblLoanHdrData } from "@/app/Model/Data/rawData";
 import { RowAction } from "@/components/common/reusable-tableV2/types";
 import Card from "@/components/cards/Card";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
+import { OSPBadge } from "@/components/common/badge/badge";
 
 type Props = {
   payments: PaymentRecord[];
@@ -64,6 +67,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
   const [selectPlanholder, setSelectPlanholder] =
     useState<PlanholderLookupItem | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [taxOpen, setTaxOpen] = useState(false);
   const [installmentAmount, setInstallmentAmount] = useState<number>(0);
   const [nextSI, setNextSI] = useState("00000050");
   const [selectedSIDate, setSelectedSIDate] = useState(() => {
@@ -80,6 +84,19 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
       setIsDialogOpen(true);
     }
   }, [paymentClass, payments, nextSI]);
+
+  // For LOAN planholders only Lending Payment (LE) / Lending Penalty (PL) are
+  // valid. Reset the payment class to a valid option when the entry type changes.
+  const isLoan = selectPlanholder?.EntryType === "LOAN";
+  useEffect(() => {
+    if (isLoan) {
+      if (paymentClass !== "LE" && paymentClass !== "PL") {
+        setPaymentClass("LE");
+      }
+    } else if (paymentClass === "LE" || paymentClass === "PL") {
+      setPaymentClass("DC");
+    }
+  }, [isLoan, paymentClass]);
   // Find selected planholder's plan details
   const planDetails = selectPlanholder;
 
@@ -128,7 +145,9 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
       toast.error("Please select Planholder");
       return;
     }
-    const newInstNo = getNextInstNo(selectPlanholder.LPANo);
+    // Loan AR payments are not installment-based, so InstNo stays fixed.
+    const newInstNo = isLoan ? 1 : getNextInstNo(selectPlanholder.LPANo);
+    const formattedSI = /^\d+$/.test(nextSI) ? nextSI.padStart(8, "0") : nextSI;
 
     const newPayment: PaymentRecord = {
       LPANo:
@@ -136,7 +155,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
           ? selectPlanholder.LPANo
           : (selectPlanholder.LAFNo ?? ""),
       name: `${selectPlanholder.LastName} ${selectPlanholder.FirstName} ${selectPlanholder.MiddleName}`,
-      SI: nextSI,
+      SI: formattedSI,
       SIDate: new Date(selectedSIDate).toLocaleDateString(),
       SIAmount: installmentAmount.toString() || "0",
       InstNo: newInstNo.toString(),
@@ -154,43 +173,38 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     };
 
     setPayments((prev) => [newPayment, ...prev]);
-    toast.success(`Payment added! SI: ${nextSI}, InstNo: ${newInstNo}`);
+    toast.success(`Payment added! SI: ${formattedSI}, InstNo: ${newInstNo}`);
   };
 
-  type BadgeProps = {
-    label: string;
-    color?: string;
-  };
-
-  const Badge = ({ label, color }: BadgeProps) => {
-    return (
-      <span
-        style={{
-          padding: "2px 8px",
-          borderRadius: 10,
-          fontSize: 11,
-          fontWeight: 600,
-          backgroundColor: color ?? "#eee",
-          marginRight: 6,
-          color: "white",
-        }}
-      >
+  const DetailChip = ({ label, value }: { label: string; value: string }) => (
+    <Flex
+      align="center"
+      gap={1.5}
+      px={3}
+      py={1.5}
+      borderRadius="md"
+      bg="gray.50"
+      borderWidth="1px"
+      borderColor="gray.100"
+      w="full"
+    >
+      <Body fontSize="sm" color="gray.500">
         {label}
-      </span>
-    );
-  };
+      </Body>
+      <Body fontSize="sm" fontWeight="semibold" color="gray.800">
+        {value}
+      </Body>
+    </Flex>
+  );
 
-  const getEntryBadge = (type: PlanholderLookupItem["EntryType"]) => {
+  const getEntryBadge = (type: PlanholderLookupItem["EntryType"]): { label: string; color: "warning" | "success" | "info" | "danger" } => {
     switch (type) {
       case "LOAN":
-        return { label: "LOAN", color: BRAND_COLORS.darkGreen };
+        return { label: "LOAN", color: "info" };
       case "PH":
-        return {
-          label: "PLAN",
-          color: BRAND_COLORS.primaryGreen,
-        };
+        return { label: "PLAN", color: "success" };
       default:
-        return { label: "UNKNOWN", color: BRAND_COLORS.grey };
+        return { label: "UNKNOWN", color: "warning" };
     }
   };
   const SearchHeader: LookupColumn<PlanholderLookupItem>[] = [
@@ -202,14 +216,8 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
         const refNo = row.EntryType === "LOAN" ? row.LAFNo : row.LPANo;
         return (
           <div style={{ display: "flex", alignItems: "center" }}>
-            <Badge label={badge.label} color={badge.color} />
-            {/* <Badge
-              colorPalette={row.EntryType == "PH" ? "teal" : "blue"}
-              size={"sm"}
-              variant={"subtle"}
-            >
-              {badge.label}
-            </Badge> */}
+            <OSPBadge type={badge.color}> {badge.label}</OSPBadge>
+
             <span>{refNo}</span>
           </div>
         );
@@ -230,12 +238,21 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     { key: "branch", header: "Branch" },
   ];
 
+  // Per-planholder commission / transportation expense.
+  // Displayed on selection and constant regardless of the payments list.
+  const COMMISSION_PER_PLANHOLDER = 342;
+  const TRANSPORTATION_EXPENSE_PER_PLANHOLDER = 76;
+
   const computed = useMemo(() => {
+    if (!selectPlanholder) {
+      return computePayments(0, 0, 0);
+    }
     return computePayments(
-      payments,
-      Number(planDetails?.PlanData?.PlanType?.IntsAmt ?? 0),
+      installmentAmount,
+      COMMISSION_PER_PLANHOLDER,
+      TRANSPORTATION_EXPENSE_PER_PLANHOLDER,
     );
-  }, [payments, planDetails]);
+  }, [selectPlanholder, installmentAmount]);
 
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -310,7 +327,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
 
       <Card.Root>
         <Card.MainContent>
-          <Flex justify={"end"} align="center" gap={3}>
+          <Flex justify={"end"}>
             <Box width={{ base: "full", md: "sm" }}>
               <LookupField<any>
                 label=""
@@ -340,94 +357,137 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
         </Card.MainContent>
       </Card.Root>
 
-      {/* PLANHOLDER DETAILS COLLAPSIBLE */}
-      <Box mt={4}>
-        <Card.Root title={"Planholder Details"}>
-          <Card.MainContent>
-            {/* EMPTY STATE */}
-            {!selectPlanholder && (
+      {/* PLANHOLDER DETAILS */}
+      <Box mt={5}>
+        {/* EMPTY STATE */}
+        {!selectPlanholder && (
+          <Card.Root title={"Planholder Details"}>
+            <Card.MainContent>
               <EmptyStateCard
                 title="No Planholder Selected"
                 description="Search and select a planholder to display plan details."
               />
-            )}
-            <Collapsible.Root open={selectPlanholder != null}>
-              <Collapsible.Content>
-                <Grid
-                  templateColumns={{
-                    base: "1fr",
-                    sm: "repeat(2,1fr)",
-                    lg: "repeat(2,1fr)",
-                  }}
+            </Card.MainContent>
+          </Card.Root>
+        )}
+
+        {selectPlanholder && (
+          <Card.Root>
+            <Card.MainContent>
+              <Flex
+                direction={{ base: "column", lg: "row" }}
+                justify="space-between"
+                align={{ base: "stretch", lg: "center" }}
+                gap={{ base: 3, lg: 4 }}
+              >
+                {/* IDENTITY */}
+                <Flex
+                  align="center"
                   gap={3}
+                  minW={0}
+                  justify={{ base: "space-between", lg: "start" }}
                 >
-                  {selectPlanholder && (
-                    <>
-                      <LabelText
-                        // key={selectPlanholder.LPANo}
-                        label={
-                          selectPlanholder.EntryType == "PH"
-                            ? "LPA Number"
-                            : "LAF Number"
-                        }
-                        value={
-                          selectPlanholder.EntryType == "PH"
-                            ? selectPlanholder.LPANo
-                            : (selectPlanholder?.LAFNo ?? "")
-                        }
-                      />
-                      <LabelText
-                        label="Full Name"
-                        value={`${selectPlanholder.LastName} ${selectPlanholder.FirstName} ${selectPlanholder.MiddleName}`}
-                      />
-                      <LabelText
-                        label="Plan Description"
-                        value={
-                          selectPlanholder.PlanData.PlanCatalog
-                            .CatalogDescription
-                        }
-                      />
-                      <LabelText
-                        label="Branch"
-                        value={selectPlanholder?.OrgUnit.OrgUnitDescription}
-                      />
-                      {selectPlanholder.EntryType == "PH" && (
-                        <>
-                          <LabelText
-                            label="Effectivity Date"
-                            value={new Date(
-                              String(
-                                selectPlanholder.Planholders[0].EffectivityDate,
-                              ),
-                            ).toLocaleDateString()}
-                          />
-                          <LabelText
-                            label="Due Date"
-                            value={new Date(
-                              String(selectPlanholder.Planholders[0].DueDate),
-                            ).toLocaleDateString()}
-                          />
-                          <LabelText
-                            label="Sales Agent"
-                            value={selectPlanholder.FirstName || ""}
-                          />
-                          <LabelText
-                            label="Sales Agent2"
-                            value={selectPlanholder?.LastName || ""}
-                          />
-                        </>
-                      )}
-                    </>
-                  )}
-                </Grid>
-              </Collapsible.Content>
-            </Collapsible.Root>
-          </Card.MainContent>
-        </Card.Root>
+                  <Flex gap={2} align="center">
+                    <Flex
+                      align="center"
+                      justify="center"
+                      flexShrink={0}
+                      w="48px"
+                      h="48px"
+                      borderRadius="lg"
+                      bg="green.500"
+                      color="white"
+                      fontWeight="semibold"
+                      fontSize="md"
+                    >
+                      {`${selectPlanholder.LastName?.[0] ?? ""}${selectPlanholder.FirstName?.[0] ?? ""}`.toUpperCase()}
+                    </Flex>
+                    <Box minW={0}>
+                      <Body
+                        fontWeight="semibold"
+                        textTransform="uppercase"
+                        lineHeight="1.2"
+                        truncate
+                      >
+                        {`${selectPlanholder.LastName} ${selectPlanholder.FirstName} ${selectPlanholder.MiddleName}`}
+                      </Body>
+                      <Small
+                        color="gray.500"
+                        textTransform="uppercase"
+                        truncate
+                      >
+                        {[
+                          selectPlanholder.PlanData?.PlanCatalog
+                            ?.CatalogDescription,
+                          selectPlanholder.OrgUnit?.OrgUnitDescription,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </Small>
+                    </Box>
+                  </Flex>
+                  <Flex
+                    flexShrink={0}
+                    px={3}
+                    py={1}
+                    borderRadius="full"
+                    bg="green.50"
+                    color="green.600"
+                    fontWeight="semibold"
+                    fontSize="sm"
+                  >
+                    <OSPBadge
+                      type={
+                        selectPlanholder.EntryType == "PH" ? "success" : "info"
+                      }
+                    >
+                      {selectPlanholder.EntryType == "PH"
+                        ? selectPlanholder.LPANo
+                        : (selectPlanholder?.LAFNo ?? "")}
+                    </OSPBadge>
+                  </Flex>
+                </Flex>
+
+                {/* DETAIL CHIPS */}
+                {selectPlanholder.EntryType == "PH" && (
+                  <Grid
+                    gap={2}
+                    templateColumns={{
+                      base: "repeat(2,1fr)",
+                      lg: "repeat(4,auto)",
+                    }}
+                    justifyContent={{ base: "stretch", lg: "flex-end" }}
+                  >
+                    <DetailChip
+                      label="Effectivity"
+                      value={new Date(
+                        String(selectPlanholder.Planholders[0].EffectivityDate),
+                      ).toLocaleDateString()}
+                    />
+                    <DetailChip
+                      label="Due"
+                      value={new Date(
+                        String(selectPlanholder.Planholders[0].DueDate),
+                      ).toLocaleDateString()}
+                    />
+                    <DetailChip
+                      label="Agent"
+                      value={selectPlanholder.FirstName || ""}
+                    />
+                    <DetailChip
+                      label="Agent 2"
+                      value={selectPlanholder.LastName || ""}
+                    />
+                  </Grid>
+                )}
+              </Flex>
+            </Card.MainContent>
+          </Card.Root>
+        )}
       </Box>
 
       {/* PAYMENT DETAILS */}
-      <Box mt={4} mx="auto">
+      <Box mt={5} mx="auto">
         {/* HEADER */}
         <Card.Root
           title={
@@ -479,13 +539,12 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                     lg: "repeat(3,1fr)",
                     xl: "repeat(4,1fr)",
                   }}
-                  columnGap={4}
-                  rowGap={3}
+                  gapX={{ base: 1, md: 2 }}
                   alignItems="center"
                 >
                   <SelectFloatingLabel
                     label="Payment Class"
-                    collection={PayClass}
+                    collection={isLoan ? LoanPayClass : PayClass}
                     value={[paymentClass]}
                     onValueChanged={(e) => setPaymentClass(e[0])}
                   />
@@ -507,6 +566,12 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                     name="si"
                     value={nextSI}
                     onChange={(e) => setNextSI(e.currentTarget.value)}
+                    onBlur={(e) => {
+                      const raw = e.currentTarget.value.trim();
+                      if (/^\d+$/.test(raw)) {
+                        setNextSI(raw.padStart(8, "0"));
+                      }
+                    }}
                   />
 
                   <InputFloatingLabel
@@ -523,8 +588,6 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                       display={
                         selectPlanholder?.EntryType == "PH" ? "" : "none"
                       }
-                      borderColor={BRAND_COLORS.neutralBorder}
-                      borderRadius={STANDARD_RADIUS.md}
                     >
                       -
                     </Button>
@@ -546,8 +609,6 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                       display={
                         selectPlanholder?.EntryType == "PH" ? "" : "none"
                       }
-                      borderColor={BRAND_COLORS.neutralBorder}
-                      borderRadius={STANDARD_RADIUS.md}
                     >
                       +
                     </Button>
@@ -569,6 +630,9 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   <GridItem
                     colSpan={{ base: 1, lg: 3, xl: 2 }}
                     display={selectPlanholder?.EntryType == "PH" ? "" : "none"}
+                    boxShadow="sm"
+                    p={3}
+                    borderRadius="sm"
                   >
                     <Grid
                       templateColumns={{
@@ -576,8 +640,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                         md: "repeat(2,1fr)",
                         lg: "repeat(2,1fr)",
                       }}
-                      columnGap={4}
-                      rowGap={3}
+                      gap={{ base: 1, md: 2, xl: 4 }}
                     >
                       <LabelText
                         label="Com CBI"
@@ -605,9 +668,9 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   unmountOnExit={false}
                 >
                   <Collapsible.Content>
-                    <Separator my={3} />
+                    <Separator my={4} />
                     <SectionTitle>Cheque Details</SectionTitle>
-                    <Separator my={2} />
+                    <Separator my={3} />
 
                     <Grid
                       templateColumns={{
@@ -616,8 +679,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                         lg: "repeat(3,1fr)",
                         xl: "repeat(4,1fr)",
                       }}
-                      columnGap={4}
-                      rowGap={3}
+                      gap={{ base: 1, md: 2, xl: 4 }}
                       alignItems="center"
                     >
                       <InputFloatingLabel
@@ -702,8 +764,8 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                                 asChild
                                 width="100%"
                                 border="1px solid"
-                                borderColor={BRAND_COLORS.neutralBorder}
-                                borderRadius={STANDARD_RADIUS.md}
+                                borderColor="gray.300"
+                                borderRadius="sm"
                                 cursor="pointer"
                                 p={2}
                                 fontSize="sm"
@@ -728,11 +790,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
 
                         {/* ✅ OCR SUCCESS INDICATOR */}
                         {!isProcessing && chequeData.actno && (
-                          <Body
-                            fontSize="xs"
-                            color={BRAND_COLORS.primaryGreen}
-                            mt={1}
-                          >
+                          <Body fontSize="xs" color="green.500" mt={1}>
                             ✔ OCR data loaded
                           </Body>
                         )}
@@ -741,12 +799,128 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   </Collapsible.Content>
                 </Collapsible.Root>
 
-                {/* COMMISSION SUMMARY */}
+                {/* TAX DETAILS (collapsible) */}
+                {selectPlanholder?.EntryType == "PH" && (
+                  <Box
+                    mt={4}
+                    borderWidth="1px"
+                    borderColor="gray.200"
+                    borderRadius="md"
+                    overflow="hidden"
+                  >
+                    {/* HEADER BAR */}
+                    <Flex
+                      onClick={() => setTaxOpen((p) => !p)}
+                      align="center"
+                      justify="space-between"
+                      gap={2}
+                      w="full"
+                      px={{ base: 3, md: 4 }}
+                      py={3}
+                      bg="green.50"
+                      cursor="pointer"
+                      _hover={{ bg: "green.100" }}
+                    >
+                      <Flex align="center" gap={2} color="green.700">
+                        {/* <Receipt size={18} /> */}
+                        <Text fontWeight="semibold" fontSize="sm">
+                          Tax Details
+                        </Text>
+                      </Flex>
+                      <Flex align="center" gap={2}>
+                        <Text fontSize="sm" color="gray.600">
+                          Net:
+                        </Text>
+                        <Text fontWeight="bold" fontSize="sm" color="green.600">
+                          {`₱${computed.totalAmountDue.toLocaleString(
+                            undefined,
+                            {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            },
+                          )}`}
+                        </Text>
+                        <Box color="green.700">
+                          {taxOpen ? (
+                            <ChevronUp size={18} />
+                          ) : (
+                            <ChevronDown size={18} />
+                          )}
+                        </Box>
+                      </Flex>
+                    </Flex>
+
+                    {/* BODY */}
+                    <Collapsible.Root open={taxOpen}>
+                      <Collapsible.Content>
+                        <Grid
+                          templateColumns={{
+                            base: "1fr",
+                            md: "repeat(2,1fr)",
+                          }}
+                          columnGap={{ base: 0, md: 10 }}
+                          rowGap={2}
+                          px={{ base: 3, md: 4 }}
+                          py={4}
+                        >
+                          <LabelText
+                            label="Vatable Sales"
+                            value={computed.vatableSales.toFixed(2)}
+                          />
+                          <LabelText
+                            label="VAT Exempt Sales"
+                            value={computed.vatExemptSales.toFixed(2)}
+                          />
+                          <LabelText
+                            label="Total Sales"
+                            value={computed.totalSales.toFixed(2)}
+                          />
+                          <LabelText
+                            label="Less VAT"
+                            value={computed.lessVat.toFixed(2)}
+                          />
+                          <LabelText
+                            label="Add 12% VAT"
+                            value={computed.vat.toFixed(2)}
+                          />
+                          <LabelText
+                            label="Sub Total"
+                            value={computed.subTotal.toFixed(2)}
+                          />
+                          <LabelText
+                            label="Zero Rated Sales"
+                            value={computed.zeroRatedSales.toFixed(2)}
+                          />
+                          <LabelText
+                            label="VAT Amount"
+                            value={computed.vatAmount.toFixed(2)}
+                          />
+                          <LabelText
+                            label="Amount Net of VAT"
+                            value={computed.amountNetOfVat.toFixed(2)}
+                          />
+                          <LabelText
+                            label="Amount Due"
+                            value={computed.amountDue.toFixed(2)}
+                          />
+                          <LabelText
+                            label="Withholding Tax"
+                            value={computed.withholdingTax.toFixed(2)}
+                          />
+                          <LabelText
+                            label="Total Amount Due"
+                            value={computed.totalAmountDue.toFixed(2)}
+                          />
+                        </Grid>
+                      </Collapsible.Content>
+                    </Collapsible.Root>
+                  </Box>
+                )}
 
                 {/* ACTION BUTTONS */}
                 <Flex
                   // gap={{ base: 0 }}
-                  mt={{ base: 3, md: 4 }}
+                  mt={{ base: 2, md: 3 }}
                   justify={"flex-end"}
                   flexWrap="wrap"
                 >
@@ -794,96 +968,8 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
           </Card.MainContent>
         </Card.Root>
       </Box>
-      <Box mt={4} display={selectPlanholder?.EntryType == "PH" ? "" : "none"}>
-        <Card.Root title={"Tax Details"}>
-          <Card.MainContent>
-            {/* EMPTY STATE */}
-            {!selectPlanholder && (
-              <EmptyStateCard
-                title="No Planholder Selected"
-                description="Search and select a planholder to display Tax details."
-              />
-            )}
-
-            {/* VAT BREAKDOWN */}
-            <Collapsible.Root open={selectPlanholder != null}>
-              <Collapsible.Content>
-                <Grid
-                  templateColumns={{
-                    base: "1fr",
-                    md: "repeat(2,1fr)",
-                    lg: "repeat(2,1fr)",
-                  }}
-                  gap={3}
-                >
-                  <Grid gap={2}>
-                    <LabelText
-                      label="Vatable Sales"
-                      value={computed.vatableSales.toFixed(2)}
-                    />
-                    <LabelText
-                      label="Total Sales"
-                      value={computed.totalSales.toFixed(2)}
-                    />
-                    <LabelText
-                      label="Add 12% VAT"
-                      value={computed.vat.toFixed(2)}
-                    />
-                  </Grid>
-
-                  <Grid gap={2}>
-                    <LabelText
-                      label="VAT Exempt Sales"
-                      value={computed.vatExemptSales.toFixed(2)}
-                    />
-                    <LabelText
-                      label="Less VAT"
-                      value={computed.lessVat.toFixed(2)}
-                    />
-                    <LabelText
-                      label="Sub Total"
-                      value={computed.subTotal.toFixed(2)}
-                    />
-                  </Grid>
-
-                  <Grid gap={2}>
-                    <LabelText
-                      label="Zero Rated Sales"
-                      value={computed.zeroRatedSales.toFixed(2)}
-                    />
-                    <LabelText
-                      label="Amount Net of VAT"
-                      value={computed.amountNetOfVat.toFixed(2)}
-                    />
-                    <LabelText
-                      label="Withholding Tax"
-                      value={computed.withholdingTax.toFixed(2)}
-                    />
-                  </Grid>
-
-                  <Grid gap={2}>
-                    <LabelText
-                      label="VAT Amount"
-                      value={computed.vatAmount.toFixed(2)}
-                    />
-                    <LabelText
-                      label="Amount Due"
-                      value={computed.amountDue.toFixed(2)}
-                    />
-                    <LabelText
-                      label="Total Amount Due"
-                      value={computed.totalAmountDue.toFixed(2)}
-                    />
-                  </Grid>
-                </Grid>
-              </Collapsible.Content>
-            </Collapsible.Root>
-          </Card.MainContent>
-        </Card.Root>
-      </Box>
-
       {/* ENCODED PAYMENT TABLE */}
-      <Box mt={4}>
+      <Box mt={5}>
         <DataTable
           data={payments}
           columns={tableColumns}
@@ -926,41 +1012,38 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
               </Card.MainContent>
             </Card.Root>
           )}
-          mobileConfig={{
-            viewMode: "accordion",
-            titleTransform: "uppercase",
-            primaryField: "SI",
-            secondaryField: "LPANo",
-            badgeField: "SIAmount",
-            visibleFields: ["name", "InstNo", "PayClass", "SIDate"],
-            labelMap: {
-              LPANo: "LPA Number",
-              InstNo: "Installment Number",
-              SIDate: "Sales Invoice Date",
-            },
-            valueFormatter: {
-              SIAmount: (value) => {
-                const num = Number(value);
-                return isNaN(num) ? String(num) : `₱: ${value}`;
-              },
-            },
-          }}
+          // mobileConfig={{
+          //   viewMode: "accordion",
+          //   titleTransform: "uppercase",
+          //   primaryField: "SI",
+          //   secondaryField: "LPANo",
+          //   badgeField: "SIAmount",
+          //   visibleFields: ["name", "InstNo", "PayClass", "SIDate"],
+          //   labelMap: {
+          //     LPANo: "LPA Number",
+          //     InstNo: "Installment Number",
+          //     SIDate: "Sales Invoice Date",
+          //   },
+          //   valueFormatter: {
+          //     SIAmount: (value) => {
+          //       const num = Number(value);
+          //       return isNaN(num) ? String(num) : `₱: ${value}`;
+          //     },
+          //   },
+          // }}
         />
       </Box>
 
       <Dialog.Root
         open={isDialogOpen}
         onOpenChange={(e) => setIsDialogOpen(e.open)}
-        size="xl"
+        size={{ base: "full", md: "xl" }}
         placement="center"
       >
         <Portal>
           <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content
-              borderRadius={STANDARD_RADIUS.lg}
-              boxShadow={STANDARD_SHADOWS.level3}
-            >
+          <Dialog.Positioner p={{ base: 0, md: undefined }}>
+            <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
               <Dialog.Body>
                 <Box py={8}>
                   <DataTable columns={[]} data={[]} title="Cancelled SI" />

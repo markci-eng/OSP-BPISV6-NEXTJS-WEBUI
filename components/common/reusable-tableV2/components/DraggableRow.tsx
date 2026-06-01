@@ -10,8 +10,6 @@ import { Table, IconButton, Box } from "@chakra-ui/react";
 import { Checkbox } from "@chakra-ui/react";
 import type { TableSize } from "../types";
 import { SIZE_STYLES } from "../types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_ICON_BUTTON_STYLES } from "@/lib/theme/standard-design-tokens";
 
 type Props<TData> = {
   row: Row<TData>;
@@ -61,17 +59,9 @@ export function DraggableRow<TData>({
 
   const rowIsSelected = row.getIsSelected();
 
-  const rowBg = isActive
-    ? BRAND_COLORS.successBg
-    : rowIsSelected
-      ? "gray.50"
-      : "white";
+  const rowBg = isActive ? "blue.50" : rowIsSelected ? "gray.50" : "white";
 
-  const stickyBg = isActive
-    ? BRAND_COLORS.successBg
-    : rowIsSelected
-      ? "gray.50"
-      : "white";
+  const stickyBg = isActive ? "blue.50" : rowIsSelected ? "gray.50" : "white";
 
   return (
     <Table.Row
@@ -82,7 +72,7 @@ export function DraggableRow<TData>({
       borderBottomWidth="1px"
       borderColor="gray.100"
       _hover={{
-        bg: isActive ? BRAND_COLORS.successBg : "gray.50",
+        bg: isActive ? "blue.50" : "gray.50",
       }}
       opacity={isDragging ? 0.75 : 1}
       cursor={onRowClick ? "pointer" : "default"}
@@ -94,7 +84,6 @@ export function DraggableRow<TData>({
             aria-label="Drag row"
             variant="ghost"
             size="xs"
-            {...STANDARD_ICON_BUTTON_STYLES.sm}
             cursor="grab"
             _active={{ cursor: "grabbing" }}
             {...attributes}

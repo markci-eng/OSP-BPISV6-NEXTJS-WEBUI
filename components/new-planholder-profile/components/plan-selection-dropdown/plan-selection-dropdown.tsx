@@ -9,16 +9,11 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
-import { Badge } from "../badge/badge";
 import { FaRegFileAlt } from "react-icons/fa";
 import { LuSearch } from "react-icons/lu";
 import { IoChevronDown } from "react-icons/io5";
+import { OSPBadge } from "@/components/common/badge/badge";
 import { PlanDetailType } from "@/components/plan-management/planholder-profile/planholder-profile-page";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 export function PlanSelectionDropdown(
   {
@@ -57,24 +52,21 @@ export function PlanSelectionDropdown(
           key={planDetails.lpaNumber}
           align={"center"}
           width={"full"}
-          borderRadius={STANDARD_RADIUS.md}
-          borderWidth="1px"
-          borderColor="gray.200"
+          borderRadius={"md"}
           cursor={"pointer"}
-          boxShadow={STANDARD_SHADOWS.level1}
-          p={{ base: 3, md: 4 }}
-          gap={3}
+          boxShadow={"sm"}
+          p={4}
+          gap={4}
           _hover={{
-            bg: BRAND_COLORS.successBg,
-            borderColor: BRAND_COLORS.primaryGreen,
+            bg: "var(--chakra-colors-primary-disabled)/40",
           }}
         >
           <Flex align={"center"} justify={"justify-start"}>
-            <FaRegFileAlt size={22} color={BRAND_COLORS.primaryGreen} />
+            <FaRegFileAlt size={25} color="var(--chakra-colors-primary)" />
             <VStack gap={1} mx={2} align="start" minW={0} cursor={"pointer"}>
               <Strong>{planDetails.lpaNumber}</Strong>
-              <Flex gap={2} wrap="wrap">
-                <Badge
+              <Flex gap={2}>
+                <OSPBadge
                   type={
                     planDetails.accountStatus === "LAPSED"
                       ? "warning"
@@ -82,16 +74,8 @@ export function PlanSelectionDropdown(
                   }
                 >
                   {planDetails.accountStatus}
-                </Badge>
-                <Badge
-                  type={
-                    planDetails.terminationStatus === "NOT YET TERMINATED"
-                      ? "success"
-                      : "info"
-                  }
-                >
-                  {planDetails.terminationStatus}
-                </Badge>
+                </OSPBadge>
+                <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
               </Flex>
             </VStack>
           </Flex>
@@ -117,24 +101,13 @@ export function PlanSelectionDropdown(
                     align={"center"}
                     justify={"justify-start"}
                     width={"full"}
-                    borderRadius={STANDARD_RADIUS.md}
-                    borderWidth="1px"
-                    borderColor={
-                      planDetails.lpaNumber === plan.lpaNumber
-                        ? BRAND_COLORS.primaryGreen
-                        : "gray.200"
-                    }
+                    borderRadius={"md"}
                     cursor={"pointer"}
-                    boxShadow={
-                      planDetails.lpaNumber === plan.lpaNumber
-                        ? STANDARD_SHADOWS.level1
-                        : "none"
-                    }
-                    p={{ base: 3, md: 4 }}
-                    gap={3}
+                    boxShadow={"sm"}
+                    p={4}
+                    gap={4}
                     _hover={{
-                      bg: BRAND_COLORS.successBg,
-                      borderColor: BRAND_COLORS.primaryGreen,
+                      bg: "var(--chakra-colors-primary-disabled)/40",
                     }}
                     onClick={() => {
                       setPlanDetails(plan);
@@ -143,18 +116,18 @@ export function PlanSelectionDropdown(
                     }}
                     bg={
                       planDetails.lpaNumber === plan.lpaNumber
-                        ? BRAND_COLORS.successBg
+                        ? "var(--chakra-colors-primary-disabled)/30"
                         : "white"
                     }
                   >
                     <FaRegFileAlt
-                      size={22}
-                      color={BRAND_COLORS.primaryGreen}
+                      size={25}
+                      color="var(--chakra-colors-primary)"
                     />
                     <VStack gap={1} align="start" minW={0} cursor={"pointer"}>
                       <Strong>{plan.lpaNumber}</Strong>
-                      <Flex gap={2} wrap="wrap">
-                        <Badge
+                      <Flex gap={2}>
+                        <OSPBadge
                           type={
                             plan.accountStatus === "LAPSED"
                               ? "warning"
@@ -162,16 +135,8 @@ export function PlanSelectionDropdown(
                           }
                         >
                           {plan.accountStatus}
-                        </Badge>
-                        <Badge
-                          type={
-                            plan.terminationStatus === "NOT YET TERMINATED"
-                              ? "success"
-                              : "info"
-                          }
-                        >
-                          {plan.terminationStatus}
-                        </Badge>
+                        </OSPBadge>
+                        <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
                       </Flex>
                     </VStack>
                   </Flex>

@@ -116,7 +116,6 @@ export const PayClass = createListCollection({
     { label: "REPLACEMENT OF COFPP", value: "CF" },
     { label: "CREDIT LIFE INSURANCE", value: "CL" },
     { label: "CANCELLED OR", value: "CO" },
-    { label: "LENDING PAYMENT", value: "LE" },
     { label: "MEETING AND CONFERENCE", value: "MC" },
     { label: "CHANGE MODE", value: "MF" },
     { label: "MARKETING TRANSPORTATION", value: "MT" },
@@ -125,7 +124,6 @@ export const PayClass = createListCollection({
     { label: "OTHER FEES", value: "OF" },
     { label: "OVERRIDING COMMISSION - SA", value: "OV" },
     { label: "PROCESSING FEE", value: "PF" },
-    { label: "LENDING PENALTY", value: "PL" },
     { label: "RETURNED BUDGET", value: "RB" },
     { label: "REINSTATEMENT FEE", value: "RF" },
     { label: "REINSTATEMENT PAYMENT", value: "RI" },
@@ -136,6 +134,14 @@ export const PayClass = createListCollection({
     { label: "TRANSFER FEE", value: "TF" },
     { label: "TAXES AND LICENSES", value: "TL" },
     { label: "UPDATING PAYMENT", value: "UP" },
+  ],
+});
+
+// For LOAN planholders only Lending Payment and Lending Penalty are allowed.
+export const LoanPayClass = createListCollection({
+  items: [
+    { label: "LENDING PAYMENT", value: "LE" },
+    { label: "LENDING PENALTY", value: "PL" },
   ],
 });
 

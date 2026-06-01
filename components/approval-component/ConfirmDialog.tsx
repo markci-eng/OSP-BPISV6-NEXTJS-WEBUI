@@ -33,11 +33,15 @@ export function ConfirmDialog({
       }}
       placement="center"
       motionPreset="scale"
+      size={{ base: "full", md: "md" }}
     >
       <Portal>
         <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content maxW="md" rounded="2xl">
+        <Dialog.Positioner p={{ base: 0, md: undefined }}>
+          <Dialog.Content
+            maxW={{ base: "100dvw", md: "md" }}
+            borderRadius={{ base: 0, md: "2xl" }}
+          >
             <Dialog.Header>
               <Dialog.Title asChild>
                 <Text fontWeight="medium" fontSize="md" color="fg">

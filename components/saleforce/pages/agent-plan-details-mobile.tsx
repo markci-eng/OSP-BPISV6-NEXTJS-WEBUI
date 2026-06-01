@@ -7,247 +7,335 @@ import {
 } from "../../common/agent-lookup/agent-lookup.type";
 import {
   Flex,
+  Strong,
   Text,
   Box,
-  Carousel,
-  IconButton,
 } from "@chakra-ui/react";
 import {
-  LuArrowLeft,
-  LuArrowRight,
   LuReplace,
   LuTrendingUpDown,
   LuUserPen,
-  LuHistory,
+  LuPhone,
+  LuMail,
+  LuMapPin,
+  LuPrinter,
+  LuShare2,
+  LuArrowLeft,
+  LuSearch,
 } from "react-icons/lu";
-import { ProgressCard } from "../../plan-management/planholders/cards/pending-request-card";
 import AgentInfoTabsMobile from "../tabs/agent-info-tabs-mobile";
+import { PendingRequests, RequestProps } from "@/components/new-planholder-profile/sections/pending-requests";
 import DataTable from "../../common/reusable-tableV2/DataTable";
 import TeamMemberDrawer from "../drawers/team-member-drawer";
-import RequestHistoryDrawer from "../drawers/request-history-drawer";
 import { useState } from "react";
 import { Button } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
-import StickyNavbar from "../../common/navbar/StickyNavbar";
-import StickyNavbarBtn from "../../common/navbar/StickyNavbarBtn";
 import AgentEditForm from "../forms/agent-edit-form";
 import AgentReassignForm from "../forms/agent-reassign-form";
 import AgentMovementForm from "../forms/agent-movement-form";
 import { SearchAgentDialog } from "../../common/agent-lookup/search-agent-dialog";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
-import AgentMoreDrawer from "../drawers/agent-more-drawer";
-import { Page } from "@/components/page/page";
-import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
-import ProfileSectionCard from "../components/profile-section-card";
+import MenuButton, { MenuItemButton } from "@/components/buttons/MenuButton";
+import Page from "@/components/layout/page/Page";
+import ReferralPage from "./referral-page";
+import { useRouter } from "next/navigation";
+import Card from "@/components/cards/Card";
+
+const MOCK_AGENT_REQUESTS: RequestProps[] = [
+  {
+    type: "Reinstatement",
+    title: "Contract Renewal",
+    description: "Waiting for approval.",
+    transactionId: "RI-202-6311",
+    currentStep: 3,
+    totalSteps: 7,
+    status: "Pending",
+    date: "",
+    hyperlink: "/transaction/CA-202-6311",
+  },
+  {
+    type: "Transfer of Rights",
+    title: "Transfer Approval",
+    description: "Waiting for approval.",
+    transactionId: "TR-202-6309",
+    currentStep: 2,
+    totalSteps: 3,
+    status: "Pending",
+    date: "",
+    hyperlink: "/transaction/TR-202-6311",
+  },
+];
 
 const AgentDetailsMobile = (params: {
   selectedAgent: SalesAgent | undefined;
   onAgentSelect?: (agent: SalesAgent | undefined) => void;
-  breadItem: {
-    label: string;
-    href?: string;
-  }[];
 }) => {
   const { selectedAgent, onAgentSelect } = params;
+  const [page, setPage] = useState("default");
   const [teamDrawerOpen, setTeamDrawerOpen] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] =
     useState<SalesAgent | null>(null);
-  const [historyOpen, setHistoryOpen] = useState(false);
+  const router = useRouter();
 
   return (
-    <Page
+    <Page.Root
       title="Sales Agent Profile"
       description="View sales agent information and details."
-      breadcrumbItems={params.breadItem}
     >
-      <Flex direction="column" gap={4}>
-        <Box py={2}>
-          <SearchAgentDialog
-            onSelectChange={(a) => {
-              if (onAgentSelect) onAgentSelect(a);
-            }}
-          />
-        </Box>
-
-        {!selectedAgent ? (
-          <Flex flexDir="column" gap={3}>
-            <AgentProfileHeaderCard agent={undefined} />
-
-            <ProfileSectionCard title="Pending Requests" minH="120px">
-              <EmptyStateCard
-                title="Request"
-                description="No Pending Request"
-                w="full"
-              ></EmptyStateCard>
-            </ProfileSectionCard>
-
-            <ProfileSectionCard title="Agent Information">
-                <AgentInfoTabsMobile agent={undefined} />
-            </ProfileSectionCard>
-
-            <ProfileSectionCard title="Team Members" minH="100px">
-              <EmptyStateCard
-                title="Team"
-                description="No team members."
-                w="full"
-              ></EmptyStateCard>
-            </ProfileSectionCard>
-          </Flex>
-        ) : (
-          <>
-            <Flex flexDir="column" gap={4}>
-              <AgentProfileHeaderCard agent={selectedAgent} />
-
-              <ProfileSectionCard
-                title="Pending Requests"
-                description="Track active approval workflows."
-              >
-                <Carousel.Root slideCount={2} maxW="full">
-                  <Carousel.Control justifyContent="center" gap={2} w="full">
-                    <Carousel.PrevTrigger asChild>
-                      <IconButton size={"2xs"} variant="outline">
-                        <LuArrowLeft />
-                      </IconButton>
-                    </Carousel.PrevTrigger>
-
-                    <Carousel.ItemGroup w="full">
-                      <Carousel.Item index={0}>
-                        <ProgressCard
-                          current={3}
-                          total={7}
-                          title={"Contract Renewal"}
-                          description={"Waiting for approval."}
-                          transactionId="RI-202-6311"
-                          onClick={() =>
-                            (window.location.href = "/transaction/CA-202-6311")
-                          }
-                        />
-                      </Carousel.Item>
-
-                      <Carousel.Item index={1}>
-                        <ProgressCard
-                          current={2}
-                          total={3}
-                          title={"Transfer Approval"}
-                          description={"Waiting for approval."}
-                          transactionId="TR-202-6309"
-                          onClick={() =>
-                            (window.location.href = "/transaction/TR-202-6311")
-                          }
-                        />
-                      </Carousel.Item>
-                    </Carousel.ItemGroup>
-
-                    <Carousel.NextTrigger asChild>
-                      <IconButton
-                        size={{ base: "2xs", md: "xs" }}
-                        variant="outline"
-                      >
-                        <LuArrowRight />
-                      </IconButton>
-                    </Carousel.NextTrigger>
-                  </Carousel.Control>
-                </Carousel.Root>
-
-                <Flex justify="center" mt={2}>
-                  <Button
-                    variant="plain"
-                    size="xs"
-                    color="var(--chakra-colors-primary)"
-                    onClick={() => setHistoryOpen(true)}
-                  >
-                    <LuHistory />
-                    <Text fontSize="xs">View Request History</Text>
-                  </Button>
-                </Flex>
-              </ProfileSectionCard>
-
-              <ProfileSectionCard title="Agent Information">
-                <AgentInfoTabsMobile agent={selectedAgent} />
-              </ProfileSectionCard>
-
-              <ProfileSectionCard title="Team Members">
-                <DataTable
-                  columns={columns}
-                  data={getSubordinates(selectedAgent.id)}
-                  onRowClick={(row) => {
-                    setSelectedTeamMember(row);
-                    setTeamDrawerOpen(true);
-                  }}
-                  features={{
-                    search: false,
-                    filtering: false,
-                    sorting: false,
-                    pagination: true,
-                    selection: false,
-                    draggable: false,
-                    columnToggle: false,
-                    detailSidebar: false,
-                  }}
+      {page === "default" && (
+        <Page.ToolContent>
+          <Flex direction="row" gap={2} align="center" w="full">
+            <Box flex={1} minW={0}>
+              <SearchAgentDialog
+                onSelectChange={(a) => {
+                  if (onAgentSelect) onAgentSelect(a);
+                }}
+              />
+            </Box>
+            {selectedAgent && (
+              <MenuButton>
+                <MenuItemButton
+                  icon={<LuUserPen />}
+                  label="Edit"
+                  itemKey="edit"
+                  value="edit"
+                  onClick={() => setPage("edit")}
                 />
-              </ProfileSectionCard>
+                <MenuItemButton
+                  icon={<LuReplace />}
+                  label="Re-Organized"
+                  itemKey="reassign"
+                  value="reassign"
+                  onClick={() => setPage("reassign")}
+                />
+                <MenuItemButton
+                  icon={<LuTrendingUpDown />}
+                  label="Movement"
+                  itemKey="movement"
+                  value="movement"
+                  onClick={() => setPage("movement")}
+                />
+                <MenuItemButton
+                  icon={<LuShare2 />}
+                  label="Referral"
+                  itemKey="referral"
+                  value="referral"
+                  onClick={() => setPage("referral")}
+                />
+                <MenuItemButton
+                  icon={<LuPrinter />}
+                  label="Reprint SFID"
+                  itemKey="printing"
+                  value="printing"
+                  onClick={() => router.push("/printing")}
+                />
+              </MenuButton>
+            )}
+          </Flex>
+        </Page.ToolContent>
+      )}
+      <Page.MainContent>
+        {page === "default" ? (
+          <Flex direction="column" gap={4}>
+            {!selectedAgent ? (
+              <Flex
+                direction="column"
+                align="center"
+                justify="center"
+                gap={4}
+                py={16}
+                px={6}
+                textAlign="center"
+              >
+                <Box
+                  p={5}
+                  borderRadius="full"
+                  bg="var(--chakra-colors-primary-disabled)/20"
+                >
+                  <LuSearch size={36} color="var(--chakra-colors-primary)" />
+                </Box>
+                <Box>
+                  <Text fontWeight="semibold" fontSize="lg" color="gray.700">
+                    No Agent Selected
+                  </Text>
+                  <Text fontSize="sm" color="gray.400" mt={1}>
+                    Use the search bar above to find an agent.
+                  </Text>
+                </Box>
+              </Flex>
+            ) : (
+              <Flex flexDir="column" gap={4}>
+                <AgentProfileHeaderCard agent={selectedAgent} />
+
+                {(() => {
+                  const phone = selectedAgent.mobile || selectedAgent.landline;
+                  const email = selectedAgent.email;
+                  const addr = selectedAgent.address;
+                  const address = addr
+                    ? [addr.unit, addr.street, addr.barangay, addr.city, addr.province]
+                        .filter(Boolean)
+                        .join(", ")
+                    : undefined;
+                  return (
+                    <Flex gap={2} overflow="hidden">
+                      <Button
+                        bg={"white"}
+                        variant="outline"
+                        size="sm"
+                        borderRadius="full"
+                        disabled={!phone}
+                        asChild={!!phone}
+                        flexShrink={0}
+                      >
+                        {phone ? (
+                          <a href={`tel:${phone}`}>
+                            <LuPhone />
+                            {(() => {
+                              const d = phone.replace(/\D/g, "");
+                              const local = d.startsWith("63") ? "0" + d.slice(2) : d;
+                              return local.startsWith("09") && local.length === 11
+                                ? local.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3")
+                                : phone;
+                            })()}
+                          </a>
+                        ) : (
+                          <>
+                            <LuPhone />
+                            No phone
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        bg={"white"}
+                        variant="outline"
+                        size="sm"
+                        borderRadius="full"
+                        disabled={!email}
+                        asChild={!!email}
+                        flexShrink={0}
+                      >
+                        {email ? (
+                          <a href={`mailto:${email}`}>
+                            <LuMail />
+                            Send email
+                          </a>
+                        ) : (
+                          <>
+                            <LuMail />
+                            Send email
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        bg={"white"}
+                        variant="outline"
+                        size="sm"
+                        borderRadius="full"
+                        disabled={!address}
+                        asChild={!!address}
+                        flexShrink={0}
+                      >
+                        {address ? (
+                          <a
+                            href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <LuMapPin />
+                            Map address
+                          </a>
+                        ) : (
+                          <>
+                            <LuMapPin />
+                            Map address
+                          </>
+                        )}
+                      </Button>
+                    </Flex>
+                  );
+                })()}
+
+                <PendingRequests requests={MOCK_AGENT_REQUESTS} />
+
+                <Card.Root>
+                  <Card.MainContent>
+                    <AgentInfoTabsMobile agent={selectedAgent} />
+                  </Card.MainContent>
+                </Card.Root>
+
+                <Flex borderColor="gray.200" borderRadius="md">
+                  <DataTable
+                    columns={columns}
+                    data={getSubordinates(selectedAgent.id)}
+                    onRowClick={(row) => {
+                      setSelectedTeamMember(row);
+                      setTeamDrawerOpen(true);
+                    }}
+                    features={{
+                      search: false,
+                      filtering: false,
+                      sorting: false,
+                      pagination: true,
+                      selection: false,
+                      draggable: false,
+                      columnToggle: false,
+                      detailSidebar: false,
+                    }}
+                    mobileConfig={{
+                      viewMode: "card",
+                      primaryField: "name",
+                      secondaryField: "id",
+                    }}
+                    title={
+                      <Strong fontSize="16px" color="var(--chakra-colors-primary)">
+                        Team Members
+                      </Strong>
+                    }
+                  />
+                </Flex>
+              </Flex>
+            )}
+
+            <TeamMemberDrawer
+              agent={selectedTeamMember}
+              open={teamDrawerOpen}
+              onOpenChange={setTeamDrawerOpen}
+            />
+          </Flex>
+        ) : page === "edit" ? (
+          <AgentEditForm
+            selectedAgent={selectedAgent}
+            onCancel={() => setPage("default")}
+            onSubmitted={() => setPage("default")}
+          />
+        ) : page === "reassign" ? (
+          selectedAgent ? (
+            <AgentReassignForm
+              selectedAgent={selectedAgent}
+              onCancel={() => setPage("default")}
+              onSubmitted={() => setPage("default")}
+            />
+          ) : null
+        ) : page === "movement" ? (
+          selectedAgent ? (
+            <AgentMovementForm
+              selectedAgent={selectedAgent}
+              onCancel={() => setPage("default")}
+              onSubmitted={() => setPage("default")}
+            />
+          ) : null
+        ) : page === "referral" ? (
+          <Box>
+            <Flex justify="flex-start" mb={2}>
+              <Button variant="outline" size="sm" onClick={() => setPage("default")}>
+                <LuArrowLeft /> Back
+              </Button>
             </Flex>
-
-            <StickyNavbar>
-              <StickyNavbarBtn
-                onClickEvent={() => {}}
-                btnChildren={<LuUserPen />}
-                title="Edit"
-              >
-                <Box pb={6}>
-                  <AgentEditForm
-                    selectedAgent={selectedAgent}
-                    onCancel={() => {}}
-                    hideActions
-                  />
-                </Box>
-              </StickyNavbarBtn>
-
-              <StickyNavbarBtn
-                onClickEvent={() => {}}
-                btnChildren={<LuReplace />}
-                title="Re-Organized"
-              >
-                <Box pb={6}>
-                  <AgentReassignForm
-                    selectedAgent={selectedAgent}
-                    onCancel={() => {}}
-                    hideActions
-                  />
-                </Box>
-              </StickyNavbarBtn>
-
-              <StickyNavbarBtn
-                onClickEvent={() => {}}
-                btnChildren={<LuTrendingUpDown />}
-                title="Movement"
-              >
-                <Box pb={6}>
-                  <AgentMovementForm
-                    selectedAgent={selectedAgent}
-                    onCancel={() => {}}
-                    hideActions
-                  />
-                </Box>
-              </StickyNavbarBtn>
-
-              <AgentMoreDrawer />
-            </StickyNavbar>
-          </>
-        )}
-
-        <TeamMemberDrawer
-          agent={selectedTeamMember}
-          open={teamDrawerOpen}
-          onOpenChange={setTeamDrawerOpen}
-        />
-
-        <RequestHistoryDrawer
-          open={historyOpen}
-          onOpenChange={setHistoryOpen}
-        />
-      </Flex>
-    </Page>
+            <ReferralPage />
+          </Box>
+        ) : null}
+      </Page.MainContent>
+    </Page.Root>
   );
 };
 

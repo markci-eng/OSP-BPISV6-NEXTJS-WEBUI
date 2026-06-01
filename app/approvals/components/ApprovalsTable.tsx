@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Box, Text, createListCollection } from "@chakra-ui/react";
+import { Box, Flex, Grid, Text } from "@chakra-ui/react";
+import { Check, X } from "lucide-react";
 import { toast } from "sonner";
-import { SelectFloatingLabel } from "st-peter-ui";
-import { FiInbox } from "react-icons/fi";
 
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import type {
@@ -16,72 +15,19 @@ import { approvalConfig } from "../config/approval-config";
 import { ApprovalDetailContent } from "./ApprovalDetailContent";
 import type { ApprovalView } from "../data/types";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import {
-  APPROVAL_BRAND_COLORS,
-  approvalStatusBadgeStyleMap,
-} from "../utils/colors";
-
-const approvalTypeCollection = createListCollection({
-  items: [
-    {
-      label: "Reassignment of Documents",
-      value: "reassignment-doc",
-    },
-    {
-      label: "Digital Remittance Slip (DRS)",
-      value: "drs",
-    },
-    {
-      label: "Movement of Employees",
-      value: "movement-employees",
-    },
-    {
-      label: "Reassignment of SA2",
-      value: "reassignment-sa2",
-    },
-  ],
-});
-
-const statusCollection = createListCollection({
-  items: [
-    { label: "All Status", value: "All" },
-    { label: "Pending", value: "Pending" },
-    { label: "Approved", value: "Approved" },
-    { label: "Denied", value: "Denied" },
-  ],
-});
 
 function getApprovalStatus(row: any) {
   return row.drs?.status ?? row.status;
 }
 
-function ApprovalsEmptyState() {
-  return (
-    <Box display="grid" justifyItems="center" gap={2} py={4} color="gray.600">
-      <Box
-        display="grid"
-        placeItems="center"
-        boxSize="40px"
-        borderRadius="full"
-        bg={APPROVAL_BRAND_COLORS.successBg}
-        color={APPROVAL_BRAND_COLORS.primaryGreen}
-      >
-        <FiInbox size={20} />
-      </Box>
-      <Text fontWeight="700" color="gray.800">
-        No Records Available
-      </Text>
-      <Text fontSize="sm" color="gray.500">
-        Adjust the approval type or status filter to view more records.
-      </Text>
-    </Box>
-  );
-}
-
-export function ApprovalsTable() {
+export function ApprovalsTable({
+  view,
+  setView,
+}: {
+  view: ApprovalView;
+  setView: (v: ApprovalView) => void;
+}) {
   const { messageBox } = useMessageDialog();
-
-  const [view, setView] = React.useState<ApprovalView>("reassignment-doc");
 
   const config = approvalConfig[view];
 
@@ -130,7 +76,7 @@ export function ApprovalsTable() {
   const handleApprove = React.useCallback(
     async (row: any) => {
       const confirmed = await messageBox({
-        title: "CONFIRMATION",
+        title: "CONFIRM",
         message: "Are you sure you want to approve this request?",
         confirmText: "Approve",
         variant: "confirmation",
@@ -157,7 +103,7 @@ export function ApprovalsTable() {
   const handleReject = React.useCallback(
     async (row: any) => {
       const confirmed = await messageBox({
-        title: "CONFIRMATION",
+        title: "CONFIRM",
         message: "Are you sure you want to deny this request?",
         confirmText: "Deny",
         variant: "confirmation",
@@ -176,7 +122,7 @@ export function ApprovalsTable() {
         ),
       }));
 
-      toast.success("Request denied");
+      toast.error("Request denied");
     },
     [config, messageBox, view],
   );
@@ -184,7 +130,7 @@ export function ApprovalsTable() {
   const handleBulkApprove = React.useCallback(
     async (rows: any[]) => {
       const confirmed = await messageBox({
-        title: "CONFIRMATION",
+        title: "CONFIRM BULK APPROVAL",
         message: `Are you sure you want to approve ${rows.length} selected request(s)?`,
         confirmText: "Approve",
         variant: "confirmation",
@@ -213,9 +159,9 @@ export function ApprovalsTable() {
   const handleBulkDeny = React.useCallback(
     async (rows: any[]) => {
       const confirmed = await messageBox({
-        title: "CONFIRMATION",
+        title: "CONFIRM BULK DENIAL",
         message: `Are you sure you want to deny ${rows.length} selected request(s)?`,
-        confirmText: "Deny",
+        confirmText: "Deny All",
         variant: "confirmation",
       });
 
@@ -234,7 +180,7 @@ export function ApprovalsTable() {
         ),
       }));
 
-      toast.success(`Denied ${rows.length} request(s)`);
+      toast.error(`Denied ${rows.length} request(s)`);
     },
     [config, messageBox, view],
   );
@@ -242,17 +188,19 @@ export function ApprovalsTable() {
   const rowActions = React.useMemo<RowAction<any>[]>(
     () => [
       {
+        id: "approve",
+        label: "Approve",
+        icon: Check,
+        hidden: (row) => getApprovalStatus(row) !== "Pending",
+        onClick: handleApprove,
+      },
+      {
         id: "deny",
         label: "Deny",
+        icon: X,
         variant: "destructive",
         hidden: (row) => getApprovalStatus(row) !== "Pending",
         onClick: handleReject,
-      },
-      {
-        id: "approve",
-        label: "Approve",
-        hidden: (row) => getApprovalStatus(row) !== "Pending",
-        onClick: handleApprove,
       },
     ],
     [handleApprove, handleReject],
@@ -262,45 +210,75 @@ export function ApprovalsTable() {
     () => [
       {
         id: "bulk-reject",
-        label: "Deny",
+        label: "Deny All",
+        icon: X,
         variant: "destructive",
         onClick: handleBulkDeny,
       },
       {
         id: "bulk-approve",
-        label: "Approve",
+        label: "Approve All",
+        icon: Check,
         onClick: handleBulkApprove,
       },
     ],
     [handleBulkApprove, handleBulkDeny],
   );
 
+  const summary = React.useMemo(() => {
+    const total = data.length;
+    const pending = data.filter((r) => getApprovalStatus(r) === "Pending").length;
+    const approved = data.filter((r) => getApprovalStatus(r) === "Approved").length;
+    const denied = data.filter((r) => getApprovalStatus(r) === "Denied").length;
+    return { total, pending, approved, denied };
+  }, [data]);
+
   return (
-    <DataTable<any>
+    <Flex direction="column" gap={4}>
+      <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap={3}>
+        {[
+          { label: "Total Requests", value: summary.total, filter: "All", sub: null },
+          { label: "Pending", value: summary.pending, filter: "Pending", sub: "awaiting review" },
+          { label: "Approved", value: summary.approved, filter: "Approved", sub: null },
+          { label: "Rejected", value: summary.denied, filter: "Denied", sub: null },
+        ].map((card) => {
+          const isActive = statusFilter === card.filter;
+          return (
+            <Box
+              key={card.label}
+              bg={isActive ? "var(--chakra-colors-primary-disabled)/15" : "white"}
+              border="1px solid"
+              borderColor={isActive ? "var(--chakra-colors-primary-disabled)" : "gray.200"}
+              borderRadius="xl"
+              p={4}
+              boxShadow="xs"
+              cursor="pointer"
+              onClick={() => setStatusFilter(card.filter)}
+              transition="all 0.15s ease"
+              _hover={{ borderColor: "var(--chakra-colors-primary-disabled)", bg: "var(--chakra-colors-primary-disabled)/10" }}
+            >
+              <Text fontSize="10px" fontWeight="700" letterSpacing="0.08em" textTransform="uppercase" color={isActive ? "var(--chakra-colors-primary)" : "gray.400"} mb={1}>
+                {card.label}
+              </Text>
+              <Flex align="baseline" gap={2}>
+                <Text fontSize="2xl" fontWeight="bold" color={isActive ? "var(--chakra-colors-primary)" : "gray.800"} lineHeight="1">
+                  {card.value}
+                </Text>
+                {card.sub && (
+                  <Text fontSize="xs" color="orange.400" fontWeight="medium">
+                    {card.sub}
+                  </Text>
+                )}
+              </Flex>
+            </Box>
+          );
+        })}
+      </Grid>
+
+      <DataTable<any>
       key={view}
-      headerContent={
-        <SelectFloatingLabel
-          label="Approval Type"
-          collection={approvalTypeCollection}
-          value={[view]}
-          onValueChanged={(values) => {
-            const selected = values[0] as ApprovalView;
-            setView(selected);
-          }}
-          w="full"
-        />
-      }
-      headerActions={
-        <SelectFloatingLabel
-          label="Status"
-          collection={statusCollection}
-          value={[statusFilter]}
-          onValueChanged={(values) => {
-            setStatusFilter(values[0] ?? "Pending");
-          }}
-          w={{ base: "full", md: "150px" }}
-        />
-      }
+      title={config.title}
+      description={config.description}
       data={filteredData}
       columns={config.columns}
       getRowId={config.getRowId}
@@ -312,11 +290,11 @@ export function ApprovalsTable() {
           config={config}
           onApprove={(selectedRow, remarks) => {
             handleApprove(selectedRow);
-            void remarks;
+            console.log("Approve remarks:", remarks);
           }}
           onDeny={(selectedRow, remarks) => {
             handleReject(selectedRow);
-            void remarks;
+            console.log("Deny remarks:", remarks);
           }}
         />
       )}
@@ -337,10 +315,13 @@ export function ApprovalsTable() {
         badgeField: config.mobile.badgeField as any,
         visibleFields: config.mobile.visibleFields as any,
         labelMap: config.mobile.labelMap as any,
-        valueFormatter: config.mobile.valueFormatter as any,
-        badgeStyleMap: approvalStatusBadgeStyleMap,
+        badgeColorMap: {
+          Pending: "yellow",
+          Approved: "green",
+          Denied: "red",
+        },
       }}
-      emptyState={<ApprovalsEmptyState />}
     />
+    </Flex>
   );
 }

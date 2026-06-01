@@ -1,18 +1,14 @@
 "use client";
 
 import { AppLayout } from "@/components/layout/app-layout";
-import Login from "@/components/login/page";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 export function RenderPage({ children }: { children?: ReactNode }) {
-  const [user, setUser] = useState<string | null>(null);
+  const pathname = usePathname();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    setUser(storedUser);
-  }, []);
-
-  if (!user) return <Login />;
+  // Login page renders without AppLayout chrome
+  if (pathname?.startsWith("/login")) return <>{children}</>;
 
   return <AppLayout>{children}</AppLayout>;
 }

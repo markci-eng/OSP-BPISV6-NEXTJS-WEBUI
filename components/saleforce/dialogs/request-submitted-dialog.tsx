@@ -35,12 +35,12 @@ export function RequestSubmittedDialog({
       onOpenChange={(e) => onOpenChange(e.open)}
       placement="center"
       motionPreset="slide-in-bottom"
-      size={{ base: "sm", md: "md" }}
+      size={{ base: "full", md: "md" }}
     >
       <Portal>
         <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
+        <Dialog.Positioner p={{ base: 0, md: undefined }}>
+          <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
             <Dialog.Header>
               <Dialog.Title>
                 <Flex align="center" gap={2}>

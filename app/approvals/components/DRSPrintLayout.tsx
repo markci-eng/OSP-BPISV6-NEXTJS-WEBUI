@@ -1,18 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Box,
-  HStack,
-  Image,
-  Table,
-  Text,
-} from "@chakra-ui/react";
-import {
-  formatApprovalDateTime,
-  formatPeso as formatPesoValue,
-} from "../utils/formatters";
-import { APPROVAL_BRAND_COLORS } from "../utils/colors";
+import { Box, HStack, Separator, Table, Text, VStack } from "@chakra-ui/react";
 
 type PaymentDetail = {
   depositDtl: {
@@ -25,18 +14,13 @@ type PaymentDetail = {
     SIDate?: string;
     SIAmount?: number | string;
     LpaNo?: string;
-    LPANo?: string;
     Payor?: string;
-    PayClass?: string;
-    SI?: string;
-    name?: string;
   } | null;
 };
 
 type DRSData = {
   drs: {
     id: string;
-    referenceNo?: string;
     status?: string;
     createdAt?: string;
   };
@@ -44,7 +28,6 @@ type DRSData = {
     deposit?: {
       DepositedBy?: string;
       DepositDate?: string;
-      DepositDateTime?: string;
       BankName?: string;
       BankBranch?: string;
       BankCode?: string;
@@ -55,6 +38,14 @@ type DRSData = {
     details?: PaymentDetail[];
   } | null;
 };
+
+function formatPeso(n: number) {
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 2,
+  }).format(n);
+}
 
 function safeAmount(v: unknown) {
   return Number(v ?? 0);
@@ -82,7 +73,7 @@ function ReportField({
 export function DRSPrintLayout({
   drs,
   companyName = "ST. PETER LIFE PLAN, INC.",
-  companyAddress = "Head Office, Quezon City, Philippines",
+  companyAddress = "Head Office Address Here",
 }: {
   drs: DRSData;
   companyName?: string;
@@ -99,7 +90,6 @@ export function DRSPrintLayout({
   const declaredAmount = safeAmount(depositHdr?.Amount);
   const difference = totalAmount - declaredAmount;
   const isShort = difference < 0;
-  const generatedAt = formatApprovalDateTime(new Date().toISOString());
 
   return (
     <Box
@@ -115,43 +105,26 @@ export function DRSPrintLayout({
       fontFamily="Arial, sans-serif"
     >
       {/* HEADER */}
-      <HStack align="start" justify="space-between" gap={6} mb={6}>
-        <HStack align="start" gap={3}>
-          <Image
-            src="/images/osp-chakra-reusable-components/stpeter-logo.png"
-            alt="St. Peter Life Plan"
-            h="44px"
-            w="auto"
-            objectFit="contain"
-          />
-          <Box>
-            <Text fontSize="15px" fontWeight="700" letterSpacing="0.3px">
-              {companyName}
-            </Text>
-            <Text fontSize="10px">{companyAddress}</Text>
-            <Text fontSize="10px">Branch Office Address</Text>
-          </Box>
-        </HStack>
-
-        <Box textAlign="right">
-          <Text fontSize="16px" fontWeight="700">
-            DIGITAL REMITTANCE SLIP
-          </Text>
-          <Text fontSize="10px" color="gray.700" mt={1}>
-            Generated: {generatedAt}
-          </Text>
-        </Box>
-      </HStack>
+      <VStack gap={1} mb={6}>
+        <Text fontSize="18px" fontWeight="700" letterSpacing="0.5px">
+          {companyName}
+        </Text>
+        <Text fontSize="11px">{companyAddress}</Text>
+        <Text fontSize="16px" fontWeight="700" mt={2}>
+          DIGITAL REMITTANCE SLIP
+        </Text>
+      </VStack>
 
       {/* REPORT META */}
       <Box borderWidth="1px" borderColor="black" mb={4}>
         <HStack justify="space-between" align="stretch">
+          <Separator w="1px" />
           <Box flex="1" p={3}>
             <Text fontSize="10px" fontWeight="700" color="gray.600" mb="1">
               REFERENCE NO.
             </Text>
             <Text fontSize="12px" fontWeight="700">
-              {drs.drs.referenceNo ?? drs.drs.id ?? "-"}
+              {drs.drs.id ?? "-"}
             </Text>
           </Box>
 
@@ -166,9 +139,7 @@ export function DRSPrintLayout({
             <Text fontSize="10px" fontWeight="700" color="gray.600" mb="1">
               CREATED AT
             </Text>
-            <Text fontSize="12px">
-              {formatApprovalDateTime(drs.drs.createdAt)}
-            </Text>
+            <Text fontSize="12px">{drs.drs.createdAt ?? "-"}</Text>
           </Box>
         </HStack>
       </Box>
@@ -204,7 +175,7 @@ export function DRSPrintLayout({
           >
             <ReportField
               label="Deposit Date and Time"
-              value={formatApprovalDateTime(depositHdr?.DepositDateTime)}
+              value={depositHdr?.DepositDate}
             />
           </Box>
           <Box p={3} borderBottomWidth="1px" borderColor="black">
@@ -240,13 +211,13 @@ export function DRSPrintLayout({
           <Box p={3} borderRightWidth="1px" borderColor="black">
             <ReportField
               label="Declared Deposit Amount"
-              value={formatPesoValue(safeAmount(depositHdr?.Amount))}
+              value={formatPeso(safeAmount(depositHdr?.Amount))}
             />
           </Box>
           <Box p={3}>
             <ReportField
               label="Computed Payment Total"
-              value={formatPesoValue(totalAmount)}
+              value={formatPeso(totalAmount)}
             />
           </Box>
 
@@ -256,15 +227,11 @@ export function DRSPrintLayout({
               value={
                 <Text
                   fontWeight="bold"
-                  color={
-                    isShort
-                      ? APPROVAL_BRAND_COLORS.errorRed
-                      : APPROVAL_BRAND_COLORS.warningText
-                  }
+                  color={isShort ? "red.500" : "orange.500"}
                 >
                   {difference >= 0
-                    ? `+${formatPesoValue(difference)}`
-                    : `-${formatPesoValue(Math.abs(difference))}`}
+                    ? `+${formatPeso(difference)}`
+                    : `-${formatPeso(Math.abs(difference))}`}
                 </Text>
               }
             />
@@ -357,24 +324,22 @@ export function DRSPrintLayout({
                     {item.depositDtl.SINo ?? "-"}
                   </Table.Cell>
                   <Table.Cell borderColor="black" fontSize="11px">
-                    {(item.payment as any)?.ORNo ?? item.payment?.SI ?? "-"}
+                    {item.payment?.ORNo ?? "-"}
                   </Table.Cell>
                   <Table.Cell borderColor="black" fontSize="11px">
-                    {(item.payment as any)?.LpaNo ?? item.payment?.LPANo ?? "-"}
+                    {item.payment?.LpaNo ?? "-"}
                   </Table.Cell>
                   <Table.Cell borderColor="black" fontSize="11px">
-                    {(item.payment as any)?.Payor ?? item.payment?.name ?? "-"}
+                    {item.payment?.Payor ?? "-"}
                   </Table.Cell>
                   <Table.Cell borderColor="black" fontSize="11px">
-                    {(item.payment as any)?.PayType ??
-                      item.payment?.PayClass ??
-                      "-"}
+                    {item.payment?.PayType ?? "-"}
                   </Table.Cell>
                   <Table.Cell borderColor="black" fontSize="11px">
                     {item.payment?.InstNo ?? "-"}
                   </Table.Cell>
                   <Table.Cell borderColor="black" fontSize="11px">
-                    {formatApprovalDateTime(item.payment?.SIDate)}
+                    {item.payment?.SIDate ?? "-"}
                   </Table.Cell>
                   <Table.Cell
                     borderColor="black"
@@ -382,7 +347,7 @@ export function DRSPrintLayout({
                     textAlign="right"
                     fontWeight="medium"
                   >
-                    {formatPesoValue(safeAmount(item.payment?.SIAmount))}
+                    {formatPeso(safeAmount(item.payment?.SIAmount))}
                   </Table.Cell>
                 </Table.Row>
               ))
@@ -421,7 +386,7 @@ export function DRSPrintLayout({
               minW="140px"
               textAlign="right"
             >
-              {formatPesoValue(totalAmount)}
+              {formatPeso(totalAmount)}
             </Text>
           </HStack>
         </Box>
@@ -430,7 +395,7 @@ export function DRSPrintLayout({
       {/* FOOTER / SIGNATURES */}
       <Box borderWidth="1px" borderColor="black" p={4}>
         <Box display="grid" gridTemplateColumns="repeat(3, 1fr)" gap={8} mt={6}>
-          {["Prepared By", "Verified By", "Noted By"].map((label) => (
+          {["Prepared By", "Checked By", "Approved By"].map((label) => (
             <Box key={label} textAlign="center">
               <Box h="36px" />
               <Box borderTopWidth="1px" borderColor="black" pt={1}>
@@ -442,15 +407,6 @@ export function DRSPrintLayout({
           ))}
         </Box>
       </Box>
-
-      <HStack justify="space-between" mt={4}>
-        <Text fontSize="9px" color="gray.700">
-          SYSTEM Version X.X.XX
-        </Text>
-        <Text fontSize="9px" color="gray.700">
-          Page 1 of 1
-        </Text>
-      </HStack>
     </Box>
   );
 }

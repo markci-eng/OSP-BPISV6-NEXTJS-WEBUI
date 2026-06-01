@@ -1,9 +1,6 @@
-import { Box, Flex, Grid, Separator, Strong } from "@chakra-ui/react";
+import { Grid, Separator } from "@chakra-ui/react";
 import Card from "@/components/cards/Card";
-import { LuBriefcase, LuTickets } from "react-icons/lu";
-import InfoItem from "@/components/common/info-item/info-item";
-import { GrSecure } from "react-icons/gr";
-import { TbTax } from "react-icons/tb";
+import LabelText from "@/components/texts/LabelText";
 
 export interface EmploymentInfoProps {
   employerName?: string;
@@ -20,26 +17,25 @@ export function EmploymentInfo({
   return (
     <Card.Root title={"Employment Information"}>
       <Card.MainContent>
-        <Grid templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }} gap={4}>
-          <InfoItem
+        <Grid
+          templateColumns="1fr"
+          gap={2}
+        >
+          <LabelText
             label="Employer"
             value={planholderInfo?.employerName ?? "—"}
-            icon={LuBriefcase}
           />
-          <InfoItem
-            label="TIN"
-            value={planholderInfo?.tin ?? "—"}
-            icon={LuTickets}
-          />
-          <InfoItem
+          <Separator />
+          <LabelText label="TIN" value={planholderInfo?.tin ?? "—"} />
+          <Separator />
+          <LabelText
             label="SSS/GSIS Number"
             value={planholderInfo?.securityNo ?? "—"}
-            icon={GrSecure}
           />
-          <InfoItem
+          <Separator />
+          <LabelText
             label="Source of Fund"
             value={planholderInfo?.sourceOfFund ?? "—"}
-            icon={TbTax}
           />
         </Grid>
       </Card.MainContent>

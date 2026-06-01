@@ -1,7 +1,6 @@
 import { InputFloatingLabel } from "st-peter-ui";
-import { Grid, Box } from "@chakra-ui/react";
+import { Grid, Box, Strong } from "@chakra-ui/react";
 import SectionTitle from "@/components/texts/SectionTitle";
-import { FORM_LAYOUT } from "@/lib/theme/layout-tokens";
 
 interface AgentAddressFormProps {
   lotNumber?: string;
@@ -22,18 +21,21 @@ const AgentAddressForm = (props: AgentAddressFormProps) => {
     city,
     province,
     zipCode,
+    ...rest
   } = props;
 
   return (
     <Box>
       <SectionTitle>Address</SectionTitle>
       <Grid
-        mt={2}
         templateColumns={{
           base: "1fr",
           md: "repeat(2, 1fr)",
         }}
-        gap={{ base: FORM_LAYOUT.fieldGap, md: FORM_LAYOUT.fieldGap }}
+        gap={{
+          base: 0,
+          md: 2,
+        }}
       >
         <InputFloatingLabel label="Lot/Bldg/Unit No." value={lotNumber} />
         <InputFloatingLabel label="Street" value={street} />

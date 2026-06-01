@@ -4,8 +4,6 @@ import * as React from "react";
 import { HStack, IconButton, Menu, Portal, Text } from "@chakra-ui/react";
 import { MoreHorizontal } from "lucide-react";
 import type { RowAction } from "../types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_ICON_BUTTON_STYLES } from "@/lib/theme/standard-design-tokens";
 
 type DataTableRowActionsProps<TData> = {
   row: TData;
@@ -31,18 +29,7 @@ export function DataTableRowActions<TData>({
         aria-label={action.label}
         variant="ghost"
         size="sm"
-        {...STANDARD_ICON_BUTTON_STYLES.sm}
-        color={
-          action.variant === "destructive"
-            ? BRAND_COLORS.destructiveRed
-            : BRAND_COLORS.primaryGreen
-        }
-        _hover={{
-          bg:
-            action.variant === "destructive"
-              ? BRAND_COLORS.errorBg
-              : BRAND_COLORS.successBg,
-        }}
+        colorPalette={action.variant === "destructive" ? "red" : undefined}
         disabled={action.disabled?.(row)}
         onClick={(event) => {
           event.stopPropagation();
@@ -61,7 +48,6 @@ export function DataTableRowActions<TData>({
           aria-label="Row actions"
           variant="ghost"
           size="sm"
-          {...STANDARD_ICON_BUTTON_STYLES.sm}
           onClick={(event) => event.stopPropagation()}
         >
           <MoreHorizontal size={16} />
@@ -88,9 +74,7 @@ export function DataTableRowActions<TData>({
 
                     <Text
                       color={
-                        action.variant === "destructive"
-                          ? BRAND_COLORS.destructiveRed
-                          : BRAND_COLORS.primaryGreen
+                        action.variant === "destructive" ? "red.600" : undefined
                       }
                     >
                       {action.label}

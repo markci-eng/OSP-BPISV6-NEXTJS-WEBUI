@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ColorModeProvider } from "@/components/ui/color-mode";
 
 export default function RootLayoutClient({
   children,
@@ -23,5 +24,5 @@ export default function RootLayoutClient({
     }
   }, []);
 
-  return <>{children}</>;
+  return <ColorModeProvider>{children}</ColorModeProvider>;
 }

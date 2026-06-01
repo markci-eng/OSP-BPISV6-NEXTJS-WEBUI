@@ -16,25 +16,17 @@ export default function InfoItem({
     return (
       <VStack gap={1} align="start" minW={0}>
         <Small color="gray.500">{label}</Small>
-        <Strong
-          color={color ?? "gray.700"}
-          wordBreak="break-word"
-          overflowWrap="anywhere"
-        >
-          {value}
-        </Strong>
+        <Strong color={color ?? "gray.700"}>{value}</Strong>
       </VStack>
     );
   } else {
     return (
-      <HStack gap={3} align="start" justify={"space-between"} minW={0}>
+      <HStack gap={1} align="center" justify={"space-between"} minW={0}>
         <Small color="gray.500">{label}</Small>
         <Small
           fontWeight={"semibold"}
           textAlign={"end"}
           color={color ?? "gray.700"}
-          wordBreak="break-word"
-          overflowWrap="anywhere"
         >
           {value}
         </Small>

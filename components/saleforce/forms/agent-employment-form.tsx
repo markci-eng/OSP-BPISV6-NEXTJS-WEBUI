@@ -1,9 +1,10 @@
-import { Grid, Separator, Flex } from "@chakra-ui/react";
-import { InputFloatingLabel } from "st-peter-ui";
+import React from "react";
+import { Grid, Separator, Strong } from "@chakra-ui/react";
+import { Box, H4, InputFloatingLabel, Small } from "st-peter-ui";
+import { Text, Flex } from "@chakra-ui/react";
+import Card from "@/components/cards/Card";
 import FormTitle from "@/components/texts/FormTitle";
 import Caption from "@/components/texts/Caption";
-import ProfileSectionCard from "@/components/saleforce/components/profile-section-card";
-import { FORM_LAYOUT } from "@/lib/theme/layout-tokens";
 
 interface AgentEmploymentFormProps {
   employer: string;
@@ -24,22 +25,30 @@ const AgentEmploymentForm = (props: AgentEmploymentFormProps) => {
     nbiNumber,
     tinNumber,
     sssNumber,
+    ...rest
   } = props;
 
   return (
-    <ProfileSectionCard>
-      <Flex flexDir="column" gap={{ base: 4, md: 5 }}>
-        <Flex flexDir="column" gap={1}>
+    <Card.Root>
+      <Card.MainContent>
+        <Flex flexDir={"column"} gap={1}>
           <FormTitle label="Employment Information" />
-          <Caption value="Please fill out the following employment details." />
+          <Caption>Please fill out the following employment details.</Caption>
         </Flex>
-        <Separator />
+        <Separator my={2} />
         <Grid
           templateColumns={{
             base: "1fr",
             md: "repeat(2, 1fr)",
           }}
-          gap={{ base: FORM_LAYOUT.fieldGap, md: FORM_LAYOUT.fieldGap }}
+          gap={{
+            base: 0,
+            md: 2,
+          }}
+          paddingX={{
+            base: 1,
+            md: 2,
+          }}
         >
           <InputFloatingLabel label="Employer" value={employer} />
           <InputFloatingLabel label="Position" value={position} />
@@ -52,8 +61,8 @@ const AgentEmploymentForm = (props: AgentEmploymentFormProps) => {
           <InputFloatingLabel label="TIN Number" value={tinNumber} />
           <InputFloatingLabel label="SSS Number" value={sssNumber} />
         </Grid>
-      </Flex>
-    </ProfileSectionCard>
+      </Card.MainContent>
+    </Card.Root>
   );
 };
 

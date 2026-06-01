@@ -8,7 +8,6 @@ import {
   Button,
   Checkbox,
   Collapsible,
-  Flex,
   HStack,
   IconButton,
   Text,
@@ -21,13 +20,6 @@ import type {
   DataTableMobileConfig,
   RowAction,
 } from "../types";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_BUTTON_STYLES,
-  STANDARD_ICON_BUTTON_STYLES,
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 type DataTableMobileAccordionProps<TData> = {
   table: TanStackTable<TData>;
@@ -165,10 +157,6 @@ export function DataTableMobileAccordion<TData>({
             : typeof badgeValue === "number" && badgeValue <= 0
               ? "red"
               : "green");
-        const badgeStyle =
-          badgeValue === undefined || badgeValue === null
-            ? undefined
-            : mobileConfig.badgeStyleMap?.[String(badgeValue)];
 
         const visibleFields =
           mobileConfig.visibleFields?.filter(
@@ -195,12 +183,10 @@ export function DataTableMobileAccordion<TData>({
             <Box
               bg="white"
               borderWidth="1px"
-              borderColor={
-                row.getIsSelected() ? BRAND_COLORS.primaryGreen : "gray.200"
-              }
-              borderRadius={STANDARD_RADIUS.md}
+              borderColor={row.getIsSelected() ? "blue.300" : "gray.200"}
+              borderRadius="md"
               overflow="hidden"
-              boxShadow={STANDARD_SHADOWS.level1}
+              boxShadow="xs"
             >
               <Collapsible.Trigger asChild>
                 <HStack
@@ -231,7 +217,7 @@ export function DataTableMobileAccordion<TData>({
                     <Text
                       fontSize="sm"
                       fontWeight="semibold"
-                      color={BRAND_COLORS.primaryGreen}
+                      color="var(--chakra-colors-primary)"
                       lineClamp={2}
                       letterSpacing="wide"
                     >
@@ -245,25 +231,13 @@ export function DataTableMobileAccordion<TData>({
                     </Text>
 
                     {mobileConfig.secondaryField && (
-                      <Text
-                        fontSize="xs"
-                        color="gray.500"
-                        mt={1}
-                        wordBreak="break-word"
-                        overflowWrap="anywhere"
-                      >
+                      <Text fontSize="xs" color="gray.500" mt={1} lineClamp={2}>
                         {getLabel(
                           mobileConfig.secondaryField,
                           mobileConfig.labelMap,
                         )}
                         :{" "}
-                        <Text
-                          as="span"
-                          color="gray.700"
-                          fontWeight="500"
-                          wordBreak="break-word"
-                          overflowWrap="anywhere"
-                        >
+                        <Text as="span" color="gray.700" fontWeight="500">
                           {getDisplayValue(
                             original,
                             mobileConfig.secondaryField,
@@ -278,10 +252,9 @@ export function DataTableMobileAccordion<TData>({
                     {mobileConfig.badgeField && (
                       <Badge
                         size="sm"
-                        variant={badgeStyle ? undefined : "surface"}
-                        colorPalette={badgeStyle ? undefined : badgeColor}
+                        variant="surface"
+                        colorPalette={badgeColor}
                         flexShrink={0}
-                        {...badgeStyle}
                       >
                         {getDisplayValue(
                           original,
@@ -295,7 +268,6 @@ export function DataTableMobileAccordion<TData>({
                       aria-label={isOpen ? "Collapse row" : "Expand row"}
                       variant="ghost"
                       size="xs"
-                      {...STANDARD_ICON_BUTTON_STYLES.sm}
                     >
                       {isOpen ? (
                         <ChevronDown size={16} />
@@ -317,19 +289,13 @@ export function DataTableMobileAccordion<TData>({
                   {visibleFields.length > 0 && (
                     <VStack align="stretch" gap={2}>
                       {visibleFields.map((field) => (
-                        <Flex
+                        <HStack
                           key={field}
                           justify="space-between"
                           align="flex-start"
-                          gap={{ base: 1, sm: 4 }}
-                          direction={{ base: "column", sm: "row" }}
-                          minW={0}
+                          gap={4}
                         >
-                          <Text
-                            fontSize="xs"
-                            color="gray.500"
-                            minW={{ base: 0, sm: "110px" }}
-                          >
+                          <Text fontSize="xs" color="gray.500" minW="110px">
                             {getLabel(field, mobileConfig.labelMap)}
                           </Text>
 
@@ -337,16 +303,13 @@ export function DataTableMobileAccordion<TData>({
                             fontSize="xs"
                             color="gray.900"
                             fontWeight="600"
-                            textAlign={{ base: "left", sm: "right" }}
+                            textAlign="right"
+                            lineClamp={2}
                             flex="1"
-                            minW={0}
-                            maxW="full"
-                            wordBreak="break-word"
-                            overflowWrap="anywhere"
                           >
                             {getDisplayValue(original, field, mobileConfig)}
                           </Text>
-                        </Flex>
+                        </HStack>
                       ))}
                     </VStack>
                   )}
@@ -362,7 +325,6 @@ export function DataTableMobileAccordion<TData>({
                         size="sm"
                         variant="outline"
                         w="full"
-                        {...STANDARD_BUTTON_STYLES.md}
                         onClick={(event) => {
                           event.stopPropagation();
                           onRowActivate(row.id, original);
@@ -394,11 +356,7 @@ export function DataTableMobileAccordion<TData>({
                       borderColor="gray.100"
                       onClick={(event) => event.stopPropagation()}
                     >
-                      <Flex
-                        gap={2}
-                        align="stretch"
-                        direction={{ base: "column", sm: "row" }}
-                      >
+                      <HStack gap={2} align="stretch">
                         {visibleActions.map((action) => {
                           const Icon = action.icon;
                           const isDestructive =
@@ -408,33 +366,9 @@ export function DataTableMobileAccordion<TData>({
                             <Button
                               key={action.id}
                               size="sm"
-                              flex={{ base: "none", sm: "1" }}
-                              w="full"
+                              flex="1"
                               variant={isDestructive ? "outline" : "solid"}
-                              {...STANDARD_BUTTON_STYLES.md}
-                              bg={
-                                isDestructive
-                                  ? undefined
-                                  : BRAND_COLORS.primaryGreen
-                              }
-                              color={
-                                isDestructive
-                                  ? BRAND_COLORS.destructiveRed
-                                  : "white"
-                              }
-                              borderColor={
-                                isDestructive
-                                  ? BRAND_COLORS.destructiveRed
-                                  : BRAND_COLORS.primaryGreen
-                              }
-                              _hover={{
-                                bg: isDestructive
-                                  ? BRAND_COLORS.errorBg
-                                  : BRAND_COLORS.darkGreen,
-                                borderColor: isDestructive
-                                  ? BRAND_COLORS.destructiveRed
-                                  : BRAND_COLORS.darkGreen,
-                              }}
+                              colorPalette={isDestructive ? "red" : "blue"}
                               disabled={action.disabled?.(original)}
                               onClick={() => action.onClick(original)}
                             >
@@ -443,7 +377,7 @@ export function DataTableMobileAccordion<TData>({
                             </Button>
                           );
                         })}
-                      </Flex>
+                      </HStack>
                     </Box>
                   )}
                 </Box>

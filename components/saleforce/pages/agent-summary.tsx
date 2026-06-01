@@ -1,9 +1,13 @@
+import { PrimaryMdButton } from "st-peter-ui";
+import { Flex } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 import Summary from "@/components/forms/Summary";
-import ProfileSectionCard from "@/components/saleforce/components/profile-section-card";
 
 const AgentSummary = () => {
+  const router = useRouter();
+
   return (
-    <ProfileSectionCard>
+    <Flex flexDir={"column"} boxShadow={"sm"} borderRadius={"md"}>
       <Summary
         title="Summary"
         subtitle="Verify the information below before creating the agent profile."
@@ -130,7 +134,7 @@ const AgentSummary = () => {
           },
         ]}
       />
-    </ProfileSectionCard>
+    </Flex>
   );
 };
 

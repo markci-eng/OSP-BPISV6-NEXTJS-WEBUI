@@ -14,9 +14,11 @@ const MainContent = ({ children }: { children: React.ReactNode }) => {
 const Root = ({
   title,
   children,
+  bg,
 }: {
   title?: string | null;
   children: React.ReactNode;
+  bg?: string;
 }) => {
   let buttonSection: React.ReactNode = null;
   let mainContent: React.ReactNode = null;
@@ -34,13 +36,15 @@ const Root = ({
       h="full"
       display="flex"
       flexDirection="column"
+      bg={bg ?? "bg"}
       p={{
         base: 3,
         md: 4,
       }}
-      borderRadius="md"
+      borderRadius={{ base: "2xl", md: "md" }}
       borderWidth={1}
       borderColor="gray.200"
+      boxShadow={"sm"}
     >
       {title && (
         <>

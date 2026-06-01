@@ -1,12 +1,20 @@
-import React from "react";
-import { Body } from "st-peter-ui";
+// Author By: Jimwell Ocsio
 
-interface CaptionProps {
-  value: string;
-}
+import { Box } from "@chakra-ui/react";
+import { TextProps } from "./props/TextProps";
 
-const Caption = ({ value }: CaptionProps) => {
-  return <Body>{value}</Body>;
+const Caption = ({ children, ...rest }: TextProps) => {
+  return (
+    <Box
+      color="#7B8079"
+      {...rest}
+      lineHeight="1.40"
+      fontSize="12.5px"
+      fontWeight="400"
+    >
+      {children}
+    </Box>
+  );
 };
 
 export default Caption;

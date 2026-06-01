@@ -12,31 +12,14 @@ const SalesAgentProfileWithIdParams = async ({
   const { saleforceId } = await params;
   const agent = getAgentById(saleforceId);
 
-  const breadItem = [
-    {
-      label: "Home",
-      href: "/",
-    },
-    {
-      label: "Sale Agent Management",
-      href: "",
-    },
-    {
-      label: "Sales Agent Profile",
-      href: "/sales-force/profile",
-    },
-    {
-      label: agent ? agent.name : "Agent Not Found",
-    },
-  ];
   return (
     <>
-      <Box display={{ base: "none", md: "block" }}>
-        <AgentDetails selectedAgent={agent} breadItem={breadItem} />
+      <Box display={{ base: "none", md: "block" }} h="100%">
+        <AgentDetails selectedAgent={agent} />
       </Box>
 
-      <Box display={{ base: "block", md: "none" }}>
-        <AgentDetailsMobile selectedAgent={agent} breadItem={[]} />
+      <Box display={{ base: "block", md: "none" }} h="100%">
+        <AgentDetailsMobile selectedAgent={agent} />
       </Box>
     </>
   );

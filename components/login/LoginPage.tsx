@@ -43,6 +43,7 @@ interface LoginPageProps {
     contactnumber: string,
   ) => void;
   forgotPasswordLink?: string;
+  loginError?: string | null;
 }
 
 const MotionFlex = motion(Flex);
@@ -52,6 +53,7 @@ export function LoginPage({
   onLogin,
   onSignUp,
   forgotPasswordLink,
+  loginError,
 }: LoginPageProps) {
   const isMobile = useBreakpointValue({ base: true, md: false });
   const [isSignUp, setIsSignUp] = useState(false);
@@ -179,6 +181,11 @@ export function LoginPage({
                   >
                     Forgot your password?
                   </Link>
+                  {loginError && (
+                    <Text fontSize="sm" color="red.500" textAlign="center">
+                      {loginError}
+                    </Text>
+                  )}
                   <LoginFlexButton type="submit" />
 
                   <HStack my={3}>

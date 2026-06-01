@@ -31,7 +31,7 @@ import {
   mapDRSToDepositAndPayments,
 } from "@/app/approvals/data/types";
 import { DRSPrintLayout } from "@/app/approvals/components/DRSPrintLayout";
-import { Page } from "@/components/page/page";
+import Page from "@/components/layout/page/Page";
 
 type ApprovalView =
   | "reassignment-doc"
@@ -729,15 +729,13 @@ export default function ApprovalsPage() {
     },
   };
 
-  const breadItem = [{ label: "Home" }, { label: "Approvals" }];
-
   return (
-    <Page
+    <Page.Root
       title="Approvals"
       description="Manage your pending approvals here."
-      breadcrumbItems={breadItem}
       // separator={true}
     >
+      <Page.MainContent>
       {/* Dropdown */}
       {/* <Box maxW="320px">
         <SelectFloatingLabel
@@ -812,6 +810,7 @@ export default function ApprovalsPage() {
           }
         />
       )}
-    </Page>
+      </Page.MainContent>
+    </Page.Root>
   );
 }

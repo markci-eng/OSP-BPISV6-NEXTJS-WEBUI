@@ -7,7 +7,7 @@ import {
   Text,
   Flex,
   Box,
-  Separator,
+  VStack,
 } from "@chakra-ui/react";
 
 import {
@@ -45,23 +45,51 @@ type MessageDialogProps = {
   variant?: DialogVariant;
 };
 
-const variantStyles: Record<
+const variantConfig: Record<
   DialogVariant,
   {
     icon: React.ElementType;
+    iconBg: string;
+    iconColor: string;
+    colorPalette: string;
   }
 > = {
-  information: { icon: Info },
-  error: { icon: CircleX },
-  warning: { icon: AlertTriangle },
-  success: { icon: CheckCircle },
-  confirmation: { icon: HelpCircle },
+  information: {
+    icon: Info,
+    iconBg: "blue.subtle",
+    iconColor: "blue.600",
+    colorPalette: "blue",
+  },
+  error: {
+    icon: CircleX,
+    iconBg: "red.subtle",
+    iconColor: "red.600",
+    colorPalette: "red",
+  },
+  warning: {
+    icon: AlertTriangle,
+    iconBg: "orange.subtle",
+    iconColor: "orange.600",
+    colorPalette: "orange",
+  },
+  success: {
+    icon: CheckCircle,
+    iconBg: "green.subtle",
+    iconColor: "green.600",
+    colorPalette: "green",
+  },
+  confirmation: {
+    icon: HelpCircle,
+    iconBg: "blue.subtle",
+    iconColor: "blue.600",
+    colorPalette: "blue",
+  },
 };
 
 export default function MessageDialog({
   open,
   onOpenChange,
-  title = "CONFIRMATION",
+  title = "Confirmation",
   message = "Do you want to proceed?",
   onConfirm,
   onCancel,
@@ -73,85 +101,85 @@ export default function MessageDialog({
 }: MessageDialogProps) {
   const handleClose = () => onOpenChange(false);
 
-  const styles = variantStyles[variant];
-  const Icon = styles.icon;
+  const config = variantConfig[variant];
+  const Icon = config.icon;
+  const showCancelButton = showCancel && variant === "confirmation";
 
   return (
-    <Dialog.Root open={open} onOpenChange={(e) => onOpenChange(e.open)}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(e) => onOpenChange(e.open)}
+      size="sm"
+      placement="center"
+      motionPreset="scale"
+    >
       <Portal>
         <Dialog.Backdrop />
 
         <Dialog.Positioner>
           <Dialog.Content
-            borderRadius="xl"
+            borderRadius="2xl"
             overflow="hidden"
-            bg="gray.100"
-            border="1px solid"
-            borderColor="gray.300"
-            maxW="420px"
+            maxW="360px"
+            boxShadow="xl"
           >
-            {/* Header */}
-            <Box
-              px={4}
-              py={3}
-              display="flex"
-              alignItems="center"
-              gap={2}
+            {/* Icon + Title + Message */}
+            <VStack gap={3} pt={8} pb={6} px={6} textAlign="center">
+              <Box
+                p={3}
+                borderRadius="xl"
+                bg={config.iconBg}
+                color={config.iconColor}
+                display="inline-flex"
+              >
+                <Icon size={26} strokeWidth={1.75} />
+              </Box>
+
+              <VStack gap={1}>
+                <Text fontWeight="semibold" fontSize="md" color="fg">
+                  {title}
+                </Text>
+                <Text fontSize="sm" color="fg.muted" lineHeight="tall">
+                  {message}
+                </Text>
+              </VStack>
+            </VStack>
+
+            {/* Actions */}
+            <Flex
+              px={6}
+              pb={6}
+              gap={3}
+              direction={showCancelButton ? "row" : "column"}
             >
-              <Icon size={18} />
-              <Text fontWeight="bold" letterSpacing="wide">
-                {title}
-              </Text>
-            </Box>
-
-            <Separator borderColor="gray.300" />
-
-            {/* Body */}
-            <Box px={4} py={6}>
-              <Text fontSize="sm" color="gray.700">
-                {message}
-              </Text>
-            </Box>
-
-            {/* Footer */}
-            <Flex justify="flex-end" px={4} pb={4}>
-              {/* 👇 Wrapper for symmetry */}
-              <Flex gap={2}>
-                {showCancel && variant === "confirmation" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    borderRadius="md"
-                    minW="90px"
-                    px={4}
-                    whiteSpace="nowrap"
-                    flexShrink={0}
-                    onClick={() => {
-                      onCancel?.();
-                      handleClose();
-                    }}
-                  >
-                    {cancelText}
-                  </Button>
-                )}
-
+              {showCancelButton && (
                 <Button
-                  size="sm"
-                  // variant="outline"
-                  borderRadius="md"
-                  minW="90px"
-                  px={4}
-                  whiteSpace="nowrap"
-                  flexShrink={0}
-                  loading={isLoading}
+                  variant="outline"
+                  flex={1}
+                  borderRadius="lg"
+                  size={"md"}
                   onClick={() => {
-                    onConfirm?.();
+                    onCancel?.();
                     handleClose();
                   }}
                 >
-                  {confirmText}
+                  {cancelText}
                 </Button>
-              </Flex>
+              )}
+
+              <Button
+                flex={1}
+                size={"md"} 
+                borderRadius="lg"
+                colorPalette={config.colorPalette}
+                loading={isLoading}
+                onClick={() => {
+                  onConfirm?.();
+                  handleClose();
+                }}
+              >
+                {confirmText}
+              </Button>
             </Flex>
           </Dialog.Content>
         </Dialog.Positioner>

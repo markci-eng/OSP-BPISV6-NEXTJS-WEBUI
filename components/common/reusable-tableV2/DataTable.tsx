@@ -70,6 +70,7 @@ export function DataTable<TData>({
   mobileConfig,
   floatingBulkActions = false,
   summaryRows,
+  toolbarTop = "var(--sticky-header-h, 0px)",
 }: DataTableProps<TData>) {
   const features = { ...DEFAULT_FEATURES, ...featuresProp };
   const resolvedMobileConfig = {
@@ -319,7 +320,7 @@ export function DataTable<TData>({
       borderWidth="1px"
       borderColor="gray.200"
       borderRadius="lg"
-      overflow="hidden"
+      overflow="clip"
       bg="white"
       position="relative"
       className={className}
@@ -334,6 +335,7 @@ export function DataTable<TData>({
         setGlobalFilter={setGlobalFilter}
         headerButton={headerButton}
         headerActions={headerActions}
+        top={toolbarTop}
       />
 
       {features.filtering && (

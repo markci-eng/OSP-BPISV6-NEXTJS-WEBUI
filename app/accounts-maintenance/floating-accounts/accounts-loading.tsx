@@ -1,14 +1,18 @@
 import {
-  Box,
+  Flex,
   Grid,
   GridItem,
   Separator,
+  SimpleGrid,
   Strong,
 } from "@chakra-ui/react";
 import {
+  Box,
   PrimaryMdButton,
+  PrimarySmButton,
   SelectFloatingLabel,
 } from "st-peter-ui";
+import Page from "@/components/layout/page/Page";
 import { STLList, TrxMonth } from "../data/transaction-month";
 import FloatingAccountList from "./floating-list";
 import {
@@ -19,39 +23,13 @@ import {
 import { useState } from "react";
 import LookUp from "../../../components/common/reusable-lookup/dynamic-lookup";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { Page } from "@/components/page/page";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
-const bcrumb = [
-  {
-    label: "Home",
-  },
-  {
-    label: "Accounts Maintenance",
-  },
-  {
-    label: "Floating Accounts",
-  },
-];
 
 export default function AccountsLoadingPage() {
   const [selectedAgent, setSelectedAgent] =
     useState<SalesForceLookUpData | null>(null);
 
   const { messageBox } = useMessageDialog();
-
-  const sectionCardProps = {
-    p: { base: 4, md: 5 },
-    bg: BRAND_COLORS.white,
-    boxShadow: STANDARD_SHADOWS.level1,
-    borderRadius: STANDARD_RADIUS.md,
-    borderWidth: "1px",
-    borderColor: BRAND_COLORS.neutralBorder,
-  } as const;
 
   const confirmLoad = async () => {
     const confirmed = await messageBox({
@@ -76,27 +54,58 @@ export default function AccountsLoadingPage() {
     });
   };
 
+  // const confirmLoad = async () => {
+  //   await messageBox({
+  //     title: "CONFIRMATION",
+  //     message: "Do you want to load account(s)?",
+  //     confirmText: "Yes",
+  //     cancelText: "No",
+  //     variant: "confirmation",
+  //     onConfirm: () => {
+  //       loadAccounts();
+  //     },
+  //   });
+
+  //   // if (confirmed) {
+  //   //   await loadAccounts();
+  //   // }
+  // };
+
+  // const loadAccounts = async () => {
+  //   await messageBox({
+  //     title: "SUCCESS",
+  //     message: "Account(s) successfully loaded.",
+  //     confirmText: "Ok",
+  //     variant: "success",
+  //   });
+  // };
+
   return (
-    <Page
-      breadcrumbItems={bcrumb}
-      title="Floating Accounts"
-      description="Review floating accounts and load selected accounts to a sales agent."
-    >
-      <Box display="flex" flexDirection="column" gap={{ base: 4, md: 5 }}>
-        <Box {...sectionCardProps}>
-          <Strong color={BRAND_COLORS.primaryGreen}>
-            Sales Team Leader / Transaction Month
+    <Page.Root title="Floating Accounts">
+      <Page.MainContent>
+        <Page.Row>
+        <Box
+          p={3}
+          bg="white"
+          boxShadow="sm"
+          borderRadius="lg"
+          borderWidth="0.5px"
+        >
+          <Strong color="var(--chakra-colors-primary)">
+            Sales Team Leader\Transaction Month
           </Strong>
           <Separator my={2} />
 
           <Grid
             templateColumns={{
               base: "1fr",
+              sm: "1fr",
               md: "1fr 1fr",
               lg: "max-content auto",
             }}
             gap={4}
           >
+            {/* Row 2 - Select Month */}
             <GridItem>
               <SelectFloatingLabel
                 label="Select Transaction Month"
@@ -114,23 +123,33 @@ export default function AccountsLoadingPage() {
             </GridItem>
           </Grid>
         </Box>
+        </Page.Row>
 
-        <Box flex="1" minW={0} overflow="hidden">
+        <Page.Row>
           <FloatingAccountList />
-        </Box>
+        </Page.Row>
 
-        <Box {...sectionCardProps}>
-          <Strong color={BRAND_COLORS.primaryGreen}>Sales Agent 2</Strong>
+        <Page.Row>
+        <Box
+          p={3}
+          bg="white"
+          boxShadow="sm"
+          borderRadius="lg"
+          borderWidth="0.5px"
+        >
+          <Strong color="var(--chakra-colors-primary)">Sales Agent 2</Strong>
           <Separator my={2} />
 
           <Grid
             templateColumns={{
               base: "1fr",
-              md: "1fr auto",
+              md: "1fr 1fr",
+              lg: "max-content auto",
             }}
             gap={4}
-            alignItems="start"
+            justifyContent="end"
           >
+            {/* Search Employee */}
             <GridItem>
               <Box w={{ base: "100%", md: "360px" }}>
                 <LookUp<SalesForceLookUpData>
@@ -146,14 +165,16 @@ export default function AccountsLoadingPage() {
               </Box>
             </GridItem>
 
-            <GridItem justifySelf={{ base: "stretch", md: "end" }}>
+            {/* Button */}
+            <GridItem justifySelf={{ base: "stretch", lg: "end" }}>
               <PrimaryMdButton onClick={confirmLoad}>
                 Load Account/s
               </PrimaryMdButton>
             </GridItem>
           </Grid>
         </Box>
-      </Box>
-    </Page>
+        </Page.Row>
+      </Page.MainContent>
+    </Page.Root>
   );
 }

@@ -42,6 +42,7 @@ export function FormStepper({
 
   useEffect(() => {
     setStepNumber(stepIndex + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [stepIndex]);
 
   //For Mobile Progresss
@@ -191,27 +192,11 @@ export function FormStepper({
         justifyContent={"space-between"}
       >
         <Steps.PrevTrigger asChild>
-          <PreviousButton
-            onClick={() =>
-              window.scrollTo({
-                top: 0,
-                left: 0,
-                behavior: "smooth",
-              })
-            }
-          />
+          <PreviousButton />
         </Steps.PrevTrigger>
         <Show when={stepIndex < steps.length - 1}>
           <Steps.NextTrigger asChild>
-            <NextButton
-              onClick={() => {
-                window.scrollTo({
-                  top: 0,
-                  behavior: "smooth",
-                });
-                setTargetIdx(stepIndex + 1);
-              }}
-            />
+            <NextButton onClick={() => setTargetIdx(stepIndex + 1)} />
           </Steps.NextTrigger>
         </Show>
         <Show when={stepIndex === steps.length - 1 && hasSubmitButton}>

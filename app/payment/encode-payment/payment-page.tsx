@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { toast } from "sonner";
 import { PaymentRecord } from "../data/payment.types";
-import { Page } from "@/components/page/page";
+import Page from "@/components/layout/page/Page";
 import { FormStepper } from "@/components/form-stepper/form-stepper";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { useRouter } from "next/navigation";
@@ -14,17 +14,9 @@ import { EncodePaymentPage } from "./encode-payment-page";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 
 import PrepareDRS from "./prepare-drs";
-import { Box } from "@chakra-ui/react";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-} from "@/lib/theme/standard-design-tokens";
 
 export default function PaymentPage() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
-
-  const breadCrumbs = [{ label: "Home" }, { label: "Payment" }];
 
   const steps = [
     {
@@ -72,21 +64,13 @@ export default function PaymentPage() {
   };
 
   return (
-    <Page
-      breadcrumbItems={breadCrumbs}
+    <Page.Root
       title={"Encode Payment"}
-      description={"Encode payment records and prepare a digital remittance slip."}
+      description={"Encode Payment"}
     >
-      <Box
-        bg={BRAND_COLORS.white}
-        border="1px solid"
-        borderColor={BRAND_COLORS.neutralBorder}
-        borderRadius={STANDARD_RADIUS.md}
-        boxShadow={STANDARD_SHADOWS.level1}
-        p={{ base: 4, md: 5 }}
-      >
+      <Page.MainContent>
         <FormStepper steps={steps} onSubmit={handleConfirm} />
-      </Box>
-    </Page>
+      </Page.MainContent>
+    </Page.Root>
   );
 }

@@ -1,9 +1,14 @@
 import { IconType } from "react-icons";
 
+export type NotificationType = "request" | "system" | "approval" | "payment" | "document" | "alert";
+
 export interface NotificationDataProps {
   id: number;
   title: string;
   description: string;
+  type: NotificationType;
+  timestamp: string;
+  read: boolean;
 }
 
 export type SidebarProps = {
