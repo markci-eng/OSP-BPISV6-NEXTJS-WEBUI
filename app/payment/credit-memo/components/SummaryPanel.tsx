@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
-import { motion } from "framer-motion";
-import { Box, Button, HStack, Text, VStack, Badge } from "@chakra-ui/react";
+import { Badge, Box, Button, HStack, Text, VStack } from "@chakra-ui/react";
+import { PrimaryMdFlexButton } from "st-peter-ui";
+import Card from "@/components/cards/Card";
 
 interface SummaryPanelProps {
   totalDeposits: number;
@@ -13,10 +13,10 @@ interface SummaryPanelProps {
 }
 
 function formatCurrency(n: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
+  return `₱${n.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 function SummaryRow({
@@ -30,7 +30,7 @@ function SummaryRow({
 }) {
   return (
     <HStack justify="space-between" align="baseline">
-      <Text fontSize="sm" color="fg.muted">
+      <Text fontSize="sm" color="gray.500">
         {label}
       </Text>
       <Text
@@ -44,8 +44,6 @@ function SummaryRow({
   );
 }
 
-const MotionBox = motion.create(Box);
-
 export function SummaryPanel({
   totalDeposits,
   totalPayments,
@@ -55,49 +53,28 @@ export function SummaryPanel({
 }: SummaryPanelProps) {
   const net = totalDeposits - totalPayments;
   const isBalanced = net === 0;
-
   const label = net > 0 ? "Excess" : net < 0 ? "Shortage" : "Balanced";
 
   return (
-    <MotionBox position="sticky" top="6" layout>
-      <VStack gap={6} align="stretch">
-        {/* Summary Card */}
-        <Box
-          bg="bg"
-          borderWidth="1px"
-          borderColor="border.muted"
-          rounded="xl"
-          p={5}
-          boxShadow="sm"
-        >
-          <Text
-            fontSize="xs"
-            fontWeight="semibold"
-            textTransform="uppercase"
-            letterSpacing="wider"
-            opacity={0.6}
-          >
-            Batch Summary
-          </Text>
-
-          <VStack mt={5} gap={3} align="stretch">
-            <SummaryRow
-              label="Total Deposits"
-              value={formatCurrency(totalDeposits)}
-            />
-            <SummaryRow
-              label="Total Payments"
-              value={formatCurrency(totalPayments)}
-            />
-
-            <Box pt={3} borderTopWidth="1px" borderColor="border.muted">
-              <HStack justify="space-between" align="end">
-                <Box>
+    <Box position="sticky" top="6">
+      <VStack gap={4} align="stretch">
+        <Card.Root title="Batch Summary">
+          <Card.MainContent>
+            <VStack gap={3} align="stretch">
+              <SummaryRow
+                label="Total Deposits"
+                value={formatCurrency(totalDeposits)}
+              />
+              <SummaryRow
+                label="Total Payments"
+                value={formatCurrency(totalPayments)}
+              />
+              <Box pt={3} borderTopWidth="1px" borderColor="gray.100">
+                <HStack justify="space-between" align="end">
                   <HStack gap={2}>
                     <Text fontSize="sm" fontWeight="medium">
                       Net Collection
                     </Text>
-
                     {!isBalanced && (
                       <Badge
                         size="sm"
@@ -108,45 +85,40 @@ export function SummaryPanel({
                       </Badge>
                     )}
                   </HStack>
-                </Box>
+                  <Text
+                    fontSize="xl"
+                    fontWeight="bold"
+                    fontVariantNumeric="tabular-nums"
+                    color={isBalanced ? "green.600" : "red.500"}
+                  >
+                    {formatCurrency(Math.abs(net))}
+                  </Text>
+                </HStack>
+              </Box>
+            </VStack>
+          </Card.MainContent>
+        </Card.Root>
 
-                <Text
-                  fontSize="xl"
-                  fontWeight="bold"
-                  fontVariantNumeric="tabular-nums"
-                  color={isBalanced ? "green.600" : "red.500"}
-                >
-                  {formatCurrency(Math.abs(net))}
-                </Text>
+        <Card.Root>
+          <Card.MainContent>
+            <VStack gap={2} align="stretch">
+              <Box>
+                <PrimaryMdFlexButton onClick={onSubmit}>
+                  Submit Credit Memo
+                </PrimaryMdFlexButton>
+              </Box>
+              <HStack gap={2}>
+                <Button flex={1} variant="outline" size="sm" onClick={onSave}>
+                  Save Draft
+                </Button>
+                <Button flex={1} variant="outline" size="sm" onClick={onReset}>
+                  Reset
+                </Button>
               </HStack>
-            </Box>
-          </VStack>
-        </Box>
-
-        {/* Actions */}
-        <Box
-          bg="bg"
-          borderWidth="1px"
-          borderColor="border.muted"
-          rounded="xl"
-          p={4}
-          boxShadow="sm"
-        >
-          <VStack gap={2}>
-            <Button w="full" colorPalette="blue" onClick={onSubmit}>
-              Submit Credit Memo
-            </Button>
-
-            <Button w="full" variant="outline" onClick={onSave}>
-              Save Batch
-            </Button>
-
-            <Button w="full" variant="ghost" color="fg.muted" onClick={onReset}>
-              Reset
-            </Button>
-          </VStack>
-        </Box>
+            </VStack>
+          </Card.MainContent>
+        </Card.Root>
       </VStack>
-    </MotionBox>
+    </Box>
   );
 }

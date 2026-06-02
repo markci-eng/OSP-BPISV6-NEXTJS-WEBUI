@@ -4,6 +4,7 @@ import {
   Button,
   CloseButton,
   Collapsible,
+  createListCollection,
   Dialog,
   FileUpload,
   Flex,
@@ -61,11 +62,66 @@ type Props = {
   payments: PaymentRecord[];
   setPayments: React.Dispatch<React.SetStateAction<PaymentRecord[]>>;
 };
+
+// Account type filter for the planholder lookup.
+// ALL → both Life Plan (PH) and Lending (LOAN) records.
+const ACCOUNT_FILTER_ALL = "ALL";
+const ACCOUNT_FILTER_LIFE_PLAN = "LP";
+const ACCOUNT_FILTER_LENDING = "LN";
+
+const AccountTypeFilter = createListCollection({
+  items: [
+    { label: "All", value: ACCOUNT_FILTER_ALL },
+    { label: "Life Plan", value: ACCOUNT_FILTER_LIFE_PLAN },
+    { label: "Lending", value: ACCOUNT_FILTER_LENDING },
+  ],
+});
+
 export function EncodePaymentPage({ payments, setPayments }: Props) {
   const [paymentType, setPaymentType] = useState("CH");
   const [paymentClass, setPaymentClass] = useState("DC");
+  const [accountFilter, setAccountFilter] = useState(ACCOUNT_FILTER_ALL);
   const [selectPlanholder, setSelectPlanholder] =
     useState<PlanholderLookupItem | null>(null);
+
+  // Restrict the lookup data source to the account type chosen in the dropdown.
+  const filteredLookup = useMemo(() => {
+    if (accountFilter === ACCOUNT_FILTER_LIFE_PLAN) {
+      return planholderLookup.filter((item) => item.EntryType === "PH");
+    }
+    if (accountFilter === ACCOUNT_FILTER_LENDING) {
+      return planholderLookup.filter((item) => item.EntryType === "LOAN");
+    }
+    return planholderLookup;
+  }, [accountFilter]);
+
+  // Keep the dropdown and lookup in sync. When a record is picked while the
+  // filter is still "All", inherit the record's account type into the dropdown.
+  const handleSelectPlanholder = (item: PlanholderLookupItem | null) => {
+    setSelectPlanholder(item);
+    if (item && accountFilter === ACCOUNT_FILTER_ALL) {
+      setAccountFilter(
+        item.EntryType === "LOAN"
+          ? ACCOUNT_FILTER_LENDING
+          : ACCOUNT_FILTER_LIFE_PLAN,
+      );
+    }
+  };
+
+  // Changing the dropdown immediately refreshes the lookup; clear any selection
+  // that no longer matches the chosen account type.
+  const handleAccountFilterChange = (next: string) => {
+    setAccountFilter(next);
+    if (
+      selectPlanholder &&
+      ((next === ACCOUNT_FILTER_LIFE_PLAN &&
+        selectPlanholder.EntryType !== "PH") ||
+        (next === ACCOUNT_FILTER_LENDING &&
+          selectPlanholder.EntryType !== "LOAN"))
+    ) {
+      setSelectPlanholder(null);
+    }
+  };
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [taxOpen, setTaxOpen] = useState(false);
   const [installmentAmount, setInstallmentAmount] = useState<number>(0);
@@ -197,7 +253,9 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     </Flex>
   );
 
-  const getEntryBadge = (type: PlanholderLookupItem["EntryType"]): { label: string; color: "warning" | "success" | "info" | "danger" } => {
+  const getEntryBadge = (
+    type: PlanholderLookupItem["EntryType"],
+  ): { label: string; color: "warning" | "success" | "info" | "danger" } => {
     switch (type) {
       case "LOAN":
         return { label: "LOAN", color: "info" };
@@ -327,14 +385,28 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
 
       <Card.Root>
         <Card.MainContent>
-          <Flex justify={"end"}>
+          <Flex
+            justify={"end"}
+            gap={2}
+            align="start"
+            wrap="wrap"
+            alignItems={"center"}
+          >
+            <Box width={{ base: "full", md: "3xs" }}>
+              <SelectFloatingLabel
+                label="Company"
+                collection={AccountTypeFilter}
+                value={[accountFilter]}
+                onValueChanged={(e) => handleAccountFilterChange(e[0])}
+              />
+            </Box>
             <Box width={{ base: "full", md: "sm" }}>
               <LookupField<any>
                 label=""
                 placeholder="Search by Name / LPA#/ LAF#"
                 modalTitle="Search Planholder"
                 columns={SearchHeader}
-                dataSource={planholderLookup}
+                dataSource={filteredLookup}
                 searchKeys={[
                   "LPANo",
                   "LAFNo",
@@ -342,7 +414,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   "LastName",
                   "MiddleName",
                 ]}
-                onSelect={setSelectPlanholder}
+                onSelect={handleSelectPlanholder}
                 renderDisplay={(a) => {
                   if (a.EntryType === "LOAN") {
                     return `LOAN: ${a.LAFNo} - ${a.FirstName} ${a.LastName}`;

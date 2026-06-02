@@ -196,16 +196,6 @@ export function LPANumberButton({
       }}
       onClick={onClick}
     >
-      {/* Progress bar at top */}
-      <Box h="3px" bg="gray.100">
-        <Box
-          h="full"
-          bg="var(--chakra-colors-primary)"
-          w={`${progress}%`}
-          transition="width 0.4s ease"
-        />
-      </Box>
-
       <Box px={4} pt={3} pb={4}>
         {/* Header row */}
         <Flex align="flex-start" justify="space-between" gap={2} mb={2}>

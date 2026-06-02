@@ -25,14 +25,14 @@ export function EmploymentInfo({
             label="Employer"
             value={planholderInfo?.employerName ?? "—"}
           />
-          <Separator />
+          <Separator display={{ base: "block", lg: "none" }} />
           <LabelText label="TIN" value={planholderInfo?.tin ?? "—"} />
-          <Separator />
+          <Separator display={{ base: "block", lg: "none" }} />
           <LabelText
             label="SSS/GSIS Number"
             value={planholderInfo?.securityNo ?? "—"}
           />
-          <Separator />
+          <Separator display={{ base: "block", lg: "none" }} />
           <LabelText
             label="Source of Fund"
             value={planholderInfo?.sourceOfFund ?? "—"}

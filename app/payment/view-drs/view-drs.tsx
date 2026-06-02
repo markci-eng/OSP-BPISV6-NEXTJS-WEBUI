@@ -1,20 +1,32 @@
 "use client";
 import {
+  Badge,
   Box,
   Button,
   Collapsible,
   Flex,
   Grid,
   GridItem,
-  Table,
-  TableScrollArea,
+  Heading,
+  IconButton,
+  Stack,
+  Text,
+  useBreakpointValue,
 } from "@chakra-ui/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { PrimaryMdFlexButton, SecondaryMdFlexButton } from "st-peter-ui";
 
 import { drsItems, samplePayments } from "../data/paymentDetails";
-import { LuTrash } from "react-icons/lu";
+import { DepositHdr } from "../data/payment.types";
+import {
+  LuTrash,
+  LuChevronLeft,
+  LuChevronRight,
+  LuChevronDown,
+  LuChevronUp,
+} from "react-icons/lu";
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -24,14 +36,32 @@ import {
   LookupColumn,
   LookupField,
 } from "@/components/common/reusable-lookup/LookUpField";
-import { Employee } from "@/data/doc-management/employeeSelector";
-import { EMPLOYEES } from "@/data/doc-management/documenttype";
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import Page from "@/components/layout/page/Page";
 import Card from "@/components/cards/Card";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
+
+const STATUS_STYLES: Record<
+  string,
+  { colorPalette: string; dotColor: string }
+> = {
+  Pending: { colorPalette: "yellow", dotColor: "yellow.500" },
+  Validated: { colorPalette: "green", dotColor: "green.500" },
+  "For Deposit": { colorPalette: "blue", dotColor: "blue.500" },
+};
+
+const formatSlipDate = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
 
 export default function ViewDrs() {
   const { rows, totals } = DrsFunction(samplePayments);
@@ -47,15 +77,26 @@ export default function ViewDrs() {
     [selectedId, items],
   );
 
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
-    null,
-  );
-
-  const employeeColumns: LookupColumn<Employee>[] = [
-    { key: "id", header: "Employee ID" },
-    { key: "name", header: "Name" },
-    { key: "branch", header: "Department" },
+  // ── Lookup (search / filter) state ──
+  const [lookupValue, setLookupValue] = useState<DepositHdr | null>(null);
+  const drsLookupColumns: LookupColumn<DepositHdr>[] = [
+    { key: "name", header: "Reference" },
+    { key: "Amount", header: "Amount" },
+    { key: "Status", header: "Status", enableColumnFilter: true },
   ];
+
+  // ── Collapsible panel state ──
+  const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Mobile defaults to collapsed (accordion closed); desktop defaults to open.
+  useEffect(() => {
+    setCollapsed(isMobile);
+  }, [isMobile]);
+
+  const showStrip = collapsed && !isMobile; // desktop minimized rail
+  const showBody = !collapsed;
+
   //delete function
   const { messageBox } = useMessageDialog();
   const handleDelete = async (item: any) => {
@@ -98,96 +139,235 @@ export default function ViewDrs() {
         gap={{ base: 4, lg: 6 }}
         templateColumns={{
           base: "1fr",
-          lg: "380px 1fr",
-          xl: "420px 1fr",
+          lg: showStrip ? "56px 1fr" : "380px 1fr",
+          xl: showStrip ? "56px 1fr" : "420px 1fr",
         }}
         alignItems="start"
+        transition="grid-template-columns 0.3s ease"
       >
         {/* LEFT PANEL */}
         <Card.Root>
           <Card.MainContent>
-            <GridItem minW={0} bg="white" overflow="hidden" h={"full"}>
-              <Box my={2}>
-                <LookupField<Employee>
-                  label=""
-                  placeholder="Search by name or ID..."
-                  modalTitle="Search Employee"
-                  columns={employeeColumns}
-                  dataSource={EMPLOYEES}
-                  searchKeys={["id", "name", "branch"]}
-                  onSelect={setSelectedEmployee}
-                  renderDisplay={(emp) => `${emp.name} (${emp.id})`}
-                  value={selectedEmployee}
-                />
-              </Box>
-
-              <TableScrollArea
-                maxH={{
-                  base: "300px",
-                  md: "450px",
-                  xl: "500px",
-                }}
-              >
-                <Table.Root
-                  size="sm"
-                  variant="outline"
-                  interactive
-                  stickyHeader
+            <GridItem minW={0} overflow="hidden" h={"full"}>
+              {showStrip ? (
+                /* ── DESKTOP COLLAPSED RAIL ── */
+                <Flex
+                  direction="column"
+                  align="center"
+                  gap={3}
+                  py={1}
+                  h="full"
                 >
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.ColumnHeader>Reference Number</Table.ColumnHeader>
-                      <Table.ColumnHeader textAlign="end">
-                        Amount
-                      </Table.ColumnHeader>
-                      <Table.ColumnHeader w="100px">Action</Table.ColumnHeader>
-                    </Table.Row>
-                  </Table.Header>
-
-                  <Table.Body>
-                    {sortedDrsItems.map((item) => (
-                      <Table.Row
-                        key={item.id}
-                        cursor="pointer"
-                        data-selected={selectedId === item.id ? "" : undefined}
-                        onClick={() => setSelectedId(item.id)}
-                        _selected={{
-                          bg: "green.100",
-                          borderLeft: "4px solid",
-                          borderColor: "green.500",
-                        }}
+                  <IconButton
+                    aria-label="Expand remittance slips panel"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setCollapsed(false)}
+                  >
+                    <LuChevronRight />
+                  </IconButton>
+                  <Badge
+                    colorPalette="green"
+                    variant="subtle"
+                    borderRadius="full"
+                    px={2}
+                  >
+                    {sortedDrsItems.length}
+                  </Badge>
+                  <Text
+                    fontWeight="semibold"
+                    fontSize="sm"
+                    color="fg.muted"
+                    css={{ writingMode: "vertical-rl" }}
+                    transform="rotate(180deg)"
+                    whiteSpace="nowrap"
+                  >
+                    Remittance Slips
+                  </Text>
+                </Flex>
+              ) : (
+                <>
+                  {/* HEADER */}
+                  <Flex align="center" justify="space-between" gap={2} mb={3}>
+                    <Flex align="center" gap={2} minW={0}>
+                      <Heading size="md" lineClamp={1}>
+                        Remittance Slips
+                      </Heading>
+                      <Badge
+                        colorPalette="green"
+                        variant="subtle"
+                        borderRadius="full"
+                        px={2}
                       >
-                        <Table.Cell>{item.name}</Table.Cell>
+                        {sortedDrsItems.length}
+                      </Badge>
+                    </Flex>
+                    <IconButton
+                      aria-label={
+                        collapsed
+                          ? "Expand remittance slips panel"
+                          : "Collapse remittance slips panel"
+                      }
+                      size="sm"
+                      variant="ghost"
+                      flexShrink={0}
+                      onClick={() => setCollapsed((prev) => !prev)}
+                    >
+                      {isMobile ? (
+                        collapsed ? (
+                          <LuChevronDown />
+                        ) : (
+                          <LuChevronUp />
+                        )
+                      ) : (
+                        <LuChevronLeft />
+                      )}
+                    </IconButton>
+                  </Flex>
 
-                        <Table.Cell textAlign="end">{item.Amount}</Table.Cell>
+                  <AnimatePresence initial={false}>
+                    {showBody && (
+                      <motion.div
+                        key="drs-panel-body"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25, ease: "easeInOut" }}
+                        style={{ overflow: "hidden" }}
+                      >
+                        {/* SEARCH — reusable lookup */}
+                        <Box mb={3}>
+                          <LookupField<DepositHdr>
+                            placeholder="Search by reference or ID..."
+                            modalTitle="Search Remittance Slip"
+                            columns={drsLookupColumns}
+                            dataSource={items}
+                            searchKeys={["name"]}
+                            value={lookupValue}
+                            onSelect={(item) => {
+                              setLookupValue(item);
+                              if (item) setSelectedId(item.id);
+                            }}
+                            renderDisplay={(item) => item.name}
+                          />
+                        </Box>
 
-                        <Table.Cell>
-                          {sortedDrsItems[0]?.id === item.id && (
-                            <Flex gap={2} flexWrap="wrap">
-                              <Button
-                                size="xs"
-                                variant="outline"
-                                color="red.500"
-                                borderColor="red.500"
+                        {/* CARD LIST */}
+                        <Stack
+                          gap={2}
+                          maxH={{ base: "360px", md: "450px", xl: "520px" }}
+                          overflowY="auto"
+                          pr={1}
+                        >
+                          {sortedDrsItems.map((item) => {
+                            const isSelected = selectedId === item.id;
+                            const status = item.Status ?? "Pending";
+                            const styles =
+                              STATUS_STYLES[status] ?? STATUS_STYLES.Pending;
+                            const isLatest = sortedDrsItems[0]?.id === item.id;
+
+                            return (
+                              <Box
+                                key={item.id}
+                                role="button"
+                                onClick={() => setSelectedId(item.id)}
+                                cursor="pointer"
+                                position="relative"
+                                borderWidth="1px"
+                                borderRadius="lg"
+                                borderColor={isSelected ? "green.300" : "border"}
+                                bg={isSelected ? "green.50" : "bg"}
+                                borderLeftWidth={isSelected ? "4px" : "1px"}
+                                borderLeftColor={
+                                  isSelected ? "green.500" : "border"
+                                }
+                                p={3}
+                                transition="all 0.15s"
                                 _hover={{
-                                  bg: "red.500",
-                                  color: "white",
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(item);
+                                  borderColor: "green.300",
+                                  bg: "green.50",
                                 }}
                               >
-                                <LuTrash />
-                              </Button>
-                            </Flex>
-                          )}
-                        </Table.Cell>
-                      </Table.Row>
-                    ))}
-                  </Table.Body>
-                </Table.Root>
-              </TableScrollArea>
+                                <Flex
+                                  justify="space-between"
+                                  align="start"
+                                  gap={2}
+                                >
+                                  <Text
+                                    fontWeight="bold"
+                                    color="green.700"
+                                    fontSize="sm"
+                                  >
+                                    {item.name}
+                                  </Text>
+                                  <Text
+                                    fontWeight="bold"
+                                    color="green.700"
+                                    fontSize="sm"
+                                    whiteSpace="nowrap"
+                                  >
+                                    {item.Amount}
+                                  </Text>
+                                </Flex>
+
+                                <Flex
+                                  justify="space-between"
+                                  align="center"
+                                  mt={2}
+                                  gap={2}
+                                >
+                                  <Text fontSize="xs" color="fg.muted">
+                                    {formatSlipDate(item.SlipDate)}
+                                    {item.Planholders != null &&
+                                      ` · ${item.Planholders} planholders`}
+                                  </Text>
+
+                                  <Flex align="center" gap={2}>
+                                    <Badge
+                                      colorPalette={styles.colorPalette}
+                                      variant="subtle"
+                                      borderRadius="full"
+                                      px={2}
+                                    >
+                                      <Box
+                                        as="span"
+                                        boxSize="6px"
+                                        borderRadius="full"
+                                        bg={styles.dotColor}
+                                        mr={1}
+                                      />
+                                      {status}
+                                    </Badge>
+
+                                    {isLatest && (
+                                      <Button
+                                        size="xs"
+                                        variant="outline"
+                                        color="red.500"
+                                        borderColor="red.500"
+                                        _hover={{
+                                          bg: "red.500",
+                                          color: "white",
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDelete(item);
+                                        }}
+                                      >
+                                        <LuTrash />
+                                      </Button>
+                                    )}
+                                  </Flex>
+                                </Flex>
+                              </Box>
+                            );
+                          })}
+                        </Stack>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
             </GridItem>
           </Card.MainContent>
         </Card.Root>
