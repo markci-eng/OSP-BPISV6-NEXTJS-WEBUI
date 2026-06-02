@@ -8,6 +8,9 @@ export interface DepositHdr {
   Amount: string; // amount as string with currency symbol
   DepositedBy: string; // name of depositor
   isApproved: number; // 0 or 1
+  SlipDate?: string; // remittance slip date, e.g. "2026-03-24"
+  Planholders?: number; // number of planholders in the slip
+  Status?: "Pending" | "Validated" | "For Deposit"; // remittance slip status
 }
 
 export type PaymentRecord = {

@@ -179,25 +179,44 @@ export default function PrepareDRS({ payments }: Props) {
     <div>DRS No: ${escapeHtml(drsNo)}</div>
     <div>Payment Type: CASH</div>
   </div>
+
   <table>
     <thead><tr>${headerCells}</tr></thead>
     <tbody>${bodyRows}</tbody>
     <tfoot><tr>${totalCells}</tr></tfoot>
   </table>
-  <script>
-    window.onload = function () { window.print(); };
-  </script>
 </body>
 </html>`;
 
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      toast.error("Unable to open print window. Please allow pop-ups.");
-      return;
-    }
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.srcdoc = html;
+
+    iframe.onload = () => {
+      const frameWindow = iframe.contentWindow;
+      if (!frameWindow) {
+        toast.error("Unable to prepare the print preview.");
+        iframe.remove();
+        return;
+      }
+
+      const cleanup = () => {
+        iframe.remove();
+        frameWindow.removeEventListener("afterprint", cleanup);
+      };
+      frameWindow.addEventListener("afterprint", cleanup);
+
+      frameWindow.focus();
+      frameWindow.print();
+    };
+
+    document.body.appendChild(iframe);
   };
 
   return (
@@ -212,7 +231,7 @@ export default function PrepareDRS({ payments }: Props) {
           {/* <Separator my={4} /> */}
 
           {/* TABLE */}
-          <Box overflowX="auto" mt={5}>
+          <Box overflowX="auto">
             <DataTable
               columns={drsColumns}
               data={drsRows}
@@ -225,33 +244,27 @@ export default function PrepareDRS({ payments }: Props) {
                 columnToggle: false,
               }}
               headerContent={
-                <Flex justify="space-between" wrap="wrap" gap="6">
+                <Flex justify="space-between" align="flex-start" w="full" gap={4} wrap="wrap">
                   <Box>
-                    <Heading size="md">REMITTANCE (HEAD OFFICE)</Heading>
-
-                    <Text mt={1} fontWeight="bold">
+                    <Body>REMITTANCE (HEAD OFFICE)</Body>
+                    <Body mt={1} fontWeight="bold">
                       KIRK PATRICK OLIVAR
-                    </Text>
+                    </Body>
+                  </Box>
+                  <Box textAlign={{ base: "left", md: "right" }}>
+                    <Body fontSize="sm">
+                      Payment Type <Badge colorPalette="green">CASH</Badge>
+                    </Body>
+                    <Body fontWeight="bold">{drsNo}</Body>
                   </Box>
                 </Flex>
-              }
-              headerActions={
-                <Box w={"full"}>
-                  <Heading fontSize="sm">
-                    Payment Type <Badge colorPalette="green">CASH</Badge>
-                  </Heading>
-
-                  <Text mt={1} fontWeight="bold">
-                    {drsNo}
-                  </Text>
-                </Box>
               }
               summaryRows={[
                 isLaf
                   ? {
                       id: "assigned-documents-summary",
                       label: "Total",
-                      labelColumnId: "name",
+                      labelColumnId: "LPANo",
                       aggregations: {
                         ARAmount: "sum",
                       },
@@ -259,7 +272,7 @@ export default function PrepareDRS({ payments }: Props) {
                   : {
                       id: "assigned-documents-summary",
                       label: "Total",
-                      labelColumnId: "SI",
+                      labelColumnId: "LPANo",
                       aggregations: {
                         GrossCom: "sum",
                         ncom: "sum",
@@ -343,7 +356,11 @@ export default function PrepareDRS({ payments }: Props) {
           </Box>
 
           {/* CONFIRM DIALOG */}
-          <Dialog.Root open={open} size={{ base: "full", md: "md" }} placement="center">
+          <Dialog.Root
+            open={open}
+            size={{ base: "full", md: "md" }}
+            placement="center"
+          >
             <Portal>
               <Dialog.Backdrop />
               <Dialog.Positioner p={{ base: 0, md: undefined }}>

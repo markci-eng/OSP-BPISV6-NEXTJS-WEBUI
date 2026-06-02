@@ -49,11 +49,17 @@ export function DataTableToolbar<TData>({
   headerActions,
   top = "var(--sticky-header-h, 0px)",
 }: DataTableToolbarProps<TData>) {
+  const hasRightContent =
+    features.search ||
+    features.columnToggle ||
+    !!headerButton ||
+    !!headerActions;
+
   return (
     <Box
-      position="sticky"
-      top={top}
-      zIndex={3}
+      position={hasRightContent ? "sticky" : "relative"}
+      top={hasRightContent ? top : undefined}
+      zIndex={hasRightContent ? 3 : undefined}
       p={{ base: 4, md: 5 }}
       borderBottomWidth="1px"
       bg="white"
@@ -61,9 +67,12 @@ export function DataTableToolbar<TData>({
       <Grid
         templateColumns={{
           base: "1fr",
-          lg: headerContent
-            ? "minmax(280px, 340px) minmax(0, 1fr)"
-            : "minmax(220px, 1fr) minmax(0, auto)",
+          lg:
+            headerContent && hasRightContent
+              ? "minmax(280px, 340px) minmax(0, 1fr)"
+              : headerContent
+                ? "1fr"
+                : "minmax(220px, 1fr) minmax(0, auto)",
         }}
         alignItems="center"
         gap={4}
@@ -87,6 +96,7 @@ export function DataTableToolbar<TData>({
           )}
         </Box>
 
+        {hasRightContent && (
         <Flex
           gap={2}
           wrap="nowrap"
@@ -223,6 +233,7 @@ export function DataTableToolbar<TData>({
             </Box>
           )}
         </Flex>
+        )}
       </Grid>
     </Box>
   );

@@ -1,4 +1,4 @@
-import { Grid, Separator, useBreakpointValue } from "@chakra-ui/react";
+import { Box, Grid, Separator, useBreakpointValue } from "@chakra-ui/react";
 import Card from "@/components/cards/Card";
 import LabelText from "@/components/texts/LabelText";
 
@@ -36,44 +36,67 @@ export function PlanholderInfo({
           templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }}
           gap={2}
         >
-          <LabelText
-            label="Nationality"
-            value={planholder?.nationality ?? "—"}
-          />
-          {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-          <LabelText
-            label="Naturalization Date"
-            value={planholder?.naturalizationDate?.toLocaleDateString() ?? "—"}
-          />
-          {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-          <LabelText
-            label="Date of Birth"
-            value={planholder?.dateOfBirth?.toLocaleDateString() ?? "—"}
-          />
-          {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-          <LabelText
-            label="Place of Birth"
-            value={planholder?.placeOfBirth ?? "—"}
-          />
-          {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-          <LabelText
-            label="Age"
-            value={computeAge(planholder?.dateOfBirth ?? null) ?? "—"}
-          />
-          {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-          <LabelText label="Gender" value={planholder?.gender ?? "—"} />
-          {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-          <LabelText
-            label="Civil Status"
-            value={planholder?.civilStatus ?? "—"}
-          />
-          {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-          <LabelText label="Height" value={planholder?.height ?? "—"} />
-          {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-          <LabelText
-            label="Weight"
-            value={planholder?.weight ? planholder.weight + " KG" : "—"}
-          />
+          <Box
+            border="1px solid"
+            borderColor="border.muted"
+            borderRadius="lg"
+            bg={"gray.50"}
+            p={3}
+            display="flex"
+            flexDir="column"
+            gap={2}
+          >
+            <LabelText
+              label="Nationality"
+              value={planholder?.nationality ?? "—"}
+            />
+            {useBreakpointValue({ base: true, lg: false }) && <Separator />}
+            <LabelText
+              label="Date of Birth"
+              value={planholder?.dateOfBirth?.toLocaleDateString() ?? "—"}
+            />
+            {useBreakpointValue({ base: true, lg: false }) && <Separator />}
+            <LabelText
+              label="Age"
+              value={computeAge(planholder?.dateOfBirth ?? null) ?? "—"}
+            />
+            {useBreakpointValue({ base: true, lg: false }) && <Separator />}
+            <LabelText
+              label="Civil Status"
+              value={planholder?.civilStatus ?? "—"}
+            />
+            {useBreakpointValue({ base: true, lg: false }) && <Separator />}
+            <LabelText
+              label="Weight"
+              value={planholder?.weight ? planholder.weight + " KG" : "—"}
+            />
+          </Box>
+          <Box
+            border="1px solid"
+            borderColor="border.muted"
+            borderRadius="lg"
+            bg={"gray.50"}
+            p={3}
+            display="flex"
+            flexDir="column"
+            gap={2}
+          >
+            <LabelText
+              label="Naturalization Date"
+              value={
+                planholder?.naturalizationDate?.toLocaleDateString() ?? "—"
+              }
+            />
+            {useBreakpointValue({ base: true, lg: false }) && <Separator />}
+            <LabelText
+              label="Place of Birth"
+              value={planholder?.placeOfBirth ?? "—"}
+            />
+            {useBreakpointValue({ base: true, lg: false }) && <Separator />}
+            <LabelText label="Gender" value={planholder?.gender ?? "—"} />
+            {useBreakpointValue({ base: true, lg: false }) && <Separator />}
+            <LabelText label="Height" value={planholder?.height ?? "—"} />
+          </Box>
         </Grid>
       </Card.MainContent>
     </Card.Root>

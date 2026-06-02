@@ -22,7 +22,7 @@
     "@splpi/summary": "^0.1.0",
     "@tanstack/react-table": "^8.21.3",
     "date-fns": "^4.1.0",
-    "new-sales-page-component": "^0.0.4",
+    "new-sales-page-component": "^0.0.6",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
     "osp.cis.nextjs.components": "^1.0.13",

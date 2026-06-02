@@ -177,7 +177,7 @@ export default function ViewDeposit() {
                         // md: 3,
                         lg: 2,
                       }}
-                      // gap={2}
+                      gapY={{ base: 1, lg: 0 }}
                     >
                       <LabelText
                         label="Deposit Date Time"
@@ -242,50 +242,56 @@ export default function ViewDeposit() {
           </GridItem>
         </Grid>
 
-      {/* Dialog */}
-      <Dialog.Root open={open} size={{ base: "full", md: "xl" }} placement="center">
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner p={{ base: 0, md: undefined }}>
-            <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
-              <Dialog.Header>
-                <Dialog.Title>Encode Supplementary - {selectedId}</Dialog.Title>
-              </Dialog.Header>
+        {/* Dialog */}
+        <Dialog.Root
+          open={open}
+          size={{ base: "full", md: "xl" }}
+          placement="center"
+        >
+          <Portal>
+            <Dialog.Backdrop />
+            <Dialog.Positioner p={{ base: 0, md: undefined }}>
+              <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
+                <Dialog.Header>
+                  <Dialog.Title>
+                    Encode Supplementary - {selectedId}
+                  </Dialog.Title>
+                </Dialog.Header>
 
-              <Separator />
+                <Separator />
 
-              <Dialog.Body>
-                <SimpleGrid
-                  columns={{
-                    base: 1,
-                    sm: 2,
-                    md: 3,
-                  }}
-                  gap={4}
-                >
-                  <InputFloatingLabel
-                    type="date"
-                    id="depositdate"
-                    label="Deposit Date Time"
-                  />
-                  <InputFloatingLabel
-                    type="number"
-                    id="AccountNo"
-                    label="Account No#:"
-                  />
-                  <InputFloatingLabel id="BankBranch" label="Bank Branch" />
-                  <InputFloatingLabel id="BankCode" label="Bank Code" />
-                  <InputFloatingLabel id="Amount" label="Amount" />
-                  <InputFloatingLabel label="Deposited By" />
-                </SimpleGrid>
-              </Dialog.Body>
+                <Dialog.Body>
+                  <SimpleGrid
+                    columns={{
+                      base: 1,
+                      sm: 2,
+                      md: 3,
+                    }}
+                    gap={4}
+                  >
+                    <InputFloatingLabel
+                      type="date"
+                      id="depositdate"
+                      label="Deposit Date Time"
+                    />
+                    <InputFloatingLabel
+                      type="number"
+                      id="AccountNo"
+                      label="Account No#:"
+                    />
+                    <InputFloatingLabel id="BankBranch" label="Bank Branch" />
+                    <InputFloatingLabel id="BankCode" label="Bank Code" />
+                    <InputFloatingLabel id="Amount" label="Amount" />
+                    <InputFloatingLabel label="Deposited By" />
+                  </SimpleGrid>
+                </Dialog.Body>
 
-              <Dialog.Footer>
-                <Dialog.ActionTrigger asChild>
-                  <CancelSolidButton onClick={() => setOpen(false)} />
-                </Dialog.ActionTrigger>
-                <SaveButton />
-              </Dialog.Footer>
+                <Dialog.Footer>
+                  <Dialog.ActionTrigger asChild>
+                    <CancelSolidButton onClick={() => setOpen(false)} />
+                  </Dialog.ActionTrigger>
+                  <SaveButton />
+                </Dialog.Footer>
 
                 <Dialog.CloseTrigger asChild>
                   <CloseButton onClick={() => setOpen(false)} />

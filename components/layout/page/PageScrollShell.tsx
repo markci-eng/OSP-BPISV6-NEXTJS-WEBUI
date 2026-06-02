@@ -4,6 +4,7 @@
 import { Box, Flex, type BoxProps } from "@chakra-ui/react";
 import React from "react";
 import Caption from "../../texts/Caption";
+import BackButton from "./BackButton";
 
 type PageScrollShellProps = {
   title: React.ReactNode;
@@ -183,29 +184,33 @@ const PageScrollShell = ({
                       {subtitle}
                     </Box>
                   )}
-                  <Box
-                    as="h1"
-                    m="0"
-                    fontFamily="var(--font-dm-sans), system-ui, sans-serif"
-                    fontWeight={subtitle ? 600 : 500}
-                    color="var(--chakra-colors-primary-hover)"
-                    lineHeight="1"
-                    letterSpacing={subtitle ? "-0.025em" : "-0.015em"}
-                    fontSize={
-                      scrolled
-                        ? {
-                            base: subtitle ? "18px" : "20px",
-                            lg: subtitle ? "22px" : "24px",
-                          }
-                        : {
-                            base: subtitle ? "22px" : "24px",
-                            lg: subtitle ? "28px" : "32px",
-                          }
-                    }
-                    transition="font-size .2s ease"
-                  >
-                    {mainTitle}
-                  </Box>
+                  <Flex align="center">
+                    <BackButton />
+                    <Box
+                      as="h1"
+                      m="0"
+                      flex={1}
+                      fontFamily="var(--font-dm-sans), system-ui, sans-serif"
+                      fontWeight={subtitle ? 600 : 500}
+                      color="var(--chakra-colors-primary-hover)"
+                      lineHeight="1"
+                      letterSpacing={subtitle ? "-0.025em" : "-0.015em"}
+                      fontSize={
+                        scrolled
+                          ? {
+                              base: subtitle ? "18px" : "20px",
+                              lg: subtitle ? "22px" : "24px",
+                            }
+                          : {
+                              base: subtitle ? "22px" : "24px",
+                              lg: subtitle ? "28px" : "32px",
+                            }
+                      }
+                      transition="font-size .2s ease"
+                    >
+                      {mainTitle}
+                    </Box>
+                  </Flex>
                 </>
               );
             })()}

@@ -1351,6 +1351,7 @@ export function LookupField<T extends object>({
                             px={5}
                             py={2}
                             gap={4}
+                            display={{ base: "none", lg: "flex" }}
                             borderBottomWidth="1px"
                             borderColor="gray.100"
                             flexWrap="wrap"

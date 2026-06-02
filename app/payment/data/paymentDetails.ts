@@ -208,6 +208,9 @@ export const drsItems: DepositHdr[] = [
     Amount: "₱10000.00",
     DepositedBy: "Juan Dela Cruz",
     isApproved: 1,
+    SlipDate: "2026-03-18",
+    Planholders: 12,
+    Status: "Validated",
   },
   {
     id: "2",
@@ -219,6 +222,9 @@ export const drsItems: DepositHdr[] = [
     Amount: "₱20000.00",
     DepositedBy: "Maria Santos",
     isApproved: 1,
+    SlipDate: "2026-03-19",
+    Planholders: 22,
+    Status: "Pending",
   },
   {
     id: "3",
@@ -230,6 +236,9 @@ export const drsItems: DepositHdr[] = [
     Amount: "₱15000.00",
     DepositedBy: "",
     isApproved: 0,
+    SlipDate: "2026-03-20",
+    Planholders: 18,
+    Status: "For Deposit",
   },
   {
     id: "4",
@@ -241,6 +250,9 @@ export const drsItems: DepositHdr[] = [
     Amount: "₱5000.00",
     DepositedBy: "",
     isApproved: 0,
+    SlipDate: "2026-03-22",
+    Planholders: 6,
+    Status: "Validated",
   },
   {
     id: "5",
@@ -252,6 +264,9 @@ export const drsItems: DepositHdr[] = [
     Amount: "₱12000.00",
     DepositedBy: "",
     isApproved: 0,
+    SlipDate: "2026-03-24",
+    Planholders: 15,
+    Status: "Pending",
   }
 ];
 

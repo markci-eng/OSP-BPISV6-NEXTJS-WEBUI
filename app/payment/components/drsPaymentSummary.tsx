@@ -52,11 +52,14 @@ export default function DrsPaymentSummary({
           >
             {items
               ? items.map((item) => (
-                  <LabelText
-                    key={item.label}
-                    label={item.label}
-                    value={format(item.value)}
-                  />
+                  <>
+                    <LabelText
+                      key={item.label}
+                      label={item.label}
+                      value={format(item.value)}
+                    />
+                    <Separator display={{ base: "block", md: "none" }} />
+                  </>
                 ))
               : Object.entries(totals)
                   .filter(([_, val]) => typeof val === "number")

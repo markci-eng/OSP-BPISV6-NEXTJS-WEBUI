@@ -19,9 +19,9 @@ export function ContactInfo({ contacts }: ContactInfoProps) {
           gap={2}
         >
           <LabelText label="Email" value={contacts?.Email[0] ?? "—"} />
-          <Separator />
+          <Separator display={{ base: "block", lg: "none" }} />
           <LabelText label="Mobile No" value={contacts?.MobileNo[0] ?? "—"} />
-          <Separator />
+          <Separator display={{ base: "block", lg: "none" }} />
           <LabelText
             label="Landline No"
             value={contacts?.LandlineNo[0] ?? "—"}
