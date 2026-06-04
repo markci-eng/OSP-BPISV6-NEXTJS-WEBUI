@@ -201,6 +201,7 @@ export default function EncodeDeposit() {
                         lg: 3,
                       }}
                       gapX={2}
+                      gapY={1}
                     >
                       <InputFloatingLabel
                         type="datetime-local"

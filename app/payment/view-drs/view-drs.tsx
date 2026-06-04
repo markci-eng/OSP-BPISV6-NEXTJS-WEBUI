@@ -16,7 +16,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { PrimaryMdFlexButton, SecondaryMdFlexButton } from "st-peter-ui";
+import { Body, PrimaryMdFlexButton, SecondaryMdFlexButton } from "st-peter-ui";
 
 import { drsItems, samplePayments } from "../data/paymentDetails";
 import { DepositHdr } from "../data/payment.types";
@@ -42,14 +42,15 @@ import { useMessageDialog } from "@/components/common/message-box/message-box-pr
 import Page from "@/components/layout/page/Page";
 import Card from "@/components/cards/Card";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
+import { OSPBadge } from "@/components/common/badge/badge";
 
 const STATUS_STYLES: Record<
   string,
-  { colorPalette: string; dotColor: string }
+  { colorPalette: "warning" | "success" | "info"; dotColor: string }
 > = {
-  Pending: { colorPalette: "yellow", dotColor: "yellow.500" },
-  Validated: { colorPalette: "green", dotColor: "green.500" },
-  "For Deposit": { colorPalette: "blue", dotColor: "blue.500" },
+  Pending: { colorPalette: "warning", dotColor: "yellow.500" },
+  Validated: { colorPalette: "success", dotColor: "green.500" },
+  "For Deposit": { colorPalette: "info", dotColor: "blue.500" },
 };
 
 const formatSlipDate = (value?: string) => {
@@ -134,328 +135,329 @@ export default function ViewDrs() {
       description="Manage your digital remittance slip"
     >
       <Page.MainContent>
-      {/* MAIN GRID */}
-      <Grid
-        gap={{ base: 4, lg: 6 }}
-        templateColumns={{
-          base: "1fr",
-          lg: showStrip ? "56px 1fr" : "380px 1fr",
-          xl: showStrip ? "56px 1fr" : "420px 1fr",
-        }}
-        alignItems="start"
-        transition="grid-template-columns 0.3s ease"
-      >
-        {/* LEFT PANEL */}
-        <Card.Root>
-          <Card.MainContent>
-            <GridItem minW={0} overflow="hidden" h={"full"}>
-              {showStrip ? (
-                /* ── DESKTOP COLLAPSED RAIL ── */
-                <Flex
-                  direction="column"
-                  align="center"
-                  gap={3}
-                  py={1}
-                  h="full"
-                >
-                  <IconButton
-                    aria-label="Expand remittance slips panel"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setCollapsed(false)}
-                  >
-                    <LuChevronRight />
-                  </IconButton>
-                  <Badge
-                    colorPalette="green"
-                    variant="subtle"
-                    borderRadius="full"
-                    px={2}
-                  >
-                    {sortedDrsItems.length}
-                  </Badge>
-                  <Text
-                    fontWeight="semibold"
-                    fontSize="sm"
-                    color="fg.muted"
-                    css={{ writingMode: "vertical-rl" }}
-                    transform="rotate(180deg)"
-                    whiteSpace="nowrap"
-                  >
-                    Remittance Slips
-                  </Text>
-                </Flex>
-              ) : (
-                <>
-                  {/* HEADER */}
-                  <Flex align="center" justify="space-between" gap={2} mb={3}>
-                    <Flex align="center" gap={2} minW={0}>
-                      <Heading size="md" lineClamp={1}>
-                        Remittance Slips
-                      </Heading>
-                      <Badge
-                        colorPalette="green"
-                        variant="subtle"
-                        borderRadius="full"
-                        px={2}
-                      >
-                        {sortedDrsItems.length}
-                      </Badge>
-                    </Flex>
-                    <IconButton
-                      aria-label={
-                        collapsed
-                          ? "Expand remittance slips panel"
-                          : "Collapse remittance slips panel"
-                      }
-                      size="sm"
-                      variant="ghost"
-                      flexShrink={0}
-                      onClick={() => setCollapsed((prev) => !prev)}
-                    >
-                      {isMobile ? (
-                        collapsed ? (
-                          <LuChevronDown />
-                        ) : (
-                          <LuChevronUp />
-                        )
-                      ) : (
-                        <LuChevronLeft />
-                      )}
-                    </IconButton>
-                  </Flex>
-
-                  <AnimatePresence initial={false}>
-                    {showBody && (
-                      <motion.div
-                        key="drs-panel-body"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25, ease: "easeInOut" }}
-                        style={{ overflow: "hidden" }}
-                      >
-                        {/* SEARCH — reusable lookup */}
-                        <Box mb={3}>
-                          <LookupField<DepositHdr>
-                            placeholder="Search by reference or ID..."
-                            modalTitle="Search Remittance Slip"
-                            columns={drsLookupColumns}
-                            dataSource={items}
-                            searchKeys={["name"]}
-                            value={lookupValue}
-                            onSelect={(item) => {
-                              setLookupValue(item);
-                              if (item) setSelectedId(item.id);
-                            }}
-                            renderDisplay={(item) => item.name}
-                          />
-                        </Box>
-
-                        {/* CARD LIST */}
-                        <Stack
-                          gap={2}
-                          maxH={{ base: "360px", md: "450px", xl: "520px" }}
-                          overflowY="auto"
-                          pr={1}
-                        >
-                          {sortedDrsItems.map((item) => {
-                            const isSelected = selectedId === item.id;
-                            const status = item.Status ?? "Pending";
-                            const styles =
-                              STATUS_STYLES[status] ?? STATUS_STYLES.Pending;
-                            const isLatest = sortedDrsItems[0]?.id === item.id;
-
-                            return (
-                              <Box
-                                key={item.id}
-                                role="button"
-                                onClick={() => setSelectedId(item.id)}
-                                cursor="pointer"
-                                position="relative"
-                                borderWidth="1px"
-                                borderRadius="lg"
-                                borderColor={isSelected ? "green.300" : "border"}
-                                bg={isSelected ? "green.50" : "bg"}
-                                borderLeftWidth={isSelected ? "4px" : "1px"}
-                                borderLeftColor={
-                                  isSelected ? "green.500" : "border"
-                                }
-                                p={3}
-                                transition="all 0.15s"
-                                _hover={{
-                                  borderColor: "green.300",
-                                  bg: "green.50",
-                                }}
-                              >
-                                <Flex
-                                  justify="space-between"
-                                  align="start"
-                                  gap={2}
-                                >
-                                  <Text
-                                    fontWeight="bold"
-                                    color="green.700"
-                                    fontSize="sm"
-                                  >
-                                    {item.name}
-                                  </Text>
-                                  <Text
-                                    fontWeight="bold"
-                                    color="green.700"
-                                    fontSize="sm"
-                                    whiteSpace="nowrap"
-                                  >
-                                    {item.Amount}
-                                  </Text>
-                                </Flex>
-
-                                <Flex
-                                  justify="space-between"
-                                  align="center"
-                                  mt={2}
-                                  gap={2}
-                                >
-                                  <Text fontSize="xs" color="fg.muted">
-                                    {formatSlipDate(item.SlipDate)}
-                                    {item.Planholders != null &&
-                                      ` · ${item.Planholders} planholders`}
-                                  </Text>
-
-                                  <Flex align="center" gap={2}>
-                                    <Badge
-                                      colorPalette={styles.colorPalette}
-                                      variant="subtle"
-                                      borderRadius="full"
-                                      px={2}
-                                    >
-                                      <Box
-                                        as="span"
-                                        boxSize="6px"
-                                        borderRadius="full"
-                                        bg={styles.dotColor}
-                                        mr={1}
-                                      />
-                                      {status}
-                                    </Badge>
-
-                                    {isLatest && (
-                                      <Button
-                                        size="xs"
-                                        variant="outline"
-                                        color="red.500"
-                                        borderColor="red.500"
-                                        _hover={{
-                                          bg: "red.500",
-                                          color: "white",
-                                        }}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDelete(item);
-                                        }}
-                                      >
-                                        <LuTrash />
-                                      </Button>
-                                    )}
-                                  </Flex>
-                                </Flex>
-                              </Box>
-                            );
-                          })}
-                        </Stack>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </>
-              )}
-            </GridItem>
-          </Card.MainContent>
-        </Card.Root>
-
-        {/* RIGHT PANEL */}
-
-        <GridItem bg="white" overflow="hidden" h="full">
+        {/* MAIN GRID */}
+        <Grid
+          gap={{ base: 4, lg: 6 }}
+          templateColumns={{
+            base: "1fr",
+            lg: showStrip ? "56px 1fr" : "380px 1fr",
+            xl: showStrip ? "56px 1fr" : "420px 1fr",
+          }}
+          alignItems="start"
+          transition="grid-template-columns 0.3s ease"
+        >
+          {/* LEFT PANEL */}
           <Card.Root>
             <Card.MainContent>
-              {!selectedId && (
-                /* EMPTY STATE */
-                <EmptyStateCard
-                  title={"No DRS Selected"}
-                  description="Select a DRS from the left to view details"
-                />
-              )}
-              <Collapsible.Root open={selectedId != ""}>
-                <Collapsible.Content>
-                  <DrsDataTable
-                    payments={samplePayments}
-                    onRowClick={(row) => console.log("Clicked row:", row)}
-                  />
-                  <Box display={{ base: "block", md: "none" }}>
-                    <DrsPaymentSummary totals={totals} displayProp={false} />
-                  </Box>
-                  {/* ACTION BUTTON */}
+              <GridItem minW={0} overflow="hidden" h={"full"}>
+                {showStrip ? (
+                  /* ── DESKTOP COLLAPSED RAIL ── */
                   <Flex
-                    direction={{ base: "column", md: "row" }}
-                    justify={{ base: "flex-end" }}
-                    mt={4}
-                    gap={{ base: 2, xl: 4 }}
-                    width="full"
+                    direction="column"
+                    align="center"
+                    gap={3}
+                    py={1}
+                    h="full"
                   >
-                    <Box width={{ base: "full", md: "auto" }}>
-                      <SecondaryMdFlexButton
-                        width={{ base: "full", md: "auto" }}
-                        onClick={() => {
-                          const selected = items.find(
-                            (x) => x.id === selectedId,
-                          );
-
-                          sessionStorage.setItem(
-                            "selectedDRS",
-                            JSON.stringify(selected),
-                          );
-
-                          router.push("/disbursement/comte");
-                        }}
-                      >
-                        Add Disbursement
-                      </SecondaryMdFlexButton>
-                    </Box>
-
-                    <Box width={{ base: "full", md: "auto" }}>
-                      <PrimaryMdFlexButton
-                        width={{ base: "full", md: "auto" }}
-                        onClick={() => {
-                          const selected = items.find(
-                            (x) => x.id === selectedId,
-                          );
-
-                          if (!selected) return;
-
-                          const firstCreated = drsItems[0];
-
-                          if (selected.id !== firstCreated?.id) {
-                            toast.error("Please encode the first created DRS");
-                            return;
-                          }
-
-                          sessionStorage.setItem(
-                            "selectedDRS",
-                            JSON.stringify(selected),
-                          );
-
-                          router.push("/payment/encodevalidated-deposit");
-                        }}
-                      >
-                        Encode Deposit
-                      </PrimaryMdFlexButton>
-                    </Box>
+                    <IconButton
+                      aria-label="Expand remittance slips panel"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setCollapsed(false)}
+                    >
+                      <LuChevronRight />
+                    </IconButton>
+                    <OSPBadge
+                      // colorPalette="green"
+                      // variant="subtle"
+                      // borderRadius="full"
+                      // px={2}
+                      type="success"
+                    >
+                      {sortedDrsItems.length}
+                    </OSPBadge>
+                    <Body
+                      fontWeight="semibold"
+                      fontSize="sm"
+                      color="fg.muted"
+                      css={{ writingMode: "vertical-rl" }}
+                      transform="rotate(180deg)"
+                      whiteSpace="nowrap"
+                    >
+                      Remittance Slips
+                    </Body>
                   </Flex>
-                </Collapsible.Content>
-              </Collapsible.Root>
+                ) : (
+                  <>
+                    {/* HEADER */}
+                    <Flex align="center" justify="space-between" gap={2} mb={3}>
+                      <Flex align="center" gap={2} minW={0}>
+                        <Heading size="md" lineClamp={1}>
+                          Remittance Slips
+                        </Heading>
+                        <OSPBadge type="success">
+                          {sortedDrsItems.length}
+                        </OSPBadge>
+                      </Flex>
+                      <IconButton
+                        aria-label={
+                          collapsed
+                            ? "Expand remittance slips panel"
+                            : "Collapse remittance slips panel"
+                        }
+                        size="sm"
+                        variant="ghost"
+                        flexShrink={0}
+                        onClick={() => setCollapsed((prev) => !prev)}
+                      >
+                        {isMobile ? (
+                          collapsed ? (
+                            <LuChevronDown />
+                          ) : (
+                            <LuChevronUp />
+                          )
+                        ) : (
+                          <LuChevronLeft />
+                        )}
+                      </IconButton>
+                    </Flex>
+
+                    <AnimatePresence initial={false}>
+                      {showBody && (
+                        <motion.div
+                          key="drs-panel-body"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: "easeInOut" }}
+                          style={{ overflow: "hidden" }}
+                        >
+                          {/* SEARCH — reusable lookup */}
+                          <Box mb={3}>
+                            <LookupField<DepositHdr>
+                              placeholder="Search by reference or ID..."
+                              modalTitle="Search Remittance Slip"
+                              columns={drsLookupColumns}
+                              dataSource={items}
+                              searchKeys={["name"]}
+                              value={lookupValue}
+                              onSelect={(item) => {
+                                setLookupValue(item);
+                                if (item) setSelectedId(item.id);
+                              }}
+                              renderDisplay={(item) => item.name}
+                            />
+                          </Box>
+
+                          {/* CARD LIST */}
+                          <Stack
+                            gap={2}
+                            maxH={{ base: "360px", md: "450px", xl: "520px" }}
+                            overflowY="auto"
+                            pr={1}
+                          >
+                            {sortedDrsItems.map((item) => {
+                              const isSelected = selectedId === item.id;
+                              const status = item.Status ?? "Pending";
+                              const styles =
+                                STATUS_STYLES[status] ?? STATUS_STYLES.Pending;
+                              const isLatest =
+                                sortedDrsItems[0]?.id === item.id;
+
+                              return (
+                                <Box
+                                  key={item.id}
+                                  role="button"
+                                  onClick={() => setSelectedId(item.id)}
+                                  cursor="pointer"
+                                  position="relative"
+                                  borderWidth="1px"
+                                  borderRadius="lg"
+                                  borderColor={
+                                    isSelected ? "green.300" : "border"
+                                  }
+                                  bg={isSelected ? "green.50" : "bg"}
+                                  borderLeftWidth={isSelected ? "4px" : "1px"}
+                                  borderLeftColor={
+                                    isSelected ? "green.500" : "border"
+                                  }
+                                  p={3}
+                                  transition="all 0.15s"
+                                  _hover={{
+                                    borderColor: "green.300",
+                                    bg: "green.50",
+                                  }}
+                                >
+                                  <Flex
+                                    justify="space-between"
+                                    align="start"
+                                    gap={2}
+                                  >
+                                    <Text
+                                      fontWeight="bold"
+                                      color="green.700"
+                                      fontSize="sm"
+                                    >
+                                      {item.name}
+                                    </Text>
+                                    <Text
+                                      fontWeight="bold"
+                                      color="green.700"
+                                      fontSize="sm"
+                                      whiteSpace="nowrap"
+                                    >
+                                      {item.Amount}
+                                    </Text>
+                                  </Flex>
+
+                                  <Flex
+                                    justify="space-between"
+                                    align="center"
+                                    mt={2}
+                                    gap={2}
+                                  >
+                                    <Text fontSize="xs" color="fg.muted">
+                                      {formatSlipDate(item.SlipDate)}
+                                      {item.Planholders != null &&
+                                        ` · ${item.Planholders} planholders`}
+                                    </Text>
+
+                                    <Flex align="center" gap={2}>
+                                      <OSPBadge
+                                        type={styles.colorPalette}
+                                        // variant="subtle"
+                                        // borderRadius="full"
+                                        // px={2}
+                                      >
+                                        {/* <Box
+                                          as="span"
+                                          boxSize="6px"
+                                          borderRadius="full"
+                                          bg={styles.dotColor}
+                                          mr={1}
+                                        /> */}
+                                        {status}
+                                      </OSPBadge>
+
+                                      {isLatest && (
+                                        <Button
+                                          size="xs"
+                                          variant="outline"
+                                          color="red.500"
+                                          borderColor="red.500"
+                                          _hover={{
+                                            bg: "red.500",
+                                            color: "white",
+                                          }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDelete(item);
+                                          }}
+                                        >
+                                          <LuTrash />
+                                        </Button>
+                                      )}
+                                    </Flex>
+                                  </Flex>
+                                </Box>
+                              );
+                            })}
+                          </Stack>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
+                )}
+              </GridItem>
             </Card.MainContent>
           </Card.Root>
-        </GridItem>
-      </Grid>
+
+          {/* RIGHT PANEL */}
+
+          <GridItem bg="white" overflow="hidden" h="full">
+            <Card.Root>
+              <Card.MainContent>
+                {!selectedId && (
+                  /* EMPTY STATE */
+                  <EmptyStateCard
+                    title={"No DRS Selected"}
+                    description="Select a DRS from the left to view details"
+                  />
+                )}
+                <Collapsible.Root open={selectedId != ""}>
+                  <Collapsible.Content>
+                    <DrsDataTable
+                      payments={samplePayments}
+                      onRowClick={(row) => console.log("Clicked row:", row)}
+                    />
+                    <Box display={{ base: "block", md: "none" }}>
+                      <DrsPaymentSummary totals={totals} displayProp={false} />
+                    </Box>
+                    {/* ACTION BUTTON */}
+                    <Flex
+                      direction={{ base: "column", md: "row" }}
+                      justify={{ base: "flex-end" }}
+                      mt={4}
+                      gap={{ base: 2, xl: 4 }}
+                      width="full"
+                    >
+                      <Box width={{ base: "full", md: "auto" }}>
+                        <SecondaryMdFlexButton
+                          width={{ base: "full", md: "auto" }}
+                          onClick={() => {
+                            const selected = items.find(
+                              (x) => x.id === selectedId,
+                            );
+
+                            sessionStorage.setItem(
+                              "selectedDRS",
+                              JSON.stringify(selected),
+                            );
+
+                            router.push("/disbursement/comte");
+                          }}
+                        >
+                          Add Disbursement
+                        </SecondaryMdFlexButton>
+                      </Box>
+
+                      <Box width={{ base: "full", md: "auto" }}>
+                        <PrimaryMdFlexButton
+                          width={{ base: "full", md: "auto" }}
+                          onClick={() => {
+                            const selected = items.find(
+                              (x) => x.id === selectedId,
+                            );
+
+                            if (!selected) return;
+
+                            const firstCreated = drsItems[0];
+
+                            if (selected.id !== firstCreated?.id) {
+                              toast.error(
+                                "Please encode the first created DRS",
+                              );
+                              return;
+                            }
+
+                            sessionStorage.setItem(
+                              "selectedDRS",
+                              JSON.stringify(selected),
+                            );
+
+                            router.push("/payment/encodevalidated-deposit");
+                          }}
+                        >
+                          Encode Deposit
+                        </PrimaryMdFlexButton>
+                      </Box>
+                    </Flex>
+                  </Collapsible.Content>
+                </Collapsible.Root>
+              </Card.MainContent>
+            </Card.Root>
+          </GridItem>
+        </Grid>
       </Page.MainContent>
     </Page.Root>
   );

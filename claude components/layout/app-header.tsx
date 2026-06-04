@@ -31,6 +31,7 @@ import {
   LuCreditCard,
   LuFileText,
   LuTriangleAlert,
+  LuCircleHelp,
   LuBotMessageSquare,
 } from "react-icons/lu";
 import { NotificationDataProps } from "./app-layout.type";
@@ -44,20 +45,24 @@ const DEFAULT_NOTIF_ICON = {
   color: "#6B7280",
 };
 
-const NOTIF_ICON_MAP: Record<string, { Icon: React.ElementType; bg: string; color: string }> = {
-  request:  { Icon: LuClipboardList, bg: "#D3EDEE", color: "#006838" },
-  system:   { Icon: LuRefreshCw,     bg: "#DBEAFE", color: "#283D91" },
-  approval: { Icon: LuUserCheck,     bg: "#ACD6A6", color: "#006838" },
-  payment:  { Icon: LuCreditCard,     bg: "#FFF9C4", color: "#92792D" },
-  document: { Icon: LuFileText,      bg: "#D3EDEE", color: "#026BA9" },
-  alert:    { Icon: LuTriangleAlert, bg: "#FFCEE9", color: "#BF1F2F" },
+const NOTIF_ICON_MAP: Record<
+  string,
+  { Icon: React.ElementType; bg: string; color: string }
+> = {
+  request: { Icon: LuClipboardList, bg: "#D3EDEE", color: "#006838" },
+  system: { Icon: LuRefreshCw, bg: "#DBEAFE", color: "#283D91" },
+  approval: { Icon: LuUserCheck, bg: "#ACD6A6", color: "#006838" },
+  payment: { Icon: LuCreditCard, bg: "#FFF9C4", color: "#92792D" },
+  document: { Icon: LuFileText, bg: "#D3EDEE", color: "#026BA9" },
+  alert: { Icon: LuTriangleAlert, bg: "#FFCEE9", color: "#BF1F2F" },
 };
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return decodeURIComponent(parts.pop()!.split(";").shift() ?? "");
+  if (parts.length === 2)
+    return decodeURIComponent(parts.pop()!.split(";").shift() ?? "");
   return null;
 }
 
@@ -70,8 +75,17 @@ function parseAvatarName(session: string | null): string {
     const decoded = atob(padded + "=".repeat(padding));
     const payload = JSON.parse(decoded) as { email?: string };
     const email = payload.email ?? "";
-    const stored = typeof localStorage !== "undefined" ? localStorage.getItem("user-display-name") : null;
-    return stored || (email.split("@")[0] ?? "").replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).trim();
+    const stored =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("user-display-name")
+        : null;
+    return (
+      stored ||
+      (email.split("@")[0] ?? "")
+        .replace(/[._-]/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim()
+    );
   } catch {
     return "";
   }
@@ -97,7 +111,7 @@ export default function AppHeader({
   const [avatarName, setAvatarName] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
   const [readIds, setReadIds] = useState<Set<number>>(
-    () => new Set(notifications.filter((n) => n.read).map((n) => n.id))
+    () => new Set(notifications.filter((n) => n.read).map((n) => n.id)),
   );
   const unreadCount = notifications.filter((n) => !readIds.has(n.id)).length;
   const markAllRead = () => setReadIds(new Set(notifications.map((n) => n.id)));
@@ -109,12 +123,12 @@ export default function AppHeader({
     setAvatarName(parseAvatarName(readCookie("osp_session")));
   }, []);
 
-  const colorPalette = ["red", "blue", "green", "yellow", "purple", "orange"]
+  const colorPalette = ["red", "blue", "green", "yellow", "purple", "orange"];
 
-const pickPalette = (name: string) => {
-  const index = name.charCodeAt(0) % colorPalette.length
-  return colorPalette[index]
-}
+  const pickPalette = (name: string) => {
+    const index = name.charCodeAt(0) % colorPalette.length;
+    return colorPalette[index];
+  };
 
   return (
     <Flex
@@ -173,7 +187,7 @@ const pickPalette = (name: string) => {
                 fontWeight="bold"
                 whiteSpace="nowrap"
                 transition="opacity 0.2s"
-                color="primary"
+                color="gray.800"
               >
                 {appName}
               </Body>
@@ -189,6 +203,17 @@ const pickPalette = (name: string) => {
 
       {/* Right side */}
       <Flex align="center">
+        {/* <IconButton
+          color="gray.fg"
+          aria-label="Page tour"
+          size="xl"
+          variant="ghost"
+          onClick={() =>
+            window.dispatchEvent(new CustomEvent("osp-start-page-tour"))
+          }
+        >
+          <LuCircleHelp />
+        </IconButton> */}
         <Dialog.Root size="full" motionPreset="slide-in-bottom">
           <Dialog.Trigger asChild>
             <IconButton
@@ -286,15 +311,32 @@ const pickPalette = (name: string) => {
               <Dialog.Positioner>
                 <Dialog.Content>
                   {/* Header */}
-                  <Dialog.Header p={0} borderBottomWidth="1px" borderColor="gray.200">
-                    <Flex px={4} py={3} align="center" justify="space-between" w="full">
+                  <Dialog.Header
+                    p={0}
+                    borderBottomWidth="1px"
+                    borderColor="gray.200"
+                  >
+                    <Flex
+                      px={4}
+                      py={3}
+                      align="center"
+                      justify="space-between"
+                      w="full"
+                    >
                       <Flex align="center" gap={2}>
-                        <Dialog.Title fontWeight="bold" fontSize="md">Notifications</Dialog.Title>
+                        <Dialog.Title fontWeight="bold" fontSize="md">
+                          Notifications
+                        </Dialog.Title>
                         {unreadCount > 0 && (
                           <Badge
-                            bg="var(--chakra-colors-primary)" color="white"
-                            borderRadius="full" fontSize="xs" px={1.5}
-                            h="18px" display="flex" alignItems="center"
+                            bg="var(--chakra-colors-primary)"
+                            color="white"
+                            borderRadius="full"
+                            fontSize="xs"
+                            px={1.5}
+                            h="18px"
+                            display="flex"
+                            alignItems="center"
                           >
                             {unreadCount}
                           </Badge>
@@ -303,14 +345,23 @@ const pickPalette = (name: string) => {
                       <Flex align="center" gap={1}>
                         {unreadCount > 0 && (
                           <Button
-                            size="xs" variant="ghost" fontSize="xs" fontWeight="medium"
-                            color="var(--chakra-colors-primary)" onClick={markAllRead}
+                            size="xs"
+                            variant="ghost"
+                            fontSize="xs"
+                            fontWeight="medium"
+                            color="var(--chakra-colors-primary)"
+                            onClick={markAllRead}
                           >
                             Mark all read
                           </Button>
                         )}
                         <Dialog.CloseTrigger asChild>
-                          <IconButton size="sm" variant="ghost" aria-label="Close" position="static">
+                          <IconButton
+                            size="sm"
+                            variant="ghost"
+                            aria-label="Close"
+                            position="static"
+                          >
                             <LuX />
                           </IconButton>
                         </Dialog.CloseTrigger>
@@ -322,48 +373,89 @@ const pickPalette = (name: string) => {
                     {notifications.length > 0 ? (
                       <VStack gap={0} align="stretch">
                         {notifications.map((n, idx) => {
-                          const cfg = NOTIF_ICON_MAP[n.type] ?? DEFAULT_NOTIF_ICON;
+                          const cfg =
+                            NOTIF_ICON_MAP[n.type] ?? DEFAULT_NOTIF_ICON;
                           const isUnread = !readIds.has(n.id);
                           const NotifIcon = cfg.Icon;
                           return (
                             <React.Fragment key={n.id}>
                               <Box
-                                px={4} py={3}
+                                px={4}
+                                py={3}
                                 bg={isUnread ? "bg.subtle" : "bg"}
                                 _hover={{ bg: "bg.muted", cursor: "pointer" }}
                                 transition="background 150ms ease-out"
                               >
                                 <Flex gap={3} align="flex-start">
                                   {/* Unread dot column */}
-                                  <Flex w="8px" flexShrink={0} justify="center" pt="15px">
+                                  <Flex
+                                    w="8px"
+                                    flexShrink={0}
+                                    justify="center"
+                                    pt="15px"
+                                  >
                                     {isUnread && (
-                                      <Box w="6px" h="6px" borderRadius="full" bg="var(--chakra-colors-primary)" />
+                                      <Box
+                                        w="6px"
+                                        h="6px"
+                                        borderRadius="full"
+                                        bg="var(--chakra-colors-primary)"
+                                      />
                                     )}
                                   </Flex>
                                   {/* Icon circle */}
                                   <Box
-                                    w="40px" h="40px" borderRadius="full" flexShrink={0}
-                                    bg={cfg.bg} display="flex" alignItems="center" justifyContent="center"
+                                    w="40px"
+                                    h="40px"
+                                    borderRadius="full"
+                                    flexShrink={0}
+                                    bg={cfg.bg}
+                                    display="flex"
+                                    alignItems="center"
+                                    justifyContent="center"
                                   >
                                     <NotifIcon size={18} color={cfg.color} />
                                   </Box>
                                   {/* Content */}
                                   <Box flex={1} minW={0}>
-                                    <Flex justify="space-between" align="flex-start" gap={2}>
-                                      <Text fontSize="sm" fontWeight={isUnread ? "semibold" : "medium"} color="gray.fg" lineHeight="1.3">
+                                    <Flex
+                                      justify="space-between"
+                                      align="flex-start"
+                                      gap={2}
+                                    >
+                                      <Text
+                                        fontSize="sm"
+                                        fontWeight={
+                                          isUnread ? "semibold" : "medium"
+                                        }
+                                        color="gray.fg"
+                                        lineHeight="1.3"
+                                      >
                                         {n.title}
                                       </Text>
-                                      <Text fontSize="xs" color="gray.400" flexShrink={0} lineHeight="1.5">
+                                      <Text
+                                        fontSize="xs"
+                                        color="gray.400"
+                                        flexShrink={0}
+                                        lineHeight="1.5"
+                                      >
                                         {n.timestamp}
                                       </Text>
                                     </Flex>
-                                    <Text fontSize="xs" color="gray.500" mt={0.5} lineHeight="1.5">
+                                    <Text
+                                      fontSize="xs"
+                                      color="gray.500"
+                                      mt={0.5}
+                                      lineHeight="1.5"
+                                    >
                                       {n.description}
                                     </Text>
                                   </Box>
                                 </Flex>
                               </Box>
-                              {idx !== notifications.length - 1 && <Separator />}
+                              {idx !== notifications.length - 1 && (
+                                <Separator />
+                              )}
                             </React.Fragment>
                           );
                         })}
@@ -371,14 +463,28 @@ const pickPalette = (name: string) => {
                     ) : (
                       <Box py={20} textAlign="center">
                         <Box
-                          w="56px" h="56px" borderRadius="full" bg="gray.100"
-                          display="flex" alignItems="center" justifyContent="center"
-                          mx="auto" mb={3}
+                          w="56px"
+                          h="56px"
+                          borderRadius="full"
+                          bg="gray.100"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          mx="auto"
+                          mb={3}
                         >
                           <LuBell size={24} color="#9CA3AF" />
                         </Box>
-                        <Text fontSize="sm" fontWeight="semibold" color="gray.fg">All caught up!</Text>
-                        <Text fontSize="xs" color="gray.400" mt={1}>No new notifications</Text>
+                        <Text
+                          fontSize="sm"
+                          fontWeight="semibold"
+                          color="gray.fg"
+                        >
+                          All caught up!
+                        </Text>
+                        <Text fontSize="xs" color="gray.400" mt={1}>
+                          No new notifications
+                        </Text>
                       </Box>
                     )}
                   </Dialog.Body>
@@ -426,18 +532,36 @@ const pickPalette = (name: string) => {
             </Popover.Trigger>
             <Portal>
               <Popover.Positioner>
-                <Popover.Content w="340px" p={0} borderRadius="xl" shadow="xl" overflow="hidden">
+                <Popover.Content
+                  w="340px"
+                  p={0}
+                  borderRadius="xl"
+                  shadow="xl"
+                  overflow="hidden"
+                >
                   <Popover.Arrow />
                   {/* Header */}
                   <Box borderBottomWidth="1px" borderColor="gray.200">
-                    <Flex px={3} py={2.5} align="center" justify="space-between">
+                    <Flex
+                      px={3}
+                      py={2.5}
+                      align="center"
+                      justify="space-between"
+                    >
                       <Flex align="center" gap={2}>
-                        <Text fontSize="sm" fontWeight="bold" color="gray.fg">Notifications</Text>
+                        <Text fontSize="sm" fontWeight="bold" color="gray.fg">
+                          Notifications
+                        </Text>
                         {unreadCount > 0 && (
                           <Badge
-                            bg="var(--chakra-colors-primary)" color="white"
-                            borderRadius="full" fontSize="xs" px={1.5}
-                            h="18px" display="flex" alignItems="center"
+                            bg="var(--chakra-colors-primary)"
+                            color="white"
+                            borderRadius="full"
+                            fontSize="xs"
+                            px={1.5}
+                            h="18px"
+                            display="flex"
+                            alignItems="center"
                           >
                             {unreadCount}
                           </Badge>
@@ -445,8 +569,12 @@ const pickPalette = (name: string) => {
                       </Flex>
                       {unreadCount > 0 && (
                         <Button
-                          size="xs" variant="ghost" fontSize="xs" fontWeight="medium"
-                          color="var(--chakra-colors-primary)" onClick={markAllRead}
+                          size="xs"
+                          variant="ghost"
+                          fontSize="xs"
+                          fontWeight="medium"
+                          color="var(--chakra-colors-primary)"
+                          onClick={markAllRead}
                         >
                           Mark all read
                         </Button>
@@ -458,48 +586,89 @@ const pickPalette = (name: string) => {
                     {notifications.length > 0 ? (
                       <VStack gap={0} align="stretch">
                         {notifications.map((n, idx) => {
-                          const cfg = NOTIF_ICON_MAP[n.type] ?? DEFAULT_NOTIF_ICON;
+                          const cfg =
+                            NOTIF_ICON_MAP[n.type] ?? DEFAULT_NOTIF_ICON;
                           const isUnread = !readIds.has(n.id);
                           const NotifIcon = cfg.Icon;
                           return (
                             <React.Fragment key={n.id}>
                               <Box
-                                px={3} py={2.5}
+                                px={3}
+                                py={2.5}
                                 bg={isUnread ? "bg.subtle" : "bg"}
                                 _hover={{ bg: "bg.muted", cursor: "pointer" }}
                                 transition="background 150ms ease-out"
                               >
                                 <Flex gap={3} align="flex-start">
                                   {/* Unread dot column */}
-                                  <Flex w="8px" flexShrink={0} justify="center" pt="13px">
+                                  <Flex
+                                    w="8px"
+                                    flexShrink={0}
+                                    justify="center"
+                                    pt="13px"
+                                  >
                                     {isUnread && (
-                                      <Box w="6px" h="6px" borderRadius="full" bg="var(--chakra-colors-primary)" />
+                                      <Box
+                                        w="6px"
+                                        h="6px"
+                                        borderRadius="full"
+                                        bg="var(--chakra-colors-primary)"
+                                      />
                                     )}
                                   </Flex>
                                   {/* Icon circle */}
                                   <Box
-                                    w="36px" h="36px" borderRadius="full" flexShrink={0}
-                                    bg={cfg.bg} display="flex" alignItems="center" justifyContent="center"
+                                    w="36px"
+                                    h="36px"
+                                    borderRadius="full"
+                                    flexShrink={0}
+                                    bg={cfg.bg}
+                                    display="flex"
+                                    alignItems="center"
+                                    justifyContent="center"
                                   >
                                     <NotifIcon size={16} color={cfg.color} />
                                   </Box>
                                   {/* Content */}
                                   <Box flex={1} minW={0}>
-                                    <Flex justify="space-between" align="flex-start" gap={2}>
-                                      <Text fontSize="sm" fontWeight={isUnread ? "semibold" : "medium"} color="gray.fg" lineHeight="1.3">
+                                    <Flex
+                                      justify="space-between"
+                                      align="flex-start"
+                                      gap={2}
+                                    >
+                                      <Text
+                                        fontSize="sm"
+                                        fontWeight={
+                                          isUnread ? "semibold" : "medium"
+                                        }
+                                        color="gray.fg"
+                                        lineHeight="1.3"
+                                      >
                                         {n.title}
                                       </Text>
-                                      <Text fontSize="xs" color="gray.400" flexShrink={0} lineHeight="1.5">
+                                      <Text
+                                        fontSize="xs"
+                                        color="gray.400"
+                                        flexShrink={0}
+                                        lineHeight="1.5"
+                                      >
                                         {n.timestamp}
                                       </Text>
                                     </Flex>
-                                    <Text fontSize="xs" color="gray.500" mt={0.5} lineHeight="1.5">
+                                    <Text
+                                      fontSize="xs"
+                                      color="gray.500"
+                                      mt={0.5}
+                                      lineHeight="1.5"
+                                    >
                                       {n.description}
                                     </Text>
                                   </Box>
                                 </Flex>
                               </Box>
-                              {idx !== notifications.length - 1 && <Separator />}
+                              {idx !== notifications.length - 1 && (
+                                <Separator />
+                              )}
                             </React.Fragment>
                           );
                         })}
@@ -507,14 +676,28 @@ const pickPalette = (name: string) => {
                     ) : (
                       <Box py={12} textAlign="center">
                         <Box
-                          w="48px" h="48px" borderRadius="full" bg="gray.100"
-                          display="flex" alignItems="center" justifyContent="center"
-                          mx="auto" mb={3}
+                          w="48px"
+                          h="48px"
+                          borderRadius="full"
+                          bg="gray.100"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          mx="auto"
+                          mb={3}
                         >
                           <LuBell size={20} color="#9CA3AF" />
                         </Box>
-                        <Text fontSize="sm" fontWeight="semibold" color="gray.fg">All caught up!</Text>
-                        <Text fontSize="xs" color="gray.400" mt={1}>No new notifications</Text>
+                        <Text
+                          fontSize="sm"
+                          fontWeight="semibold"
+                          color="gray.fg"
+                        >
+                          All caught up!
+                        </Text>
+                        <Text fontSize="xs" color="gray.400" mt={1}>
+                          No new notifications
+                        </Text>
                       </Box>
                     )}
                   </Box>
@@ -531,10 +714,7 @@ const pickPalette = (name: string) => {
             title="Account & Settings"
             colorPalette={pickPalette(avatarName || "U")}
           >
-            <Avatar.Fallback
-              name={avatarName || "U"}
-              fontWeight="bold"
-            />
+            <Avatar.Fallback name={avatarName || "U"} fontWeight="bold" />
           </Avatar.Root>
         </Show>
       </Flex>

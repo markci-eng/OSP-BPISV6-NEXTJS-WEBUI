@@ -736,8 +736,9 @@ export default function ApprovalsPage() {
       // separator={true}
     >
       <Page.MainContent>
-      {/* Dropdown */}
-      {/* <Box maxW="320px">
+        <Box></Box>
+        {/* Dropdown */}
+        {/* <Box maxW="320px">
         <SelectFloatingLabel
           label="Select Approval Type"
           collection={ApprovalType}
@@ -746,8 +747,8 @@ export default function ApprovalsPage() {
         />
       </Box> */}
 
-      {/* Dynamic Rendering */}
-      {view === "reassignment-doc" && (
+        {/* Dynamic Rendering */}
+        {/* {view === "reassignment-doc" && (
         <RenderApproval<Request>
           config={configMap["reassignment-doc"]}
           delay={delay}
@@ -809,7 +810,7 @@ export default function ApprovalsPage() {
             />
           }
         />
-      )}
+      )} */}
       </Page.MainContent>
     </Page.Root>
   );

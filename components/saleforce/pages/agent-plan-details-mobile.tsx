@@ -5,12 +5,7 @@ import {
   getSubordinates,
   SalesAgent,
 } from "../../common/agent-lookup/agent-lookup.type";
-import {
-  Flex,
-  Strong,
-  Text,
-  Box,
-} from "@chakra-ui/react";
+import { Flex, Strong, Text, Box } from "@chakra-ui/react";
 import {
   LuReplace,
   LuTrendingUpDown,
@@ -22,9 +17,14 @@ import {
   LuShare2,
   LuArrowLeft,
   LuSearch,
+  LuPlus,
+  LuActivity,
 } from "react-icons/lu";
 import AgentInfoTabsMobile from "../tabs/agent-info-tabs-mobile";
-import { PendingRequests, RequestProps } from "@/components/new-planholder-profile/sections/pending-requests";
+import {
+  PendingRequests,
+  RequestProps,
+} from "@/components/new-planholder-profile/sections/pending-requests";
 import DataTable from "../../common/reusable-tableV2/DataTable";
 import TeamMemberDrawer from "../drawers/team-member-drawer";
 import { useState } from "react";
@@ -36,10 +36,12 @@ import AgentMovementForm from "../forms/agent-movement-form";
 import { SearchAgentDialog } from "../../common/agent-lookup/search-agent-dialog";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
 import MenuButton, { MenuItemButton } from "@/components/buttons/MenuButton";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import ReferralPage from "./referral-page";
 import { useRouter } from "next/navigation";
 import Card from "@/components/cards/Card";
+import { PageHeader } from "@/app/page-template/page";
+import { ActionButtonItem } from "@/app/page-template/ActionButtons";
 
 const MOCK_AGENT_REQUESTS: RequestProps[] = [
   {
@@ -77,61 +79,70 @@ const AgentDetailsMobile = (params: {
     useState<SalesAgent | null>(null);
   const router = useRouter();
 
+  const actionButtonDefs: ActionButtonItem[] = [
+    {
+      label: "New Request",
+      href: `/request/new`,
+      icon: LuPlus, // Clock for time logging
+    },
+    {
+      label: "Tracker",
+      href: `/Transaction`,
+      icon: LuActivity, // Clock for time logging
+    },
+  ];
+
   return (
     <Page.Root
       title="Sales Agent Profile"
       description="View sales agent information and details."
     >
+      <PageHeader
+        title="Sales Agent Profile"
+        subtitle="View sales agent information and details."
+        actionButtonDefs={actionButtonDefs}
+      />
       {page === "default" && (
         <Page.ToolContent>
-          <Flex direction="row" gap={2} align="center" w="full">
-            <Box flex={1} minW={0}>
-              <SearchAgentDialog
-                onSelectChange={(a) => {
-                  if (onAgentSelect) onAgentSelect(a);
-                }}
+          {selectedAgent && (
+            <MenuButton>
+              <MenuItemButton
+                icon={<LuUserPen />}
+                label="Edit"
+                itemKey="edit"
+                value="edit"
+                onClick={() => setPage("edit")}
               />
-            </Box>
-            {selectedAgent && (
-              <MenuButton>
-                <MenuItemButton
-                  icon={<LuUserPen />}
-                  label="Edit"
-                  itemKey="edit"
-                  value="edit"
-                  onClick={() => setPage("edit")}
-                />
-                <MenuItemButton
-                  icon={<LuReplace />}
-                  label="Re-Organized"
-                  itemKey="reassign"
-                  value="reassign"
-                  onClick={() => setPage("reassign")}
-                />
-                <MenuItemButton
-                  icon={<LuTrendingUpDown />}
-                  label="Movement"
-                  itemKey="movement"
-                  value="movement"
-                  onClick={() => setPage("movement")}
-                />
-                <MenuItemButton
-                  icon={<LuShare2 />}
-                  label="Referral"
-                  itemKey="referral"
-                  value="referral"
-                  onClick={() => setPage("referral")}
-                />
-                <MenuItemButton
-                  icon={<LuPrinter />}
-                  label="Reprint SFID"
-                  itemKey="printing"
-                  value="printing"
-                  onClick={() => router.push("/printing")}
-                />
-              </MenuButton>
-            )}
-          </Flex>
+              <MenuItemButton
+                icon={<LuReplace />}
+                label="Re-Organized"
+                itemKey="reassign"
+                value="reassign"
+                onClick={() => setPage("reassign")}
+              />
+              <MenuItemButton
+                icon={<LuTrendingUpDown />}
+                label="Movement"
+                itemKey="movement"
+                value="movement"
+                onClick={() => setPage("movement")}
+              />
+              <MenuItemButton
+                icon={<LuShare2 />}
+                label="Referral"
+                itemKey="referral"
+                value="referral"
+                onClick={() => setPage("referral")}
+              />
+              <MenuItemButton
+                icon={<LuPrinter />}
+                label="Reprint SFID"
+                itemKey="printing"
+                value="printing"
+                onClick={() => router.push("/printing")}
+              />
+            </MenuButton>
+          )}
         </Page.ToolContent>
       )}
       <Page.MainContent>
@@ -165,6 +176,13 @@ const AgentDetailsMobile = (params: {
               </Flex>
             ) : (
               <Flex flexDir="column" gap={4}>
+                <Box flex={1} minW={0}>
+                  <SearchAgentDialog
+                    onSelectChange={(a) => {
+                      if (onAgentSelect) onAgentSelect(a);
+                    }}
+                  />
+                </Box>
                 <AgentProfileHeaderCard agent={selectedAgent} />
 
                 {(() => {
@@ -172,7 +190,13 @@ const AgentDetailsMobile = (params: {
                   const email = selectedAgent.email;
                   const addr = selectedAgent.address;
                   const address = addr
-                    ? [addr.unit, addr.street, addr.barangay, addr.city, addr.province]
+                    ? [
+                        addr.unit,
+                        addr.street,
+                        addr.barangay,
+                        addr.city,
+                        addr.province,
+                      ]
                         .filter(Boolean)
                         .join(", ")
                     : undefined;
@@ -192,9 +216,15 @@ const AgentDetailsMobile = (params: {
                             <LuPhone />
                             {(() => {
                               const d = phone.replace(/\D/g, "");
-                              const local = d.startsWith("63") ? "0" + d.slice(2) : d;
-                              return local.startsWith("09") && local.length === 11
-                                ? local.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3")
+                              const local = d.startsWith("63")
+                                ? "0" + d.slice(2)
+                                : d;
+                              return local.startsWith("09") &&
+                                local.length === 11
+                                ? local.replace(
+                                    /(\d{4})(\d{3})(\d{4})/,
+                                    "$1 $2 $3",
+                                  )
                                 : phone;
                             })()}
                           </a>
@@ -287,7 +317,10 @@ const AgentDetailsMobile = (params: {
                       secondaryField: "id",
                     }}
                     title={
-                      <Strong fontSize="16px" color="var(--chakra-colors-primary)">
+                      <Strong
+                        fontSize="16px"
+                        color="var(--chakra-colors-primary)"
+                      >
                         Team Members
                       </Strong>
                     }
@@ -327,7 +360,11 @@ const AgentDetailsMobile = (params: {
         ) : page === "referral" ? (
           <Box>
             <Flex justify="flex-start" mb={2}>
-              <Button variant="outline" size="sm" onClick={() => setPage("default")}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage("default")}
+              >
                 <LuArrowLeft /> Back
               </Button>
             </Flex>

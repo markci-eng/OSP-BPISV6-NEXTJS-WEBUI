@@ -2,6 +2,7 @@
 
 import {
   Box,
+  Button,
   CloseButton,
   Dialog,
   Flex,
@@ -14,6 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { LuEllipsis } from "react-icons/lu";
 import { ReactNode, createContext, useContext, useState } from "react";
+import { BiCaretDown } from "react-icons/bi";
 
 const MenuModeCtx = createContext<"menu" | "dialog">("menu");
 
@@ -28,22 +30,14 @@ export default function MenuButton({ children }: MenuButtonProps) {
   if (isMobile) {
     return (
       <MenuModeCtx.Provider value="dialog">
-        <IconButton
-          aria-label="Actions"
-          variant="solid"
-          bg="white"
-          color="gray.700"
-          shadow="sm"
-          _hover={{ bg: "gray.50" }}
-          onClick={() => setOpen(true)}
-        >
-          <LuEllipsis />
-        </IconButton>
+        <Button size="sm" variant="solid" onClick={() => setOpen(true)}>
+          Actions <BiCaretDown />
+        </Button>
 
         <Dialog.Root
           open={open}
           onOpenChange={(e) => setOpen(e.open)}
-          size="full"
+          // size="full"
           placement="bottom"
           motionPreset="slide-in-bottom"
         >

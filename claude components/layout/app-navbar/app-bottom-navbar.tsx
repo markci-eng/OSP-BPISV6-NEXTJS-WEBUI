@@ -596,16 +596,18 @@ export function AppBottomNavBar({
       <Show when={isMobile}>
         <StickyNavbar>
           {navItems
-            ? navItems.slice(0, 4).map((item) => (
-                <StickyNavbarBtn
-                  key={item.label}
-                  btnChildren={item.icon as IconType}
-                  activeIcon={item.activeIcon as IconType | undefined}
-                  title={item.displayName ?? item.label}
-                  isActive={navItemIsActive(item, pathname)}
-                  onClickEvent={() => router.push(navItemHref(item))}
-                />
-              ))
+            ? navItems
+                .slice(0, 4)
+                .map((item) => (
+                  <StickyNavbarBtn
+                    key={item.label}
+                    btnChildren={item.icon as IconType}
+                    activeIcon={item.activeIcon as IconType | undefined}
+                    title={item.displayName ?? item.label}
+                    isActive={navItemIsActive(item, pathname)}
+                    onClickEvent={() => router.push(navItemHref(item))}
+                  />
+                ))
             : computedNavItems.map((item) => (
                 <StickyNavbarBtn
                   key={item.key}
@@ -638,6 +640,10 @@ export function AppBottomNavBar({
                 outline="2px solid"
                 outlineColor="#808080"
               >
+                <Avatar.Image
+                  src="https://lh3.googleusercontent.com/a-/ALV-UjWzjMfUgpdzCgxwydW7PAI1Q7uDo4ZAiE_cl8CjH9bXKkUzqAs=s40-p"
+                  alt={displayName}
+                />
                 <Avatar.Fallback name={displayName || "U"} />
               </Avatar.Root>
               <Box

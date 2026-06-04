@@ -24,6 +24,8 @@ import {
   RiBookShelfLine,
   RiDashboardFill,
   RiDashboardLine,
+  RiHome4Fill,
+  RiHome4Line,
   RiUser2Fill,
   RiUser2Line,
 } from "react-icons/ri";
@@ -32,9 +34,9 @@ import { LuClipboardCheck } from "react-icons/lu";
 
 export const SideBarItemsBranch: NavItem[] = [
   {
-    icon: RiDashboardLine,
-    activeIcon: RiDashboardFill,
-    label: "Dashboard",
+    icon: RiHome4Line,
+    activeIcon: RiHome4Fill,
+    label: "Home",
     href: "/",
   },
   {
@@ -51,6 +53,7 @@ export const SideBarItemsBranch: NavItem[] = [
       {
         label: "Sales Agent Profile",
         href: "/sales-force/profile",
+        displayName: "Agents",
       },
       {
         label: "Re-Organization",
@@ -71,6 +74,7 @@ export const SideBarItemsBranch: NavItem[] = [
     icon: RiBookShelfLine,
     activeIcon: RiBookShelfFill,
     href: "/document-management",
+    displayName: "Docs",
     // subItems: [
     //   // {1
     //   //   label: "Assign Documents",
@@ -207,7 +211,7 @@ export const SideBarItemsEKolekta: NavItem[] = [
     label: "Disbursement",
     href: "/disbursement/comte",
   },
-{
+  {
     label: "Plan Management",
     icon: HiOutlineUsers,
     activeIcon: HiUsers,

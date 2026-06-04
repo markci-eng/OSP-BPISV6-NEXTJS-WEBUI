@@ -75,7 +75,8 @@ export function AppLayout({
         <Box
           flex="1"
           minW={0}
-          bg="bg"
+          // bg="#F2F4F5"
+          bg={"white"}
           p={0}
           overflow="auto"
           ref={scrollRef}

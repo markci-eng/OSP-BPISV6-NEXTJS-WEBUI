@@ -40,7 +40,10 @@ import { MdPayment } from "react-icons/md";
 import { useMessageDialog } from "../common/message-box/message-box-provider";
 import { TbMoneybagMove } from "react-icons/tb";
 import Page from "@/components/layout/page/Page";
-import { ACCOUNT_SUMMARY_STEPS, OnboardingTutorial } from "./onboarding-tutorial";
+import {
+  ACCOUNT_SUMMARY_STEPS,
+  OnboardingTutorial,
+} from "./onboarding-tutorial";
 
 export interface Hyperlinks {
   payMyPlan?: string | undefined;
@@ -152,7 +155,7 @@ export default function PlanholderProfilePage({
           justify={{ sm: "flex-end" }}
           w="full"
         >
-          <Box flex={1} minW={0} id="tour-search">
+          {/* <Box flex={1} minW={0} id="tour-search">
             <PlanholderLookup
               value={
                 props.planholderInfo
@@ -180,91 +183,95 @@ export default function PlanholderProfilePage({
               }
               mobileFullscreen
             />
-          </Box>
+          </Box> */}
           {props.planholderInfo && (
             <>
               <Box id="tour-actions-menu" flexShrink={0}>
-              <MenuButton>
-                <MenuItemButton
-                  icon={<LuUserPen />}
-                  label="Edit Planholder Info"
-                  itemKey="edit"
-                  value="edit"
-                  onClick={() => {
-                    redirect(
-                      `/plan-management/planholder/${props.planholderInfo?.personId}/edit`,
-                    );
-                  }}
-                />
-                <MenuItemButton
-                  icon={<LuTrash2 />}
-                  label="Delete Planholder"
-                  itemKey="delete"
-                  value="delete"
-                  onClick={() =>
-                    messageBox({
-                      title: "Unable to delete planholder.",
-                      message: "Unable to delete planholder with active plans.",
-                      confirmText: "Dismiss",
-                      variant: "error",
-                    })
-                  }
-                />
-                {props.hyperlinks && <Separator />}
-                {props.hyperlinks && props.hyperlinks.payMyPlan && (
+                <MenuButton>
                   <MenuItemButton
-                    icon={<MdPayment />}
-                    label="Pay My Plan"
-                    itemKey="pay-my-plan"
-                    value="pay-my-plan"
-                    onClick={() => redirect(props.hyperlinks?.payMyPlan ?? "")}
+                    icon={<LuUserPen />}
+                    label="Edit Planholder Info"
+                    itemKey="edit"
+                    value="edit"
+                    onClick={() => {
+                      redirect(
+                        `/plan-management/planholder/${props.planholderInfo?.personId}/edit`,
+                      );
+                    }}
                   />
-                )}
-                {props.hyperlinks && props.hyperlinks.changeOfMode && (
                   <MenuItemButton
-                    icon={<LuReplace />}
-                    label="Change of Mode"
-                    itemKey="change-of-mode"
-                    value="change-of-mode"
+                    icon={<LuTrash2 />}
+                    label="Delete Planholder"
+                    itemKey="delete"
+                    value="delete"
                     onClick={() =>
-                      redirect(props.hyperlinks?.changeOfMode ?? "")
+                      messageBox({
+                        title: "Unable to delete planholder.",
+                        message:
+                          "Unable to delete planholder with active plans.",
+                        confirmText: "Dismiss",
+                        variant: "error",
+                      })
                     }
                   />
-                )}
-                {props.hyperlinks && props.hyperlinks.returnedOfPremium && (
-                  <MenuItemButton
-                    icon={<LuTrendingUpDown />}
-                    label="ROP Application"
-                    itemKey="return-of-premium"
-                    value="return-of-premium"
-                    onClick={() =>
-                      redirect(props.hyperlinks?.returnedOfPremium ?? "")
-                    }
-                  />
-                )}
-                {props.hyperlinks && props.hyperlinks.claimApplication && (
-                  <MenuItemButton
-                    icon={<LuFile />}
-                    label="Claim Application"
-                    itemKey="claim-application"
-                    value="claim-application"
-                    onClick={() =>
-                      redirect(props.hyperlinks?.claimApplication ?? "")
-                    }
-                  />
-                )}
-                {props.hyperlinks && props.hyperlinks.cashSurrenderedValue && (
-                  <MenuItemButton
-                    icon={<TbMoneybagMove />}
-                    label="CSV Application"
-                    itemKey="cash-surrendered-value"
-                    value="cash-surrendered-value"
-                    onClick={() =>
-                      redirect(props.hyperlinks?.cashSurrenderedValue ?? "")
-                    }
-                  />
-                )}
-              </MenuButton>
+                  {props.hyperlinks && <Separator />}
+                  {props.hyperlinks && props.hyperlinks.payMyPlan && (
+                    <MenuItemButton
+                      icon={<MdPayment />}
+                      label="Pay My Plan"
+                      itemKey="pay-my-plan"
+                      value="pay-my-plan"
+                      onClick={() =>
+                        redirect(props.hyperlinks?.payMyPlan ?? "")
+                      }
+                    />
+                  )}
+                  {props.hyperlinks && props.hyperlinks.changeOfMode && (
+                    <MenuItemButton
+                      icon={<LuReplace />}
+                      label="Change of Mode"
+                      itemKey="change-of-mode"
+                      value="change-of-mode"
+                      onClick={() =>
+                        redirect(props.hyperlinks?.changeOfMode ?? "")
+                      }
+                    />
+                  )}
+                  {props.hyperlinks && props.hyperlinks.returnedOfPremium && (
+                    <MenuItemButton
+                      icon={<LuTrendingUpDown />}
+                      label="ROP Application"
+                      itemKey="return-of-premium"
+                      value="return-of-premium"
+                      onClick={() =>
+                        redirect(props.hyperlinks?.returnedOfPremium ?? "")
+                      }
+                    />
+                  )}
+                  {props.hyperlinks && props.hyperlinks.claimApplication && (
+                    <MenuItemButton
+                      icon={<LuFile />}
+                      label="Claim Application"
+                      itemKey="claim-application"
+                      value="claim-application"
+                      onClick={() =>
+                        redirect(props.hyperlinks?.claimApplication ?? "")
+                      }
+                    />
+                  )}
+                  {props.hyperlinks &&
+                    props.hyperlinks.cashSurrenderedValue && (
+                      <MenuItemButton
+                        icon={<TbMoneybagMove />}
+                        label="CSV Application"
+                        itemKey="cash-surrendered-value"
+                        value="cash-surrendered-value"
+                        onClick={() =>
+                          redirect(props.hyperlinks?.cashSurrenderedValue ?? "")
+                        }
+                      />
+                    )}
+                </MenuButton>
               </Box>
             </>
           )}
@@ -310,18 +317,18 @@ export default function PlanholderProfilePage({
             <GridItem>
               <Flex direction={"column"} gap={5}>
                 <Box id="tour-profile-header">
-                {props.planholderInfo ? (
-                  <ProfileHeaderCard
-                    name={
-                      props.planholderInfo.firstName +
-                      " " +
-                      props.planholderInfo.lastName
-                    }
-                    nameSubtitle={{ active: true, value: "Insurable" }}
-                  />
-                ) : (
-                  <ProfileHeaderCard />
-                )}
+                  {props.planholderInfo ? (
+                    <ProfileHeaderCard
+                      name={
+                        props.planholderInfo.firstName +
+                        " " +
+                        props.planholderInfo.lastName
+                      }
+                      nameSubtitle={{ active: true, value: "Insurable" }}
+                    />
+                  ) : (
+                    <ProfileHeaderCard />
+                  )}
                 </Box>
                 {props.planholderInfo &&
                   (() => {
@@ -352,9 +359,15 @@ export default function PlanholderProfilePage({
                               <LuPhone />
                               {(() => {
                                 const d = phone.replace(/\D/g, "");
-                                const local = d.startsWith("63") ? "0" + d.slice(2) : d;
-                                return local.startsWith("09") && local.length === 11
-                                  ? local.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3")
+                                const local = d.startsWith("63")
+                                  ? "0" + d.slice(2)
+                                  : d;
+                                return local.startsWith("09") &&
+                                  local.length === 11
+                                  ? local.replace(
+                                      /(\d{4})(\d{3})(\d{4})/,
+                                      "$1 $2 $3",
+                                    )
                                   : phone;
                               })()}
                             </a>
@@ -472,8 +485,16 @@ export default function PlanholderProfilePage({
           </Box>
         </Box>
         <OnboardingTutorial
-          steps={props.planholderInfo ? ACCOUNT_SUMMARY_STEPS.slice(1) : ACCOUNT_SUMMARY_STEPS.slice(0, 1)}
-          storageKey={props.planholderInfo ? "osp-account-summary-tour-person-v1" : "osp-account-summary-tour-base-v1"}
+          steps={
+            props.planholderInfo
+              ? ACCOUNT_SUMMARY_STEPS.slice(1)
+              : ACCOUNT_SUMMARY_STEPS.slice(0, 1)
+          }
+          storageKey={
+            props.planholderInfo
+              ? "osp-account-summary-tour-person-v1"
+              : "osp-account-summary-tour-base-v1"
+          }
         />
       </Page.MainContent>
     </Page.Root>

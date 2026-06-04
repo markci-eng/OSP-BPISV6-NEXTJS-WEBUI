@@ -1,13 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { ColorModeProvider } from "@/components/ui/color-mode";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export default function RootLayoutClient({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [queryClient] = useState(() => new QueryClient());
+
   React.useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
@@ -24,5 +27,9 @@ export default function RootLayoutClient({
     }
   }, []);
 
-  return <ColorModeProvider>{children}</ColorModeProvider>;
+  return (
+    <ColorModeProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </ColorModeProvider>
+  );
 }
