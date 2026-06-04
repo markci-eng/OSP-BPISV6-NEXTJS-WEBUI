@@ -189,26 +189,23 @@ export default function ProfilePage() {
     }
   };
 
-  const colorPalette = ["red", "blue", "green", "yellow", "purple", "orange"]
+  const colorPalette = ["red", "blue", "green", "yellow", "purple", "orange"];
 
-const pickPalette = (name: string) => {
-  const index = name.charCodeAt(0) % colorPalette.length
-  return colorPalette[index]
-}
+  const pickPalette = (name: string) => {
+    const index = name.charCodeAt(0) % colorPalette.length;
+    return colorPalette[index];
+  };
 
   return (
     <Page.Root
       title="My Profile"
       subtitle={fullName}
       description="View and manage your account details and preferences."
-      swapOnScroll
     >
       <Page.MainContent>
-
         {/* ── Hero card ── */}
         <Page.Row>
           <Card>
-
             <Flex
               direction={{ base: "column", md: "row" }}
               align={{ base: "center", md: "flex-start" }}
@@ -216,11 +213,13 @@ const pickPalette = (name: string) => {
               p={{ base: 5, md: 6 }}
             >
               {/* Avatar */}
-              <Avatar.Root size="2xl" flexShrink={0} colorPalette={pickPalette(fullName)}>
+              <Avatar.Root
+                size="2xl"
+                flexShrink={0}
+                colorPalette={pickPalette(fullName)}
+              >
                 <Avatar.Image src="/images/profile.jpg" alt={fullName} />
-                <Avatar.Fallback
-                  name={fullName}
-                />
+                <Avatar.Fallback name={fullName} />
               </Avatar.Root>
 
               {/* Identity block */}
@@ -240,7 +239,11 @@ const pickPalette = (name: string) => {
                   {PROFILE.accountNo}
                 </Text>
 
-                <HStack gap={2} justify={{ base: "center", md: "flex-start" }} flexWrap="wrap">
+                <HStack
+                  gap={2}
+                  justify={{ base: "center", md: "flex-start" }}
+                  flexWrap="wrap"
+                >
                   <OSPBadge type="success">Active</OSPBadge>
                   <OSPBadge type="info">Branch</OSPBadge>
                 </HStack>
@@ -316,7 +319,12 @@ const pickPalette = (name: string) => {
 
                   {/* Referral Code + copy */}
                   <Box>
-                    <Text fontSize="xs" fontWeight="semibold" color="gray.500" mb={1.5}>
+                    <Text
+                      fontSize="xs"
+                      fontWeight="semibold"
+                      color="gray.500"
+                      mb={1.5}
+                    >
                       Referral Code
                     </Text>
                     <Flex
@@ -347,14 +355,23 @@ const pickPalette = (name: string) => {
                         onClick={() => handleCopy(REFERRAL.code, "code")}
                         transition="color 0.15s"
                       >
-                        {codeCopied ? <LuCheck size={14} /> : <LuCopy size={14} />}
+                        {codeCopied ? (
+                          <LuCheck size={14} />
+                        ) : (
+                          <LuCopy size={14} />
+                        )}
                       </IconButton>
                     </Flex>
                   </Box>
 
                   {/* Referral Link + copy */}
                   <Box>
-                    <Text fontSize="xs" fontWeight="semibold" color="gray.500" mb={1.5}>
+                    <Text
+                      fontSize="xs"
+                      fontWeight="semibold"
+                      color="gray.500"
+                      mb={1.5}
+                    >
                       Referral Link
                     </Text>
                     <Flex
@@ -372,7 +389,10 @@ const pickPalette = (name: string) => {
                         fontSize="xs"
                         color="blue.600"
                         overflow="hidden"
-                        style={{ textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                        style={{
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
                         title={REFERRAL.link}
                       >
                         {REFERRAL.link}
@@ -386,14 +406,20 @@ const pickPalette = (name: string) => {
                         transition="color 0.15s"
                         flexShrink={0}
                       >
-                        {linkCopied ? <LuCheck size={14} /> : <LuCopy size={14} />}
+                        {linkCopied ? (
+                          <LuCheck size={14} />
+                        ) : (
+                          <LuCopy size={14} />
+                        )}
                       </IconButton>
                     </Flex>
                   </Box>
 
                   {/* Total Rewards */}
-                  <LabelText label="Total Rewards" value={REFERRAL.totalRewards} />
-
+                  <LabelText
+                    label="Total Rewards"
+                    value={REFERRAL.totalRewards}
+                  />
                 </Flex>
               </CardSection>
             </Card>
@@ -426,7 +452,10 @@ const pickPalette = (name: string) => {
                 <Box key={i}>
                   {i > 0 && <Separator my={3} />}
                   <Flex direction="column" gap={2.5}>
-                    <LabelText label="Referral Code" value={agent.referralCode} />
+                    <LabelText
+                      label="Referral Code"
+                      value={agent.referralCode}
+                    />
                     <LabelText label="Agent Name" value={agent.agentName} />
                     <LabelText label="Mobile" value={agent.mobile} />
                     {agent.email && (
@@ -444,13 +473,27 @@ const pickPalette = (name: string) => {
           <Card>
             <CardSection icon={LuSmartphone} label="App">
               <Flex direction="column" gap={3}>
-                <Flex align="center" justify="space-between" wrap="wrap" gap={2}>
-                  <LabelText label="Connection" value={isOnline ? "Online" : "Offline"} />
+                <Flex
+                  align="center"
+                  justify="space-between"
+                  wrap="wrap"
+                  gap={2}
+                >
+                  <LabelText
+                    label="Connection"
+                    value={isOnline ? "Online" : "Offline"}
+                  />
                   <Flex align="center" gap={1.5}>
                     {isOnline ? (
-                      <LuWifi size={14} color="var(--chakra-colors-green-500)" />
+                      <LuWifi
+                        size={14}
+                        color="var(--chakra-colors-green-500)"
+                      />
                     ) : (
-                      <LuWifiOff size={14} color="var(--chakra-colors-red-500)" />
+                      <LuWifiOff
+                        size={14}
+                        color="var(--chakra-colors-red-500)"
+                      />
                     )}
                     <Text
                       fontSize="xs"
@@ -462,8 +505,16 @@ const pickPalette = (name: string) => {
                   </Flex>
                 </Flex>
 
-                <Flex align="center" justify="space-between" wrap="wrap" gap={2}>
-                  <LabelText label="Install Status" value={isInstalled ? "Installed" : "Not installed"} />
+                <Flex
+                  align="center"
+                  justify="space-between"
+                  wrap="wrap"
+                  gap={2}
+                >
+                  <LabelText
+                    label="Install Status"
+                    value={isInstalled ? "Installed" : "Not installed"}
+                  />
                   {isInstalled ? (
                     <Text fontSize="xs" fontWeight="semibold" color="green.600">
                       Installed
@@ -488,7 +539,6 @@ const pickPalette = (name: string) => {
             </CardSection>
           </Card>
         </Page.Row>
-
       </Page.MainContent>
     </Page.Root>
   );
