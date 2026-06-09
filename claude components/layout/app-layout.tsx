@@ -75,13 +75,11 @@ export function AppLayout({
         <Box
           flex="1"
           minW={0}
-          // bg="#F2F4F5"
-          bg={"white"}
+          bg="bg"
           p={0}
           overflow="auto"
           ref={scrollRef}
           px={2}
-          pb={"100px"}
         >
           <StickyNavbarContext refParent={scrollRef}>
             {children}

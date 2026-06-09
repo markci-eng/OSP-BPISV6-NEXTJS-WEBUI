@@ -13,7 +13,6 @@ import {
   Badge,
   Popover,
   Portal,
-  InputGroup,
   Separator,
   useBreakpointValue,
   Show,
@@ -110,6 +109,8 @@ export default function AppHeader({
   const [isMounted, setIsMounted] = useState(false);
   const [avatarName, setAvatarName] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [searchTab, setSearchTab] = useState<"all" | "recent">("all");
   const [readIds, setReadIds] = useState<Set<number>>(
     () => new Set(notifications.filter((n) => n.read).map((n) => n.id)),
   );
@@ -133,14 +134,14 @@ export default function AppHeader({
   return (
     <Flex
       className="no-print"
-      h="58px"
+      h="80px"
       px={4}
       align="center"
       justify="space-between"
       bg="bg"
       _dark={{ bg: "rgba(20, 24, 36, 0.88)" }}
-      borderBottom="1px solid"
-      borderColor="gray.200"
+      // borderBottom="1px solid"
+      // borderColor="gray.200"
     >
       {/* Left side */}
       <Flex align="center" gap={2}>
@@ -192,9 +193,17 @@ export default function AppHeader({
                 {appName}
               </Body>
               {appSubtitle && (
-                <Small mt={"-5px"} color={"primary"} fontStyle={"italic"}>
+                // <Small mt={"-5px"} color={"primary"} fontStyle={"normal"}>
+                //   {appSubtitle}
+                // </Small>
+                <Text
+                  mt={"-5px"}
+                  color="#003818"
+                  fontStyle={"normal"}
+                  fontSize="small"
+                >
                   {appSubtitle}
-                </Small>
+                </Text>
               )}
             </Box>
           </Flex>
@@ -214,7 +223,14 @@ export default function AppHeader({
         >
           <LuCircleHelp />
         </IconButton> */}
-        <Dialog.Root size="full" motionPreset="slide-in-bottom">
+        <Dialog.Root
+          size="full"
+          motionPreset="slide-in-bottom"
+          onExitComplete={() => {
+            setSearchValue("");
+            setSearchTab("all");
+          }}
+        >
           <Dialog.Trigger asChild>
             <IconButton
               color={"gray.fg"}
@@ -229,35 +245,156 @@ export default function AppHeader({
           <Portal>
             <Dialog.Backdrop />
             <Dialog.Positioner>
-              <Dialog.Content>
-                <Dialog.Header>
-                  <InputGroup
-                    flex="1"
-                    startElement={<LuSearch />}
-                    endElement={
-                      <Dialog.CloseTrigger>
-                        <Box
-                          py={1}
-                          px={2}
-                          bg={"gray.100"}
-                          borderRadius={"md"}
-                          cursor={"pointer"}
-                          _hover={{ bg: "gray.200" }}
-                        >
-                          Cancel
-                        </Box>
-                      </Dialog.CloseTrigger>
-                    }
-                  >
-                    <Input placeholder="Search . . ." />
-                  </InputGroup>
+              <Dialog.Content bg="white" _dark={{ bg: "gray.900" }}>
+                {/* Search bar row */}
+                <Dialog.Header
+                  p={0}
+                  borderBottomWidth="1px"
+                  borderColor="gray.100"
+                  _dark={{ borderColor: "gray.700" }}
+                >
+                  <Flex align="center" gap={2} px={3} pt={3} pb={3} w="full">
+                    <Flex
+                      flex={1}
+                      minW={0}
+                      align="center"
+                      gap={2}
+                      bg="gray.100"
+                      _dark={{ bg: "gray.800" }}
+                      borderRadius="xl"
+                      px={3}
+                      py={2}
+                    >
+                      <Box color="gray.400" flexShrink={0}>
+                        <LuSearch size={16} />
+                      </Box>
+                      <Input
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        placeholder="Search . . ."
+                        border="none"
+                        bg="transparent"
+                        p={0}
+                        h="auto"
+                        minW={0}
+                        fontSize="md"
+                        _focus={{ outline: "none", boxShadow: "none" }}
+                        autoFocus
+                      />
+                    </Flex>
+                    <Dialog.CloseTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        color="green.600"
+                        fontWeight="medium"
+                        px={2}
+                        flexShrink={0}
+                        onClick={() => setSearchValue("")}
+                      >
+                        Cancel
+                      </Button>
+                    </Dialog.CloseTrigger>
+                  </Flex>
                 </Dialog.Header>
-                <Dialog.Body>
-                  <Text textAlign={"center"} py={5}>
-                    No recent searches
-                  </Text>
+
+                {/* Suggestions list */}
+                <Dialog.Body p={0}>
+                  {/* Filter tab pills */}
+                  <Flex
+                    gap={2}
+                    px={3}
+                    py={3}
+                    borderBottomWidth="1px"
+                    borderColor="gray.100"
+                    _dark={{ borderColor: "gray.700" }}
+                  >
+                    {(["all", "recent"] as const).map((tab) => (
+                      <Box
+                        key={tab}
+                        px={4}
+                        py={1.5}
+                        borderRadius="full"
+                        bg={searchTab === tab ? "gray.800" : "gray.100"}
+                        color={searchTab === tab ? "white" : "gray.600"}
+                        cursor="pointer"
+                        fontSize="sm"
+                        fontWeight="medium"
+                        onClick={() => setSearchTab(tab)}
+                        _dark={{
+                          bg: searchTab === tab ? "white" : "gray.700",
+                          color: searchTab === tab ? "gray.900" : "gray.300",
+                        }}
+                      >
+                        {tab === "all" ? "All" : "Recent"}
+                      </Box>
+                    ))}
+                  </Flex>
+                  <VStack gap={0} align="stretch">
+                    {[
+                      "Approvals",
+                      "Claims",
+                      "Payment",
+                      "Plan Management",
+                      "Disbursement",
+                      "Accounts Maintenance",
+                      "Sales Force",
+                      "Loan",
+                      "Document Management",
+                    ]
+                      .filter(
+                        (s) =>
+                          !searchValue ||
+                          s
+                            .toLowerCase()
+                            .includes(searchValue.toLowerCase()),
+                      )
+                      .map((s) => (
+                        <Flex
+                          key={s}
+                          align="center"
+                          gap={3}
+                          px={4}
+                          py={3.5}
+                          borderBottomWidth="1px"
+                          borderColor="gray.100"
+                          _dark={{ borderColor: "gray.700" }}
+                          _hover={{ bg: "gray.50", cursor: "pointer" }}
+                        >
+                          <Box color="gray.400" flexShrink={0}>
+                            <LuSearch size={16} />
+                          </Box>
+                          <Text fontSize="md" color="gray.700" _dark={{ color: "gray.200" }}>
+                            {s}
+                          </Text>
+                        </Flex>
+                      ))}
+                    {[
+                      "Approvals",
+                      "Claims",
+                      "Payment",
+                      "Plan Management",
+                      "Disbursement",
+                      "Accounts Maintenance",
+                      "Sales Force",
+                      "Loan",
+                      "Document Management",
+                    ].filter(
+                      (s) =>
+                        !searchValue ||
+                        s.toLowerCase().includes(searchValue.toLowerCase()),
+                    ).length === 0 && (
+                      <Text
+                        textAlign="center"
+                        py={10}
+                        color="gray.400"
+                        fontSize="sm"
+                      >
+                        No results found
+                      </Text>
+                    )}
+                  </VStack>
                 </Dialog.Body>
-                <Dialog.Footer></Dialog.Footer>
+                <Dialog.Footer />
               </Dialog.Content>
             </Dialog.Positioner>
           </Portal>
@@ -714,6 +851,10 @@ export default function AppHeader({
             title="Account & Settings"
             colorPalette={pickPalette(avatarName || "U")}
           >
+            <Avatar.Image
+              src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
+              alt={avatarName || "U"}
+            />
             <Avatar.Fallback name={avatarName || "U"} fontWeight="bold" />
           </Avatar.Root>
         </Show>

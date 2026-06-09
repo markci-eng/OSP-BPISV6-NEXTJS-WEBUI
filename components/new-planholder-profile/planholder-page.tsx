@@ -10,6 +10,7 @@ import {
   Text,
   useBreakpointValue,
 } from "@chakra-ui/react";
+import { useState } from "react";
 import {
   PlanholderInfo,
   PlanholderInfoProps,
@@ -34,6 +35,7 @@ import {
   LuMail,
   LuMapPin,
   LuSearch,
+  LuChevronUp,
 } from "react-icons/lu";
 import MenuButton, { MenuItemButton } from "../buttons/MenuButton";
 import { MdPayment } from "react-icons/md";
@@ -129,6 +131,7 @@ export default function PlanholderProfilePage({
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const router = useRouter();
   const { messageBox } = useMessageDialog();
+  const [isProfileOpen, setIsProfileOpen] = useState(true);
 
   const planholderAddress = (() => {
     const addr =
@@ -140,6 +143,91 @@ export default function PlanholderProfilePage({
           .join(", ")
       : undefined;
   })();
+
+  const toggleProfile = () => setIsProfileOpen((prev) => !prev);
+
+  const phone =
+    props.planholderContact?.find((c) => c.type === "MobileNo")?.value ??
+    props.planholderContact?.find((c) => c.type === "LandlineNo")?.value;
+  const email = props.planholderContact?.find((c) => c.type === "Email")?.value;
+
+  const contactActions = props.planholderInfo ? (
+    <Flex gap={2} overflow="hidden" id="tour-contact-actions" flexWrap="wrap">
+      <Button
+        bg={"white"}
+        variant="outline"
+        size="sm"
+        borderRadius="full"
+        disabled={!phone}
+        asChild={!!phone}
+        flexShrink={0}
+      >
+        {phone ? (
+          <a href={`tel:${phone}`}>
+            <LuPhone />
+            {(() => {
+              const d = phone.replace(/\D/g, "");
+              const local = d.startsWith("63") ? "0" + d.slice(2) : d;
+              return local.startsWith("09") && local.length === 11
+                ? local.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3")
+                : phone;
+            })()}
+          </a>
+        ) : (
+          <>
+            <LuPhone />
+            No phone
+          </>
+        )}
+      </Button>
+      <Button
+        bg={"white"}
+        variant="outline"
+        size="sm"
+        borderRadius="full"
+        disabled={!email}
+        asChild={!!email}
+        flexShrink={0}
+      >
+        {email ? (
+          <a href={`mailto:${email}`}>
+            <LuMail />
+            Send email
+          </a>
+        ) : (
+          <>
+            <LuMail />
+            Send email
+          </>
+        )}
+      </Button>
+      <Button
+        bg={"white"}
+        variant="outline"
+        size="sm"
+        borderRadius="full"
+        disabled={!planholderAddress}
+        asChild={!!planholderAddress}
+        flexShrink={0}
+      >
+        {planholderAddress ? (
+          <a
+            href={`https://maps.google.com/?q=${encodeURIComponent(planholderAddress)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <LuMapPin />
+            Map address
+          </a>
+        ) : (
+          <>
+            <LuMapPin />
+            Map address
+          </>
+        )}
+      </Button>
+    </Flex>
+  ) : undefined;
 
   return (
     <Page.Root
@@ -315,118 +403,115 @@ export default function PlanholderProfilePage({
         >
           <Grid gap={5} templateColumns={{ base: "1fr", lg: "2fr 1fr" }}>
             <GridItem>
-              <Flex direction={"column"} gap={5}>
+              <Flex direction="column" gap={5}>
+                {/* ProfileHeaderCard — accordion trigger with contact actions */}
                 <Box id="tour-profile-header">
-                  {props.planholderInfo ? (
-                    <ProfileHeaderCard
-                      name={
-                        props.planholderInfo.firstName +
-                        " " +
-                        props.planholderInfo.lastName
-                      }
-                      nameSubtitle={{ active: true, value: "Insurable" }}
-                    />
-                  ) : (
-                    <ProfileHeaderCard />
-                  )}
+                  <ProfileHeaderCard
+                    name={
+                      props.planholderInfo
+                        ? props.planholderInfo.firstName +
+                          " " +
+                          props.planholderInfo.lastName
+                        : undefined
+                    }
+                    personId={props.planholderInfo?.personId}
+                    isInsured={props.plans?.[0]?.isInsured}
+                    homeAddress={
+                      (props.planholderAddress?.slice(-1)?.[0]?.addressNo ??
+                        "") +
+                      " " +
+                      (props.planholderAddress?.slice(-1)?.[0]?.street ?? "") +
+                      "\n" +
+                      (props.planholderAddress?.slice(-1)?.[0]?.barangay ??
+                        "") +
+                      " " +
+                      (props.planholderAddress?.slice(-1)?.[0]?.district ??
+                        "") +
+                      "\n" +
+                      (props.planholderAddress?.slice(-1)?.[0]?.city ?? "") +
+                      " " +
+                      (props.planholderAddress?.slice(-1)?.[0]?.province ?? "")
+                    }
+                    email={
+                      props.planholderContact?.find((x) => x.type === "Email")
+                        ?.value
+                    }
+                    landlineNo={
+                      props.planholderContact?.find(
+                        (x) => x.type === "LandlineNo",
+                      )?.value
+                    }
+                    contactNo={phone}
+                    isOpen={isProfileOpen}
+                    onToggle={toggleProfile}
+                    contentId="profile-details-content"
+                    actions={contactActions}
+                  />
                 </Box>
-                {props.planholderInfo &&
-                  (() => {
-                    const phone =
-                      props.planholderContact?.find(
-                        (c) => c.type === "MobileNo",
-                      )?.value ??
-                      props.planholderContact?.find(
-                        (c) => c.type === "LandlineNo",
-                      )?.value;
-                    const email = props.planholderContact?.find(
-                      (c) => c.type === "Email",
-                    )?.value;
-                    const address = planholderAddress;
-                    return (
-                      <Flex gap={2} overflow="hidden" id="tour-contact-actions">
-                        <Button
-                          bg={"white"}
-                          variant="outline"
-                          size="sm"
-                          borderRadius="full"
-                          disabled={!phone}
-                          asChild={!!phone}
-                          flexShrink={0}
-                        >
-                          {phone ? (
-                            <a href={`tel:${phone}`}>
-                              <LuPhone />
-                              {(() => {
-                                const d = phone.replace(/\D/g, "");
-                                const local = d.startsWith("63")
-                                  ? "0" + d.slice(2)
-                                  : d;
-                                return local.startsWith("09") &&
-                                  local.length === 11
-                                  ? local.replace(
-                                      /(\d{4})(\d{3})(\d{4})/,
-                                      "$1 $2 $3",
-                                    )
-                                  : phone;
-                              })()}
-                            </a>
-                          ) : (
-                            <>
-                              <LuPhone />
-                              No phone
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          bg={"white"}
-                          variant="outline"
-                          size="sm"
-                          borderRadius="full"
-                          disabled={!email}
-                          asChild={!!email}
-                          flexShrink={0}
-                        >
-                          {email ? (
-                            <a href={`mailto:${email}`}>
-                              <LuMail />
-                              Send email
-                            </a>
-                          ) : (
-                            <>
-                              <LuMail />
-                              Send email
-                            </>
-                          )}
-                        </Button>
-                        <Button
-                          bg={"white"}
-                          variant="outline"
-                          size="sm"
-                          borderRadius="full"
-                          disabled={!address}
-                          asChild={!!address}
-                          flexShrink={0}
-                        >
-                          {address ? (
-                            <a
-                              href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <LuMapPin />
-                              Map address
-                            </a>
-                          ) : (
-                            <>
-                              <LuMapPin />
-                              Map address
-                            </>
-                          )}
-                        </Button>
-                      </Flex>
-                    );
-                  })()}
+
+                {/* Collapsible content */}
+                {isProfileOpen && (
+                  <Flex
+                    id="profile-details-content"
+                    role="region"
+                    aria-label="Profile Details"
+                    direction="column"
+                    gap={5}
+                  >
+                    {/* Personal Information + Addresses | Contact Information + Employment Information */}
+                    <Grid
+                      gap={5}
+                      templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
+                    >
+                      <GridItem>
+                        <Flex direction="column" gap={5}>
+                          <Box id="tour-planholder-info">
+                            <PlanholderInfo
+                              planholder={props.planholderInfo ?? undefined}
+                            />
+                          </Box>
+                          <PlanholderAddressCard
+                            phAddress={props.planholderAddress}
+                          />
+                        </Flex>
+                      </GridItem>
+                      <GridItem>
+                        <Flex direction="column" gap={5}>
+                          <ContactInfo
+                            contacts={{
+                              Email:
+                                props.planholderContact
+                                  ?.filter((x) => x.type === "Email")
+                                  .map((x) => x.value) ?? [],
+                              MobileNo:
+                                props.planholderContact
+                                  ?.filter((x) => x.type === "MobileNo")
+                                  .map((x) => x.value) ?? [],
+                              LandlineNo:
+                                props.planholderContact
+                                  ?.filter((x) => x.type === "LandlineNo")
+                                  .map((x) => x.value) ?? [],
+                            }}
+                          />
+                          <EmploymentInfo planholderInfo={undefined} />
+                        </Flex>
+                      </GridItem>
+                    </Grid>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleProfile}
+                      alignSelf="center"
+                      color="gray.500"
+                      gap={1}
+                    >
+                      <LuChevronUp size={14} />
+                      Collapse
+                    </Button>
+                  </Flex>
+                )}
+
                 <Show when={isMobile}>
                   <PendingRequests requests={MOCK_REQUESTS} />
                 </Show>
@@ -440,41 +525,20 @@ export default function PlanholderProfilePage({
                     planholderAddress={planholderAddress}
                   />
                 </Show>
-                <Box id="tour-planholder-info">
-                  <PlanholderInfo
-                    planholder={props.planholderInfo ?? undefined}
-                  />
-                </Box>
-                <PlanholderAddressCard phAddress={props.planholderAddress} />
               </Flex>
             </GridItem>
+
             <GridItem>
-              <Flex direction={"column"} gap={5}>
+              <Flex direction="column" gap={5}>
                 <Show when={!isMobile}>
                   <Box id="tour-pending-requests">
                     <PendingRequests requests={MOCK_REQUESTS} />
                   </Box>
                 </Show>
-                <ContactInfo
-                  contacts={{
-                    Email:
-                      props.planholderContact
-                        ?.filter((x) => x.type === "Email")
-                        .map((x) => x.value) ?? [],
-                    MobileNo:
-                      props.planholderContact
-                        ?.filter((x) => x.type === "MobileNo")
-                        .map((x) => x.value) ?? [],
-                    LandlineNo:
-                      props.planholderContact
-                        ?.filter((x) => x.type === "LandlineNo")
-                        .map((x) => x.value) ?? [],
-                  }}
-                />
-                <EmploymentInfo planholderInfo={undefined} />
               </Flex>
             </GridItem>
           </Grid>
+
           <Box id="tour-plans-list" display={{ base: "none", md: "block" }}>
             <ListOfPlans
               plans={(props.plans ?? []) as any}

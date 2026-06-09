@@ -1,87 +1,233 @@
-import { Avatar, Box, Flex, Text } from "@chakra-ui/react";
-import InfoItem from "../common/info-item/info-item";
-import ProfileHeaderLabel from "../texts/ProfileHeaderLabel";
-
-interface HeaderInfo {
-  label: string;
-  value: string;
-}
-
-interface NameSubtitle {
-  active: boolean;
-  value: string;
-}
+import { Avatar, Box, Flex, Link, Text } from "@chakra-ui/react";
+import {
+  LuCalendar,
+  LuChevronDown,
+  LuChevronUp,
+  LuHash,
+  LuMapPin,
+  LuPhone,
+} from "react-icons/lu";
+import { OSPBadge } from "../common/badge/badge";
+import { ContactNumber } from "@/claude components/contact-number/contact-number";
 
 interface ProfileHeaderCardProps {
   name?: string;
-  headerInfo?: HeaderInfo;
-  nameSubtitle?: NameSubtitle;
+  personId?: string;
+  isInsured?: boolean;
+  homeAddress?: string;
+  contactNo?: string;
+  email?: string;
+  landlineNo?: string;
+  isOpen?: boolean;
+  onToggle?: () => void;
+  contentId?: string;
+  actions?: React.ReactNode;
+}
+
+function getStatusType(
+  status?: string,
+): "success" | "info" | "warning" | "danger" | undefined {
+  if (!status) return undefined;
+  const s = status.toLowerCase();
+  if (s === "active") return "success";
+  if (s === "lapsed") return "warning";
+  if (s.includes("termin")) return "danger";
+  return undefined;
+}
+
+function formatPhone(raw: string): string {
+  const d = raw.replace(/\D/g, "");
+  const local = d.startsWith("63") ? "0" + d.slice(2) : d;
+  return local.startsWith("09") && local.length === 11
+    ? local.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3")
+    : raw;
 }
 
 const ProfileHeaderCard = ({
   name,
-  headerInfo,
-  nameSubtitle,
+  personId,
+  isInsured,
+  homeAddress,
+  contactNo,
+  email,
+  landlineNo,
+  isOpen,
+  onToggle,
+  contentId,
+  actions,
 }: ProfileHeaderCardProps) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (onToggle && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      onToggle();
+    }
+  };
+
   return (
     <Box
       w="full"
       bg="white"
-      borderRadius="xl"
+      borderRadius="2xl"
       borderWidth={1}
       borderColor="gray.100"
-      boxShadow="sm"
-      p={{ base: 4, lg: 6 }}
+      shadow="sm"
+      overflow="hidden"
+      transition="all 0.25s ease"
+      _hover={
+        onToggle ? { transform: "translateY(-3px)", shadow: "lg" } : undefined
+      }
     >
-      <Flex align="center" justify="space-between" gap={4}>
-        <Flex align="center" gap={{ base: 3, lg: 5 }} minW={0}>
-          <Box
-            p="3px"
-            borderRadius="full"
-            border="2px solid"
-            borderColor="var(--chakra-colors-primary-disabled)"
-            flexShrink={0}
-          >
-            <Avatar.Root
-              size={{ base: "xl", lg: "2xl" }}
-              bg="var(--chakra-colors-primary-disabled)/30"
+      {/* Trigger area — accordion toggle */}
+      <Box
+        p={{ base: 4, lg: 5 }}
+        cursor={onToggle ? "pointer" : undefined}
+        role={onToggle ? "button" : undefined}
+        tabIndex={onToggle ? 0 : undefined}
+        aria-expanded={onToggle ? isOpen : undefined}
+        aria-controls={onToggle && contentId ? contentId : undefined}
+        onClick={onToggle}
+        onKeyDown={handleKeyDown}
+        _focusVisible={
+          onToggle
+            ? {
+                outline: "2px solid",
+                outlineColor: "blue.500",
+                outlineOffset: "-2px",
+              }
+            : undefined
+        }
+      >
+        {/* HEADER: Avatar + Name/ID + Badges + Chevron */}
+        <Flex justify="space-between" align="start" mb={3}>
+          <Flex align="center" gap={3} minW={0} flex={1}>
+            <Box
+              p="3px"
+              borderRadius="full"
+              border="2px solid"
+              borderColor="var(--chakra-colors-primary-disabled)"
+              flexShrink={0}
             >
-              <Avatar.Fallback
-                color="var(--chakra-colors-primary)"
-                fontWeight="semibold"
-                name={name}
-              />
-            </Avatar.Root>
-          </Box>
-
-          <Flex direction="column" gap={1} minW={0}>
-            <Text
-              fontSize={{ base: "lg", lg: "xl" }}
-              fontWeight="semibold"
-              color="var(--chakra-colors-primary)"
-              lineHeight="short"
-              truncate
-            >
-              {name ?? "—"}
-            </Text>
-
-            {nameSubtitle && name && (
-              <Flex align="center" gap={2}>
-                <ProfileHeaderLabel
-                  isActive={nameSubtitle.active}
-                  value={nameSubtitle.value}
+              <Avatar.Root
+                size="md"
+                bg="var(--chakra-colors-primary-disabled)/30"
+              >
+                <Avatar.Fallback
+                  color="var(--chakra-colors-primary)"
+                  fontWeight="semibold"
+                  name={name}
                 />
-              </Flex>
+              </Avatar.Root>
+            </Box>
+
+            <Box minW={0}>
+              <Text fontWeight="bold" fontSize="md" lineHeight="1.2" truncate>
+                {name?.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) ??
+                  "—"}
+              </Text>
+              {personId && (
+                <Flex
+                  align="center"
+                  gap={1}
+                  fontSize="xs"
+                  color="gray.500"
+                  mt={0.5}
+                >
+                  <LuHash size={12} />
+                  <Text>{personId}</Text>
+                </Flex>
+              )}
+            </Box>
+          </Flex>
+
+          {/* Status badge + Insurability badge + Chevron */}
+          <Flex align="center" gap={2} flexShrink={0} ml={2}>
+            {isInsured !== undefined && (
+              <OSPBadge type={isInsured ? "success" : "danger"}>
+                {isInsured ? "Insurable" : "Not Insurable"}
+              </OSPBadge>
             )}
+            {/* {onToggle &&
+              (isOpen ? (
+                <LuChevronUp size={16} />
+              ) : (
+                <LuChevronDown size={16} />
+              ))} */}
           </Flex>
         </Flex>
 
-        {headerInfo && name && (
-          <Box display={{ base: "none", lg: "block" }} flexShrink={0}>
-            <InfoItem label={headerInfo.label} value={headerInfo.value} />
-          </Box>
+        {/* QUICK INFO CHIPS */}
+        {homeAddress && (
+          <Flex gap={2} wrap="wrap" mb={3}>
+            {homeAddress && (
+              <a
+                href={`https://maps.google.com/?q=${encodeURIComponent(homeAddress)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Box
+                  px={2}
+                  py={1}
+                  fontSize="xs"
+                  borderRadius="full"
+                  bg="gray.50"
+                  display="flex"
+                  alignItems="center"
+                  gap={1}
+                  width={"full"}
+                  color="gray.600"
+                >
+                  <LuMapPin size={12} />
+                  {homeAddress}
+                </Box>
+              </a>
+            )}
+          </Flex>
         )}
-      </Flex>
+
+        {/* CONTACT NUMBER */}
+        {contactNo && <ContactNumber contactNo={contactNo} />}
+        {landlineNo && <ContactNumber contactNo={landlineNo} />}
+        {email && (
+          <Link href={`mailto:${email}`}>
+            <Box
+              // as="a"
+              px={2}
+              py={1}
+              fontSize="xs"
+              borderRadius="full"
+              bg="blue.50"
+              color="blue.600"
+              display="flex"
+              alignItems="center"
+              gap={1}
+              cursor="pointer"
+              _hover={{ bg: "blue.100" }}
+            >
+              ✉️ {email}
+            </Box>
+          </Link>
+        )}
+
+        {/* FOOTER */}
+        <Flex justify="flex-end" align="center">
+          <Text fontSize="xs" color="gray.400">
+            {isOpen ? "Tap to collapse" : "Tap to view profile"}
+          </Text>
+        </Flex>
+      </Box>
+
+      {/* Contact actions — separate from trigger to avoid nested interactive elements */}
+      {/* {actions && (
+        <Box
+          px={{ base: 4, lg: 5 }}
+          pb={{ base: 4, lg: 5 }}
+          pt={3}
+          borderTopWidth="1px"
+          borderTopColor="gray.100"
+        >
+          {actions}
+        </Box>
+      )} */}
     </Box>
   );
 };

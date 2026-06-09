@@ -184,8 +184,6 @@ export default function PlanholderSearchPage() {
                     p={4}
                     borderRadius="2xl"
                     bg="white"
-                    // border="1px solid"
-                    // borderColor="gray.200"
                     shadow="sm"
                     transition="all 0.25s ease"
                     _hover={{ transform: "translateY(-3px)", shadow: "lg" }}
@@ -221,20 +219,6 @@ export default function PlanholderSearchPage() {
                           </Flex>
                         </Box>
                       </Flex>
-                      {/* 
-                      <OSPBadge type={badgeType}>
-                        {toTitleCase(ph.accountStatus)}
-                      </OSPBadge>
-                      <Badge
-                        colorPalette={getStatusColor(ph.accountStatus)}
-                        variant="subtle"
-                        px={2}
-                        py={1}
-                        fontSize="0.75rem"
-                      >
-                        {toTitleCase(ph.accountStatus)}
-                      </Badge>
-                    </Flex> */}
 
                       <Flex align="center" gap={2}>
                         <Box

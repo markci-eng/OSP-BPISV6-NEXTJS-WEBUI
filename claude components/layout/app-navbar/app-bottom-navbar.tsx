@@ -641,7 +641,7 @@ export function AppBottomNavBar({
                 outlineColor="#808080"
               >
                 <Avatar.Image
-                  src="https://lh3.googleusercontent.com/a-/ALV-UjWzjMfUgpdzCgxwydW7PAI1Q7uDo4ZAiE_cl8CjH9bXKkUzqAs=s40-p"
+                  src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
                   alt={displayName}
                 />
                 <Avatar.Fallback name={displayName || "U"} />
@@ -722,7 +722,7 @@ export function AppBottomNavBar({
                         colorPalette={pickPalette(displayName || "U")}
                       >
                         <Avatar.Image
-                          src="/images/profile.jpg"
+                          src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
                           alt={displayName}
                         />
                         <Avatar.Fallback name={displayName} />
@@ -1129,7 +1129,7 @@ export function AppBottomNavBar({
                     <Box textAlign="center" pt={6} pb={4}>
                       <Avatar.Root size="xl" mx="auto" mb={1}>
                         <Avatar.Image
-                          src="/images/profile.jpg"
+                          src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
                           alt={editName}
                         />
                         <Avatar.Fallback name={editName} />

@@ -40,6 +40,8 @@ import Page from "@/claude components/layout/page/Page";
 import ReferralPage from "./referral-page";
 import { useRouter } from "next/navigation";
 import Card from "@/components/cards/Card";
+import { PageHeader } from "@/claude components/page-template/page";
+import { ActionButtonItem } from "@/claude components/page-template/ActionButtons";
 
 const MOCK_AGENT_REQUESTS: RequestProps[] = [
   {
@@ -77,11 +79,29 @@ const AgentDetailsMobile = (params: {
     useState<SalesAgent | null>(null);
   const router = useRouter();
 
+  const actionButtonDefs: ActionButtonItem[] = [
+    {
+      label: "New Request",
+      href: `/request/new`,
+      icon: LuPlus, // Clock for time logging
+    },
+    {
+      label: "Tracker",
+      href: `/Transaction`,
+      icon: LuActivity, // Clock for time logging
+    },
+  ];
+
   return (
     <Page.Root
       title="Sales Agent Profile"
       description="View sales agent information and details."
     >
+      <PageHeader
+        title="Sales Agent Profile"
+        subtitle="View sales agent information and details."
+        actionButtonDefs={actionButtonDefs}
+      />
       {page === "default" && (
         <Page.ToolContent>
           {selectedAgent && (

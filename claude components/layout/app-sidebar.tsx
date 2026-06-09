@@ -76,7 +76,7 @@ function NavItemRow({
 
   return (
     <Tooltip
-      content={item.displayName ?? item.label}
+      content={item.label}
       positioning={{ placement: "right" }}
       disabled={isSidebarOpen}
     >
@@ -143,7 +143,7 @@ function NavItemRow({
                     fontSize={"sm"}
                     transition="opacity 0.2s"
                   >
-                    {item.displayName ?? item.label}
+                    {item.label}
                   </Small>
                 </Box>
               </Flex>
@@ -212,7 +212,7 @@ function NavItemRow({
                                 opacity={isSidebarOpen ? 1 : 0}
                                 transition="opacity 0.2s"
                               >
-                                {subItem.displayName ?? subItem.label}
+                                {subItem.label}
                               </Text>
                             </Box>
                           </Flex>
@@ -275,7 +275,7 @@ function NavItemRow({
                   opacity={isSidebarOpen ? 1 : 0}
                   transition="opacity 0.2s"
                 >
-                  {item.displayName ?? item.label}
+                  {item.label}
                 </Text>
               </Box>
             </Flex>
@@ -396,14 +396,24 @@ export default function Sidebar({
                 {appName}
               </Body>
               {appSubtitle && (
-                <Small
+                // <Small
+                //   opacity={isSidebarOpen ? 1 : 0}
+                //   mt={"-5px"}
+                //   color={"primary"}
+                //   fontStyle={"italic"}
+                // >
+                //   {appSubtitle}
+                // </Small>
+
+                <Text
                   opacity={isSidebarOpen ? 1 : 0}
                   mt={"-5px"}
-                  color={"primary"}
-                  fontStyle={"italic"}
+                  color="#003818"
+                  fontStyle={"normal"}
+                  fontSize="small"
                 >
                   {appSubtitle}
-                </Small>
+                </Text>
               )}
             </Box>
             {/* </Show> */}

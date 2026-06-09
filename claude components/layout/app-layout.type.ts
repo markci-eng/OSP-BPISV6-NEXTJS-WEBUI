@@ -34,7 +34,6 @@ export type NavItem = {
   onClick?: () => void;
   subItems?: {
     label: string;
-    displayName?: string;
     href: string;
     onClick?: () => void;
   }[];

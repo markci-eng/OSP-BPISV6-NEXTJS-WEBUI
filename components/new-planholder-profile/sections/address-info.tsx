@@ -163,89 +163,16 @@ export function AddressCard({
 
 export function PlanholderAddressCard({
   phAddress,
-  noBorder = false
+  noBorder = false,
 }: {
   phAddress: Address[] | undefined;
-  noBorder?: boolean
+  noBorder?: boolean;
 }) {
-  if(noBorder) {
+  if (noBorder) {
     return (
-    <Box>
-      <SectionTitle>Address Information</SectionTitle>
-      <Separator mb={3}/>
-      <Grid gap={4} templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}>
-          {(
-            phAddress?.filter(
-              (address) => address.addressType === "RESIDENCE",
-            ) ?? []
-          ).length === 0 ? (
-            <EmptyState
-              title={"No Residence Address"}
-              description={"No residence address available"}
-            />
-          ) : (
-            phAddress
-              ?.filter((address) => address.addressType === "RESIDENCE")
-              .map((address, idx) => (
-                <AddressCard
-                  key={idx}
-                  id={idx.toString()}
-                  addressType={address.addressType}
-                  addressNo={address.addressNo ?? ""}
-                  street={address.street ?? ""}
-                  barangay={
-                    !address.barangay ? "" : "Brgy. " + address.barangay
-                  }
-                  district={
-                    !address.district ? "" : "District " + address.district
-                  }
-                  city={address.city}
-                  province={address.province}
-                  zipCode={address.zipCode ?? 0}
-                  isMailAddress={address.isMailAddress}
-                />
-              ))
-          )}
-
-          {(
-            phAddress?.filter((address) => address.addressType === "OFFICE") ??
-            []
-          ).length === 0 ? (
-            <EmptyState
-              title={"No Office Address"}
-              description={"No office address available"}
-            />
-          ) : (
-            phAddress
-              ?.filter((address) => address.addressType === "OFFICE")
-              .map((address, idx) => (
-                <AddressCard
-                  key={idx}
-                  id={idx.toString()}
-                  addressType={address.addressType}
-                  addressNo={address.addressNo ?? ""}
-                  street={address.street ?? ""}
-                  barangay={
-                    !address.barangay ? "" : "Brgy. " + address.barangay
-                  }
-                  district={
-                    !address.district ? "" : "District " + address.district
-                  }
-                  city={address.city}
-                  province={address.province}
-                  zipCode={address.zipCode ?? 0}
-                  isMailAddress={address.isMailAddress}
-                />
-              ))
-          )}
-        </Grid>
-    </Box>
-  );
-  }
-  else {
-    return (
-    <Card.Root title={"Address Information"}>
-      <Card.MainContent>
+      <Box>
+        <Strong>Address Information</Strong>
+        <Separator mb={3} />
         <Grid gap={4} templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}>
           {(
             phAddress?.filter(
@@ -312,8 +239,81 @@ export function PlanholderAddressCard({
               ))
           )}
         </Grid>
-      </Card.MainContent>
-    </Card.Root>
-  );
+      </Box>
+    );
+  } else {
+    return (
+      <Card.Root title={"Address Information"}>
+        <Card.MainContent>
+          <Grid gap={4} templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}>
+            {(
+              phAddress?.filter(
+                (address) => address.addressType === "RESIDENCE",
+              ) ?? []
+            ).length === 0 ? (
+              <EmptyState
+                title={"No Residence Address"}
+                description={"No residence address available"}
+              />
+            ) : (
+              phAddress
+                ?.filter((address) => address.addressType === "RESIDENCE")
+                .map((address, idx) => (
+                  <AddressCard
+                    key={idx}
+                    id={idx.toString()}
+                    addressType={address.addressType}
+                    addressNo={address.addressNo ?? ""}
+                    street={address.street ?? ""}
+                    barangay={
+                      !address.barangay ? "" : "Brgy. " + address.barangay
+                    }
+                    district={
+                      !address.district ? "" : "District " + address.district
+                    }
+                    city={address.city}
+                    province={address.province}
+                    zipCode={address.zipCode ?? 0}
+                    isMailAddress={address.isMailAddress}
+                  />
+                ))
+            )}
+
+            {(
+              phAddress?.filter(
+                (address) => address.addressType === "OFFICE",
+              ) ?? []
+            ).length === 0 ? (
+              <EmptyState
+                title={"No Office Address"}
+                description={"No office address available"}
+              />
+            ) : (
+              phAddress
+                ?.filter((address) => address.addressType === "OFFICE")
+                .map((address, idx) => (
+                  <AddressCard
+                    key={idx}
+                    id={idx.toString()}
+                    addressType={address.addressType}
+                    addressNo={address.addressNo ?? ""}
+                    street={address.street ?? ""}
+                    barangay={
+                      !address.barangay ? "" : "Brgy. " + address.barangay
+                    }
+                    district={
+                      !address.district ? "" : "District " + address.district
+                    }
+                    city={address.city}
+                    province={address.province}
+                    zipCode={address.zipCode ?? 0}
+                    isMailAddress={address.isMailAddress}
+                  />
+                ))
+            )}
+          </Grid>
+        </Card.MainContent>
+      </Card.Root>
+    );
   }
 }

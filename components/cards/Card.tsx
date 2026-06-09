@@ -1,5 +1,5 @@
 // Created By: JLO
-import { Box, Flex, Separator } from "@chakra-ui/react";
+import { Box, Flex, Separator, Strong } from "@chakra-ui/react";
 import React from "react";
 import SectionTitle from "../texts/SectionTitle";
 
@@ -42,14 +42,14 @@ const Root = ({
         md: 4,
       }}
       borderRadius={{ base: "2xl", md: "md" }}
-      borderWidth={1}
-      borderColor="gray.200"
+      // borderWidth={1}
+      // borderColor="gray.200"
       boxShadow={"sm"}
     >
       {title && (
         <>
           <Flex align="center" justify="space-between">
-            <SectionTitle>{title}</SectionTitle>
+            <Strong>{title}</Strong>
             {buttonSection}
           </Flex>
           <Separator

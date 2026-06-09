@@ -18,11 +18,11 @@ const AgentProfileHeaderCard = ({ agent }: AgentProfileHeaderCardProps) => {
   return (
     <ProfileHeaderCard
       name={agent?.name ?? undefined}
-      nameSubtitle={{ active: isActive, value: positionDesc }}
-      headerInfo={{
-        label: "Agent ID",
-        value: agent?.id ?? "-",
-      }}
+      // nameSubtitle={{ active: isActive, value: positionDesc }}
+      // headerInfo={{
+      //   label: "Agent ID",
+      //   value: agent?.id ?? "-",
+      // }}
     />
   );
 };

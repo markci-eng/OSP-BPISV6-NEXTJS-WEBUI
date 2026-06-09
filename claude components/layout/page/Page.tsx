@@ -35,12 +35,10 @@ type RootProps = Omit<BoxProps, RootStyleProps> & {
     title: React.ReactNode;
     subtitle?: React.ReactNode;
     description?: React.ReactNode;
-    swapOnScroll?: boolean;
-    scrolledValue?: React.ReactNode;
     children: React.ReactNode;
 };
 
-const Root = ({ children, title, subtitle, description, swapOnScroll, scrolledValue, ...rest }: RootProps) => {
+const Root = ({ children, title, subtitle, description, ...rest }: RootProps) => {
     let toolContent: React.ReactNode = null;
     let mainContent: React.ReactNode = null;
 
@@ -55,8 +53,6 @@ const Root = ({ children, title, subtitle, description, swapOnScroll, scrolledVa
             title={title}
             subtitle={subtitle}
             description={description}
-            swapOnScroll={swapOnScroll}
-            scrolledValue={scrolledValue}
             toolContent={toolContent}
             mainContent={mainContent}
             boxProps={rest}

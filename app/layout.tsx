@@ -33,7 +33,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" style={{ fontSize: "100%" }} suppressHydrationWarning>
+    <html
+      lang="en"
+      style={{ fontSize: "100%", maxHeight: "100vh", overflow: "auto" }}
+      suppressHydrationWarning
+    >
       <body
         className={`${geistSans.variable} ${geistMono.variable}`}
         style={{ background: "#fff" }}
