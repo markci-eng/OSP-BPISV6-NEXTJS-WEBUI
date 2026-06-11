@@ -1,6 +1,7 @@
 import { Grid, Separator } from "@chakra-ui/react";
-import Card from "@/components/cards/Card";
-import LabelText from "@/components/texts/LabelText";
+import { RowItem } from "@/claude components/info-card/row-item";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import { LuBriefcase } from "react-icons/lu";
 
 export interface EmploymentInfoProps {
   employerName?: string;
@@ -11,34 +12,35 @@ export interface EmploymentInfoProps {
 
 export function EmploymentInfo({
   planholderInfo,
+  isOpen,
+  onToggle,
 }: {
   planholderInfo: EmploymentInfoProps | undefined;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }) {
   return (
-    <Card.Root title={"Employment Information"}>
-      <Card.MainContent>
-        <Grid
-          templateColumns="1fr"
-          gap={2}
-        >
-          <LabelText
-            label="Employer"
-            value={planholderInfo?.employerName ?? "—"}
-          />
-          <Separator display={{ base: "block", lg: "none" }} />
-          <LabelText label="TIN" value={planholderInfo?.tin ?? "—"} />
-          <Separator display={{ base: "block", lg: "none" }} />
-          <LabelText
-            label="SSS/GSIS Number"
-            value={planholderInfo?.securityNo ?? "—"}
-          />
-          <Separator display={{ base: "block", lg: "none" }} />
-          <LabelText
-            label="Source of Fund"
-            value={planholderInfo?.sourceOfFund ?? "—"}
-          />
-        </Grid>
-      </Card.MainContent>
-    </Card.Root>
+    <InfoCardAccordion
+      icon={<LuBriefcase />}
+      title={"Employment Information"}
+      isOpen={isOpen}
+      onToggle={onToggle}
+    >
+      <Grid templateColumns="1fr" gap={2}>
+        <RowItem label="Employer" value={planholderInfo?.employerName ?? "—"} />
+        {/* <Separator display={{ base: "block", lg: "none" }} /> */}
+        <RowItem label="TIN" value={planholderInfo?.tin ?? "—"} />
+        {/* <Separator display={{ base: "block", lg: "none" }} /> */}
+        <RowItem
+          label="SSS/GSIS Number"
+          value={planholderInfo?.securityNo ?? "—"}
+        />
+        {/* <Separator display={{ base: "block", lg: "none" }} /> */}
+        <RowItem
+          label="Source of Fund"
+          value={planholderInfo?.sourceOfFund ?? "—"}
+        />
+      </Grid>
+    </InfoCardAccordion>
   );
 }

@@ -39,6 +39,9 @@ import { PrimaryMdButton } from "st-peter-ui";
 import {
   LuSun,
   LuMoon,
+  LuHouse,
+  LuCreditCard,
+  LuFileText,
   LuChevronRight,
   LuChevronLeft,
   LuChevronUp,
@@ -52,6 +55,8 @@ import {
   LuLayoutGrid,
   LuArrowLeftRight,
 } from "react-icons/lu";
+import { RiHome4Line, RiHome4Fill } from "react-icons/ri";
+
 import { HiOutlineUsers, HiUsers } from "react-icons/hi2";
 import {
   BsFileEarmarkSpreadsheet,
@@ -62,10 +67,17 @@ import {
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";
 import { FaHandHoldingUsd } from "react-icons/fa";
 import { MdOutlineManageAccounts, MdManageAccounts } from "react-icons/md";
+import { IoLeaf, IoLeafOutline } from "react-icons/io5";
 import type { IconType } from "react-icons";
 import type { NavItem } from "../app-layout.type";
-import { toast } from "sonner";
 import { useColorMode } from "@/components/ui/color-mode";
+import { useDemoAuth } from "@/components/ui/demo-auth";
+import ProfilePage from "@/app/account/profile/page";
+
+const toast = {
+  error: (_message: string) => undefined,
+  success: (_message: string) => undefined,
+};
 
 type ProfileView =
   | "main"
@@ -84,211 +96,50 @@ interface NavOptionDef {
 }
 
 const NAVBAR_STORAGE_KEY = "navbar-quick-items";
-const DEFAULT_NAV_HREFS = [
-  "/",
-  "/approvals",
-  "/document-management",
-  "/payment/encode-payment",
-];
+const DEFAULT_NAV_HREFS = ["/", "/plans", "/pay-my-plan", "/claims"];
 
 const ALL_NAV_OPTIONS: NavOptionDef[] = [
   {
     key: "/",
-    title: "Dashboard",
+    title: "Home",
     href: "/",
-    Icon: RiDashboardLine,
-    activeIcon: RiDashboardFill,
-    match: (p) => p === "/" || p.startsWith("/dashboard"),
+    Icon: RiHome4Line,
+    activeIcon: RiHome4Fill,
+    match: (p) => p === "/",
     roles: ["branch", "bmstl", "sales-agent"],
   },
   {
-    key: "/approvals",
-    title: "Approvals",
-    href: "/approvals",
-    Icon: RiCheckboxCircleLine,
-    activeIcon: RiCheckboxCircleFill,
-    match: (p) => p.startsWith("/approvals"),
-    roles: ["branch", "bmstl"],
+    key: "/plans",
+    title: "Products",
+    href: "/plans",
+    Icon: IoLeafOutline,
+    activeIcon: IoLeaf,
+    match: (p) =>
+      p.startsWith("/plans") ||
+      p.startsWith("/plan-details") ||
+      p.startsWith("/plan-comparison"),
+    roles: ["branch", "bmstl", "sales-agent"],
   },
   {
-    key: "/document-management",
-    title: "Documents",
-    href: "/document-management",
-    Icon: RiBookShelfLine,
-    activeIcon: RiBookShelfFill,
-    match: (p) => p.startsWith("/document-management"),
-    roles: ["branch"],
+    key: "/pay-my-plan",
+    title: "Pay",
+    href: "/pay-my-plan",
+    Icon: LuCreditCard,
+    activeIcon: LuCreditCard,
+    match: (p) =>
+      p.startsWith("/pay-my-plan") ||
+      p.startsWith("/account/pay-my-plan") ||
+      p.startsWith("/order-summary"),
+    roles: ["branch", "bmstl", "sales-agent"],
   },
   {
-    key: "/payment/encode-payment",
-    title: "Encode Payment",
-    href: "/payment/encode-payment",
-    Icon: RiMoneyDollarCircleLine,
-    activeIcon: RiMoneyDollarCircleFill,
-    match: (p) => p === "/payment/encode-payment",
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/payment/view-drs",
-    title: "View DRS",
-    href: "/payment/view-drs",
-    Icon: RiMoneyDollarCircleLine,
-    activeIcon: RiMoneyDollarCircleFill,
-    match: (p) => p === "/payment/view-drs",
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/payment/encodevalidated-deposit",
-    title: "Encode Deposit Slip",
-    href: "/payment/encodevalidated-deposit",
-    Icon: RiMoneyDollarCircleLine,
-    activeIcon: RiMoneyDollarCircleFill,
-    match: (p) => p === "/payment/encodevalidated-deposit",
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/payment/viewvalidated-deposit",
-    title: "View Deposit Slips",
-    href: "/payment/viewvalidated-deposit",
-    Icon: RiMoneyDollarCircleLine,
-    activeIcon: RiMoneyDollarCircleFill,
-    match: (p) => p === "/payment/viewvalidated-deposit",
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/payment/credit-memo",
-    title: "Credit Memo",
-    href: "/payment/credit-memo",
-    Icon: RiMoneyDollarCircleLine,
-    activeIcon: RiMoneyDollarCircleFill,
-    match: (p) => p === "/payment/credit-memo",
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/sales-force/profile",
-    title: "Agent Profile",
-    href: "/sales-force/profile",
-    Icon: RiUser2Line,
-    activeIcon: RiUser2Fill,
-    match: (p) => p === "/sales-force/profile",
-    roles: ["branch"],
-  },
-  {
-    key: "/sales-force/re-assign",
-    title: "Re-Organization",
-    href: "/sales-force/re-assign",
-    Icon: RiUser2Line,
-    activeIcon: RiUser2Fill,
-    match: (p) => p === "/sales-force/re-assign",
-    roles: ["branch"],
-  },
-  {
-    key: "/sales-force/new",
-    title: "Add New Agent",
-    href: "/sales-force/new",
-    Icon: RiUser2Line,
-    activeIcon: RiUser2Fill,
-    match: (p) => p === "/sales-force/new",
-    roles: ["branch"],
-  },
-  {
-    key: "/plan-management/new",
-    title: "Add New Sale",
-    href: "/plan-management/new",
-    Icon: HiOutlineUsers,
-    activeIcon: HiUsers,
-    match: (p) => p === "/plan-management/new",
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/plan-management/planholder",
-    title: "Account Summary",
-    href: "/plan-management/planholder",
-    Icon: HiOutlineUsers,
-    activeIcon: HiUsers,
-    match: (p) => p.startsWith("/plan-management/planholder"),
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/plan-management/change-of-mode",
-    title: "Change of Mode",
-    href: "/plan-management/change-of-mode",
-    Icon: HiOutlineUsers,
-    activeIcon: HiUsers,
-    match: (p) => p === "/plan-management/change-of-mode",
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/disbursement/comte",
-    title: "COM/TE",
-    href: "/disbursement/comte",
-    Icon: BsFileEarmarkSpreadsheet,
-    activeIcon: BsFileEarmarkSpreadsheetFill,
-    match: (p) => p === "/disbursement/comte",
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/disbursement/rfexpense",
-    title: "Revolving Fund",
-    href: "/disbursement/rfexpense",
-    Icon: BsFileEarmarkSpreadsheet,
-    activeIcon: BsFileEarmarkSpreadsheetFill,
-    match: (p) => p === "/disbursement/rfexpense",
-    roles: ["branch"],
-  },
-  {
-    key: "/loan",
-    title: "Loan",
-    href: "/loan",
-    Icon: LiaHandHoldingUsdSolid,
-    activeIcon: FaHandHoldingUsd,
-    match: (p) => p.startsWith("/loan"),
-    roles: ["branch"],
-  },
-  {
-    key: "/accounts-maintenance/mcpr",
-    title: "MCPR",
-    href: "/accounts-maintenance/mcpr",
-    Icon: MdOutlineManageAccounts,
-    activeIcon: MdManageAccounts,
-    match: (p) => p === "/accounts-maintenance/mcpr",
-    roles: ["branch", "sales-agent"],
-  },
-  {
-    key: "/accounts-maintenance/next-month-loading",
-    title: "Next Month Loading",
-    href: "/accounts-maintenance/next-month-loading",
-    Icon: MdOutlineManageAccounts,
-    activeIcon: MdManageAccounts,
-    match: (p) => p === "/accounts-maintenance/next-month-loading",
-    roles: ["branch"],
-  },
-  {
-    key: "/accounts-maintenance/floating-accounts",
-    title: "Floating Accounts",
-    href: "/accounts-maintenance/floating-accounts",
-    Icon: MdOutlineManageAccounts,
-    activeIcon: MdManageAccounts,
-    match: (p) => p === "/accounts-maintenance/floating-accounts",
-    roles: ["branch"],
-  },
-  {
-    key: "/accounts-maintenance/accounts-transfer",
-    title: "Transfer of Accounts",
-    href: "/accounts-maintenance/accounts-transfer",
-    Icon: MdOutlineManageAccounts,
-    activeIcon: MdManageAccounts,
-    match: (p) => p === "/accounts-maintenance/accounts-transfer",
-    roles: ["branch"],
-  },
-  {
-    key: "/dc",
-    title: "Doc Cancellation",
-    href: "/dc",
-    Icon: BsFileEarmarkExcel,
-    activeIcon: BsFileEarmarkExcelFill,
-    match: (p) => p === "/dc",
-    roles: ["sales-agent"],
+    key: "/claims",
+    title: "Claim",
+    href: "/claims",
+    Icon: LuFileText,
+    activeIcon: LuFileText,
+    match: (p) => p.startsWith("/claims"),
+    roles: ["branch", "bmstl", "sales-agent"],
   },
 ];
 
@@ -383,6 +234,7 @@ export function AppBottomNavBar({
   const pathname = usePathname();
   const router = useRouter();
   const isMobile = useBreakpointValue({ base: true, lg: false });
+  const { isLoggedIn } = useDemoAuth();
 
   // Dialog + view state (controlled from parent when prop provided)
   const [profileOpenInternal, setProfileOpenInternal] = useState(false);
@@ -393,6 +245,9 @@ export function AppBottomNavBar({
     onProfileOpenChange?.(v);
   };
   const [profileView, setProfileView] = useState<ProfileView>("main");
+
+  // Full-screen dialog that hosts the /account/profile page (instead of routing)
+  const [profilePageOpen, setProfilePageOpen] = useState(false);
 
   // User info
   const [email, setEmail] = useState("");
@@ -618,50 +473,66 @@ export function AppBottomNavBar({
                   onClickEvent={() => router.push(item.href)}
                 />
               ))}
-          <Box
-            as="button"
-            onClick={() => setProfileOpen(true)}
-            px="14px"
-            py="10px"
-            borderRadius="2xl"
-            cursor="pointer"
-            outline="none"
-            userSelect="none"
-            color="gray.700"
-            _hover={{ bg: "rgba(0,0,0,0.04)" }}
-            _active={{ transform: "scale(0.88)" }}
-            _dark={{ color: "gray.400" }}
-            style={{ transition: "transform 0.14s ease" }}
-          >
-            <Flex direction="column" align="center" gap="4px">
-              <Avatar.Root
-                size="2xs"
-                colorPalette={pickPalette(displayName || "U")}
-                outline="2px solid"
-                outlineColor="#808080"
-              >
-                <Avatar.Image
-                  src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
-                  alt={displayName}
-                />
-                <Avatar.Fallback name={displayName || "U"} />
-              </Avatar.Root>
-              <Box
-                mt={1}
-                fontSize="xs"
-                fontWeight="500"
-                letterSpacing="0.06em"
-                lineHeight="1"
-                maxW="52px"
-                overflow="hidden"
-                whiteSpace="nowrap"
-                textOverflow="ellipsis"
-                style={{ opacity: 0.45, transition: "opacity 0.2s ease" }}
-              >
-                Profile
-              </Box>
-            </Flex>
-          </Box>
+          {/* Profile (logged in) or Guest (not logged in) */}
+          {isLoggedIn ? (
+            <Box
+              as="button"
+              onClick={() => setProfilePageOpen(true)}
+              px="14px"
+              py="10px"
+              borderRadius="2xl"
+              cursor="pointer"
+              outline="none"
+              userSelect="none"
+              _hover={{ bg: "rgba(0,0,0,0.04)" }}
+              _active={{ transform: "scale(0.88)" }}
+              style={{ transition: "transform 0.14s ease" }}
+            >
+              <Flex direction="column" align="center" gap="4px">
+                <Box
+                  w="24px"
+                  h="24px"
+                  borderRadius="full"
+                  overflow="hidden"
+                  outline="2px solid"
+                  outlineColor="var(--chakra-colors-primary)"
+                  flexShrink={0}
+                >
+                  <img
+                    src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
+                    alt="Profile"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </Box>
+                <Box
+                  mt={1}
+                  fontSize="xs"
+                  fontWeight="500"
+                  letterSpacing="0.06em"
+                  lineHeight="1"
+                  maxW="52px"
+                  overflow="hidden"
+                  whiteSpace="nowrap"
+                  textOverflow="ellipsis"
+                  color="var(--chakra-colors-primary)"
+                  style={{ opacity: 1, transition: "opacity 0.2s ease" }}
+                >
+                  Profile
+                </Box>
+              </Flex>
+            </Box>
+          ) : (
+            <StickyNavbarBtn
+              btnChildren={LuUser}
+              title="Login"
+              isActive={pathname === "/login"}
+              onClickEvent={() => router.push("/login")}
+            />
+          )}
         </StickyNavbar>
       </Show>
 
@@ -1126,7 +997,7 @@ export function AppBottomNavBar({
                     </Box>
 
                     {/* Avatar */}
-                    <Box textAlign="center" pt={6} pb={4}>
+                    <Box textAlign="center" pt={2} pb={4}>
                       <Avatar.Root size="xl" mx="auto" mb={1}>
                         <Avatar.Image
                           src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
@@ -1136,64 +1007,96 @@ export function AppBottomNavBar({
                       </Avatar.Root>
                     </Box>
 
-                    {/* Form */}
-                    <VStack gap={4} px={4} pb={10}>
-                      <Box w="full">
-                        <Text
-                          fontSize="xs"
-                          fontWeight="semibold"
-                          color="gray.500"
-                          mb={1.5}
-                        >
-                          Display Name
-                        </Text>
-                        <Input
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          placeholder="Your name"
-                          size="md"
-                        />
-                      </Box>
+                    {/* Form — related fields joined into one connected group */}
+                    <VStack gap={4} px={4} pb={10} align="stretch">
+                      <Box
+                        w="full"
+                        borderWidth="1px"
+                        borderColor="gray.200"
+                        borderRadius="lg"
+                        overflow="hidden"
+                      >
+                        {/* Display Name */}
+                        <Box px={3} py={2.5}>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="semibold"
+                            color="gray.500"
+                          >
+                            Display Name
+                          </Text>
+                          <Input
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            placeholder="Your name"
+                            border="none"
+                            px={0}
+                            h="auto"
+                            py={1}
+                            _focusVisible={{
+                              boxShadow: "none",
+                              outline: "none",
+                            }}
+                          />
+                        </Box>
 
-                      <Box w="full">
-                        <Text
-                          fontSize="xs"
-                          fontWeight="semibold"
-                          color="gray.500"
-                          mb={1.5}
-                        >
-                          Email
-                        </Text>
-                        <Input
-                          value={email}
-                          readOnly
-                          opacity={0.55}
-                          cursor="not-allowed"
-                          size="md"
-                        />
-                      </Box>
+                        <Separator />
 
-                      <Box w="full">
-                        <Text
-                          fontSize="xs"
-                          fontWeight="semibold"
-                          color="gray.500"
-                          mb={1.5}
-                        >
-                          Role
-                        </Text>
-                        <Input
-                          value={ROLE_LABELS[role] ?? role}
-                          readOnly
-                          opacity={0.55}
-                          cursor="not-allowed"
-                          size="md"
-                        />
+                        {/* Email */}
+                        <Box px={3} py={2.5}>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="semibold"
+                            color="gray.500"
+                          >
+                            Email
+                          </Text>
+                          <Input
+                            value={email}
+                            readOnly
+                            opacity={0.6}
+                            cursor="not-allowed"
+                            border="none"
+                            px={0}
+                            h="auto"
+                            py={1}
+                            _focusVisible={{
+                              boxShadow: "none",
+                              outline: "none",
+                            }}
+                          />
+                        </Box>
+
+                        <Separator />
+
+                        {/* Role */}
+                        <Box px={3} py={2.5}>
+                          <Text
+                            fontSize="xs"
+                            fontWeight="semibold"
+                            color="gray.500"
+                          >
+                            Role
+                          </Text>
+                          <Input
+                            value={ROLE_LABELS[role] ?? role}
+                            readOnly
+                            opacity={0.6}
+                            cursor="not-allowed"
+                            border="none"
+                            px={0}
+                            h="auto"
+                            py={1}
+                            _focusVisible={{
+                              boxShadow: "none",
+                              outline: "none",
+                            }}
+                          />
+                        </Box>
                       </Box>
 
                       <Button
                         w="full"
-                        mt={2}
                         bg="var(--chakra-colors-primary)"
                         color="white"
                         _hover={{ opacity: 0.9 }}
@@ -1761,6 +1664,36 @@ export function AppBottomNavBar({
                     </Box>
                   </>
                 )}
+              </Dialog.Body>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+
+      {/* Full-screen profile page, opened as a dialog instead of a route */}
+      <Dialog.Root
+        open={profilePageOpen}
+        onOpenChange={(e) => setProfilePageOpen(e.open)}
+        size="full"
+        motionPreset="slide-in-bottom"
+        scrollBehavior="inside"
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.CloseTrigger
+                asChild
+                position="fixed"
+                top={3}
+                right={3}
+                zIndex={20}
+              >
+                <CloseButton size="md" color="white" />
+              </Dialog.CloseTrigger>
+
+              <Dialog.Body p={0} overflowY="auto">
+                <ProfilePage />
               </Dialog.Body>
             </Dialog.Content>
           </Dialog.Positioner>

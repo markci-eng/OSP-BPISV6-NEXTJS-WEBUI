@@ -5,13 +5,23 @@ import {
   Badge,
   Box,
   Button,
+  Flex,
   HStack,
   Separator,
   Text,
   Textarea,
   VStack,
 } from "@chakra-ui/react";
-import { Check, Printer, X } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  Clock,
+  FileText,
+  MessageSquare,
+  Printer,
+  X,
+  XCircle,
+} from "lucide-react";
 
 import type { ApprovalConfig } from "../config/approval-config";
 import { DRSPrintModal } from "./DRSPrintModal";
@@ -47,31 +57,43 @@ function renderDetailValue(row: any, key: string) {
 
 function SectionCard({
   title,
+  icon,
   children,
 }: {
   title: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <Box
-      rounded="md"
+      rounded="lg"
       borderWidth="1px"
       borderColor="border.muted"
-      bg="bg"
-      p={{ base: 3, md: 4 }}
+      overflow="hidden"
     >
-      <Text
-        fontSize="xs"
-        fontWeight="semibold"
-        color="fg.muted"
-        textTransform="uppercase"
-        letterSpacing="wider"
-        mb={3}
+      <HStack
+        gap={2}
+        px={4}
+        py={2.5}
+        borderBottomWidth="1px"
+        borderColor="border.muted"
+        bg="bg.subtle"
       >
-        {title}
-      </Text>
+        {icon && <Box color="fg.muted">{icon}</Box>}
+        <Text
+          fontSize="xs"
+          fontWeight="semibold"
+          color="fg.muted"
+          textTransform="uppercase"
+          letterSpacing="wider"
+        >
+          {title}
+        </Text>
+      </HStack>
 
-      {children}
+      <Box bg="bg" p={{ base: 3, md: 4 }}>
+        {children}
+      </Box>
     </Box>
   );
 }
@@ -79,15 +101,56 @@ function SectionCard({
 function DetailItem({
   label,
   value,
+  mandatory,
 }: {
   label: string;
   value: React.ReactNode;
+  mandatory?: boolean;
 }) {
   return (
-    <Box>
-      <Text fontSize="11px" color="fg.muted" mb="0.5">
-        {label}
-      </Text>
+    <Box width={"full"}>
+      <Flex align="center" py={1.5} fontSize="sm">
+        {/* LABEL */}
+        <Text color="gray.500" whiteSpace="nowrap">
+          {label}
+        </Text>
+        {mandatory && (
+          <Text fontSize="10px" color="red.400" ml={1} fontWeight="700">
+            *
+          </Text>
+        )}
+
+        {/* LINE */}
+        <Box
+          flex="1"
+          mx={3}
+          borderBottom="1px dashed"
+          borderColor="gray.300"
+          transform="translateY(2px)"
+        />
+
+        {/* VALUE */}
+        <Text fontWeight="medium" textAlign="right" whiteSpace="nowrap">
+          {value ?? "-"}
+        </Text>
+      </Flex>
+
+      {/* <HStack gap={0.5} mb={0.5}>
+        <Text
+          fontSize="10px"
+          fontWeight="700"
+          color="fg.subtle"
+          textTransform="uppercase"
+          letterSpacing="wide"
+        >
+          {label}
+        </Text>
+        {mandatory && (
+          <Text fontSize="10px" color="red.400" fontWeight="700">
+            *
+          </Text>
+        )}
+      </HStack>
       <Text
         fontSize="sm"
         fontWeight="medium"
@@ -95,17 +158,48 @@ function DetailItem({
         overflowWrap="anywhere"
       >
         {value}
-      </Text>
+      </Text> */}
     </Box>
   );
 }
 
+const STATUS_META = {
+  Approved: {
+    colorPalette: "green",
+    color: "green.600",
+    bg: "green.50",
+    borderColor: "green.200",
+    icon: CheckCircle2,
+  },
+  Denied: {
+    colorPalette: "red",
+    color: "red.600",
+    bg: "red.50",
+    borderColor: "red.200",
+    icon: XCircle,
+  },
+  Pending: {
+    colorPalette: "yellow",
+    color: "yellow.700",
+    bg: "yellow.50",
+    borderColor: "yellow.200",
+    icon: Clock,
+  },
+};
+
 function StatusBadge({ status }: { status: string }) {
-  const colorPalette =
-    status === "Approved" ? "green" : status === "Denied" ? "red" : "yellow";
+  const meta =
+    STATUS_META[status as keyof typeof STATUS_META] ?? STATUS_META.Pending;
+  const Icon = meta.icon;
 
   return (
-    <Badge colorPalette={colorPalette} variant="subtle">
+    <Badge
+      colorPalette={meta.colorPalette}
+      variant="subtle"
+      gap={1}
+      flexShrink={0}
+    >
+      <Icon size={11} />
       {status}
     </Badge>
   );
@@ -129,32 +223,46 @@ export function ApprovalDetailContent({
     ? renderDetailValue(row, primaryField.key)
     : "Approval Request";
 
+  const statusMeta =
+    STATUS_META[status as keyof typeof STATUS_META] ?? STATUS_META.Pending;
+
   return (
-    <VStack align="stretch" gap={{ base: 4, md: 5 }}>
-      <Box>
+    <VStack align="stretch" gap={{ base: 3, md: 4 }}>
+      {/* Header with status accent */}
+      <Box
+        rounded="lg"
+        borderWidth="1px"
+        borderColor={statusMeta.borderColor}
+        borderLeftWidth="4px"
+        borderLeftColor={statusMeta.color}
+        bg={statusMeta.bg}
+        p={4}
+      >
         <HStack justify="space-between" align="start" gap={3}>
           <Box minW={0}>
-            <Text fontSize="xs" color="fg.muted" fontWeight="medium">
+            <Text
+              fontSize="10px"
+              fontWeight="700"
+              letterSpacing="0.08em"
+              textTransform="uppercase"
+              color="fg.muted"
+              mb={1}
+            >
               {config.title}
             </Text>
-
-            <Text fontSize="lg" fontWeight="semibold" mt={1} lineClamp={2}>
+            <Text fontSize="md" fontWeight="semibold" lineClamp={2} color="fg">
               {primaryValue}
             </Text>
           </Box>
-
           <StatusBadge status={status} />
         </HStack>
       </Box>
 
-      <SectionCard title="Request Details">
+      <SectionCard title="Request Details" icon={<FileText size={13} />}>
         <Box
           display="grid"
-          gridTemplateColumns={{
-            base: "1fr",
-            sm: "repeat(2, 1fr)",
-          }}
-          gap={3}
+          gridTemplateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }}
+          gap={{ base: 3, md: 4 }}
         >
           {config.detailFields.map((field) => {
             const isStatusField =
@@ -163,7 +271,8 @@ export function ApprovalDetailContent({
             return (
               <DetailItem
                 key={`${field.key}-${field.label}`}
-                label={field.mandatory ? `${field.label} *` : field.label}
+                label={field.label}
+                mandatory={field.mandatory}
                 value={
                   isStatusField ? (
                     <StatusBadge status={status} />
@@ -177,27 +286,38 @@ export function ApprovalDetailContent({
         </Box>
 
         {isDRSApproval && (
-          <Button
-            mt={4}
-            variant="outline"
-            size="sm"
-            onClick={() => setDrsPrintOpen(true)}
-          >
-            <Printer size={16} />
-            View / Print DRS
-          </Button>
+          <Box mt={4} pt={4} borderTopWidth="1px" borderColor="border.muted">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDrsPrintOpen(true)}
+            >
+              <Printer size={14} />
+              View / Print DRS
+            </Button>
+          </Box>
         )}
       </SectionCard>
 
-      <SectionCard title="Remarks">
+      <SectionCard title="Remarks" icon={<MessageSquare size={13} />}>
         <Textarea
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
-          placeholder="Add remarks before approving or rejecting..."
+          placeholder={
+            isPending
+              ? "Add remarks before approving or rejecting..."
+              : "No remarks added."
+          }
           minH="80px"
           resize="vertical"
           disabled={!isPending}
+          fontSize="sm"
         />
+        {isPending && (
+          <Text fontSize="xs" color="fg.subtle" mt={1.5}>
+            Remarks are optional but recommended.
+          </Text>
+        )}
       </SectionCard>
 
       {isPending ? (
@@ -218,8 +338,8 @@ export function ApprovalDetailContent({
               colorPalette="red"
               onClick={() => onDeny?.(row, remarks)}
             >
-              <X size={16} />
-              Deny
+              <X size={15} />
+              Deny Request
             </Button>
 
             <Button
@@ -227,15 +347,24 @@ export function ApprovalDetailContent({
               colorPalette="blue"
               onClick={() => onApprove?.(row, remarks)}
             >
-              <Check size={16} />
+              <Check size={15} />
               Approve
             </Button>
           </HStack>
         </>
       ) : (
-        <Text fontSize="sm" color="fg.muted">
-          This request has already been {String(status).toLowerCase()}.
-        </Text>
+        <Box
+          rounded="lg"
+          borderWidth="1px"
+          borderColor={statusMeta.borderColor}
+          bg={statusMeta.bg}
+          px={4}
+          py={3}
+        >
+          <Text fontSize="sm" color={statusMeta.color} fontWeight="medium">
+            This request has been {String(status).toLowerCase()}.
+          </Text>
+        </Box>
       )}
 
       {isDRSApproval && (

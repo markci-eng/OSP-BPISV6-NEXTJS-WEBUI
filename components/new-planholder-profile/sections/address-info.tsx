@@ -6,6 +6,7 @@ import { LuMapPin } from "react-icons/lu";
 import { EmptyState } from "../components/empty-state/empty-state";
 import Card from "@/components/cards/Card";
 import { SectionTitle } from "st-peter-ui";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 
 export interface Address {
   id: string;
@@ -164,9 +165,13 @@ export function AddressCard({
 export function PlanholderAddressCard({
   phAddress,
   noBorder = false,
+  isOpen,
+  onToggle,
 }: {
   phAddress: Address[] | undefined;
   noBorder?: boolean;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }) {
   if (noBorder) {
     return (
@@ -243,77 +248,81 @@ export function PlanholderAddressCard({
     );
   } else {
     return (
-      <Card.Root title={"Address Information"}>
-        <Card.MainContent>
-          <Grid gap={4} templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}>
-            {(
-              phAddress?.filter(
-                (address) => address.addressType === "RESIDENCE",
-              ) ?? []
-            ).length === 0 ? (
-              <EmptyState
-                title={"No Residence Address"}
-                description={"No residence address available"}
-              />
-            ) : (
-              phAddress
-                ?.filter((address) => address.addressType === "RESIDENCE")
-                .map((address, idx) => (
-                  <AddressCard
-                    key={idx}
-                    id={idx.toString()}
-                    addressType={address.addressType}
-                    addressNo={address.addressNo ?? ""}
-                    street={address.street ?? ""}
-                    barangay={
-                      !address.barangay ? "" : "Brgy. " + address.barangay
-                    }
-                    district={
-                      !address.district ? "" : "District " + address.district
-                    }
-                    city={address.city}
-                    province={address.province}
-                    zipCode={address.zipCode ?? 0}
-                    isMailAddress={address.isMailAddress}
-                  />
-                ))
-            )}
+      <InfoCardAccordion
+        icon={<LuMapPin />}
+        title={"Address Information"}
+        subtitle="Address Information"
+        defaultOpen
+        isOpen={isOpen}
+        onToggle={onToggle}
+      >
+        <Grid gap={4} templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}>
+          {(
+            phAddress?.filter(
+              (address) => address.addressType === "RESIDENCE",
+            ) ?? []
+          ).length === 0 ? (
+            <EmptyState
+              title={"No Residence Address"}
+              description={"No residence address available"}
+            />
+          ) : (
+            phAddress
+              ?.filter((address) => address.addressType === "RESIDENCE")
+              .map((address, idx) => (
+                <AddressCard
+                  key={idx}
+                  id={idx.toString()}
+                  addressType={address.addressType}
+                  addressNo={address.addressNo ?? ""}
+                  street={address.street ?? ""}
+                  barangay={
+                    !address.barangay ? "" : "Brgy. " + address.barangay
+                  }
+                  district={
+                    !address.district ? "" : "District " + address.district
+                  }
+                  city={address.city}
+                  province={address.province}
+                  zipCode={address.zipCode ?? 0}
+                  isMailAddress={address.isMailAddress}
+                />
+              ))
+          )}
 
-            {(
-              phAddress?.filter(
-                (address) => address.addressType === "OFFICE",
-              ) ?? []
-            ).length === 0 ? (
-              <EmptyState
-                title={"No Office Address"}
-                description={"No office address available"}
-              />
-            ) : (
-              phAddress
-                ?.filter((address) => address.addressType === "OFFICE")
-                .map((address, idx) => (
-                  <AddressCard
-                    key={idx}
-                    id={idx.toString()}
-                    addressType={address.addressType}
-                    addressNo={address.addressNo ?? ""}
-                    street={address.street ?? ""}
-                    barangay={
-                      !address.barangay ? "" : "Brgy. " + address.barangay
-                    }
-                    district={
-                      !address.district ? "" : "District " + address.district
-                    }
-                    city={address.city}
-                    province={address.province}
-                    zipCode={address.zipCode ?? 0}
-                    isMailAddress={address.isMailAddress}
-                  />
-                ))
-            )}
-          </Grid>
-        </Card.MainContent>
-      </Card.Root>
+          {(
+            phAddress?.filter((address) => address.addressType === "OFFICE") ??
+            []
+          ).length === 0 ? (
+            <EmptyState
+              title={"No Office Address"}
+              description={"No office address available"}
+            />
+          ) : (
+            phAddress
+              ?.filter((address) => address.addressType === "OFFICE")
+              .map((address, idx) => (
+                <AddressCard
+                  key={idx}
+                  id={idx.toString()}
+                  addressType={address.addressType}
+                  addressNo={address.addressNo ?? ""}
+                  street={address.street ?? ""}
+                  barangay={
+                    !address.barangay ? "" : "Brgy. " + address.barangay
+                  }
+                  district={
+                    !address.district ? "" : "District " + address.district
+                  }
+                  city={address.city}
+                  province={address.province}
+                  zipCode={address.zipCode ?? 0}
+                  isMailAddress={address.isMailAddress}
+                />
+              ))
+          )}
+        </Grid>
+      </InfoCardAccordion>
     );
   }
 }

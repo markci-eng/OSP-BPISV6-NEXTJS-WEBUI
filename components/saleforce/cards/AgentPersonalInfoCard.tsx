@@ -1,72 +1,51 @@
-import Card from "@/components/cards/Card";
-import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import { RowItem } from "@/claude components/info-card/row-item";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
-import LabelText from "@/components/texts/LabelText";
-import { Box, Flex, Separator } from "@chakra-ui/react";
+import { Flex } from "@chakra-ui/react";
+import { LuUser } from "react-icons/lu";
 
 interface AgentPersonalInfoCardProps {
   agent: SalesAgent | undefined | null;
   removeCard?: Boolean;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
 const PersonalInfo = ({ agent }: AgentPersonalInfoCardProps) => {
+  if (!agent) return null;
   return (
-    <>
-      {agent ? (
-        <Flex direction="column" gap={2}>
-          <LabelText label="Place of Birth" value={agent.placeOfBirth} />
-          <Separator />
-          <LabelText label="Date of Birth" value={agent.birthDate} />
-          <Separator />
-          <LabelText label="Gender" value={agent.gender} />
-          <Separator />
-          <LabelText label="Civil Status" value={agent.civilStatus} />
-          <Separator />
-          <LabelText label="Nationality" value={agent.nationality} />
-          <Separator />
-          <LabelText
-            label="Naturalization Date"
-            value={agent.naturalizationDate ?? "N/A"}
-          />
-          <Separator />
-          <LabelText label="Height" value={agent.height ?? "N/A"} />
-          <Separator />
-          <LabelText label="Weight" value={agent.weight ?? "N/A"} />
-        </Flex>
-      ) : (
-        <EmptyStateCard
-          title="No Agent Selected"
-          description="Select an agent to view their personal information."
-        />
-      )}
-    </>
-  );
-};
-
-const PersonalInfoCard = ({ agent }: AgentPersonalInfoCardProps) => {
-  return (
-    <Card.Root title="Personal">
-      <Card.MainContent>
-        <Box px={1}>
-          <PersonalInfo agent={agent} />
-        </Box>
-      </Card.MainContent>
-    </Card.Root>
+    <Flex direction="column">
+      <RowItem label="Place of Birth" value={agent.placeOfBirth} />
+      <RowItem label="Date of Birth" value={agent.birthDate} />
+      <RowItem label="Gender" value={agent.gender} />
+      <RowItem label="Civil Status" value={agent.civilStatus} />
+      <RowItem label="Nationality" value={agent.nationality} />
+      <RowItem label="Naturalization Date" value={agent.naturalizationDate ?? "N/A"} />
+      <RowItem label="Height" value={agent.height ?? "N/A"} />
+      <RowItem label="Weight" value={agent.weight ?? "N/A"} />
+    </Flex>
   );
 };
 
 const AgentPersonalInfoCard = ({
   agent,
   removeCard,
+  isOpen,
+  onToggle,
 }: AgentPersonalInfoCardProps) => {
+  if (removeCard) {
+    return <PersonalInfo agent={agent} />;
+  }
   return (
-    <>
-      {removeCard ? (
-        <PersonalInfo agent={agent} />
-      ) : (
-        <PersonalInfoCard agent={agent} />
-      )}
-    </>
+    <InfoCardAccordion
+      icon={<LuUser />}
+      title="Personal Information"
+      subtitle="Personal Information"
+      isOpen={isOpen}
+      onToggle={onToggle}
+    >
+      <PersonalInfo agent={agent} />
+    </InfoCardAccordion>
   );
 };
 

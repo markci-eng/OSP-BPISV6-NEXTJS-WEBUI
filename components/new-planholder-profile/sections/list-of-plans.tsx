@@ -22,6 +22,8 @@ import { FaRegFileAlt } from "react-icons/fa";
 import {
   LuArrowLeft,
   LuArrowRight,
+  LuChevronLeft,
+  LuChevronRight,
   LuPointer,
   LuSearch,
   LuTrash,
@@ -39,12 +41,13 @@ import { FiFileText } from "react-icons/fi";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
 import { MdHealthAndSafety } from "react-icons/md";
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";
-import { GiMartyrMemorial } from "react-icons/gi";
+import { GiClick, GiMartyrMemorial } from "react-icons/gi";
 import { PlanDetailsPage } from "../pages/plan-details";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { Beneficiaries } from "../pages/beneficiaries";
 import { StatementOfAccount } from "../pages/statement-of-accounts";
 import { HealthDeclaration } from "../pages/health-declaration";
+import { FaRegHandPointer } from "react-icons/fa6";
 
 const PLAN_DETAIL_STEPS = [
   {
@@ -209,6 +212,7 @@ export function ListOfPlans({
   );
   const [filteredPlans, setFilteredPlans] = useState<PlanDetailType[]>(plans);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showViewDetails, setShowViewDetails] = useState(true);
 
   const { messageBox } = useMessageDialog();
 
@@ -313,208 +317,229 @@ export function ListOfPlans({
     </Flex>
   ) : null;
 
+  const glassBg = "rgba(255, 255, 255, 0.72)";
+  const glassBorder = "rgba(255, 255, 255, 0.60)";
+  const glassShadow =
+    "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,0.85), inset 0 -0.5px 0 rgba(0,0,0,0.04)";
+
   return (
     <Box my={{ base: 0, lg: 5 }}>
-      <Card.Root title={"List of Plan(s)"}>
-        {plans.length > 0 ? (
-          <Card.MainContent>
-            <Grid templateColumns={"repeat(4, 1fr)"} gap={2}>
-              {/* Plan list / carousel column */}
-              <GridItem colSpan={isMobile ? 4 : 1}>
-                <Show when={!isMobile}>
-                  <InputGroup startElement={<LuSearch />}>
-                    <Input
-                      placeholder="Search LPA Number"
-                      value={searchVal}
-                      onChange={(e) => setSearchVal(e.currentTarget.value)}
-                    />
-                  </InputGroup>
-                  <Separator my={3} />
-                  <Flex direction={"column"} gap={2}>
-                    <Show when={filteredPlans.length === 0}>
-                      <EmptyState
-                        title={"No Plans Found"}
-                        description={"No Plans match your search criteria."}
-                      />
-                    </Show>
-                    {filteredPlans.map((plan) => (
-                      <LPANumberButton
-                        key={plan.lpaNumber}
-                        plan={plan}
-                        isSelected={planDetails?.lpaNumber === plan.lpaNumber}
-                        onClick={() => setPlanDetails(plan)}
-                        personId={personId}
-                      />
-                    ))}
-                  </Flex>
-                </Show>
-
-                <Show when={isMobile}>
-                  <Carousel.Root
-                    slideCount={plans.length}
-                    onPageChange={(details) =>
-                      setPlanDetails(plans[details.page])
-                    }
-                  >
-                    <Box
-                      position="relative"
-                      mx={plans.length > 1 ? 4 : 0}
-                      overflow="visible"
-                    >
-                      <Carousel.ItemGroup w="full">
-                        {plans.map((plan, index) => (
-                          <Carousel.Item
-                            key={plan.lpaNumber}
-                            index={index}
-                            minW={0}
-                          >
-                            <LPANumberButton
-                              plan={plan}
-                              isSelected={true}
-                              onClick={() => {
-                                setPlanDetails(plan);
-                                setModalOpen(true);
-                              }}
-                              personId={personId}
-                            />
-                          </Carousel.Item>
-                        ))}
-                      </Carousel.ItemGroup>
-
-                      {/* View Details — sibling of ItemGroup so carousel clipping doesn't affect it */}
-                      <Box
-                        position="absolute"
-                        bottom={0}
-                        left="50%"
-                        zIndex={2}
-                        style={{ transform: "translate(-50%, 50%)" }}
-                      >
-                        <Button
-                          size="xs"
-                          bg="white"
-                          border="1px solid"
-                          borderColor="gray.200"
-                          boxShadow="sm"
-                          borderRadius="full"
-                          fontSize="xs"
-                          fontWeight="semibold"
-                          color="var(--chakra-colors-primary)"
-                          px={3}
-                          gap={1}
-                          onClick={() => setModalOpen(true)}
-                        >
-                          <LuPointer size={11} />
-                          View Details
-                        </Button>
-                      </Box>
-
-                      {plans.length > 1 && (
-                        <Carousel.PrevTrigger asChild>
-                          <IconButton
-                            size="xs"
-                            variant="outline"
-                            position="absolute"
-                            left={0}
-                            top="50%"
-                            bg="white"
-                            boxShadow="sm"
-                            borderRadius="full"
-                            zIndex={1}
-                            style={{ transform: "translate(-50%, -50%)" }}
-                          >
-                            <LuArrowLeft />
-                          </IconButton>
-                        </Carousel.PrevTrigger>
-                      )}
-
-                      {plans.length > 1 && (
-                        <Carousel.NextTrigger asChild>
-                          <IconButton
-                            size="xs"
-                            variant="outline"
-                            position="absolute"
-                            right={0}
-                            top="50%"
-                            bg="white"
-                            boxShadow="sm"
-                            borderRadius="full"
-                            zIndex={1}
-                            style={{ transform: "translate(50%, -50%)" }}
-                          >
-                            <LuArrowRight />
-                          </IconButton>
-                        </Carousel.NextTrigger>
-                      )}
-                    </Box>
-
-                    {plans.length > 1 && (
-                      <Carousel.Indicators
-                        mt={6}
-                        transition="width 0.2s ease-in-out"
-                        boxSize="2"
-                        opacity="0.5"
-                        _current={{
-                          width: "10",
-                          bg: "colorPalette.subtle",
-                          opacity: 1,
-                        }}
-                      />
-                    )}
-                  </Carousel.Root>
-                </Show>
-              </GridItem>
-
-              {/* Tabs panel — desktop only */}
-              <GridItem colSpan={3} display={{ base: "none", lg: "block" }}>
-                <Box
-                  p={3}
-                  borderRadius={"sm"}
-                  border={"1px solid"}
-                  borderColor={"gray.200"}
-                >
-                  <Flex align={"center"} justify={"space-between"}>
-                    <Flex gap={2} my={2} align={"center"}>
-                      <FaRegFileAlt
-                        size={40}
-                        color="var(--chakra-colors-primary)"
-                      />
-                      <Flex direction={"column"}>
-                        <Small mb={-1}>LPA Number</Small>
-                        <H4>{planDetails!.lpaNumber}</H4>
-                        <Flex gap={2} mt={2}>
-                          <OSPBadge
-                            type={
-                              planDetails!.accountStatus === "LAPSED"
-                                ? "warning"
-                                : "success"
-                            }
-                          >
-                            {planDetails!.accountStatus}
-                          </OSPBadge>
-                          <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
-                        </Flex>
-                      </Flex>
-                    </Flex>
-                    {actionButtons}
-                  </Flex>
-                  <Separator my={2} />
-                  <PlanTabs
-                    planDetails={planDetails!}
-                    planholderAddress={planholderAddress}
+      {plans.length > 0 ? (
+        <Grid templateColumns={"repeat(4, 1fr)"} gap={2}>
+          {/* Plan list / carousel column */}
+          <GridItem colSpan={isMobile ? 4 : 1}>
+            <Show when={!isMobile}>
+              <InputGroup startElement={<LuSearch />}>
+                <Input
+                  placeholder="Search LPA Number"
+                  value={searchVal}
+                  onChange={(e) => setSearchVal(e.currentTarget.value)}
+                />
+              </InputGroup>
+              <Separator my={3} />
+              <Flex direction={"column"} gap={2}>
+                <Show when={filteredPlans.length === 0}>
+                  <EmptyState
+                    title={"No Plans Found"}
+                    description={"No Plans match your search criteria."}
                   />
+                </Show>
+                {filteredPlans.map((plan) => (
+                  <LPANumberButton
+                    key={plan.lpaNumber}
+                    plan={plan}
+                    isSelected={planDetails?.lpaNumber === plan.lpaNumber}
+                    onClick={() => setPlanDetails(plan)}
+                    personId={personId}
+                  />
+                ))}
+              </Flex>
+            </Show>
+
+            <Show when={isMobile}>
+              <Carousel.Root
+                slideCount={plans.length}
+                onPageChange={(details) => {
+                  setPlanDetails(plans[details.page]);
+                  setShowViewDetails(false);
+                  setTimeout(() => setShowViewDetails(true), 350);
+                }}
+              >
+                <Box
+                  position="relative"
+                  // mx={plans.length > 1 ? 4 : 0}
+                  overflow="visible"
+                >
+                  <Carousel.ItemGroup w="full">
+                    {plans.map((plan, index) => (
+                      <Carousel.Item
+                        key={plan.lpaNumber}
+                        index={index}
+                        minW={0}
+                      >
+                        <LPANumberButton
+                          plan={plan}
+                          isSelected={true}
+                          onClick={() => {
+                            setPlanDetails(plan);
+                            setModalOpen(true);
+                          }}
+                          personId={personId}
+                        />
+                      </Carousel.Item>
+                    ))}
+                  </Carousel.ItemGroup>
+
+                  {/* View Details — sibling of ItemGroup so carousel clipping doesn't affect it */}
+                  <Box
+                    position="absolute"
+                    bottom={0}
+                    left="50%"
+                    zIndex={2}
+                    style={{ transform: "translate(-50%, 50%)" }}
+                    opacity={showViewDetails ? 1 : 0}
+                    pointerEvents={showViewDetails ? "auto" : "none"}
+                    transition="opacity 0.2s ease"
+                  >
+                    {/* <Button
+                      size="xs"
+                      bg="white"
+                      border="1px solid"
+                      borderColor="gray.200"
+                      boxShadow="sm"
+                      borderRadius="full"
+                      fontSize="xs"
+                      fontWeight="semibold"
+                      color="var(--chakra-colors-primary)"
+                      px={3}
+                      gap={1}
+                      onClick={() => setModalOpen(true)}
+                    >
+                      <LuPointer size={11} />
+                      View Details
+                    </Button> */}
+                  </Box>
+
+                  {/* {plans.length > 1 && (
+                    <Carousel.PrevTrigger asChild>
+                      <IconButton
+                        size="xs"
+                        variant="outline"
+                        position="absolute"
+                        left={0}
+                        top="50%"
+                        bg="white"
+                        boxShadow="sm"
+                        borderRadius="full"
+                        zIndex={1}
+                        style={{ transform: "translate(-50%, -50%)" }}
+                      >
+                        <LuArrowLeft />
+                      </IconButton>
+                    </Carousel.PrevTrigger>
+                  )}
+
+                  {plans.length > 1 && (
+                    <Carousel.NextTrigger asChild>
+                      <IconButton
+                        size="xs"
+                        variant="outline"
+                        position="absolute"
+                        right={0}
+                        top="50%"
+                        bg="white"
+                        boxShadow="sm"
+                        borderRadius="full"
+                        zIndex={1}
+                        style={{ transform: "translate(50%, -50%)" }}
+                      >
+                        <LuArrowRight />
+                      </IconButton>
+                    </Carousel.NextTrigger>
+                  )} */}
                 </Box>
-              </GridItem>
-            </Grid>
-          </Card.MainContent>
-        ) : (
-          <Card.MainContent>
-            <EmptyState
-              title={"No Plans Found"}
-              description={"This person does not have any plans."}
-            />
-          </Card.MainContent>
-        )}
-      </Card.Root>
+
+                {/* {plans.length > 1 && (
+                  <Carousel.Indicators
+                    transition="width 0.2s ease-in-out"
+                    boxSize="2"
+                    opacity="0.5"
+                    bg={"var(--chakra-colors-primary-disabled)"}
+                    _current={{
+                      width: "10",
+                      bg: "primary",
+                      opacity: 1,
+                    }}
+                  />
+                )} */}
+                <Carousel.Control justifyContent="center" gap="4">
+                  <Carousel.PrevTrigger asChild>
+                    <IconButton size="xs" variant="ghost">
+                      <LuChevronLeft />
+                    </IconButton>
+                  </Carousel.PrevTrigger>
+
+                  <Carousel.Indicators />
+
+                  <Carousel.NextTrigger asChild>
+                    <IconButton size="xs" variant="ghost">
+                      <LuChevronRight />
+                    </IconButton>
+                  </Carousel.NextTrigger>
+                </Carousel.Control>
+              </Carousel.Root>
+            </Show>
+          </GridItem>
+
+          {/* Tabs panel — desktop only */}
+          <GridItem colSpan={3} display={{ base: "none", lg: "block" }}>
+            <Box
+              p={3}
+              borderRadius={"sm"}
+              border={"1px solid"}
+              borderColor={"gray.200"}
+            >
+              <Flex align={"center"} justify={"space-between"}>
+                <Flex gap={2} my={2} align={"center"}>
+                  <FaRegFileAlt
+                    size={40}
+                    color="var(--chakra-colors-primary)"
+                  />
+                  <Flex direction={"column"}>
+                    <Small mb={-1}>LPA Number</Small>
+                    <H4>{planDetails!.lpaNumber}</H4>
+                    <Flex gap={2} mt={2}>
+                      <OSPBadge
+                        type={
+                          planDetails!.accountStatus === "LAPSED"
+                            ? "warning"
+                            : "success"
+                        }
+                      >
+                        {planDetails!.accountStatus}
+                      </OSPBadge>
+                      <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
+                    </Flex>
+                  </Flex>
+                </Flex>
+                {actionButtons}
+              </Flex>
+              <Separator my={2} />
+              <PlanTabs
+                planDetails={planDetails!}
+                planholderAddress={planholderAddress}
+              />
+            </Box>
+          </GridItem>
+        </Grid>
+      ) : (
+        <Card.MainContent>
+          <EmptyState
+            title={"No Plans Found"}
+            description={"This person does not have any plans."}
+          />
+        </Card.MainContent>
+      )}
 
       {/* Mobile full-screen plan detail drawer */}
       <Drawer.Root
@@ -532,7 +557,13 @@ export function ListOfPlans({
                 px={4}
                 py={3}
               >
-                <Flex id="tour-plan-lpa-header" align="center" gap={3} flex={1} minW={0}>
+                <Flex
+                  id="tour-plan-lpa-header"
+                  align="center"
+                  gap={3}
+                  flex={1}
+                  minW={0}
+                >
                   <FaRegFileAlt
                     size={28}
                     color="var(--chakra-colors-primary)"
@@ -569,7 +600,13 @@ export function ListOfPlans({
               </Drawer.Header>
 
               {actionButtons && (
-                <Box id="tour-plan-actions" px={4} py={2} borderBottomWidth={1} borderColor="gray.100">
+                <Box
+                  id="tour-plan-actions"
+                  px={4}
+                  py={2}
+                  borderBottomWidth={1}
+                  borderColor="gray.100"
+                >
                   {actionButtons}
                 </Box>
               )}

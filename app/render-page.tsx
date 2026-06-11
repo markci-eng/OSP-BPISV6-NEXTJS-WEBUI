@@ -41,7 +41,7 @@ export function RenderPage({ children }: { children?: ReactNode }) {
       navItems={navItems}
       notifications={Notifications}
       appName="One St. Peter"
-      appSubtitle="Life Plan"
+      appSubtitle="Life Plan Operations"
     >
       {children}
     </AppLayout>

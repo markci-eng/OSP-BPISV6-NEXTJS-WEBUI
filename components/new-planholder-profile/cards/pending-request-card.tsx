@@ -1,3 +1,4 @@
+import { OSPBadge } from "@/components/common/badge/badge";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import React from "react";
 import {
@@ -113,7 +114,7 @@ export function ProgressCard({
       overflow="hidden"
       bg="white"
       border="1px solid"
-      borderColor="gray.100"
+      borderColor="gray.200"
       // boxShadow="sm"
       cursor="pointer"
       w="full"
@@ -153,7 +154,7 @@ export function ProgressCard({
           </Flex>
 
           {/* Status badge */}
-          <Flex
+          {/* <Flex
             align="center"
             gap={1.5}
             px={2}
@@ -166,7 +167,8 @@ export function ProgressCard({
             <Text fontSize="10px" fontWeight="semibold" color={style.color}>
               {status}
             </Text>
-          </Flex>
+          </Flex> */}
+          <OSPBadge type="warning">{status}</OSPBadge>
         </Flex>
 
         {/* Step track */}

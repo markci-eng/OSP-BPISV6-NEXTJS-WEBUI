@@ -53,7 +53,8 @@ const BackButton = () => {
         gap="3px"
         onClick={() => router.back()}
         cursor="pointer"
-        color="gray.400"
+        // color="gray.400"
+        color="#388e3c"
         fontFamily="var(--font-dm-sans), system-ui, sans-serif"
         fontSize="12px"
         fontWeight="500"

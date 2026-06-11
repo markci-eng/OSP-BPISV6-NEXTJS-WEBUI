@@ -59,6 +59,9 @@ import {
 } from "./dashboard-data";
 import { OSPBadge } from "@/components/common/badge/badge";
 import { IconType } from "react-icons";
+import UserWelcomeBanner from "@/claude components/layout/page/UserWelcomeBanner";
+import { useDemoAuth } from "@/components/ui/demo-auth";
+import { Card } from "@/claude components/card-accordion/card";
 
 // --- Types ---
 type DashboardKeys = "request" | "service" | "reservation" | "activetrips";
@@ -460,6 +463,11 @@ export default function Dashboard() {
   });
 
   const name = "Mark Cristian";
+  const { login } = useDemoAuth();
+
+  useEffect(() => {
+    login();
+  }, [login]);
 
   return (
     <Box
@@ -467,154 +475,10 @@ export default function Dashboard() {
         display: "flex",
         flexDirection: "column",
         gap: 24,
-        padding: "20px 8px 8px",
+        padding: "10px 8px 8px",
       }}
     >
-      {/* ── Welcome banner ── */}
-      {/* <div
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: ".14em",
-              textTransform: "uppercase",
-              color: C.faint,
-            }}
-          >
-            {getGreeting()}
-          </div>
-          <h1
-            style={{
-              fontSize: "clamp(22px, 4vw, 30px)",
-              fontWeight: 600,
-              margin: "5px 0",
-              color: C.ink,
-              lineHeight: 1.15,
-            }}
-          >
-            Welcome, Joyce!
-          </h1>
-          <div style={{ fontSize: 13.5, color: C.muted, fontWeight: 500 }}>
-            {formatDate()} · Head Office Branch
-          </div>
-        </div>
-      </div> */}
-
-      <div
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          borderRadius: 14,
-          padding: "16px 18px",
-        }}
-      >
-        {/* Animated background layer */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "radial-gradient(circle at 20% 20%, rgba(99,102,241,0.18), transparent 45%), radial-gradient(circle at 80% 70%, rgba(16,185,129,0.14), transparent 40%)",
-            animation: "bgFloat 14s ease-in-out infinite",
-            zIndex: 0,
-          }}
-        />
-
-        {/* Glass overlay for readability */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "rgba(255,255,255,0.04)",
-            backdropFilter: "blur(10px)",
-            zIndex: 0,
-          }}
-        />
-
-        {/* Content */}
-        <div
-          style={{
-            position: "relative",
-            zIndex: 1,
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <div>
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: ".14em",
-                textTransform: "uppercase",
-                color: C.faint,
-              }}
-            >
-              {getGreeting()}
-            </div>
-
-            <h1
-              style={{
-                fontSize: "clamp(24px, 4vw, 32px)",
-                fontWeight: 700,
-                margin: "4px 0",
-                color: C.ink,
-                lineHeight: 1.1,
-              }}
-            >
-              Welcome back, Joyce!
-            </h1>
-
-            <div
-              style={{
-                fontSize: 13.5,
-                color: C.muted,
-                fontWeight: 500,
-                display: "flex",
-                gap: 8,
-                flexWrap: "wrap",
-                alignItems: "center",
-              }}
-            >
-              <span>📅 {formatDate()}</span>
-              <span>•</span>
-              <span>📍 Quezon Ave Chapel</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Animation keyframes */}
-        <style>
-          {`
-      @keyframes bgFloat {
-        0% {
-          transform: scale(1);
-          opacity: 0.85;
-        }
-        50% {
-          transform: scale(1.05);
-          opacity: 1;
-        }
-        100% {
-          transform: scale(1);
-          opacity: 0.85;
-        }
-      }
-    `}
-        </style>
-      </div>
+      <UserWelcomeBanner firstName={"Joyce"} branch={"Head Office"} />
 
       {/* ── Account Overview ── */}
       <Flex direction="column" gap={3}>
@@ -622,58 +486,80 @@ export default function Dashboard() {
           title="Account Overview"
           subtitle="Month-over-month account metrics"
         />
-        <Grid
-          templateColumns={{ base: "repeat(2, 1fr)", xl: "repeat(4, 1fr)" }}
-          gap={4}
-        >
-          <TileItem
-            Icon={RiUserShared2Line}
-            title="New Sales"
-            value={planholders.newSales.toLocaleString()}
-            prevVal={planholders.prevNewSales.toLocaleString()}
-            monthOverMonthPercentage={
-              ((planholders.newSales - planholders.prevNewSales) /
-                planholders.prevNewSales) *
-              100
-            }
-          />
-          <TileItem
-            Icon={RiUserFollowLine}
-            title="Active Accounts"
-            value="12.1k"
-            prevVal={planholders.prevActiveAccounts.toLocaleString()}
-            monthOverMonthPercentage={
-              ((planholders.activeAccounts - planholders.prevActiveAccounts) /
-                planholders.prevActiveAccounts) *
-              100
-            }
-          />
-          <TileItem
-            Icon={RiUserForbidLine}
-            title="Lapsed Accounts"
-            value="7.3k"
-            prevVal={planholders.prevLapsedAccounts.toLocaleString()}
-            order="desc"
-            monthOverMonthPercentage={
-              ((planholders.lapsedAccounts - planholders.prevLapsedAccounts) /
-                planholders.prevLapsedAccounts) *
-              100
-            }
-          />
-          <TileItem
-            Icon={RiUserUnfollowLine}
-            title="Terminated Accounts"
-            value="24.7k"
-            prevVal={planholders.prevTerminatedAccounts.toLocaleString()}
-            order="desc"
-            monthOverMonthPercentage={
-              ((planholders.terminatedAccounts -
-                planholders.prevTerminatedAccounts) /
-                planholders.prevTerminatedAccounts) *
-              100
-            }
-          />
-        </Grid>
+        <Carousel.Root slideCount={4} loop>
+          <Carousel.ItemGroup>
+            <Carousel.Item index={0} px={2}>
+              <TileItem
+                Icon={RiUserShared2Line}
+                title="New Sales"
+                value={planholders.newSales.toLocaleString()}
+                prevVal={planholders.prevNewSales.toLocaleString()}
+                color="#1B9E57"
+                monthOverMonthPercentage={
+                  ((planholders.newSales - planholders.prevNewSales) /
+                    planholders.prevNewSales) *
+                  100
+                }
+              />
+            </Carousel.Item>
+            <Carousel.Item index={1} px={2}>
+              <TileItem
+                Icon={RiUserFollowLine}
+                title="Active Accounts"
+                value="12.1k"
+                prevVal={planholders.prevActiveAccounts.toLocaleString()}
+                color="#1976D2"
+                monthOverMonthPercentage={
+                  ((planholders.activeAccounts -
+                    planholders.prevActiveAccounts) /
+                    planholders.prevActiveAccounts) *
+                  100
+                }
+              />
+            </Carousel.Item>
+            <Carousel.Item index={2} px={2}>
+              <TileItem
+                Icon={RiUserForbidLine}
+                title="Lapsed Accounts"
+                value="7.3k"
+                prevVal={planholders.prevLapsedAccounts.toLocaleString()}
+                order="desc"
+                color="#F57C00"
+                monthOverMonthPercentage={
+                  ((planholders.lapsedAccounts -
+                    planholders.prevLapsedAccounts) /
+                    planholders.prevLapsedAccounts) *
+                  100
+                }
+              />
+            </Carousel.Item>
+            <Carousel.Item index={3} px={2}>
+              <TileItem
+                Icon={RiUserUnfollowLine}
+                title="Terminated Accounts"
+                value="24.7k"
+                prevVal={planholders.prevTerminatedAccounts.toLocaleString()}
+                order="desc"
+                color="#E53E3E"
+                monthOverMonthPercentage={
+                  ((planholders.terminatedAccounts -
+                    planholders.prevTerminatedAccounts) /
+                    planholders.prevTerminatedAccounts) *
+                  100
+                }
+              />
+            </Carousel.Item>
+          </Carousel.ItemGroup>
+          <Carousel.Control mt={3} justifyContent="center">
+            <Carousel.PrevTrigger>
+              <LuChevronLeft />
+            </Carousel.PrevTrigger>
+            <Carousel.Indicators />
+            <Carousel.NextTrigger>
+              <LuChevronRight />
+            </Carousel.NextTrigger>
+          </Carousel.Control>
+        </Carousel.Root>
       </Flex>
 
       {/* ── Efficiency ── */}
@@ -689,122 +575,121 @@ export default function Dashboard() {
         >
           {/* Quota & Collection amounts */}
           <Box
-            borderRadius="xl"
-            border="1px solid"
-            borderColor="gray.100"
-            boxShadow="sm"
-            bg="white"
-            overflow="hidden"
+          // borderRadius="xl"
+          // border="1px solid"
+          // borderColor="gray.100"
+          // boxShadow="sm"
+          // bg="white"
+          // overflow="hidden"
           >
-            <CardHeader
-              icon={
-                <LuTrendingUp size={14} color="var(--chakra-colors-primary)" />
-              }
+            <Card
+              activeIcon={<LuTrendingUp size={14} />}
               title="Quota & Collection"
               subtitle="Amount targets"
-            />
-            <Box px={4} py={2}>
-              <MetricRow
-                label="Comm. Quota"
-                value={quotaAndCollections.comQuota}
-                isAmount
-              />
-              <MetricRow
-                label="Comm. Collection"
-                value={quotaAndCollections.comCollection}
-                isAmount
-              />
-              <Separator my={1} borderColor="gray.50" />
-              <MetricRow
-                label="Non-Comm. Quota"
-                value={quotaAndCollections.nComQuota}
-                isAmount
-              />
-              <MetricRow
-                label="Non-Comm. Collection"
-                value={quotaAndCollections.nComCollection}
-                isAmount
-                last
-              />
-            </Box>
+            >
+              <Box px={0} py={2}>
+                <MetricRow
+                  label="Comm. Quota"
+                  value={quotaAndCollections.comQuota}
+                  isAmount
+                />
+                <MetricRow
+                  label="Comm. Collection"
+                  value={quotaAndCollections.comCollection}
+                  isAmount
+                />
+                <Separator my={1} borderColor="gray.50" />
+                <MetricRow
+                  label="Non-Comm. Quota"
+                  value={quotaAndCollections.nComQuota}
+                  isAmount
+                />
+                <MetricRow
+                  label="Non-Comm. Collection"
+                  value={quotaAndCollections.nComCollection}
+                  isAmount
+                  last
+                />
+              </Box>
+            </Card>
           </Box>
 
           {/* Accounts due & collected */}
           <Box
-            borderRadius="xl"
-            border="1px solid"
-            borderColor="gray.100"
-            boxShadow="sm"
-            bg="white"
-            overflow="hidden"
+          // borderRadius="xl"
+          // border="1px solid"
+          // borderColor="gray.100"
+          // boxShadow="sm"
+          // bg="white"
+          // overflow="hidden"
           >
-            <CardHeader
+            {/* <CardHeader
               icon={<LuUsers size={14} color="var(--chakra-colors-primary)" />}
               title="Accounts Due & Collected"
               subtitle="Account count targets"
-            />
-            <Box px={4} py={2}>
-              <MetricRow
-                label="Comm. Accounts Due"
-                value={quotaAndCollections.comAcctDue}
-              />
-              <MetricRow
-                label="Comm. Accounts Collected"
-                value={quotaAndCollections.comAcctCollection}
-              />
-              <Separator my={1} borderColor="gray.50" />
-              <MetricRow
-                label="Non-Comm. Accounts Due"
-                value={quotaAndCollections.nComAcctDue}
-              />
-              <MetricRow
-                label="Non-Comm. Accounts Collected"
-                value={quotaAndCollections.nComAcctCollection}
-                last
-              />
-            </Box>
+            /> */}
+            <Card
+              activeIcon={<LuUsers />}
+              title={"Accounts Due & Collected"}
+              subtitle={"Account count targets"}
+            >
+              <Box px={0} py={2}>
+                <MetricRow
+                  label="Comm. Accounts Due"
+                  value={quotaAndCollections.comAcctDue}
+                />
+                <MetricRow
+                  label="Comm. Accounts Collected"
+                  value={quotaAndCollections.comAcctCollection}
+                />
+                <Separator my={1} borderColor="gray.50" />
+                <MetricRow
+                  label="Non-Comm. Accounts Due"
+                  value={quotaAndCollections.nComAcctDue}
+                />
+                <MetricRow
+                  label="Non-Comm. Accounts Collected"
+                  value={quotaAndCollections.nComAcctCollection}
+                  last
+                />
+              </Box>
+            </Card>
           </Box>
 
           {/* Efficiency donuts */}
-          <Box
-            borderRadius="xl"
-            border="1px solid"
-            borderColor="gray.100"
-            boxShadow="sm"
-            bg="white"
-            overflow="hidden"
-          >
-            <CardHeader
-              icon={<LuZap size={14} color="var(--chakra-colors-primary)" />}
-              title="Efficiency Rates"
-              subtitle="Collection efficiency"
-            />
-            <Grid templateColumns="repeat(2, 1fr)" px={2} pb={2}>
-              <EfficiencyDonutChart
-                title="ADE Com"
-                quota={quotaAndCollections.comAcctDue}
-                collection={quotaAndCollections.comAcctCollection}
-                passingRate={50}
-              />
-              <EfficiencyDonutChart
-                title="ADE NCom"
-                quota={quotaAndCollections.nComAcctDue}
-                collection={quotaAndCollections.nComAcctCollection}
-                passingRate={50}
-              />
-              <EfficiencyDonutChart
-                title="CVE Com"
-                quota={quotaAndCollections.comQuota}
-                collection={quotaAndCollections.comCollection}
-                passingRate={50}
-              />
-              <EfficiencyDonutChart
-                title="CVE NCom"
-                quota={quotaAndCollections.nComQuota}
-                collection={quotaAndCollections.nComCollection}
-                passingRate={50}
-              />
-            </Grid>
+          <Box>
+            <Card
+              activeIcon={<LuZap />}
+              title={"Efficiency Rates"}
+              subtitle={"Collection efficiency"}
+            >
+              <Grid templateColumns="repeat(2, 1fr)" px={2} pb={2}>
+                <EfficiencyDonutChart
+                  title="ADE Com"
+                  quota={quotaAndCollections.comAcctDue}
+                  collection={quotaAndCollections.comAcctCollection}
+                  passingRate={50}
+                />
+                <EfficiencyDonutChart
+                  title="ADE NCom"
+                  quota={quotaAndCollections.nComAcctDue}
+                  collection={quotaAndCollections.nComAcctCollection}
+                  passingRate={50}
+                />
+                <EfficiencyDonutChart
+                  title="CVE Com"
+                  quota={quotaAndCollections.comQuota}
+                  collection={quotaAndCollections.comCollection}
+                  passingRate={50}
+                />
+                <EfficiencyDonutChart
+                  title="CVE NCom"
+                  quota={quotaAndCollections.nComQuota}
+                  collection={quotaAndCollections.nComCollection}
+                  passingRate={50}
+                />
+              </Grid>
+            </Card>
           </Box>
         </Grid>
       </Flex>
@@ -822,96 +707,64 @@ export default function Dashboard() {
         >
           {/* Leaderboard */}
           <Box
-            borderRadius="xl"
-            border="1px solid"
-            borderColor="gray.100"
-            boxShadow="sm"
-            bg="white"
-            overflow="hidden"
+          // borderRadius="xl"
+          // border="1px solid"
+          // borderColor="gray.100"
+          // boxShadow="sm"
+          // bg="white"
+          // overflow="hidden"
           >
-            <CardHeader
-              icon={<LuTrophy size={14} color="var(--chakra-colors-primary)" />}
-              title="Sales Agent Leaderboard"
-              subtitle="Ranked by new sales this month"
-            />
-            <ScrollArea.Root height="360px">
-              <ScrollArea.Viewport
-                css={{
-                  "--scroll-shadow-size": "2rem",
-                  "&[data-at-top]": {
-                    maskImage:
-                      "linear-gradient(180deg,#000 calc(100% - var(--scroll-shadow-size)),transparent)",
-                  },
-                  "&[data-at-bottom]": {
-                    maskImage:
-                      "linear-gradient(0deg,#000 calc(100% - var(--scroll-shadow-size)),transparent)",
-                  },
-                }}
-              >
-                <ScrollArea.Content px={4} py={2}>
-                  <Flex direction="column">
-                    {agentLeaderboards.map((agent, i) => (
-                      <LeaderboardItem
-                        key={agent.name}
-                        rank={i + 1}
-                        name={agent.name}
-                        ns={agent.ns}
-                        max={agentLeaderboards[0].ns}
-                      />
-                    ))}
-                  </Flex>
-                </ScrollArea.Content>
-              </ScrollArea.Viewport>
-              <ScrollArea.Scrollbar visibility="hidden">
-                <ScrollArea.Thumb />
-              </ScrollArea.Scrollbar>
-              <ScrollArea.Corner />
-            </ScrollArea.Root>
+            <Card
+              activeIcon={<LuTrophy />}
+              title={"Sales Agent Leaderboard"}
+              subtitle={"Ranked by new sales this month"}
+            >
+              <ScrollArea.Root height="360px">
+                <ScrollArea.Viewport
+                  css={{
+                    "--scroll-shadow-size": "2rem",
+                    "&[data-at-top]": {
+                      maskImage:
+                        "linear-gradient(180deg,#000 calc(100% - var(--scroll-shadow-size)),transparent)",
+                    },
+                    "&[data-at-bottom]": {
+                      maskImage:
+                        "linear-gradient(0deg,#000 calc(100% - var(--scroll-shadow-size)),transparent)",
+                    },
+                  }}
+                >
+                  <ScrollArea.Content px={4} py={2}>
+                    <Flex direction="column">
+                      {agentLeaderboards.map((agent, i) => (
+                        <LeaderboardItem
+                          key={agent.name}
+                          rank={i + 1}
+                          name={agent.name}
+                          ns={agent.ns}
+                          max={agentLeaderboards[0].ns}
+                        />
+                      ))}
+                    </Flex>
+                  </ScrollArea.Content>
+                </ScrollArea.Viewport>
+                <ScrollArea.Scrollbar visibility="hidden">
+                  <ScrollArea.Thumb />
+                </ScrollArea.Scrollbar>
+                <ScrollArea.Corner />
+              </ScrollArea.Root>
+            </Card>
           </Box>
 
           {/* Monthly new sales chart */}
-          <Box
-            borderRadius="xl"
-            border="1px solid"
-            borderColor="gray.100"
-            boxShadow="sm"
-            bg="white"
-            overflow="hidden"
+          <Card
+            activeIcon={<LuChartBar size={14} />}
+            title="Monthly New Sales"
+            subtitle="New plans enrolled per month"
           >
-            <Flex
-              align="center"
-              justify="space-between"
-              gap={2}
-              px={4}
-              pt={4}
-              pb={3}
-              borderBottom="1px solid"
-              borderColor="gray.50"
-            >
-              <Flex align="center" gap={2.5}>
-                <Box
-                  p={2}
-                  borderRadius="lg"
-                  bg="var(--chakra-colors-primary-disabled)/20"
-                  flexShrink={0}
-                >
-                  <LuChartBar size={14} color="var(--chakra-colors-primary)" />
-                </Box>
-                <Box>
-                  <SectionTitle fontWeight="semibold" color="gray.800">
-                    Monthly New Sales
-                  </SectionTitle>
-                  <Small color="gray.400">New plans enrolled per month</Small>
-                </Box>
-              </Flex>
+            <Flex justify="flex-end" mb={3}>
               <Menu.Root>
                 <Menu.Trigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    borderRadius="lg"
-                    flexShrink={0}
-                  >
+                  <Button variant="outline" size="sm" borderRadius="lg">
                     {year}
                   </Button>
                 </Menu.Trigger>
@@ -928,47 +781,45 @@ export default function Dashboard() {
                 </Portal>
               </Menu.Root>
             </Flex>
-            <Box px={4} pb={4} pt={3}>
-              <ResponsiveContainer width="100%" height={330}>
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#F3F4F6"
-                    vertical={false}
-                  />
-                  <XAxis
-                    axisLine={false}
-                    tickLine={false}
-                    dataKey="month"
-                    tick={{ fontSize: 11, fill: "#9CA3AF" }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fontSize: 11, fill: "#9CA3AF" }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: "10px",
-                      border: "1px solid #F3F4F6",
-                      boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                      fontSize: "12px",
-                    }}
-                    cursor={{ fill: "rgba(0,0,0,0.03)", radius: 8 }}
-                  />
-                  <Bar
-                    dataKey="value"
-                    fill="var(--chakra-colors-primary)"
-                    radius={[6, 6, 0, 0]}
-                    maxBarSize={40}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </Box>
+            <ResponsiveContainer width="100%" height={330}>
+              <BarChart
+                data={chartData}
+                margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#F3F4F6"
+                  vertical={false}
+                />
+                <XAxis
+                  axisLine={false}
+                  tickLine={false}
+                  dataKey="month"
+                  tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "10px",
+                    border: "1px solid #F3F4F6",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                    fontSize: "12px",
+                  }}
+                  cursor={{ fill: "rgba(0,0,0,0.03)", radius: 8 }}
+                />
+                <Bar
+                  dataKey="value"
+                  fill="var(--chakra-colors-primary)"
+                  radius={[6, 6, 0, 0]}
+                  maxBarSize={40}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
         </Grid>
       </Flex>
     </Box>
@@ -1071,6 +922,7 @@ type TileItemProps = {
   prevVal: string;
   monthOverMonthPercentage: number;
   order?: "asc" | "desc";
+  color: string;
 };
 
 const TileItem = ({
@@ -1080,6 +932,7 @@ const TileItem = ({
   prevVal,
   monthOverMonthPercentage,
   order = "asc",
+  color,
 }: TileItemProps) => {
   const isPositive =
     order === "asc"
@@ -1088,55 +941,48 @@ const TileItem = ({
 
   return (
     <Box
-      borderRadius="xl"
-      // border="1px solid"
-      // borderColor="gray.100"
+      borderRadius="3xl"
+      p={6}
+      minH="150px"
+      position="relative"
+      bg={`${color}18`}
+      border="2px solid"
+      borderColor={`${color}`}
       boxShadow="sm"
-      boxShadowColor={"gray.50"}
-      bg="white"
       overflow="hidden"
     >
-      <Box h="3px" bg={isPositive ? "green.400" : "red.400"} />
-      <Box p={4}>
-        <Flex justify="space-between" align="flex-start" mb={3}>
-          <Box
-            p={2}
-            borderRadius="lg"
-            bg="var(--chakra-colors-primary-disabled)/20"
+      <Flex justify="space-between" align="start">
+        <Flex direction="column" gap={3} align="start">
+          <Small as="div" fontWeight="700" style={{ color }}>
+            {title}
+          </Small>
+          <BaseText
+            as="div"
+            fontSize="5xl"
+            fontWeight="bold"
+            color="gray.800"
+            lineHeight="1"
           >
-            <Icon size={17} color="var(--chakra-colors-primary)" />
-          </Box>
-          {/* <Tooltip
-            content={"Previous month: " + prevVal}
-            contentProps={{ css: { bg: "white" } }}
-            positioning={{ placement: "top-end" }}
-          >
-            <OSPBadge type={isPositive ? "success" : "danger"} size="md">
-              {monthOverMonthPercentage > 0 ? (
-                <LuArrowUp />
-              ) : monthOverMonthPercentage < 0 ? (
-                <LuArrowDown />
-              ) : null}{" "}
-              {Math.abs(monthOverMonthPercentage).toFixed(1)}%
-            </OSPBadge>
-          </ToolTip> */}
+            {value}
+          </BaseText>
+          <Small as="div" color="gray.500">
+            from {prevVal} prior month
+          </Small>
         </Flex>
-        <BaseText
-          as="div"
-          fontSize="2xl"
-          fontWeight="bold"
-          color="gray.800"
-          lineHeight="1"
-        >
-          {value}
-        </BaseText>
-        <Small as="div" fontWeight="semibold" color="gray.600" mt={1.5}>
-          {title}
-        </Small>
-        <Small as="div" color="gray.400" mt={0.5}>
-          from {prevVal} prior month
-        </Small>
-      </Box>
+        <Box p={3} bg={`${color}20`} style={{ color }} borderRadius="2xl">
+          <Icon size={28} />
+        </Box>
+      </Flex>
+      <Flex justify="flex-end" mt={3}>
+        <OSPBadge type={isPositive ? "success" : "danger"} size="md">
+          {monthOverMonthPercentage > 0 ? (
+            <LuArrowUp />
+          ) : monthOverMonthPercentage < 0 ? (
+            <LuArrowDown />
+          ) : null}{" "}
+          {Math.abs(monthOverMonthPercentage).toFixed(1)}%
+        </OSPBadge>
+      </Flex>
     </Box>
   );
 };

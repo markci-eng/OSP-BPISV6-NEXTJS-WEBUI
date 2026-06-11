@@ -134,14 +134,13 @@ export default function AppHeader({
   return (
     <Flex
       className="no-print"
-      h="80px"
+      h={{ base: "80px", lg: "auto" }}
       px={4}
       align="center"
       justify="space-between"
       bg="bg"
       _dark={{ bg: "rgba(20, 24, 36, 0.88)" }}
-      // borderBottom="1px solid"
-      // borderColor="gray.200"
+      borderBottom={{ base: 0, md: "1px solid #dbdbdbff" }}
     >
       {/* Left side */}
       <Flex align="center" gap={2}>
@@ -344,9 +343,7 @@ export default function AppHeader({
                       .filter(
                         (s) =>
                           !searchValue ||
-                          s
-                            .toLowerCase()
-                            .includes(searchValue.toLowerCase()),
+                          s.toLowerCase().includes(searchValue.toLowerCase()),
                       )
                       .map((s) => (
                         <Flex
@@ -363,7 +360,11 @@ export default function AppHeader({
                           <Box color="gray.400" flexShrink={0}>
                             <LuSearch size={16} />
                           </Box>
-                          <Text fontSize="md" color="gray.700" _dark={{ color: "gray.200" }}>
+                          <Text
+                            fontSize="md"
+                            color="gray.700"
+                            _dark={{ color: "gray.200" }}
+                          >
                             {s}
                           </Text>
                         </Flex>
@@ -846,10 +847,13 @@ export default function AppHeader({
 
         <Show when={!isMobile}>
           <Avatar.Root
+            ml={5}
             cursor="pointer"
             onClick={onOpenProfile}
             title="Account & Settings"
             colorPalette={pickPalette(avatarName || "U")}
+            borderWidth={"3px"}
+            borderColor={"primary"}
           >
             <Avatar.Image
               src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"

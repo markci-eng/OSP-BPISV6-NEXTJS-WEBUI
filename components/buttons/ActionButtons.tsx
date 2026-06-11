@@ -12,14 +12,14 @@ import {
 import Link from "next/link";
 import { BiCaretDown } from "react-icons/bi";
 import React from "react";
-import { IconType } from "react-icons";
 
 export type ActionButtonItem =
   | {
       type?: "action";
       label: string;
-      href: string;
-      icon: IconType;
+      href?: string;
+      onClick?: () => void;
+      icon: React.ElementType;
       colorScheme?: string;
       variant?: "outline" | "solid" | "ghost";
     }
@@ -39,7 +39,7 @@ export default function ActionButtons({
   return (
     <Flex gap={2} wrap="wrap">
       {/* ================= DESKTOP BUTTONS ================= */}
-      <Flex gap={2} wrap="wrap" display={{ base: "none", md: "flex" }}>
+      {/* <Flex gap={2} wrap="wrap" display={{ base: "none", md: "flex" }}>
         {buttons.map((btn, index) => {
           if (btn.type === "separator") {
             return (
@@ -53,33 +53,40 @@ export default function ActionButtons({
             );
           }
 
-          return (
+          const buttonEl = (
+            <Button
+              size="sm"
+              variant={btn.variant || "outline"}
+              colorScheme={btn.colorScheme || "gray"}
+              px={3}
+              gap={2}
+              transition="all 0.2s"
+              onClick={btn.onClick}
+              _hover={{
+                transform: "translateY(-1px)",
+                shadow: "sm",
+              }}
+            >
+              <btn.icon size={iconBoxSize} />
+              <Text fontSize="sm">{btn.label}</Text>
+            </Button>
+          );
+
+          return btn.href && !btn.onClick ? (
             <Link key={btn.label} href={btn.href}>
-              <Button
-                size="sm"
-                variant={btn.variant || "outline"}
-                colorScheme={btn.colorScheme || "gray"}
-                px={3}
-                gap={2}
-                transition="all 0.2s"
-                _hover={{
-                  transform: "translateY(-1px)",
-                  shadow: "sm",
-                }}
-              >
-                <btn.icon size={iconBoxSize} />
-                <Text fontSize="sm">{btn.label}</Text>
-              </Button>
+              {buttonEl}
             </Link>
+          ) : (
+            <React.Fragment key={btn.label}>{buttonEl}</React.Fragment>
           );
         })}
-      </Flex>
+      </Flex> */}
 
       {/* ================= MOBILE DROPDOWN ================= */}
-      <Flex display={{ base: "flex", md: "none" }}>
+      <Flex>
         <Menu.Root>
           <Menu.Trigger asChild>
-            <Button size="sm" variant="solid">
+            <Button size="sm" variant="solid" borderRadius={"15px"} px={"15px"}>
               Actions <BiCaretDown />
             </Button>
           </Menu.Trigger>
@@ -92,21 +99,31 @@ export default function ActionButtons({
                     return <Menu.Separator key={`sep-${index}`} />;
                   }
 
-                  return (
+                  const itemContent = (
+                    <HStack
+                      gap={2}
+                      px={3}
+                      py={2}
+                      borderRadius="md"
+                      _hover={{ bg: "gray.100" }}
+                      cursor="pointer"
+                    >
+                      <btn.icon size={16} />
+                      <Text fontSize="sm">{btn.label}</Text>
+                    </HStack>
+                  );
+
+                  return btn.href && !btn.onClick ? (
                     <Menu.Item key={btn.label} value={btn.label} asChild>
-                      <Link href={btn.href}>
-                        <HStack
-                          gap={2}
-                          px={3}
-                          py={2}
-                          borderRadius="md"
-                          _hover={{ bg: "gray.100" }}
-                          cursor="pointer"
-                        >
-                          <btn.icon size={16} />
-                          <Text fontSize="sm">{btn.label}</Text>
-                        </HStack>
-                      </Link>
+                      <Link href={btn.href}>{itemContent}</Link>
+                    </Menu.Item>
+                  ) : (
+                    <Menu.Item
+                      key={btn.label}
+                      value={btn.label}
+                      onClick={btn.onClick}
+                    >
+                      {itemContent}
                     </Menu.Item>
                   );
                 })}

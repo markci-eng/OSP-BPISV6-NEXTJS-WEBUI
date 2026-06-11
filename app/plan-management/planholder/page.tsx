@@ -130,6 +130,7 @@ export default function PlanholderSearchPage() {
 
   return (
     <Page.Root
+      hideBackButton={true}
       title="Account Summary"
       description="Search and select a planholder to view their profile."
     >

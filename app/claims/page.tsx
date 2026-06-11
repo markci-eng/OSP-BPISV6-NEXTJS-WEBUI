@@ -19,7 +19,7 @@ import {
   LuTriangleAlert,
 } from "react-icons/lu";
 
-import { FormStepper, StepItem } from "@/components/form-stepper/form-stepper";
+import FormSteps, { StepItem } from "@/components/FormSteps";
 import { PlanholderInfoData } from "@/app/plan-management/data/planholder-info.data";
 import { PlanholderInfoType } from "@/components/plan-management/planholders/planholders.types";
 
@@ -53,6 +53,7 @@ const ClaimsPage = () => {
     React.useState<ClaimInfoState>(initialClaimInfo);
   const [payees, setPayees] = React.useState<PayeeInfo[]>(initialPayees);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [currentStep, setCurrentStep] = React.useState(0);
 
   // Resolve planholder from ?lpa=... or sessionStorage on mount.
   // Read directly from window so we don't pull useSearchParams (which needs a
@@ -114,7 +115,13 @@ const ClaimsPage = () => {
         description="Please fill out the following details."
       >
         <Page.MainContent>
-        <FormStepper steps={steps} onSubmit={handleSubmitClick} />
+        <FormSteps
+          stepsData={steps}
+          title="Claim Application"
+          description="Please fill out the following details."
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+        />
 
         <Dialog.Root
           open={confirmOpen}

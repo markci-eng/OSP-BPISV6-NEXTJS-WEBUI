@@ -8,8 +8,7 @@ import { ChangeModeSummaryPage } from "./change-mode-summary";
 // import PaymentPage from "../reinstatement-page/payment";
 import { FaFileAlt } from "react-icons/fa";
 import { FaCcMastercard, FaFileShield } from "react-icons/fa6";
-import { FormSteps } from "osp.cis.nextjs.components";
-import { FormStepper } from "@/components/form-stepper/form-stepper";
+import FormSteps from "@/components/FormSteps";
 import Page from "@/components/layout/page/Page";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 
@@ -26,6 +25,7 @@ export function ChangeModePage({
     CheckedPlanType[] | undefined
   >([]);
   const [totalAmountDue, setTotalAmountDue] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const { messageBox } = useMessageDialog();
 
@@ -87,10 +87,15 @@ export function ChangeModePage({
       description="Switch your payment mode anytime—Quarterly, Semi-Annual, or Annual."
     >
       <Page.MainContent>
-        <FormStepper
-          steps={stepsData}
-          onSubmit={() => onSuccess("CM-12345", totalAmountDue)}
-        />
+        <Box mt={"-30px"}>
+          <FormSteps
+            stepsData={stepsData}
+            title=""
+            description=""
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+          />
+        </Box>
       </Page.MainContent>
     </Page.Root>
     // <Box maxW={"7xl"} mx={"auto"} py={3}>

@@ -20,43 +20,42 @@ export const TileItem = ({
 }) => {
   return (
     <Box bg={"white"} borderRadius={"md"} boxShadow={"sm"} p={5}>
-      <Flex gap={5} justify={"space-between"}>
-        <Box my={2} mr={10} borderRadius={"md"}>
+      <Flex justify={"space-between"} align={"flex-start"}>
+        <Body>{title}</Body>
+        <Box borderRadius={"md"}>
           <Icon size={"35px"} color="var(--chakra-colors-primary)" />
         </Box>
-        <Flex my={1} align={"end"} direction={"column"}>
+      </Flex>
+
+      <Flex justify={"space-between"} align={"flex-end"} mt={4}>
+        <Strong fontSize={"4xl"} color={"gray.700"}>
+          {value}
+        </Strong>
+        <Flex align={"end"} direction={"column"}>
           <Tooltip content=""></Tooltip>
-            <OSPBadge
-              type={
-                order === "asc"
-                  ? monthOverMonthPercentage > 0
-                    ? "success"
-                    : "danger"
-                  : monthOverMonthPercentage > 0
-                    ? "danger"
-                    : "success"
-              }
-              size={"md"}
-            >
-              {monthOverMonthPercentage > 0 ? (
-                <LuArrowUp />
-              ) : monthOverMonthPercentage === 0 ? null : (
-                <LuArrowDown />
-              )}{" "}
-              {monthOverMonthPercentage.toFixed(2) + "%"}
-            </OSPBadge>
+          <OSPBadge
+            type={
+              order === "asc"
+                ? monthOverMonthPercentage > 0
+                  ? "success"
+                  : "danger"
+                : monthOverMonthPercentage > 0
+                  ? "danger"
+                  : "success"
+            }
+            size={"md"}
+          >
+            {monthOverMonthPercentage > 0 ? (
+              <LuArrowUp />
+            ) : monthOverMonthPercentage === 0 ? null : (
+              <LuArrowDown />
+            )}{" "}
+            {monthOverMonthPercentage.toFixed(2) + "%"}
+          </OSPBadge>
           <Small textAlign={"end"} color={"gray.500"}>
             vs previous month
           </Small>
         </Flex>
-      </Flex>
-
-      <Body>{title}</Body>
-
-      <Flex gap={5} my={5}>
-        <Strong fontSize={"4xl"} color={"gray.700"}>
-          {value}
-        </Strong>
       </Flex>
     </Box>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { Breadcrumb, H4, Small } from "st-peter-ui";
-import { FormSteps } from "osp.cis.nextjs.components";
 import { Box, Separator, Text, Flex, Strong } from "@chakra-ui/react";
 import { LuUser, LuNotebook, LuBuilding2, LuFileText } from "react-icons/lu";
 import AgentEmploymentForm from "@/components/saleforce/forms/agent-employment-form";
@@ -13,8 +12,8 @@ import Page from "@/components/layout/page/Page";
 import FormTitle from "@/components/texts/FormTitle";
 import Caption from "@/components/texts/Caption";
 import Card from "@/components/cards/Card";
-import { useRouter } from "next/navigation";
-import { FormStepper } from "@/components/form-stepper/form-stepper";
+import { useState } from "react";
+import FormSteps from "@/components/FormSteps";
 
 const steps = [
   {
@@ -100,7 +99,7 @@ const steps = [
 ];
 
 export const CreateSalesForcePage = () => {
-  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(0);
 
   return (
     <>
@@ -109,12 +108,15 @@ export const CreateSalesForcePage = () => {
         description="Please fill out the following details."
       >
         <Page.MainContent>
-          <FormStepper
-            steps={steps}
-            onSubmit={() => {
-              router.push("/printing");
-            }}
-          />
+          <Box mt={"-30px"}>
+            <FormSteps
+              stepsData={steps}
+              title=""
+              description=""
+              currentStep={currentStep}
+              setCurrentStep={setCurrentStep}
+            />
+          </Box>
         </Page.MainContent>
       </Page.Root>
     </>

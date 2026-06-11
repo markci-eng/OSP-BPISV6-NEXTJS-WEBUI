@@ -5,7 +5,6 @@ import {
   Flex,
   Grid,
   GridItem,
-  Separator,
   Show,
   Text,
   useBreakpointValue,
@@ -35,17 +34,20 @@ import {
   LuMail,
   LuMapPin,
   LuSearch,
-  LuChevronUp,
+  LuChevronsDown,
+  LuChevronsUp,
 } from "react-icons/lu";
 import MenuButton, { MenuItemButton } from "../buttons/MenuButton";
 import { MdPayment } from "react-icons/md";
 import { useMessageDialog } from "../common/message-box/message-box-provider";
 import { TbMoneybagMove } from "react-icons/tb";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import {
   ACCOUNT_SUMMARY_STEPS,
   OnboardingTutorial,
 } from "./onboarding-tutorial";
+import { SecondarySmButton, TertiarySmButton } from "st-peter-ui";
+import ActionButtons from "../buttons/ActionButtons";
 
 export interface Hyperlinks {
   payMyPlan?: string | undefined;
@@ -132,6 +134,24 @@ export default function PlanholderProfilePage({
   const router = useRouter();
   const { messageBox } = useMessageDialog();
   const [isProfileOpen, setIsProfileOpen] = useState(true);
+  const [personalOpen, setPersonalOpen] = useState(false);
+  const [addressOpen, setAddressOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [employmentOpen, setEmploymentOpen] = useState(false);
+
+  const expandAll = () => {
+    setPersonalOpen(true);
+    setAddressOpen(true);
+    setContactOpen(true);
+    setEmploymentOpen(true);
+  };
+
+  const collapseAll = () => {
+    setPersonalOpen(false);
+    setAddressOpen(false);
+    setContactOpen(false);
+    setEmploymentOpen(false);
+  };
 
   const planholderAddress = (() => {
     const addr =
@@ -144,90 +164,157 @@ export default function PlanholderProfilePage({
       : undefined;
   })();
 
-  const toggleProfile = () => setIsProfileOpen((prev) => !prev);
-
   const phone =
     props.planholderContact?.find((c) => c.type === "MobileNo")?.value ??
     props.planholderContact?.find((c) => c.type === "LandlineNo")?.value;
   const email = props.planholderContact?.find((c) => c.type === "Email")?.value;
 
-  const contactActions = props.planholderInfo ? (
-    <Flex gap={2} overflow="hidden" id="tour-contact-actions" flexWrap="wrap">
-      <Button
-        bg={"white"}
-        variant="outline"
-        size="sm"
-        borderRadius="full"
-        disabled={!phone}
-        asChild={!!phone}
-        flexShrink={0}
-      >
-        {phone ? (
-          <a href={`tel:${phone}`}>
-            <LuPhone />
-            {(() => {
-              const d = phone.replace(/\D/g, "");
-              const local = d.startsWith("63") ? "0" + d.slice(2) : d;
-              return local.startsWith("09") && local.length === 11
-                ? local.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3")
-                : phone;
-            })()}
-          </a>
-        ) : (
-          <>
-            <LuPhone />
-            No phone
-          </>
-        )}
-      </Button>
-      <Button
-        bg={"white"}
-        variant="outline"
-        size="sm"
-        borderRadius="full"
-        disabled={!email}
-        asChild={!!email}
-        flexShrink={0}
-      >
-        {email ? (
-          <a href={`mailto:${email}`}>
-            <LuMail />
-            Send email
-          </a>
-        ) : (
-          <>
-            <LuMail />
-            Send email
-          </>
-        )}
-      </Button>
-      <Button
-        bg={"white"}
-        variant="outline"
-        size="sm"
-        borderRadius="full"
-        disabled={!planholderAddress}
-        asChild={!!planholderAddress}
-        flexShrink={0}
-      >
-        {planholderAddress ? (
-          <a
-            href={`https://maps.google.com/?q=${encodeURIComponent(planholderAddress)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <LuMapPin />
-            Map address
-          </a>
-        ) : (
-          <>
-            <LuMapPin />
-            Map address
-          </>
-        )}
-      </Button>
-    </Flex>
-  ) : undefined;
+  // const contactActions = props.planholderInfo ? (
+  //   <Flex gap={2} overflow="hidden" id="tour-contact-actions" flexWrap="wrap">
+  //     <Button
+  //       bg={"white"}
+  //       variant="outline"
+  //       size="sm"
+  //       borderRadius="full"
+  //       disabled={!phone}
+  //       asChild={!!phone}
+  //       flexShrink={0}
+  //     >
+  //       {phone ? (
+  //         <a href={`tel:${phone}`}>
+  //           <LuPhone />
+  //           {(() => {
+  //             const d = phone.replace(/\D/g, "");
+  //             const local = d.startsWith("63") ? "0" + d.slice(2) : d;
+  //             return local.startsWith("09") && local.length === 11
+  //               ? local.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3")
+  //               : phone;
+  //           })()}
+  //         </a>
+  //       ) : (
+  //         <>
+  //           <LuPhone />
+  //           No phone
+  //         </>
+  //       )}
+  //     </Button>
+  //     <Button
+  //       bg={"white"}
+  //       variant="outline"
+  //       size="sm"
+  //       borderRadius="full"
+  //       disabled={!email}
+  //       asChild={!!email}
+  //       flexShrink={0}
+  //     >
+  //       {email ? (
+  //         <a href={`mailto:${email}`}>
+  //           <LuMail />
+  //           Send email
+  //         </a>
+  //       ) : (
+  //         <>
+  //           <LuMail />
+  //           Send email
+  //         </>
+  //       )}
+  //     </Button>
+  //     <Button
+  //       bg={"white"}
+  //       variant="outline"
+  //       size="sm"
+  //       borderRadius="full"
+  //       disabled={!planholderAddress}
+  //       asChild={!!planholderAddress}
+  //       flexShrink={0}
+  //     >
+  //       {planholderAddress ? (
+  //         <a
+  //           href={`https://maps.google.com/?q=${encodeURIComponent(planholderAddress)}`}
+  //           target="_blank"
+  //           rel="noopener noreferrer"
+  //         >
+  //           <LuMapPin />
+  //           Map address
+  //         </a>
+  //       ) : (
+  //         <>
+  //           <LuMapPin />
+  //           Map address
+  //         </>
+  //       )}
+  //     </Button>
+  //   </Flex>
+  // ) : undefined;
+
+  const actionButtonDefs = [
+    {
+      label: "Edit Planholder Information",
+      href: `/plan-management/planholder/${props.planholderInfo?.personId}/edit`,
+      icon: () => <LuUserPen size={16} />,
+    },
+    {
+      label: "Delete Planholder",
+      icon: () => <LuTrash2 size={16} />,
+      onClick: () =>
+        messageBox({
+          title: "Unable to delete planholder.",
+          message: "Unable to delete planholder with active plans.",
+          confirmText: "Dismiss",
+          variant: "error",
+        }),
+    },
+
+    ...(props.hyperlinks?.payMyPlan
+      ? [
+          {
+            label: "Pay My Plan",
+            href: props.hyperlinks.payMyPlan as string,
+            icon: () => <MdPayment size={16} />,
+          },
+        ]
+      : []),
+
+    ...(props.hyperlinks?.changeOfMode
+      ? [
+          {
+            label: "Change of Mode",
+            href: props.hyperlinks.changeOfMode as string,
+            icon: () => <LuReplace size={16} />,
+          },
+        ]
+      : []),
+
+    ...(props.hyperlinks?.returnedOfPremium
+      ? [
+          {
+            label: "ROP Application",
+            href: props.hyperlinks.returnedOfPremium as string,
+            icon: () => <LuTrendingUpDown size={16} />,
+          },
+        ]
+      : []),
+
+    ...(props.hyperlinks?.claimApplication
+      ? [
+          {
+            label: "Claim Application",
+            href: props.hyperlinks.claimApplication as string,
+            icon: () => <LuFile size={16} />,
+          },
+        ]
+      : []),
+
+    ...(props.hyperlinks?.cashSurrenderedValue
+      ? [
+          {
+            label: "CSV Application",
+            href: props.hyperlinks.cashSurrenderedValue as string,
+            icon: () => <TbMoneybagMove size={16} />,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <Page.Root
@@ -235,135 +322,7 @@ export default function PlanholderProfilePage({
       description="Clear Access to Every Planholder Detail."
     >
       <Page.ToolContent>
-        <Flex
-          direction="row"
-          gap={2}
-          my={2}
-          align="center"
-          justify={{ sm: "flex-end" }}
-          w="full"
-        >
-          {/* <Box flex={1} minW={0} id="tour-search">
-            <PlanholderLookup
-              value={
-                props.planholderInfo
-                  ? ({
-                      personId: props.planholderInfo.personId,
-                      firstName: props.planholderInfo.firstName,
-                      middleName: props.planholderInfo.middleName ?? "",
-                      lastName: props.planholderInfo.lastName,
-                      lpaNumber: "",
-                      dueDate: new Date(),
-                      installmentNo: 0,
-                      totalInstallment: 0,
-                      balance: 0,
-                      planDescription: "",
-                      mode: "",
-                      effectivityDate: new Date(),
-                      branch: "",
-                      accountStatus: "",
-                      terminationStatus: "",
-                    } as PlanholderLookupType)
-                  : undefined
-              }
-              onSelectChange={(e) =>
-                router.push(`/plan-management/planholder/${e?.personId}`)
-              }
-              mobileFullscreen
-            />
-          </Box> */}
-          {props.planholderInfo && (
-            <>
-              <Box id="tour-actions-menu" flexShrink={0}>
-                <MenuButton>
-                  <MenuItemButton
-                    icon={<LuUserPen />}
-                    label="Edit Planholder Info"
-                    itemKey="edit"
-                    value="edit"
-                    onClick={() => {
-                      redirect(
-                        `/plan-management/planholder/${props.planholderInfo?.personId}/edit`,
-                      );
-                    }}
-                  />
-                  <MenuItemButton
-                    icon={<LuTrash2 />}
-                    label="Delete Planholder"
-                    itemKey="delete"
-                    value="delete"
-                    onClick={() =>
-                      messageBox({
-                        title: "Unable to delete planholder.",
-                        message:
-                          "Unable to delete planholder with active plans.",
-                        confirmText: "Dismiss",
-                        variant: "error",
-                      })
-                    }
-                  />
-                  {props.hyperlinks && <Separator />}
-                  {props.hyperlinks && props.hyperlinks.payMyPlan && (
-                    <MenuItemButton
-                      icon={<MdPayment />}
-                      label="Pay My Plan"
-                      itemKey="pay-my-plan"
-                      value="pay-my-plan"
-                      onClick={() =>
-                        redirect(props.hyperlinks?.payMyPlan ?? "")
-                      }
-                    />
-                  )}
-                  {props.hyperlinks && props.hyperlinks.changeOfMode && (
-                    <MenuItemButton
-                      icon={<LuReplace />}
-                      label="Change of Mode"
-                      itemKey="change-of-mode"
-                      value="change-of-mode"
-                      onClick={() =>
-                        redirect(props.hyperlinks?.changeOfMode ?? "")
-                      }
-                    />
-                  )}
-                  {props.hyperlinks && props.hyperlinks.returnedOfPremium && (
-                    <MenuItemButton
-                      icon={<LuTrendingUpDown />}
-                      label="ROP Application"
-                      itemKey="return-of-premium"
-                      value="return-of-premium"
-                      onClick={() =>
-                        redirect(props.hyperlinks?.returnedOfPremium ?? "")
-                      }
-                    />
-                  )}
-                  {props.hyperlinks && props.hyperlinks.claimApplication && (
-                    <MenuItemButton
-                      icon={<LuFile />}
-                      label="Claim Application"
-                      itemKey="claim-application"
-                      value="claim-application"
-                      onClick={() =>
-                        redirect(props.hyperlinks?.claimApplication ?? "")
-                      }
-                    />
-                  )}
-                  {props.hyperlinks &&
-                    props.hyperlinks.cashSurrenderedValue && (
-                      <MenuItemButton
-                        icon={<TbMoneybagMove />}
-                        label="CSV Application"
-                        itemKey="cash-surrendered-value"
-                        value="cash-surrendered-value"
-                        onClick={() =>
-                          redirect(props.hyperlinks?.cashSurrenderedValue ?? "")
-                        }
-                      />
-                    )}
-                </MenuButton>
-              </Box>
-            </>
-          )}
-        </Flex>
+        {props.planholderInfo && <ActionButtons buttons={actionButtonDefs} />}
       </Page.ToolContent>
       <Page.MainContent>
         {/* Mobile empty state — visible only on mobile when no planholder is selected */}
@@ -401,10 +360,27 @@ export default function PlanholderProfilePage({
             lg: "block",
           }}
         >
-          <Grid gap={5} templateColumns={{ base: "1fr", lg: "2fr 1fr" }}>
+          {/* Expand / Collapse strip */}
+          <Flex justify="flex-end" gap={2} mb={1}>
+            <TertiarySmButton onClick={expandAll}>
+              <LuChevronsDown size={14} />
+              Expand All
+            </TertiarySmButton>
+            <TertiarySmButton onClick={collapseAll}>
+              <LuChevronsUp size={14} />
+              Collapse All
+            </TertiarySmButton>
+          </Flex>
+
+          {/* Unified 2-column profile grid */}
+          <Grid
+            templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
+            gap={5}
+            alignItems="start"
+          >
+            {/* Left column — identity & details */}
             <GridItem>
-              <Flex direction="column" gap={5}>
-                {/* ProfileHeaderCard — accordion trigger with contact actions */}
+              <Flex direction="column" gap={4}>
                 <Box id="tour-profile-header">
                   <ProfileHeaderCard
                     name={
@@ -443,78 +419,10 @@ export default function PlanholderProfilePage({
                     }
                     contactNo={phone}
                     isOpen={isProfileOpen}
-                    onToggle={toggleProfile}
                     contentId="profile-details-content"
-                    actions={contactActions}
                   />
                 </Box>
-
-                {/* Collapsible content */}
-                {isProfileOpen && (
-                  <Flex
-                    id="profile-details-content"
-                    role="region"
-                    aria-label="Profile Details"
-                    direction="column"
-                    gap={5}
-                  >
-                    {/* Personal Information + Addresses | Contact Information + Employment Information */}
-                    <Grid
-                      gap={5}
-                      templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
-                    >
-                      <GridItem>
-                        <Flex direction="column" gap={5}>
-                          <Box id="tour-planholder-info">
-                            <PlanholderInfo
-                              planholder={props.planholderInfo ?? undefined}
-                            />
-                          </Box>
-                          <PlanholderAddressCard
-                            phAddress={props.planholderAddress}
-                          />
-                        </Flex>
-                      </GridItem>
-                      <GridItem>
-                        <Flex direction="column" gap={5}>
-                          <ContactInfo
-                            contacts={{
-                              Email:
-                                props.planholderContact
-                                  ?.filter((x) => x.type === "Email")
-                                  .map((x) => x.value) ?? [],
-                              MobileNo:
-                                props.planholderContact
-                                  ?.filter((x) => x.type === "MobileNo")
-                                  .map((x) => x.value) ?? [],
-                              LandlineNo:
-                                props.planholderContact
-                                  ?.filter((x) => x.type === "LandlineNo")
-                                  .map((x) => x.value) ?? [],
-                            }}
-                          />
-                          <EmploymentInfo planholderInfo={undefined} />
-                        </Flex>
-                      </GridItem>
-                    </Grid>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={toggleProfile}
-                      alignSelf="center"
-                      color="gray.500"
-                      gap={1}
-                    >
-                      <LuChevronUp size={14} />
-                      Collapse
-                    </Button>
-                  </Flex>
-                )}
-
-                <Show when={isMobile}>
-                  <PendingRequests requests={MOCK_REQUESTS} />
-                </Show>
+                {/* {contactActions} */}
                 <Show when={isMobile}>
                   <ListOfPlans
                     plans={(props.plans ?? []) as any}
@@ -524,22 +432,60 @@ export default function PlanholderProfilePage({
                     personId={props.planholderInfo?.personId}
                     planholderAddress={planholderAddress}
                   />
+                  <PendingRequests requests={MOCK_REQUESTS} />
                 </Show>
+                <Box id="tour-planholder-info">
+                  <PlanholderInfo
+                    planholder={props.planholderInfo ?? undefined}
+                    isOpen={personalOpen}
+                    onToggle={() => setPersonalOpen((p) => !p)}
+                  />
+                </Box>
+                <PlanholderAddressCard
+                  phAddress={props.planholderAddress}
+                  isOpen={addressOpen}
+                  onToggle={() => setAddressOpen((p) => !p)}
+                />
               </Flex>
             </GridItem>
 
+            {/* Right column — activity & admin */}
             <GridItem>
-              <Flex direction="column" gap={5}>
+              <Flex direction="column" gap={4}>
                 <Show when={!isMobile}>
                   <Box id="tour-pending-requests">
                     <PendingRequests requests={MOCK_REQUESTS} />
                   </Box>
                 </Show>
+                <ContactInfo
+                  contacts={{
+                    Email:
+                      props.planholderContact
+                        ?.filter((x) => x.type === "Email")
+                        .map((x) => x.value) ?? [],
+                    MobileNo:
+                      props.planholderContact
+                        ?.filter((x) => x.type === "MobileNo")
+                        .map((x) => x.value) ?? [],
+                    LandlineNo:
+                      props.planholderContact
+                        ?.filter((x) => x.type === "LandlineNo")
+                        .map((x) => x.value) ?? [],
+                  }}
+                  isOpen={contactOpen}
+                  onToggle={() => setContactOpen((p) => !p)}
+                />
+                <EmploymentInfo
+                  planholderInfo={undefined}
+                  isOpen={employmentOpen}
+                  onToggle={() => setEmploymentOpen((p) => !p)}
+                />
               </Flex>
             </GridItem>
           </Grid>
 
-          <Box id="tour-plans-list" display={{ base: "none", md: "block" }}>
+          {/* Plans section — full width */}
+          <Box id="tour-plans-list" display={{ base: "none", lg: "block" }}>
             <ListOfPlans
               plans={(props.plans ?? []) as any}
               deletePlanFunction={props.actionFunctions?.deletePlanFunction}

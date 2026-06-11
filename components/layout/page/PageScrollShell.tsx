@@ -10,6 +10,7 @@ type PageScrollShellProps = {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   description?: React.ReactNode;
+  hideBackButton: boolean;
   toolContent?: React.ReactNode;
   mainContent?: React.ReactNode;
   boxProps?: BoxProps;
@@ -19,6 +20,7 @@ const PageScrollShell = ({
   title,
   subtitle,
   description,
+  hideBackButton,
   toolContent,
   mainContent,
   boxProps,
@@ -49,7 +51,7 @@ const PageScrollShell = ({
           pb="24px"
         >
           <Box minW={0} flex="1">
-            <BackButton />
+            <BackButton enabled={!hideBackButton} />
             {subtitle && (
               <Box
                 fontFamily="var(--font-dm-sans), system-ui, sans-serif"

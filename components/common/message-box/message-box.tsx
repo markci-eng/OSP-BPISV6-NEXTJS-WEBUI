@@ -156,7 +156,7 @@ export default function MessageDialog({
                 <Button
                   variant="outline"
                   flex={1}
-                  borderRadius="lg"
+                  borderRadius="15px"
                   size={"md"}
                   onClick={() => {
                     onCancel?.();
@@ -169,8 +169,8 @@ export default function MessageDialog({
 
               <Button
                 flex={1}
-                size={"md"} 
-                borderRadius="lg"
+                size={"md"}
+                borderRadius="15px"
                 colorPalette={config.colorPalette}
                 loading={isLoading}
                 onClick={() => {

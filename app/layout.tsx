@@ -6,6 +6,7 @@ import { MessageDialogProvider } from "@/components/common/message-box/message-b
 import { RenderPage } from "./render-page";
 import RootLayoutClient from "./root-layout-client";
 import { NavigationLoadingOverlay } from "@/components/common/loading-overlay/navigation-loading-overlay";
+import { DemoAuthProvider } from "@/components/ui/demo-auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,12 +45,14 @@ export default function RootLayout({
       >
         <RootLayoutClient>
           <StPeterProvider font="Open Sans" theme="green">
-            <MessageDialogProvider>
-              <RenderPage>{children}</RenderPage>
-              {/* <AppLayout>{children}</AppLayout> */}
-              <Toaster position="top-right" richColors />
-              <NavigationLoadingOverlay />
-            </MessageDialogProvider>
+            <DemoAuthProvider>
+              <MessageDialogProvider>
+                <RenderPage>{children}</RenderPage>
+                {/* <AppLayout>{children}</AppLayout> */}
+                <Toaster position="top-right" richColors />
+                <NavigationLoadingOverlay />
+              </MessageDialogProvider>
+            </DemoAuthProvider>
           </StPeterProvider>
         </RootLayoutClient>
       </body>

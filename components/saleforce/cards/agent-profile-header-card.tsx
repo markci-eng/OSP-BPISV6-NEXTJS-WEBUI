@@ -15,16 +15,7 @@ const AgentProfileHeaderCard = ({ agent }: AgentProfileHeaderCardProps) => {
   const positionDesc =
     getPositionDesc(agent?.position ?? "") +
     (agent?.branch ? ` · ${agent.branch}` : "");
-  return (
-    <ProfileHeaderCard
-      name={agent?.name ?? undefined}
-      // nameSubtitle={{ active: isActive, value: positionDesc }}
-      // headerInfo={{
-      //   label: "Agent ID",
-      //   value: agent?.id ?? "-",
-      // }}
-    />
-  );
+  return <ProfileHeaderCard name={agent?.name ?? undefined} />;
 };
 
 export default AgentProfileHeaderCard;

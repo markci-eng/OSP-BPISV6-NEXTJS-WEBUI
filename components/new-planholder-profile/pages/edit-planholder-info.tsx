@@ -1,6 +1,6 @@
 "use client";
 import Page from "@/components/layout/page/Page";
-import { FormStepper } from "@/components/form-stepper/form-stepper";
+import FormSteps from "@/components/FormSteps";
 import { LuFileText, LuUser } from "react-icons/lu";
 import { TransferDocumentsPage } from "@/app/plan-management/planholder/[personId]/transfer-of-rights/tf-documents-page";
 import { useState } from "react";
@@ -9,23 +9,25 @@ import { FaFileShield } from "react-icons/fa6";
 import { OSPBadge } from "@/components/common/badge/badge";
 import PlanholderInfoForm from "../forms/planholder-info-form";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { StepItem } from "@/components/form-stepper/form-stepper";
+import { StepItem } from "@/components/FormSteps";
+import { Box } from "@chakra-ui/react";
 
 export function EditPlanholderInfoPage() {
   const [selectedDocuments, setSelectedDocuments] = useState<UploadedFile[]>(
     [],
   );
+  const [currentStep, setCurrentStep] = useState(0);
 
   const { messageBox } = useMessageDialog();
 
   const stepsData = [
     {
-      title: "Update Planholder Information",
+      title: "Planholder Info",
       content: <PlanholderInfoForm />,
       icon: LuUser,
     },
     {
-      title: "Supporting Documents",
+      title: "Documents",
       content: (
         <TransferDocumentsPage
           onFilesChange={(files) => setSelectedDocuments(files)}
@@ -46,7 +48,7 @@ export function EditPlanholderInfoPage() {
       },
     },
     {
-      title: "Review Application",
+      title: "Review",
       description: "Review your application before submission.",
       content: <OSPBadge />,
       icon: FaFileShield,
@@ -58,7 +60,15 @@ export function EditPlanholderInfoPage() {
       description="Keep planholder information on track."
     >
       <Page.MainContent>
-        <FormStepper steps={stepsData} />
+        <Box mt={"-30px"}>
+          <FormSteps
+            stepsData={stepsData}
+            title=""
+            description=""
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+          />
+        </Box>
       </Page.MainContent>
     </Page.Root>
   );

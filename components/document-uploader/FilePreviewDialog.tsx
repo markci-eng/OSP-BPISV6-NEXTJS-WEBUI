@@ -7,6 +7,7 @@ import {
   Image as ImageIcon,
   File,
   Download,
+  X,
 } from "lucide-react";
 import {
   Badge,
@@ -304,7 +305,11 @@ const FilePreviewDialog: React.FC<FilePreviewDialogProps> = ({
             </VStack>
           </Dialog.Body>
 
-          <Dialog.CloseTrigger />
+          <Dialog.CloseTrigger asChild position="absolute" top={3} right={3}>
+            <Button size="sm" variant="ghost" aria-label="Close">
+              <X size={16} />
+            </Button>
+          </Dialog.CloseTrigger>
         </Dialog.Content>
       </Dialog.Positioner>
     </Dialog.Root>

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { PaymentRecord } from "../data/payment.types";
 import Page from "@/components/layout/page/Page";
-import { FormStepper } from "@/components/form-stepper/form-stepper";
+import FormSteps from "@/components/FormSteps";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { useRouter } from "next/navigation";
 
@@ -14,9 +14,11 @@ import { EncodePaymentPage } from "./encode-payment-page";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 
 import PrepareDRS from "./prepare-drs";
+import { Box } from "@chakra-ui/react";
 
 export default function PaymentPage() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
     {
@@ -64,12 +66,17 @@ export default function PaymentPage() {
   };
 
   return (
-    <Page.Root
-      title={"Encode Payment"}
-      description={"Encode Payment"}
-    >
+    <Page.Root title={"Encode Payment"} description={"Encode Payment"}>
       <Page.MainContent>
-        <FormStepper steps={steps} onSubmit={handleConfirm} />
+        <Box mt={"-30px"}>
+          <FormSteps
+            stepsData={steps}
+            title=""
+            description=""
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+          />
+        </Box>
       </Page.MainContent>
     </Page.Root>
   );

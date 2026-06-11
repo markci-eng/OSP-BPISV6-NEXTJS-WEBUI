@@ -1,4 +1,3 @@
-// Change or Add by: JLO 2026-05-16
 "use client";
 
 import {
@@ -7,9 +6,7 @@ import {
   Flex,
   Grid,
   GridItem,
-  Separator,
   Show,
-  Strong,
   Text,
   useBreakpointValue,
 } from "@chakra-ui/react";
@@ -23,7 +20,8 @@ import {
   LuMail,
   LuMapPin,
   LuShare2,
-  LuSearch,
+  LuChevronsDown,
+  LuChevronsUp,
 } from "react-icons/lu";
 import DataTable from "../../common/reusable-tableV2/DataTable";
 import { ColumnDef } from "@tanstack/react-table";
@@ -36,7 +34,6 @@ import {
 import MCPRList from "@/app/accounts-maintenance/mcpr/mcpr-list";
 import MenuButton, { MenuItemButton } from "@/components/buttons/MenuButton";
 import { useRouter } from "next/navigation";
-import { SearchAgentDialog } from "../../common/agent-lookup/search-agent-dialog";
 import TeamMemberDrawer from "../drawers/team-member-drawer";
 import { PendingRequests, RequestProps } from "@/components/new-planholder-profile/sections/pending-requests";
 import AgentReassignForm from "../forms/agent-reassign-form";
@@ -49,6 +46,7 @@ import Page from "@/components/layout/page/Page";
 import { PlanholderAddressCard } from "@/components/new-planholder-profile/sections/address-info";
 import ReferralPage from "./referral-page";
 import AgentContactInfoCard from "../cards/AgentContactInfoCard";
+import { TertiarySmButton } from "st-peter-ui";
 
 const MOCK_AGENT_REQUESTS: RequestProps[] = [
   {
@@ -76,18 +74,141 @@ const MOCK_AGENT_REQUESTS: RequestProps[] = [
 ];
 
 export function AgentDetails(params: {
-  selectedAgent: SalesAgent | undefined;
-  onAgentSelect?: (agent: SalesAgent | undefined) => void;
+  selectedAgent: SalesAgent;
+  onDeleteAgent?: () => void;
 }) {
   const [page, setPage] = useState("default");
   const [teamDrawerOpen, setTeamDrawerOpen] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] =
     useState<SalesAgent | null>(null);
-  const { selectedAgent, onAgentSelect } = params;
+  const [personalOpen, setPersonalOpen] = useState(false);
+  const [addressOpen, setAddressOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [employmentOpen, setEmploymentOpen] = useState(false);
+
+  const { selectedAgent } = params;
   const router = useRouter();
   const isMobile = useBreakpointValue({ base: true, lg: false });
 
+  const expandAll = () => {
+    setPersonalOpen(true);
+    setAddressOpen(true);
+    setContactOpen(true);
+    setEmploymentOpen(true);
+  };
+
+  const collapseAll = () => {
+    setPersonalOpen(false);
+    setAddressOpen(false);
+    setContactOpen(false);
+    setEmploymentOpen(false);
+  };
+
+  const phone = selectedAgent.mobile || selectedAgent.landline;
+  const email = selectedAgent.email;
+  const addr = selectedAgent.address;
+  const agentAddress = addr
+    ? [addr.unit, addr.street, addr.barangay, addr.city, addr.province]
+        .filter(Boolean)
+        .join(", ")
+    : undefined;
+
+  const contactActions = (
+    <Flex gap={2} overflow="hidden" flexWrap="wrap">
+      <Button
+        bg="white"
+        variant="outline"
+        size="sm"
+        borderRadius="full"
+        disabled={!phone}
+        asChild={!!phone}
+        flexShrink={0}
+      >
+        {phone ? (
+          <a href={`tel:${phone}`}>
+            <LuPhone />
+            {(() => {
+              const d = phone.replace(/\D/g, "");
+              const local = d.startsWith("63") ? "0" + d.slice(2) : d;
+              return local.startsWith("09") && local.length === 11
+                ? local.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3")
+                : phone;
+            })()}
+          </a>
+        ) : (
+          <>
+            <LuPhone />
+            No phone
+          </>
+        )}
+      </Button>
+      <Button
+        bg="white"
+        variant="outline"
+        size="sm"
+        borderRadius="full"
+        disabled={!email}
+        asChild={!!email}
+        flexShrink={0}
+      >
+        {email ? (
+          <a href={`mailto:${email}`}>
+            <LuMail />
+            Send email
+          </a>
+        ) : (
+          <>
+            <LuMail />
+            Send email
+          </>
+        )}
+      </Button>
+      <Button
+        bg="white"
+        variant="outline"
+        size="sm"
+        borderRadius="full"
+        disabled={!agentAddress}
+        asChild={!!agentAddress}
+        flexShrink={0}
+      >
+        {agentAddress ? (
+          <a
+            href={`https://maps.google.com/?q=${encodeURIComponent(agentAddress)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <LuMapPin />
+            Map address
+          </a>
+        ) : (
+          <>
+            <LuMapPin />
+            Map address
+          </>
+        )}
+      </Button>
+    </Flex>
+  );
+
   const pendingRequestsCard = <PendingRequests requests={MOCK_AGENT_REQUESTS} />;
+
+  const agentPhAddress = addr
+    ? [
+        {
+          id: "1",
+          addressType: "RESIDENCE",
+          addressNo: addr.unit || null,
+          street: addr.street || null,
+          barangay: addr.barangay || null,
+          district: addr.district || null,
+          city: addr.city,
+          province: addr.province,
+          zipCode: addr.zipCode ? parseInt(addr.zipCode) : null,
+          isMailAddress: true,
+        },
+      ]
+    : undefined;
 
   return (
     <Page.Root
@@ -96,356 +217,169 @@ export function AgentDetails(params: {
     >
       {page === "default" && (
         <Page.ToolContent>
-          <Flex
-            direction={{ base: "column", sm: "row" }}
-            gap={2}
-            align={{ base: "stretch", sm: "center" }}
-            w={{ base: "full", md: "auto" }}
-          >
-            <Box w={{ base: "full", sm: "320px" }}>
-              <SearchAgentDialog
-                onSelectChange={(a) => {
-                  if (onAgentSelect) {
-                    onAgentSelect(a);
-                  } else if (a) {
-                    router.push(`/sales-force/profile/${a.id}`);
-                  }
-                }}
-              />
-            </Box>
-
-            {selectedAgent && (
-              <MenuButton>
-                <MenuItemButton
-                  icon={<LuUserPen />}
-                  label="Edit"
-                  itemKey="edit"
-                  value="edit"
-                  onClick={() => setPage("edit")}
-                />
-                <MenuItemButton
-                  icon={<LuReplace />}
-                  label="Re-Organized"
-                  itemKey="reassign"
-                  value="reassign"
-                  onClick={() => setPage("reassign")}
-                />
-                <MenuItemButton
-                  icon={<LuTrendingUpDown />}
-                  label="Movement"
-                  itemKey="movement"
-                  value="movement"
-                  onClick={() => setPage("movement")}
-                />
-                <MenuItemButton
-                  icon={<LuShare2 />}
-                  label="Referral"
-                  itemKey="referral"
-                  value="referral"
-                  onClick={() => setPage("referral")}
-                />
-                <MenuItemButton
-                  icon={<LuPrinter />}
-                  label="Reprint SFID"
-                  itemKey="printing"
-                  value="printing"
-                  onClick={() => router.push("/printing")}
-                />
-              </MenuButton>
-            )}
-          </Flex>
+          <MenuButton>
+            <MenuItemButton
+              icon={<LuUserPen />}
+              label="Edit"
+              itemKey="edit"
+              value="edit"
+              onClick={() => setPage("edit")}
+            />
+            <MenuItemButton
+              icon={<LuReplace />}
+              label="Re-Organized"
+              itemKey="reassign"
+              value="reassign"
+              onClick={() => setPage("reassign")}
+            />
+            <MenuItemButton
+              icon={<LuTrendingUpDown />}
+              label="Movement"
+              itemKey="movement"
+              value="movement"
+              onClick={() => setPage("movement")}
+            />
+            <MenuItemButton
+              icon={<LuShare2 />}
+              label="Referral"
+              itemKey="referral"
+              value="referral"
+              onClick={() => setPage("referral")}
+            />
+            <MenuItemButton
+              icon={<LuPrinter />}
+              label="Reprint SFID"
+              itemKey="printing"
+              value="printing"
+              onClick={() => router.push("/printing")}
+            />
+          </MenuButton>
         </Page.ToolContent>
       )}
+
       <Page.MainContent>
-      {page === "default" ? (
-        <>
-          {/* Empty state — mobile/tablet only, when no agent is selected */}
-          <Flex
-            display={{ base: selectedAgent ? "none" : "flex", lg: "none" }}
-            direction="column"
-            align="center"
-            justify="center"
-            gap={4}
-            py={16}
-            px={6}
-            textAlign="center"
-          >
-            <Box
-              p={5}
-              borderRadius="full"
-              bg="var(--chakra-colors-primary-disabled)/20"
+        {page === "default" ? (
+          <>
+            {/* Expand / Collapse strip */}
+            <Flex justify="flex-end" gap={2} mb={1}>
+              <TertiarySmButton onClick={expandAll}>
+                <LuChevronsDown size={14} />
+                Expand All
+              </TertiarySmButton>
+              <TertiarySmButton onClick={collapseAll}>
+                <LuChevronsUp size={14} />
+                Collapse All
+              </TertiarySmButton>
+            </Flex>
+
+            {/* Single unified 2-column grid */}
+            <Grid
+              templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
+              gap={5}
+              alignItems="start"
             >
-              <LuSearch size={36} color="var(--chakra-colors-primary)" />
-            </Box>
-            <Box>
-              <Text fontWeight="semibold" fontSize="lg" color="gray.700">
-                No Agent Selected
-              </Text>
-              <Text fontSize="sm" color="gray.400" mt={1}>
-                Use the search bar above to find an agent.
-              </Text>
-            </Box>
-          </Flex>
+              {/* Left column — identity & details */}
+              <GridItem>
+                <Flex direction="column" gap={4}>
+                  <AgentProfileHeaderCard agent={selectedAgent} />
+                  {contactActions}
+                  <Show when={isMobile}>{pendingRequestsCard}</Show>
+                  <AgentPersonalInfoCard
+                    agent={selectedAgent}
+                    isOpen={personalOpen}
+                    onToggle={() => setPersonalOpen((p) => !p)}
+                  />
+                  <PlanholderAddressCard
+                    phAddress={agentPhAddress}
+                    isOpen={addressOpen}
+                    onToggle={() => setAddressOpen((p) => !p)}
+                  />
+                </Flex>
+              </GridItem>
 
-          {/* Main content — hidden on mobile/tablet when no agent selected; always visible on desktop */}
-          <Box display={{ base: selectedAgent ? "block" : "none", lg: "block" }}>
-            {selectedAgent ? (
-              <>
-                <Grid
-                  my={6}
-                  gap={{ base: 4, md: 6 }}
-                  templateColumns={{ base: "1fr", xl: "2fr 1fr" }}
-                >
-                  <GridItem>
-                    <Flex flexDir={"column"} gap={6}>
-                      <AgentProfileHeaderCard agent={selectedAgent} />
-
-                      {/* Quick action buttons */}
-                      {(() => {
-                        const phone = selectedAgent.mobile || selectedAgent.landline;
-                        const email = selectedAgent.email;
-                        const addr = selectedAgent.address;
-                        const address = addr
-                          ? [addr.unit, addr.street, addr.barangay, addr.city, addr.province]
-                              .filter(Boolean)
-                              .join(", ")
-                          : undefined;
-                        return (
-                          <Flex gap={2} overflow="hidden">
-                            <Button
-                              bg={"white"}
-                              variant="outline"
-                              size="sm"
-                              borderRadius="full"
-                              disabled={!phone}
-                              asChild={!!phone}
-                              flexShrink={0}
-                            >
-                              {phone ? (
-                                <a href={`tel:${phone}`}>
-                                  <LuPhone />
-                                  {(() => {
-                                    const d = phone.replace(/\D/g, "");
-                                    const local = d.startsWith("63") ? "0" + d.slice(2) : d;
-                                    return local.startsWith("09") && local.length === 11
-                                      ? local.replace(/(\d{4})(\d{3})(\d{4})/, "$1 $2 $3")
-                                      : phone;
-                                  })()}
-                                </a>
-                              ) : (
-                                <>
-                                  <LuPhone />
-                                  No phone
-                                </>
-                              )}
-                            </Button>
-                            <Button
-                              bg={"white"}
-                              variant="outline"
-                              size="sm"
-                              borderRadius="full"
-                              disabled={!email}
-                              asChild={!!email}
-                              flexShrink={0}
-                            >
-                              {email ? (
-                                <a href={`mailto:${email}`}>
-                                  <LuMail />
-                                  Send email
-                                </a>
-                              ) : (
-                                <>
-                                  <LuMail />
-                                  Send email
-                                </>
-                              )}
-                            </Button>
-                            <Button
-                              bg={"white"}
-                              variant="outline"
-                              size="sm"
-                              borderRadius="full"
-                              disabled={!address}
-                              asChild={!!address}
-                              flexShrink={0}
-                            >
-                              {address ? (
-                                <a
-                                  href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <LuMapPin />
-                                  Map address
-                                </a>
-                              ) : (
-                                <>
-                                  <LuMapPin />
-                                  Map address
-                                </>
-                              )}
-                            </Button>
-                          </Flex>
-                        );
-                      })()}
-
-                      {/* Pending requests — mobile only */}
-                      <Show when={isMobile}>{pendingRequestsCard}</Show>
-
-                      <AgentPersonalInfoCard agent={selectedAgent} />
-                      <AgentEmploymentInfoCard agent={selectedAgent} />
-
-                      <PlanholderAddressCard
-                        phAddress={[
-                          {
-                            id: "1",
-                            addressType: "RESIDENCE",
-                            addressNo: "31",
-                            street: "GSIS AVENUE",
-                            barangay: "BAGONG NAYON",
-                            district: "",
-                            city: "ANTIPOLO",
-                            province: "RIZAL",
-                            zipCode: 1870,
-                            isMailAddress: true,
-                          },
-                        ]}
+              {/* Right column — activity & admin */}
+              <GridItem>
+                <Flex direction="column" gap={4}>
+                  <Show when={!isMobile}>{pendingRequestsCard}</Show>
+                  <AgentContactInfoCard
+                    agent={selectedAgent}
+                    isOpen={contactOpen}
+                    onToggle={() => setContactOpen((p) => !p)}
+                  />
+                  <AgentEmploymentInfoCard
+                    agent={selectedAgent}
+                    isOpen={employmentOpen}
+                    onToggle={() => setEmploymentOpen((p) => !p)}
+                  />
+                  <Card.Root title="Team Members">
+                    <Card.MainContent>
+                      <DataTable
+                        columns={columns}
+                        data={getSubordinates(selectedAgent.id)}
+                        onRowClick={(row) => {
+                          setSelectedTeamMember(row);
+                          setTeamDrawerOpen(true);
+                        }}
+                        features={{
+                          search: false,
+                          filtering: false,
+                          sorting: false,
+                          pagination: true,
+                          selection: false,
+                          draggable: false,
+                          columnToggle: false,
+                          detailSidebar: false,
+                        }}
                       />
-                    </Flex>
-                  </GridItem>
+                    </Card.MainContent>
+                  </Card.Root>
+                </Flex>
+              </GridItem>
+            </Grid>
 
-                  <GridItem>
-                    <Flex
-                      height={"100%"}
-                      flexDir={"column"}
-                      gap="6"
-                      borderRadius={"md"}
-                    >
-                      {/* Pending requests — desktop only */}
-                      <Show when={!isMobile}>{pendingRequestsCard}</Show>
-
-                      <AgentContactInfoCard agent={selectedAgent} />
-
-                      <Card.Root title="Team Members">
-                        <Card.MainContent>
-                          <DataTable
-                            columns={columns}
-                            data={getSubordinates(selectedAgent.id)}
-                            onRowClick={(row) => {
-                              setSelectedTeamMember(row);
-                              setTeamDrawerOpen(true);
-                            }}
-                            features={{
-                              search: false,
-                              filtering: false,
-                              sorting: false,
-                              pagination: true,
-                              selection: false,
-                              draggable: false,
-                              columnToggle: false,
-                              detailSidebar: false,
-                            }}
-                          />
-                        </Card.MainContent>
-                      </Card.Root>
-                    </Flex>
-                  </GridItem>
-                </Grid>
-
-                <Box
-                  w={"full"}
-                  padding={6}
-                  borderRadius="md"
-                  borderWidth={1}
-                  borderColor="gray.200"
-                  my={6}
-                >
-                  <Box width={"full"}>
-                    <Flex justify={"space-between"}>
-                      <Strong
-                        fontSize={"md"}
-                        color="var(--chakra-colors-primary)"
-                      >
-                        Monthly Collection Performance Report
-                      </Strong>
-                    </Flex>
-                    <Separator my={2} />
-                    <Flex p={2} gap={4} direction={"column"}>
-                      <MCPRList />
-                    </Flex>
-                  </Box>
-                </Box>
-            </>
-            ) : (
-              <Grid
-                my={6}
-                gap={{ base: 4, md: 6 }}
-                templateColumns={{ base: "1fr", xl: "2fr 1fr" }}
-              >
-                <GridItem>
-                  <Flex flexDir={"column"} gap={6}>
-                    <AgentProfileHeaderCard />
-                    <AgentPersonalInfoCard agent={undefined} />
-                    <AgentEmploymentInfoCard agent={undefined} />
-                    <PlanholderAddressCard phAddress={undefined} />
-                  </Flex>
-                </GridItem>
-                <GridItem>
-                  <Flex height={"100%"} flexDir={"column"} gap="6" borderRadius={"md"}>
-                    <PendingRequests />
-                    <AgentContactInfoCard agent={undefined} />
-                    <Card.Root title="Team Members">
-                      <Card.MainContent>
-                        <Flex align={"center"} justify="center" flexDir="column" py={10} />
-                      </Card.MainContent>
-                    </Card.Root>
-                  </Flex>
-                </GridItem>
-              </Grid>
-            )}
-          </Box>
-        </>
-      ) : page === "reassign" ? (
-        selectedAgent ? (
+            {/* MCPR — full width */}
+            <Card.Root title="Monthly Collection Performance Report">
+              <Card.MainContent>
+                <MCPRList />
+              </Card.MainContent>
+            </Card.Root>
+          </>
+        ) : page === "reassign" ? (
           <AgentReassignForm
             selectedAgent={selectedAgent}
             onCancel={() => setPage("default")}
             onSubmitted={() => setPage("default")}
           />
-        ) : null
-      ) : page === "movement" ? (
-        selectedAgent ? (
+        ) : page === "movement" ? (
           <AgentMovementForm
             selectedAgent={selectedAgent}
             onCancel={() => setPage("default")}
             onSubmitted={() => setPage("default")}
           />
-        ) : null
-      ) : page === "referral" ? (
-        <Box my={6}>
-          <Flex justify="flex-start" mb={2}>
-            <Button variant="outline" onClick={() => setPage("default")}>
-              <LuArrowLeft /> Back
-            </Button>
-          </Flex>
-          <ReferralPage />
-        </Box>
-      ) : (
-        <Box my={6}>
-          <AgentEditForm
-            selectedAgent={selectedAgent}
-            onCancel={() => setPage("default")}
-            onSubmitted={() => setPage("default")}
-          />
-        </Box>
-      )}
+        ) : page === "referral" ? (
+          <Box>
+            <Flex justify="flex-start" mb={2}>
+              <Button variant="outline" onClick={() => setPage("default")}>
+                <LuArrowLeft /> Back
+              </Button>
+            </Flex>
+            <ReferralPage />
+          </Box>
+        ) : (
+          <Box>
+            <AgentEditForm
+              selectedAgent={selectedAgent}
+              onCancel={() => setPage("default")}
+              onSubmitted={() => setPage("default")}
+            />
+          </Box>
+        )}
 
-      <TeamMemberDrawer
-        agent={selectedTeamMember}
-        open={teamDrawerOpen}
-        onOpenChange={setTeamDrawerOpen}
-      />
-
+        <TeamMemberDrawer
+          agent={selectedTeamMember}
+          open={teamDrawerOpen}
+          onOpenChange={setTeamDrawerOpen}
+        />
       </Page.MainContent>
     </Page.Root>
   );

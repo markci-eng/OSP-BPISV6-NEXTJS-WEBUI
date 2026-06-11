@@ -1,8 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { Box, Flex, Grid, Text } from "@chakra-ui/react";
-import { Check, X } from "lucide-react";
+import { Box, Carousel, Flex, IconButton, Text } from "@chakra-ui/react";
+import {
+  Check,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Files,
+  X,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
@@ -43,8 +52,11 @@ export function ApprovalsTable({
   const data = dataByView[view];
 
   const [statusFilter, setStatusFilter] = React.useState<string>("Pending");
+  const [carouselIdx, setCarouselIdx] = React.useState(1);
+
   React.useEffect(() => {
     setStatusFilter("Pending");
+    setCarouselIdx(1);
   }, [view]);
 
   const filteredData = React.useMemo(() => {
@@ -188,19 +200,19 @@ export function ApprovalsTable({
   const rowActions = React.useMemo<RowAction<any>[]>(
     () => [
       {
-        id: "approve",
-        label: "Approve",
-        icon: Check,
-        hidden: (row) => getApprovalStatus(row) !== "Pending",
-        onClick: handleApprove,
-      },
-      {
         id: "deny",
         label: "Deny",
         icon: X,
         variant: "destructive",
         hidden: (row) => getApprovalStatus(row) !== "Pending",
         onClick: handleReject,
+      },
+      {
+        id: "approve",
+        label: "Approve",
+        icon: Check,
+        hidden: (row) => getApprovalStatus(row) !== "Pending",
+        onClick: handleApprove,
       },
     ],
     [handleApprove, handleReject],
@@ -209,17 +221,17 @@ export function ApprovalsTable({
   const bulkActions = React.useMemo<BulkAction<any>[]>(
     () => [
       {
+        id: "bulk-approve",
+        label: "Approve All",
+        icon: Check,
+        onClick: handleBulkApprove,
+      },
+      {
         id: "bulk-reject",
         label: "Deny All",
         icon: X,
         variant: "destructive",
         onClick: handleBulkDeny,
-      },
-      {
-        id: "bulk-approve",
-        label: "Approve All",
-        icon: Check,
-        onClick: handleBulkApprove,
       },
     ],
     [handleBulkApprove, handleBulkDeny],
@@ -227,101 +239,202 @@ export function ApprovalsTable({
 
   const summary = React.useMemo(() => {
     const total = data.length;
-    const pending = data.filter((r) => getApprovalStatus(r) === "Pending").length;
-    const approved = data.filter((r) => getApprovalStatus(r) === "Approved").length;
+    const pending = data.filter(
+      (r) => getApprovalStatus(r) === "Pending",
+    ).length;
+    const approved = data.filter(
+      (r) => getApprovalStatus(r) === "Approved",
+    ).length;
     const denied = data.filter((r) => getApprovalStatus(r) === "Denied").length;
     return { total, pending, approved, denied };
   }, [data]);
 
+  const cards = React.useMemo(
+    () => [
+      {
+        label: "Total Requests",
+        value: summary.total,
+        filter: "All",
+        sub: "All requests",
+        icon: Files,
+        accent: "blue",
+      },
+      {
+        label: "Pending",
+        value: summary.pending,
+        filter: "Pending",
+        sub: "Awaiting review",
+        icon: Clock,
+        accent: "orange",
+      },
+      {
+        label: "Approved",
+        value: summary.approved,
+        filter: "Approved",
+        sub: "Completed",
+        icon: CheckCircle,
+        accent: "green",
+      },
+      {
+        label: "Rejected",
+        value: summary.denied,
+        filter: "Denied",
+        sub: "Denied",
+        icon: XCircle,
+        accent: "red",
+      },
+    ],
+    [summary],
+  );
+
   return (
     <Flex direction="column" gap={4}>
-      <Grid templateColumns={{ base: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }} gap={3}>
-        {[
-          { label: "Total Requests", value: summary.total, filter: "All", sub: null },
-          { label: "Pending", value: summary.pending, filter: "Pending", sub: "awaiting review" },
-          { label: "Approved", value: summary.approved, filter: "Approved", sub: null },
-          { label: "Rejected", value: summary.denied, filter: "Denied", sub: null },
-        ].map((card) => {
-          const isActive = statusFilter === card.filter;
-          return (
-            <Box
-              key={card.label}
-              bg={isActive ? "var(--chakra-colors-primary-disabled)/15" : "white"}
-              border="1px solid"
-              borderColor={isActive ? "var(--chakra-colors-primary-disabled)" : "gray.200"}
-              borderRadius="xl"
-              p={4}
-              boxShadow="xs"
-              cursor="pointer"
-              onClick={() => setStatusFilter(card.filter)}
-              transition="all 0.15s ease"
-              _hover={{ borderColor: "var(--chakra-colors-primary-disabled)", bg: "var(--chakra-colors-primary-disabled)/10" }}
-            >
-              <Text fontSize="10px" fontWeight="700" letterSpacing="0.08em" textTransform="uppercase" color={isActive ? "var(--chakra-colors-primary)" : "gray.400"} mb={1}>
-                {card.label}
-              </Text>
-              <Flex align="baseline" gap={2}>
-                <Text fontSize="2xl" fontWeight="bold" color={isActive ? "var(--chakra-colors-primary)" : "gray.800"} lineHeight="1">
-                  {card.value}
-                </Text>
-                {card.sub && (
-                  <Text fontSize="xs" color="orange.400" fontWeight="medium">
-                    {card.sub}
-                  </Text>
-                )}
-              </Flex>
-            </Box>
-          );
-        })}
-      </Grid>
+      <Carousel.Root
+        slideCount={cards.length}
+        page={carouselIdx}
+        onPageChange={(details: { page: number }) => {
+          setCarouselIdx(details.page);
+          setStatusFilter(cards[details.page].filter);
+        }}
+      >
+        <Carousel.ItemGroup>
+          {cards.map((card, i) => {
+            const isActive = statusFilter === card.filter;
+            return (
+              <Carousel.Item key={card.label} index={i}>
+                <Box
+                  bg={isActive ? `${card.accent}.100` : `${card.accent}.50`}
+                  border="1px solid"
+                  borderColor={
+                    isActive ? `${card.accent}.400` : `${card.accent}.200`
+                  }
+                  borderRadius="xl"
+                  p={4}
+                  boxShadow="xs"
+                  cursor="pointer"
+                  h="full"
+                  onClick={() => {
+                    setStatusFilter(card.filter);
+                    setCarouselIdx(i);
+                  }}
+                  transition="all 0.15s ease"
+                  _hover={{
+                    bg: `${card.accent}.100`,
+                    borderColor: `${card.accent}.400`,
+                  }}
+                >
+                  <Flex justify="space-between" align="flex-start">
+                    <Box>
+                      <Text
+                        fontSize="10px"
+                        fontWeight="700"
+                        letterSpacing="0.08em"
+                        textTransform="uppercase"
+                        color={`${card.accent}.500`}
+                        mb={1}
+                      >
+                        {card.label}
+                      </Text>
+                      <Text
+                        fontSize="2xl"
+                        fontWeight="bold"
+                        color={
+                          isActive ? `${card.accent}.700` : `${card.accent}.600`
+                        }
+                        lineHeight="1"
+                        mb={1}
+                      >
+                        {card.value}
+                      </Text>
+                      <Text
+                        fontSize="xs"
+                        color={`gray.600`}
+                        fontWeight="medium"
+                      >
+                        {card.sub}
+                      </Text>
+                    </Box>
+                    <Box
+                      p={2}
+                      borderRadius="lg"
+                      bg={
+                        isActive ? `${card.accent}.200` : `${card.accent}.100`
+                      }
+                      color={`${card.accent}.500`}
+                    >
+                      <card.icon size={18} />
+                    </Box>
+                  </Flex>
+                </Box>
+              </Carousel.Item>
+            );
+          })}
+        </Carousel.ItemGroup>
+
+        <Carousel.Control justifyContent="center" gap="4">
+          <Carousel.PrevTrigger asChild>
+            <IconButton size="xs" variant="ghost" aria-label="Previous">
+              <ChevronLeft size={16} />
+            </IconButton>
+          </Carousel.PrevTrigger>
+
+          <Carousel.Indicators />
+
+          <Carousel.NextTrigger asChild>
+            <IconButton size="xs" variant="ghost" aria-label="Next">
+              <ChevronRight size={16} />
+            </IconButton>
+          </Carousel.NextTrigger>
+        </Carousel.Control>
+      </Carousel.Root>
 
       <DataTable<any>
-      key={view}
-      title={config.title}
-      description={config.description}
-      data={filteredData}
-      columns={config.columns}
-      getRowId={config.getRowId}
-      rowActions={rowActions}
-      bulkActions={bulkActions}
-      renderDetail={(row) => (
-        <ApprovalDetailContent
-          row={row}
-          config={config}
-          onApprove={(selectedRow, remarks) => {
-            handleApprove(selectedRow);
-            console.log("Approve remarks:", remarks);
-          }}
-          onDeny={(selectedRow, remarks) => {
-            handleReject(selectedRow);
-            console.log("Deny remarks:", remarks);
-          }}
-        />
-      )}
-      features={{
-        search: true,
-        filtering: true,
-        sorting: true,
-        pagination: true,
-        columnToggle: true,
-        selection: true,
-        draggable: false,
-        detailSidebar: true,
-      }}
-      mobileConfig={{
-        viewMode: "accordion",
-        primaryField: config.mobile.primaryField as any,
-        secondaryField: config.mobile.secondaryField as any,
-        badgeField: config.mobile.badgeField as any,
-        visibleFields: config.mobile.visibleFields as any,
-        labelMap: config.mobile.labelMap as any,
-        badgeColorMap: {
-          Pending: "yellow",
-          Approved: "green",
-          Denied: "red",
-        },
-      }}
-    />
+        key={view}
+        title={config.title}
+        description={config.description}
+        data={filteredData}
+        columns={config.columns}
+        getRowId={config.getRowId}
+        rowActions={rowActions}
+        bulkActions={bulkActions}
+        renderDetail={(row) => (
+          <ApprovalDetailContent
+            row={row}
+            config={config}
+            onApprove={(selectedRow, remarks) => {
+              handleApprove(selectedRow);
+              console.log("Approve remarks:", remarks);
+            }}
+            onDeny={(selectedRow, remarks) => {
+              handleReject(selectedRow);
+              console.log("Deny remarks:", remarks);
+            }}
+          />
+        )}
+        features={{
+          search: true,
+          filtering: true,
+          sorting: true,
+          pagination: true,
+          columnToggle: true,
+          selection: true,
+          draggable: false,
+          detailSidebar: true,
+        }}
+        mobileConfig={{
+          viewMode: "accordion",
+          primaryField: config.mobile.primaryField as any,
+          secondaryField: config.mobile.secondaryField as any,
+          badgeField: config.mobile.badgeField as any,
+          visibleFields: config.mobile.visibleFields as any,
+          labelMap: config.mobile.labelMap as any,
+          badgeColorMap: {
+            Pending: "orange",
+            Approved: "green",
+            Denied: "red",
+          },
+        }}
+      />
     </Flex>
   );
 }

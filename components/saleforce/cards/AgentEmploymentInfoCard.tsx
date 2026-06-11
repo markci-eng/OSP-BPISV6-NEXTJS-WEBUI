@@ -1,73 +1,51 @@
-import Card from "@/components/cards/Card";
-import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import { RowItem } from "@/claude components/info-card/row-item";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
-import LabelText from "@/components/texts/LabelText";
-import { Box, Flex, Separator } from "@chakra-ui/react";
+import { Flex } from "@chakra-ui/react";
+import { LuBriefcase } from "react-icons/lu";
 
 interface AgentEmploymentInfoCardProps {
   agent: SalesAgent | undefined | null;
   removeCard?: Boolean;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
-interface Agent {
-  value: SalesAgent | undefined | null;
-}
-
-const InfoDetail = ({ value }: Agent) => {
+const EmploymentInfo = ({ agent }: AgentEmploymentInfoCardProps) => {
+  if (!agent) return null;
   return (
-    <>
-      {value ? (
-        <Flex direction="column" gap={2}>
-          <LabelText label="Position" value={value?.position ?? "N/A"} />
-          <Separator />
-          <LabelText label="Date Hired" value={value?.hireDate ?? "N/A"} />
-          <Separator />
-          <LabelText label="Employee Status" value={value?.employeeStatus ?? "N/A"} />
-          <Separator />
-          <LabelText label="Branch" value={value?.branch ?? "N/A"} />
-          <Separator />
-          <LabelText label="Supervisor" value={value?.superiorId ?? "N/A"} />
-          <Separator />
-          <LabelText label="SSS No." value={value?.sssNumber ?? "N/A"} />
-          <Separator />
-          <LabelText label="NBI No." value={value?.nbiNumber ?? "N/A"} />
-          <Separator />
-          <LabelText label="TIN No." value={value?.tinNumber ?? "N/A"} />
-        </Flex>
-      ) : (
-        <EmptyStateCard
-          title="No Agent Selected"
-          description="Select an agent to view their personal information."
-        />
-      )}
-    </>
-  );
-};
-
-const InfoDetailInCard = ({ value }: Agent) => {
-  return (
-    <Card.Root title="Employment">
-      <Card.MainContent>
-        <Box px={1}>
-          <InfoDetail value={value} />
-        </Box>
-      </Card.MainContent>
-    </Card.Root>
+    <Flex direction="column">
+      <RowItem label="Position" value={agent.position ?? "N/A"} />
+      <RowItem label="Date Hired" value={agent.hireDate ?? "N/A"} />
+      <RowItem label="Employee Status" value={agent.employeeStatus ?? "N/A"} />
+      <RowItem label="Branch" value={agent.branch ?? "N/A"} />
+      <RowItem label="Supervisor" value={agent.superiorId ?? "N/A"} />
+      <RowItem label="SSS No." value={agent.sssNumber ?? "N/A"} />
+      <RowItem label="NBI No." value={agent.nbiNumber ?? "N/A"} />
+      <RowItem label="TIN No." value={agent.tinNumber ?? "N/A"} />
+    </Flex>
   );
 };
 
 const AgentEmploymentInfoCard = ({
   agent,
   removeCard,
+  isOpen,
+  onToggle,
 }: AgentEmploymentInfoCardProps) => {
+  if (removeCard) {
+    return <EmploymentInfo agent={agent} />;
+  }
   return (
-    <>
-      {removeCard ? (
-        <InfoDetail value={agent} />
-      ) : (
-        <InfoDetailInCard value={agent} />
-      )}
-    </>
+    <InfoCardAccordion
+      icon={<LuBriefcase />}
+      title="Employment Information"
+      subtitle="Employment Information"
+      isOpen={isOpen}
+      onToggle={onToggle}
+    >
+      <EmploymentInfo agent={agent} />
+    </InfoCardAccordion>
   );
 };
 

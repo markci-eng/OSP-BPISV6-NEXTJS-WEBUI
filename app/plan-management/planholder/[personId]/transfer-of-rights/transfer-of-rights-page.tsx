@@ -7,12 +7,14 @@ import { LuFileText, LuUserRound } from "react-icons/lu";
 import TFReviewApplicationPage from "./tf-review-application-page";
 import { FaFileShield } from "react-icons/fa6";
 import Page from "@/components/layout/page/Page";
-import { FormStepper } from "@/components/form-stepper/form-stepper";
 import { UploadedFile } from "@/components/document-uploader/DragAndDrop";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import FormSteps from "@/components/FormSteps";
+import { Box } from "@chakra-ui/react";
 
 export function TransferOfRightsPage() {
   const [checkedPlans, setCheckedPlans] = useState<CheckedPlan[]>([]);
+  const [currentStep, setCurrentStep] = useState(0);
   const [selectedDocuments, setSelectedDocuments] = useState<UploadedFile[]>(
     [],
   );
@@ -68,33 +70,44 @@ export function TransferOfRightsPage() {
   ];
 
   return (
-    // <FormSteps
-    //   stepsData={stepsData}
-    //   title={"Transfer of Rights"}
-    //   description={"Transfer your plan to your loved ones—simple and seamless."}
-    // />
     <Page.Root
-      title={"Transfer of Rights Application"}
-      description="Transfer your plan to your loved ones—simple and seamless."
+      title={"Transfer of Rights"}
+      description={"Transfer your plan to your loved ones—simple and seamless."}
     >
       <Page.MainContent>
-        <FormStepper
-          steps={stepsData}
-          onSubmit={async () => {
-            const confirm = await messageBox({
-              title: "Proceed Application",
-              message: "Are you sure you want to proceed?",
-              confirmText: "Proceed",
-              cancelText: "No",
-              variant: "warning",
-            });
-
-            if (confirm) {
-              window.location.href += "/success";
-            }
-          }}
-        />
+        <Box mt={"-30px"}>
+          <FormSteps
+            stepsData={stepsData}
+            title={""}
+            description={""}
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+          />
+        </Box>
       </Page.MainContent>
     </Page.Root>
+    // <Page.Root
+    //   title={"Transfer of Rights Application"}
+    //   description="Transfer your plan to your loved ones—simple and seamless."
+    // >
+    //   <Page.MainContent>
+    //     <FormStepper
+    //       steps={stepsData}
+    //       onSubmit={async () => {
+    //         const confirm = await messageBox({
+    //           title: "Proceed Application",
+    //           message: "Are you sure you want to proceed?",
+    //           confirmText: "Proceed",
+    //           cancelText: "No",
+    //           variant: "warning",
+    //         });
+
+    //         if (confirm) {
+    //           window.location.href += "/success";
+    //         }
+    //       }}
+    //     />
+    //   </Page.MainContent>
+    // </Page.Root>
   );
 }

@@ -1,49 +1,47 @@
-import Card from "@/components/cards/Card";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import { RowItem } from "@/claude components/info-card/row-item";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
-import LabelText from "@/components/texts/LabelText";
-import { Flex, Separator } from "@chakra-ui/react";
-
+import { Flex } from "@chakra-ui/react";
+import { LuPhone } from "react-icons/lu";
 
 interface AgentContactInfoCardProps {
   agent: SalesAgent | undefined | null;
   removeCard?: Boolean;
+  isOpen?: boolean;
+  onToggle?: () => void;
 }
 
-const AgentContactInfo = ({ agent }: AgentContactInfoCardProps) => {
+const ContactInfo = ({ agent }: AgentContactInfoCardProps) => {
+  if (!agent) return null;
   return (
-    <>
-        {agent && (
-            <Flex direction="column" gap={2}>
-                <LabelText label="Email" value={agent.email} />
-                <Separator />
-                <LabelText label="Mobile Number" value={agent.mobile} />
-                <Separator />
-                <LabelText label="Landline Number" value={agent.landline} />
-            </Flex>
-        )}
-    </>
-  )
-};
-
-const AgentContactInfoInCard = ({ agent }: AgentContactInfoCardProps) => {
-  return (
-    <Card.Root title="Contact Information">
-        <Card.MainContent>
-            <AgentContactInfo agent={agent} />
-        </Card.MainContent>
-    </Card.Root>
+    <Flex direction="column">
+      <RowItem label="Email" value={agent.email} />
+      <RowItem label="Mobile Number" value={agent.mobile} />
+      <RowItem label="Landline Number" value={agent.landline} />
+    </Flex>
   );
 };
 
-const AgentContactInfoCard = ({ agent, removeCard }: AgentContactInfoCardProps) => {
-    return (
-        <>
-            {removeCard ? (
-                <AgentContactInfo agent={agent} />
-            ) : (
-                <AgentContactInfoInCard agent={agent} />
-            )}
-        </>
-    )
-}
+const AgentContactInfoCard = ({
+  agent,
+  removeCard,
+  isOpen,
+  onToggle,
+}: AgentContactInfoCardProps) => {
+  if (removeCard) {
+    return <ContactInfo agent={agent} />;
+  }
+  return (
+    <InfoCardAccordion
+      icon={<LuPhone />}
+      title="Contact Information"
+      subtitle="Contact Information"
+      isOpen={isOpen}
+      onToggle={onToggle}
+    >
+      <ContactInfo agent={agent} />
+    </InfoCardAccordion>
+  );
+};
+
 export default AgentContactInfoCard;

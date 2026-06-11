@@ -1,6 +1,7 @@
-import Card from "@/components/cards/Card";
-import LabelText from "@/components/texts/LabelText";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import { RowItem } from "@/claude components/info-card/row-item";
 import { Grid, Separator } from "@chakra-ui/react";
+import { LuPhone } from "react-icons/lu";
 
 export interface ContactInfoProps {
   contacts: {
@@ -10,24 +11,26 @@ export interface ContactInfoProps {
   };
 }
 
-export function ContactInfo({ contacts }: ContactInfoProps) {
+export function ContactInfo({
+  contacts,
+  isOpen,
+  onToggle,
+}: ContactInfoProps & { isOpen?: boolean; onToggle?: () => void }) {
   return (
-    <Card.Root title={"Contact Information"}>
-      <Card.MainContent>
-        <Grid
-          templateColumns="1fr"
-          gap={2}
-        >
-          <LabelText label="Email" value={contacts?.Email[0] ?? "—"} />
-          <Separator display={{ base: "block", lg: "none" }} />
-          <LabelText label="Mobile No" value={contacts?.MobileNo[0] ?? "—"} />
-          <Separator display={{ base: "block", lg: "none" }} />
-          <LabelText
-            label="Landline No"
-            value={contacts?.LandlineNo[0] ?? "—"}
-          />
-        </Grid>
-      </Card.MainContent>
-    </Card.Root>
+    <InfoCardAccordion
+      icon={<LuPhone />}
+      title={"Contact Information"}
+      subtitle="Contact Information"
+      isOpen={isOpen}
+      onToggle={onToggle}
+    >
+      <Grid templateColumns="1fr" gap={2}>
+        <RowItem label="Email" value={contacts?.Email[0] ?? "—"} />
+        {/* <Separator display={{ base: "block", lg: "none" }} /> */}
+        <RowItem label="Mobile No" value={contacts?.MobileNo[0] ?? "—"} />
+        {/* <Separator display={{ base: "block", lg: "none" }} /> */}
+        <RowItem label="Landline No" value={contacts?.LandlineNo[0] ?? "—"} />
+      </Grid>
+    </InfoCardAccordion>
   );
 }

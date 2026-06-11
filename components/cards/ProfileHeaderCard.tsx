@@ -73,29 +73,14 @@ const ProfileHeaderCard = ({
       shadow="sm"
       overflow="hidden"
       transition="all 0.25s ease"
-      _hover={
-        onToggle ? { transform: "translateY(-3px)", shadow: "lg" } : undefined
-      }
     >
       {/* Trigger area — accordion toggle */}
       <Box
         p={{ base: 4, lg: 5 }}
         cursor={onToggle ? "pointer" : undefined}
-        role={onToggle ? "button" : undefined}
-        tabIndex={onToggle ? 0 : undefined}
         aria-expanded={onToggle ? isOpen : undefined}
         aria-controls={onToggle && contentId ? contentId : undefined}
-        onClick={onToggle}
         onKeyDown={handleKeyDown}
-        _focusVisible={
-          onToggle
-            ? {
-                outline: "2px solid",
-                outlineColor: "blue.500",
-                outlineOffset: "-2px",
-              }
-            : undefined
-        }
       >
         {/* HEADER: Avatar + Name/ID + Badges + Chevron */}
         <Flex justify="space-between" align="start" mb={3}>
@@ -207,27 +192,7 @@ const ProfileHeaderCard = ({
             </Box>
           </Link>
         )}
-
-        {/* FOOTER */}
-        <Flex justify="flex-end" align="center">
-          <Text fontSize="xs" color="gray.400">
-            {isOpen ? "Tap to collapse" : "Tap to view profile"}
-          </Text>
-        </Flex>
       </Box>
-
-      {/* Contact actions — separate from trigger to avoid nested interactive elements */}
-      {/* {actions && (
-        <Box
-          px={{ base: 4, lg: 5 }}
-          pb={{ base: 4, lg: 5 }}
-          pt={3}
-          borderTopWidth="1px"
-          borderTopColor="gray.100"
-        >
-          {actions}
-        </Box>
-      )} */}
     </Box>
   );
 };

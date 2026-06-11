@@ -6,10 +6,9 @@ import { ReinstatementForm } from "./reinstatement-form";
 import { lapsedPlans } from "./data";
 import { ReinstatementSummaryPage } from "./ri-summary";
 import PaymentPage from "./payment";
-import { FormSteps } from "osp.cis.nextjs.components";
-import { FaCcMastercard, FaFileShield, FaLock } from "react-icons/fa6";
+import { FaFileShield } from "react-icons/fa6";
 import { FaFileAlt } from "react-icons/fa";
-import { FormStepper } from "@/components/form-stepper/form-stepper";
+import FormSteps from "@/components/FormSteps";
 
 const steps = ["Select Lapsed Plan", "Review Reinstatement", "Payment"];
 
@@ -21,7 +20,7 @@ export function ReinstatementPage({
   successLink: string;
 }) {
   const [checkedPlans, setCheckedPlans] = useState<CheckedPlan[]>([]);
-  const requestId = "";
+  const [currentStep, setCurrentStep] = useState(0);
 
   const stepsData = [
     {
@@ -63,9 +62,9 @@ export function ReinstatementPage({
     <FormSteps
       stepsData={stepsData}
       title={"Reinstatement Application"}
-      description={
-        "Quickly bring your plan back on track by reactivating a lapsed plan."
-      }
+      description={"Quickly bring your plan back on track by reactivating a lapsed plan."}
+      currentStep={currentStep}
+      setCurrentStep={setCurrentStep}
     />
   );
 }

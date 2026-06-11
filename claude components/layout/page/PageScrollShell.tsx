@@ -10,6 +10,7 @@ type PageScrollShellProps = {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   description?: React.ReactNode;
+  hideBackButton?: boolean;
   toolContent?: React.ReactNode;
   mainContent?: React.ReactNode;
   boxProps?: BoxProps;
@@ -22,11 +23,12 @@ const PageScrollShell = ({
   toolContent,
   mainContent,
   boxProps,
+  hideBackButton = false,
 }: PageScrollShellProps) => {
   return (
     <Box
       w="100%"
-      // p={{ base: "0px 16px 96px", lg: "0px 44px 56px" }}
+      p={{ base: "0px 16px 126px", lg: "0px 44px 56px" }}
       {...boxProps}
       h="100%"
       maxH="100%"
@@ -34,12 +36,11 @@ const PageScrollShell = ({
       overflowX="hidden"
       scrollBehavior="smooth"
       bg={"#fff"}
-      pb={"96px"}
     >
       <Box
         mx={{ base: "-16px", lg: "-44px" }}
         px={{ base: "16px", lg: "66px" }}
-        // pt={{ base: "20px", lg: "36px" }}
+        pt={{ base: "20px", lg: "36px" }}
         mb="0px"
       >
         <Flex
@@ -50,7 +51,7 @@ const PageScrollShell = ({
           pb="24px"
         >
           <Box minW={0} flex="1">
-            <BackButton />
+            {!hideBackButton && <BackButton />}
             {subtitle && (
               <Box
                 fontFamily="var(--font-dm-sans), system-ui, sans-serif"

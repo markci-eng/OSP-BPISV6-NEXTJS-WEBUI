@@ -110,9 +110,10 @@ export function PendingRequests({
           transformOrigin="center"
           opacity="0.5"
           boxSize="2"
+          bg="gray.200"
           _current={{
             width: "10",
-            bg: "colorPalette.subtle",
+            bg: "gray.300",
             opacity: 1,
           }}
         />
