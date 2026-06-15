@@ -7,6 +7,8 @@ import { RenderPage } from "./render-page";
 import RootLayoutClient from "./root-layout-client";
 import { NavigationLoadingOverlay } from "@/components/common/loading-overlay/navigation-loading-overlay";
 import { DemoAuthProvider } from "@/components/ui/demo-auth";
+import { cookies } from "next/headers";
+import { USER_COOKIE } from "@/lib/session";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,11 +30,14 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const userRole = cookieStore.get(USER_COOKIE)?.value ?? null;
+
   return (
     <html
       lang="en"
@@ -47,7 +52,7 @@ export default function RootLayout({
           <StPeterProvider font="Open Sans" theme="green">
             <DemoAuthProvider>
               <MessageDialogProvider>
-                <RenderPage>{children}</RenderPage>
+                <RenderPage userRole={userRole}>{children}</RenderPage>
                 {/* <AppLayout>{children}</AppLayout> */}
                 <Toaster position="top-right" richColors />
                 <NavigationLoadingOverlay />

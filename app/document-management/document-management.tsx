@@ -36,7 +36,13 @@ const DocumentManagement = () => {
       title="Document Management"
       description="Search employees and manage their policy documents."
     >
-      <Page.ToolContent>
+      <Page.MainContent>
+        {/* <Flex
+        direction={{ base: "column", md: "row" }}
+        align={{ base: "stretch", md: "flex-start" }}
+        justify="space-between"
+        gap={{ base: 3, md: 4 }}
+      ></Flex> */}
         <Box
           w={{ base: "full", md: "320px", lg: "360px" }}
           ml={{ base: 0, md: "auto" }}
@@ -54,72 +60,64 @@ const DocumentManagement = () => {
             value={selectedEmployee}
           />
         </Box>
-      </Page.ToolContent>
-      <Page.MainContent>
-      {/* <Flex
-        direction={{ base: "column", md: "row" }}
-        align={{ base: "stretch", md: "flex-start" }}
-        justify="space-between"
-        gap={{ base: 3, md: 4 }}
-      ></Flex> */}
 
-      <AnimatePresence>
-        {selectedEmployee && (
-          <MotionBox
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={springTransition}
-            overflow="hidden"
-            my="3"
-          >
-            <DocumentTable
-              employee={selectedEmployee}
-              topContent={
-                <Grid
-                  templateColumns={{
-                    base: "1fr",
-                    sm: "repeat(2, 1fr)",
-                    lg: "repeat(3, 1fr)",
-                  }}
-                  gap={4}
-                >
-                  {[
-                    { label: "Employee ID", value: selectedEmployee.id },
-                    { label: "Name", value: selectedEmployee.name },
-                    { label: "Branch", value: selectedEmployee.branch },
-                  ].map((detail) => (
-                    // <Box key={detail.label} minW={0}>
-                    //   <Text
-                    //     fontSize="xs"
-                    //     fontWeight="medium"
-                    //     color="gray.500"
-                    //     textTransform="uppercase"
-                    //     letterSpacing="wide"
-                    //   >
-                    //     {detail.label}
-                    //   </Text>
+        <AnimatePresence>
+          {selectedEmployee && (
+            <MotionBox
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={springTransition}
+              overflow="hidden"
+              my="3"
+            >
+              <DocumentTable
+                employee={selectedEmployee}
+                topContent={
+                  <Grid
+                    templateColumns={{
+                      base: "1fr",
+                      sm: "repeat(2, 1fr)",
+                      lg: "repeat(3, 1fr)",
+                    }}
+                    gap={4}
+                  >
+                    {[
+                      { label: "Employee ID", value: selectedEmployee.id },
+                      { label: "Name", value: selectedEmployee.name },
+                      { label: "Branch", value: selectedEmployee.branch },
+                    ].map((detail) => (
+                      // <Box key={detail.label} minW={0}>
+                      //   <Text
+                      //     fontSize="xs"
+                      //     fontWeight="medium"
+                      //     color="gray.500"
+                      //     textTransform="uppercase"
+                      //     letterSpacing="wide"
+                      //   >
+                      //     {detail.label}
+                      //   </Text>
 
-                    //   <Text
-                    //     mt={1}
-                    //     fontSize="sm"
-                    //     color="gray.800"
-                    //     fontWeight="medium"
-                    //     wordBreak="break-word"
-                    //   >
-                    //     {detail.value}
-                    //   </Text>
-                    // </Box>
-                    <LabelText label={detail.label} value={detail.value} />
-                  ))}
-                </Grid>
-              }
-            />
-          </MotionBox>
-        )}
-      </AnimatePresence>
+                      //   <Text
+                      //     mt={1}
+                      //     fontSize="sm"
+                      //     color="gray.800"
+                      //     fontWeight="medium"
+                      //     wordBreak="break-word"
+                      //   >
+                      //     {detail.value}
+                      //   </Text>
+                      // </Box>
+                      <LabelText label={detail.label} value={detail.value} />
+                    ))}
+                  </Grid>
+                }
+              />
+            </MotionBox>
+          )}
+        </AnimatePresence>
 
-      {!selectedEmployee && <DocumentTable employee={selectedEmployee} />}
+        {!selectedEmployee && <DocumentTable employee={selectedEmployee} />}
       </Page.MainContent>
     </Page.Root>
   );

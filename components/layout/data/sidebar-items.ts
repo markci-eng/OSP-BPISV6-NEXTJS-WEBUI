@@ -22,8 +22,12 @@ import {
 import {
   RiBookShelfFill,
   RiBookShelfLine,
+  RiClipboardFill,
+  RiClipboardLine,
   RiDashboardFill,
   RiDashboardLine,
+  RiFileCheckFill,
+  RiFileCheckLine,
   RiHome4Fill,
   RiHome4Line,
   RiUser2Fill,
@@ -40,8 +44,8 @@ export const SideBarItemsBranch: NavItem[] = [
     href: "/",
   },
   {
-    icon: LuClipboardCheck,
-    activeIcon: LuClipboardCheck,
+    icon: RiFileCheckLine,
+    activeIcon: RiFileCheckFill,
     label: "Approvals",
     href: "/approvals",
   },
