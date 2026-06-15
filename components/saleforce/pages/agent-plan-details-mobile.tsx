@@ -34,7 +34,6 @@ import ActionButtons, {
 } from "@/components/buttons/ActionButtons";
 import Page from "@/claude components/layout/page/Page";
 import ReferralPage from "./referral-page";
-import Card from "@/components/cards/Card";
 
 const MOCK_AGENT_REQUESTS: RequestProps[] = [
   {
@@ -202,11 +201,7 @@ const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
 
             <PendingRequests requests={MOCK_AGENT_REQUESTS} />
 
-            <Card.Root>
-              <Card.MainContent>
-                <AgentInfoTabsMobile agent={selectedAgent} />
-              </Card.MainContent>
-            </Card.Root>
+            <AgentInfoTabsMobile agent={selectedAgent} />
 
             <Flex borderColor="gray.200" borderRadius="md">
               <DataTable

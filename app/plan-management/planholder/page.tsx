@@ -23,6 +23,7 @@ import {
   LuHash,
   LuPhone,
   LuX,
+  LuChevronRight,
 } from "react-icons/lu";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -303,10 +304,11 @@ export default function PlanholderSearchPage() {
                     <ContactNumber contactNo={mobile?.value ?? ""} />
 
                     {/* FOOTER */}
-                    <Flex justify="flex-end" align="center" mt={4}>
+                    <Flex justify="space-between" align="center" mt={2}>
                       <Text fontSize="xs" color="gray.400">
                         Tap to view profile
                       </Text>
+                      <LuChevronRight color="#a1a1aa" />
                     </Flex>
                   </Box>
                 );

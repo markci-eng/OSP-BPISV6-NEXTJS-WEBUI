@@ -98,75 +98,79 @@ const CHEVRON_COLOR = BRAND_COLORS.ashWhite;
  * Convenience header card for showing which record the actions apply to.
  * Pass this to `BottomQuickActions` via the `headerSlot` prop.
  */
-export const QuickActionsHeaderCard = React.memo(({
-  initials,
-  avatarBg = AVATAR_DEFAULT_BG,
-  label,
-  meta,
-  trailing,
-}: QuickActionsHeaderCardProps) => (
-  <HStack
-    gap={STANDARD_SPACING.sm}
-    px={STANDARD_SPACING.sm}
-    py="13px"
-    bg={HEADER_CARD_BG}
-    borderRadius={STANDARD_RADIUS.lg}
-    borderWidth="1px"
-    borderColor={HEADER_CARD_BORDER}
-  >
-    {initials && (
-      <Flex
-        w="40px"
-        h="40px"
-        borderRadius={STANDARD_RADIUS.full}
-        bg={avatarBg}
-        align="center"
-        justify="center"
-        flexShrink={0}
-      >
-        <Text
-          fontSize="14px"
-          fontWeight="700"
-          color={BRAND_COLORS.white}
-          lineHeight="1"
+export const QuickActionsHeaderCard = React.memo(
+  ({
+    initials,
+    avatarBg = AVATAR_DEFAULT_BG,
+    label,
+    meta,
+    trailing,
+  }: QuickActionsHeaderCardProps) => (
+    <HStack
+      gap={STANDARD_SPACING.sm}
+      px={STANDARD_SPACING.sm}
+      py="13px"
+      bg={HEADER_CARD_BG}
+      borderRadius={STANDARD_RADIUS.lg}
+      borderWidth="1px"
+      borderColor={HEADER_CARD_BORDER}
+    >
+      {initials && (
+        <Flex
+          w="40px"
+          h="40px"
+          borderRadius={STANDARD_RADIUS.full}
+          bg={avatarBg}
+          align="center"
+          justify="center"
+          flexShrink={0}
         >
-          {initials}
-        </Text>
-      </Flex>
-    )}
-    <Box flex="1" minW={0}>
-      <Text
-        fontSize="15px"
-        fontWeight="700"
-        color={TITLE_COLOR}
-        lineHeight="1.25"
-        overflow="hidden"
-        whiteSpace="nowrap"
-        textOverflow="ellipsis"
-      >
-        {label}
-      </Text>
-      {meta && (
+          <Text
+            fontSize="14px"
+            fontWeight="700"
+            color={BRAND_COLORS.white}
+            lineHeight="1"
+          >
+            {initials}
+          </Text>
+        </Flex>
+      )}
+      <Box flex="1" minW={0}>
         <Text
-          fontSize="12px"
-          color={SUBTITLE_COLOR}
-          mt="2px"
-          lineHeight="1.4"
+          fontSize="15px"
+          fontWeight="700"
+          color={TITLE_COLOR}
+          lineHeight="1.25"
           overflow="hidden"
           whiteSpace="nowrap"
           textOverflow="ellipsis"
         >
-          {meta}
+          {label}
         </Text>
-      )}
-    </Box>
-    {trailing}
-  </HStack>
-));
+        {meta && (
+          <Text
+            fontSize="12px"
+            color={SUBTITLE_COLOR}
+            mt="2px"
+            lineHeight="1.4"
+            overflow="hidden"
+            whiteSpace="nowrap"
+            textOverflow="ellipsis"
+          >
+            {meta}
+          </Text>
+        )}
+      </Box>
+      {trailing}
+    </HStack>
+  ),
+);
 
 // ─── Action item ──────────────────────────────────────────────────────────────
 
-const ITEM_TRANSITION = { transition: "background 0.15s ease, transform 0.1s ease" };
+const ITEM_TRANSITION = {
+  transition: "background 0.15s ease, transform 0.1s ease",
+};
 
 const ActionItem = React.memo(({ action }: { action: QuickAction }) => {
   const iconBg = action.iconBg ?? DEFAULT_ICON_BG;
@@ -272,7 +276,7 @@ export const BottomQuickActions = ({
         <Drawer.Backdrop />
         <Drawer.Positioner>
           <Drawer.Content
-            borderTopRadius="l3"
+            borderTopRadius="lg"
             borderBottomRadius="0"
             bg={SHEET_BG}
             maxW="480px"
@@ -332,7 +336,11 @@ export const BottomQuickActions = ({
             </Drawer.Header>
 
             {/* Body: optional header card + action list */}
-            <Drawer.Body px={STANDARD_SPACING.sm} pt={STANDARD_SPACING.sm} pb="4px">
+            <Drawer.Body
+              px={STANDARD_SPACING.sm}
+              pt={STANDARD_SPACING.sm}
+              pb="4px"
+            >
               {headerSlot && <Box mb={STANDARD_SPACING.xs}>{headerSlot}</Box>}
 
               <VStack gap={STANDARD_SPACING.xs} align="stretch">

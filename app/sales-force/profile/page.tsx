@@ -20,6 +20,7 @@ import {
   LuHash,
   LuX,
   LuBriefcase,
+  LuChevronRight,
 } from "react-icons/lu";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -177,11 +178,7 @@ export default function SalesAgentListPage() {
                         <LuUser size={18} />
                       </Box>
                       <Box>
-                        <Text
-                          fontWeight="bold"
-                          fontSize="md"
-                          lineHeight="1.2"
-                        >
+                        <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
                           {toTitleCase(agent.firstName)}{" "}
                           {toTitleCase(agent.lastName)}
                         </Text>
@@ -233,21 +230,17 @@ export default function SalesAgentListPage() {
                   </Flex>
 
                   {/* FOOTER */}
-                  <Flex justify="flex-end" align="center" mt={2}>
+                  <Flex justify="space-between" align="center" mt={2}>
                     <Text fontSize="xs" color="gray.400">
                       Tap to view profile
                     </Text>
+                    <LuChevronRight color="#a1a1aa" />
                   </Flex>
                 </Box>
               ))}
 
               {agents.length === 0 && (
-                <Text
-                  color="gray.500"
-                  fontSize="sm"
-                  textAlign="center"
-                  py={6}
-                >
+                <Text color="gray.500" fontSize="sm" textAlign="center" py={6}>
                   No agents found.
                 </Text>
               )}

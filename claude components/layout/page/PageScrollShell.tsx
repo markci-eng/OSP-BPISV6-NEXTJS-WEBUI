@@ -40,7 +40,6 @@ const PageScrollShell = ({
       <Box
         mx={{ base: "-16px", lg: "-44px" }}
         px={{ base: "16px", lg: "66px" }}
-        pt={{ base: "20px", lg: "36px" }}
         mb="0px"
       >
         <Flex
@@ -48,7 +47,6 @@ const PageScrollShell = ({
           align="center"
           justify="space-between"
           gap={{ base: "10px", lg: "32px" }}
-          pb="24px"
         >
           <Box minW={0} flex="1">
             {!hideBackButton && <BackButton />}

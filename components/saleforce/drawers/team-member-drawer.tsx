@@ -1,22 +1,17 @@
 "use client";
 
-import {
-  Box,
-  Flex,
-  Grid,
-  Separator,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
-import { Body, Small } from "st-peter-ui";
+import { Box, Separator, Text, VStack } from "@chakra-ui/react";
 import {
   SalesAgent,
   getAgentNameById,
   getPositionDesc,
 } from "../../common/agent-lookup/agent-lookup.type";
-import { LuIdCard, LuCalendar, LuUsers, LuBriefcase } from "react-icons/lu";
-import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
-import Drawer from "@/components/drawers/Drawer";
+import BottomQuickActions, {
+  QuickActionsHeaderCard,
+} from "@/claude components/drawer/bottom-quick-actions";
+import { RowItem } from "@/claude components/info-card/row-item";
+import { BRAND_COLORS } from "@/lib/theme/brand-colors";
+import { STANDARD_RADIUS, STANDARD_SPACING } from "@/lib/theme/standard-design-tokens";
 
 interface TeamMemberDrawerProps {
   agent: SalesAgent | null;
@@ -24,117 +19,91 @@ interface TeamMemberDrawerProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const DetailRow = ({
-  icon,
-  label,
-  value,
+function getInitials(name: string): string {
+  const [last, first] = name.split(",").map((s) => s.trim());
+  return ((first?.[0] ?? "") + (last?.[0] ?? "")).toUpperCase();
+}
+
+function SectionCard({
+  title,
+  children,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) => (
-  <Flex align="start" gap={3}>
-    <Box color="var(--chakra-colors-primary)" pt={1}>
-      {icon}
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Box
+      bg={BRAND_COLORS.subtleBg}
+      borderRadius={STANDARD_RADIUS.lg}
+      borderWidth="1px"
+      borderColor={BRAND_COLORS.neutralBorder}
+      px={STANDARD_SPACING.sm}
+      pt="12px"
+      pb="10px"
+    >
+      <Text
+        fontSize="11px"
+        fontWeight="700"
+        letterSpacing="0.06em"
+        textTransform="uppercase"
+        color={BRAND_COLORS.grey}
+        mb="8px"
+      >
+        {title}
+      </Text>
+      <Separator borderColor={BRAND_COLORS.neutralBorder} mb="10px" />
+      {children}
     </Box>
-    <VStack align="start" gap={0}>
-      <Small color="gray.500">{label}</Small>
-      <Body>{value}</Body>
-    </VStack>
-  </Flex>
-);
+  );
+}
 
 export function TeamMemberDrawer({
   agent,
   open,
   onOpenChange,
 }: TeamMemberDrawerProps) {
+  const headerSlot = agent ? (
+    <VStack gap={STANDARD_SPACING.xs} align="stretch">
+      <QuickActionsHeaderCard
+        initials={getInitials(agent.name)}
+        label={agent.name}
+        meta={`${getPositionDesc(agent.position)} · ${agent.branch}`}
+      />
+
+      <SectionCard title="Basic Information">
+        <RowItem label="Agent ID" value={agent.id} />
+        <RowItem label="Position" value={getPositionDesc(agent.position)} />
+        <RowItem label="Status" value={agent.employeeStatus} />
+        <RowItem label="Hire Date" value={agent.hireDate} />
+        <RowItem label="Branch" value={agent.branch} />
+        <RowItem
+          label="Direct Superior"
+          value={getAgentNameById(agent.superiorId ?? "") ?? "—"}
+        />
+      </SectionCard>
+
+      <SectionCard title="Document Status">
+        <RowItem
+          label="Contract"
+          value={agent.isContractPrinted ? "Printed" : "Not Printed"}
+        />
+        <RowItem
+          label="SFID Card"
+          value={agent.isSFIDPrinted ? "Printed" : "Not Printed"}
+        />
+      </SectionCard>
+    </VStack>
+  ) : undefined;
+
   return (
-    <Drawer
-      title="Team Member Details"
+    <BottomQuickActions
       open={open}
       onOpenChange={onOpenChange}
-    >
-      {agent ? (
-        <Flex direction="column" gap={6} pt={2}>
-          <AgentProfileHeaderCard agent={agent} />
-
-          <Box
-            p={4}
-            borderRadius="md"
-            borderWidth={1}
-            borderColor="gray.200"
-          >
-            <Text
-              fontSize="sm"
-              fontWeight="bold"
-              color="var(--chakra-colors-primary)"
-              mb={2}
-            >
-              Basic Information
-            </Text>
-            <Separator mb={4} />
-            <Grid
-              templateColumns={{ base: "1fr", sm: "1fr 1fr" }}
-              gap={4}
-            >
-              <DetailRow
-                icon={<LuIdCard size={16} />}
-                label="Agent ID"
-                value={agent.id}
-              />
-              <DetailRow
-                icon={<LuBriefcase size={16} />}
-                label="Position"
-                value={getPositionDesc(agent.position)}
-              />
-              <DetailRow
-                icon={<LuCalendar size={16} />}
-                label="Hire Date"
-                value={agent.hireDate}
-              />
-              <DetailRow
-                icon={<LuUsers size={16} />}
-                label="Superior"
-                value={getAgentNameById(agent.superiorId ?? "") ?? "—"}
-              />
-            </Grid>
-          </Box>
-
-          <Box
-            p={4}
-            borderRadius="md"
-            borderWidth={1}
-            borderColor="gray.200"
-          >
-            <Text
-              fontSize="sm"
-              fontWeight="bold"
-              color="var(--chakra-colors-primary)"
-              mb={2}
-            >
-              Document Status
-            </Text>
-            <Separator mb={4} />
-            <Grid
-              templateColumns={{ base: "1fr", sm: "1fr 1fr" }}
-              gap={4}
-            >
-              <VStack align="start" gap={0}>
-                <Small color="gray.500">Contract Printed</Small>
-                <Body>{agent.isContractPrinted ? "Yes" : "No"}</Body>
-              </VStack>
-              <VStack align="start" gap={0}>
-                <Small color="gray.500">SFID Printed</Small>
-                <Body>{agent.isSFIDPrinted ? "Yes" : "No"}</Body>
-              </VStack>
-            </Grid>
-          </Box>
-        </Flex>
-      ) : (
-        <Text color="gray.500">No agent selected.</Text>
-      )}
-    </Drawer>
+      title="Team Member"
+      subtitle="Agent profile and details"
+      headerSlot={headerSlot}
+      actions={[]}
+    />
   );
 }
 

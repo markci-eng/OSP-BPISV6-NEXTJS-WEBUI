@@ -339,7 +339,7 @@ export function ApprovalDetailContent({
               onClick={() => onDeny?.(row, remarks)}
             >
               <X size={15} />
-              Deny Request
+              Deny
             </Button>
 
             <Button

@@ -1,133 +1,95 @@
-import { Box, Flex, Grid, Separator, Strong, Tabs } from "@chakra-ui/react";
-import { LuNotebook, LuUser } from "react-icons/lu";
-import {
-  getAgentNameById,
-  getPositionDesc,
-  SalesAgent,
-} from "../../common/agent-lookup/agent-lookup.type";
-import LabelText from "@/components/texts/LabelText";
-import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
-import AgentEmploymentInfoCard from "../cards/AgentEmploymentInfoCard";
-import SectionTitle from "@/components/texts/SectionTitle";
+"use client";
+
+import { Flex } from "@chakra-ui/react";
+import { useState } from "react";
+import { LuChevronsDown, LuChevronsUp } from "react-icons/lu";
+import { SalesAgent } from "../../common/agent-lookup/agent-lookup.type";
 import AgentPersonalInfoCard from "../cards/AgentPersonalInfoCard";
+import AgentEmploymentInfoCard from "../cards/AgentEmploymentInfoCard";
 import AgentContactInfoCard from "../cards/AgentContactInfoCard";
 import { PlanholderAddressCard } from "@/components/new-planholder-profile/sections/address-info";
+import { TertiarySmButton } from "st-peter-ui";
 
 interface AgentInfoTabsMobileProps {
   agent?: SalesAgent;
 }
 
-const formatDate = (iso?: string): string => {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-const titleCase = (s: string): string =>
-  s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "—";
-
-const buildResidentialAddress = (agent?: SalesAgent): string => {
-  if (!agent) return "—";
-  const a = agent.address;
-  return [a.unit, a.street, a.barangay, a.city, a.province, a.zipCode]
-    .filter(Boolean)
-    .join(", ");
-};
-
 const AgentInfoTabsMobile = ({ agent }: AgentInfoTabsMobileProps) => {
-  return (
-    <Tabs.Root defaultValue="personal-info" variant="enclosed">
-      <Flex justify="center" align="center">
-        <Tabs.List bg="#f8f8ff">
-          <Tabs.Trigger
-            value="personal-info"
-            color="var(--chakra-colors-primary)"
-          >
-            <LuUser /> Personal
-          </Tabs.Trigger>
+  const [personalOpen, setPersonalOpen] = useState(true);
+  const [employmentOpen, setEmploymentOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [addressOpen, setAddressOpen] = useState(false);
 
-          <Tabs.Trigger
-            value="contact-address-info"
-            color="var(--chakra-colors-primary)"
-          >
-            <LuNotebook /> Contact & Address
-          </Tabs.Trigger>
-        </Tabs.List>
+  const expandAll = () => {
+    setPersonalOpen(true);
+    setEmploymentOpen(true);
+    setContactOpen(true);
+    setAddressOpen(true);
+  };
+
+  const collapseAll = () => {
+    setPersonalOpen(false);
+    setEmploymentOpen(false);
+    setContactOpen(false);
+    setAddressOpen(false);
+  };
+
+  return (
+    <Flex direction="column" gap={3}>
+      <Flex justify="flex-end" gap={2}>
+        <TertiarySmButton onClick={expandAll}>
+          <LuChevronsDown size={14} />
+          Expand All
+        </TertiarySmButton>
+        <TertiarySmButton onClick={collapseAll}>
+          <LuChevronsUp size={14} />
+          Collapse All
+        </TertiarySmButton>
       </Flex>
 
-      <Tabs.Content value="personal-info">
-        {agent ? (
-          <>
-            <Box p={1}>
-              <SectionTitle>Demographic</SectionTitle>
-              <Box p={1}>
-                <AgentPersonalInfoCard removeCard agent={agent} />
-              </Box>
-            </Box>
+      <AgentPersonalInfoCard
+        agent={agent}
+        isOpen={personalOpen}
+        onToggle={() => setPersonalOpen((p) => !p)}
+      />
 
-            <Separator marginY={1} />
+      <AgentEmploymentInfoCard
+        agent={agent}
+        isOpen={employmentOpen}
+        onToggle={() => setEmploymentOpen((p) => !p)}
+      />
 
-            <Box p={1} mt={5}>
-              <SectionTitle>Employment</SectionTitle>
-              <Box p={1}>
-                <AgentEmploymentInfoCard removeCard agent={agent} />
-              </Box>
-            </Box>
-          </>
-        ) : (
-          <>
-            <EmptyStateCard
-              title="No Selected Agent"
-              description="Please select an Agent"
-            ></EmptyStateCard>
-          </>
-        )}
-      </Tabs.Content>
+      <AgentContactInfoCard
+        agent={agent}
+        isOpen={contactOpen}
+        onToggle={() => setContactOpen((p) => !p)}
+      />
 
-      <Tabs.Content value="contact-address-info">
-        {agent ? (
-          <Flex direction="column" gap={4}>
-            <AgentContactInfoCard removeCard agent={agent} />
-            <Separator />
-            <PlanholderAddressCard
-            noBorder
-              phAddress={
-                agent.address
-                  ? [
-                      {
-                        id: "1",
-                        addressType: "RESIDENCE",
-                        addressNo: agent.address.unit || null,
-                        street: agent.address.street || null,
-                        barangay: agent.address.barangay || null,
-                        district: agent.address.district || null,
-                        city: agent.address.city,
-                        province: agent.address.province,
-                        zipCode: agent.address.zipCode
-                          ? parseInt(agent.address.zipCode)
-                          : null,
-                        isMailAddress: true,
-                      },
-                    ]
-                  : undefined
-              }
-            />
-          </Flex>
-        ) : (
-          <>
-            <EmptyStateCard
-              title="No Selected Agent"
-              description="Please select an Agent"
-            ></EmptyStateCard>
-          </>
-        )}
-      </Tabs.Content>
-    </Tabs.Root>
+      <PlanholderAddressCard
+        phAddress={
+          agent?.address
+            ? [
+                {
+                  id: "1",
+                  addressType: "RESIDENCE",
+                  addressNo: agent.address.unit || null,
+                  street: agent.address.street || null,
+                  barangay: agent.address.barangay || null,
+                  district: agent.address.district || null,
+                  city: agent.address.city,
+                  province: agent.address.province,
+                  zipCode: agent.address.zipCode
+                    ? parseInt(agent.address.zipCode)
+                    : null,
+                  isMailAddress: true,
+                },
+              ]
+            : undefined
+        }
+        isOpen={addressOpen}
+        onToggle={() => setAddressOpen((p) => !p)}
+      />
+    </Flex>
   );
 };
 
