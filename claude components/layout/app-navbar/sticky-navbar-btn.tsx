@@ -57,7 +57,7 @@ export const StickyNavbarBtn = (params: {
         borderColor: isActive ? "rgba(255,255,255,0.14)" : "transparent",
       }}
     >
-      <Flex direction="column" align="center" gap="4px">
+      <Flex direction="column" align="center" gap="3px">
         <Icon
           as={DisplayIcon}
           style={{
@@ -70,7 +70,8 @@ export const StickyNavbarBtn = (params: {
           fontSize="2xs"
           fontWeight={isActive ? "700" : "500"}
           letterSpacing="0.06em"
-          lineHeight="1"
+          // lineHeight="1"
+          mb={"-5px"}
           maxW="60px"
           minW={"50px"}
           overflow="hidden"
