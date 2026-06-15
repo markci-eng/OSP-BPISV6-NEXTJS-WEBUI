@@ -35,6 +35,8 @@ import {
 } from "react-icons/ri";
 import { FaHandHoldingUsd } from "react-icons/fa";
 import { LuClipboardCheck } from "react-icons/lu";
+import { BiCoin, BiSolidCoin } from "react-icons/bi";
+import { TbReceiptDollar, TbReceiptDollarFilled } from "react-icons/tb";
 
 export const SideBarItemsBranch: NavItem[] = [
   {
@@ -182,16 +184,18 @@ export const SideBarItemsBranch: NavItem[] = [
 
 export const SideBarItemsEKolekta: NavItem[] = [
   {
-    icon: RiDashboardLine,
-    activeIcon: RiDashboardFill,
-    label: "Dashboard",
+    icon: RiHome4Line,
+    activeIcon: RiHome4Fill,
+    label: "Home",
     href: "/",
+    displayName: "Home",
   },
   {
-    icon: HiOutlineCurrencyDollar,
-    activeIcon: HiCurrencyDollar,
+    icon: TbReceiptDollar,
+    activeIcon: TbReceiptDollarFilled,
     label: "View MCPR",
     href: "/accounts-maintenance/mcpr",
+    displayName: "MCPR",
   },
   {
     icon: HiOutlineCurrencyDollar,
@@ -212,9 +216,11 @@ export const SideBarItemsEKolekta: NavItem[] = [
     ],
   },
   {
-    icon: RiDashboardLine,
+    icon: BiCoin,
+    activeIcon: BiSolidCoin,
     label: "Disbursement",
     href: "/disbursement/comte",
+    displayName: "Com/TE",
   },
   {
     label: "Plan Management",
