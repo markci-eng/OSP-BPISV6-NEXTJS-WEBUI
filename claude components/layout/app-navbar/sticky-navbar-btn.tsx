@@ -78,7 +78,7 @@ export const StickyNavbarBtn = (params: {
           whiteSpace="nowrap"
           textOverflow="ellipsis"
           style={{
-            opacity: isActive ? 1 : 0.45,
+            // opacity: isActive ? 1 : 0.75,
             transform: isActive ? "translateY(0)" : "translateY(2px)",
             transition: `opacity 0.2s ease, transform ${LABEL_SPRING}`,
           }}
