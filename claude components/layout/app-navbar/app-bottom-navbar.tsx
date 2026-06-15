@@ -510,7 +510,7 @@ export function AppBottomNavBar({
                 </Box>
                 <Box
                   mt={1}
-                  fontSize="xs"
+                  fontSize="2xs"
                   fontWeight="500"
                   letterSpacing="0.06em"
                   lineHeight="1"
