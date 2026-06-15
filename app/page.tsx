@@ -62,6 +62,7 @@ import { IconType } from "react-icons";
 import UserWelcomeBanner from "@/claude components/layout/page/UserWelcomeBanner";
 import { useDemoAuth } from "@/components/ui/demo-auth";
 import { Card } from "@/claude components/card-accordion/card";
+import { RowItem } from "@/claude components/info-card/row-item";
 
 // --- Types ---
 type DashboardKeys = "request" | "service" | "reservation" | "activetrips";
@@ -475,7 +476,7 @@ export default function Dashboard() {
         display: "flex",
         flexDirection: "column",
         gap: 24,
-        padding: "10px 8px 8px",
+        padding: "10px 8px 108px",
       }}
     >
       <UserWelcomeBanner firstName={"Joyce"} branch={"Head Office"} />
@@ -588,27 +589,51 @@ export default function Dashboard() {
               subtitle="Amount targets"
             >
               <Box px={0} py={2}>
-                <MetricRow
+                <RowItem
                   label="Comm. Quota"
-                  value={quotaAndCollections.comQuota}
-                  isAmount
+                  value={
+                    "₱ " +
+                    quotaAndCollections.comQuota.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  }
+                  // isAmount
                 />
-                <MetricRow
+                <RowItem
                   label="Comm. Collection"
-                  value={quotaAndCollections.comCollection}
-                  isAmount
+                  value={
+                    "₱ " +
+                    quotaAndCollections.comCollection.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  }
+                  // isAmount
                 />
                 <Separator my={1} borderColor="gray.50" />
-                <MetricRow
+                <RowItem
                   label="Non-Comm. Quota"
-                  value={quotaAndCollections.nComQuota}
-                  isAmount
+                  value={
+                    "₱ " +
+                    quotaAndCollections.nComQuota.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  }
+                  // isAmount
                 />
-                <MetricRow
+                <RowItem
                   label="Non-Comm. Collection"
-                  value={quotaAndCollections.nComCollection}
-                  isAmount
-                  last
+                  value={
+                    "₱ " +
+                    quotaAndCollections.nComCollection.toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  }
+                  // isAmount
+                  // last
                 />
               </Box>
             </Card>
@@ -634,23 +659,22 @@ export default function Dashboard() {
               subtitle={"Account count targets"}
             >
               <Box px={0} py={2}>
-                <MetricRow
+                <RowItem
                   label="Comm. Accounts Due"
                   value={quotaAndCollections.comAcctDue}
                 />
-                <MetricRow
+                <RowItem
                   label="Comm. Accounts Collected"
                   value={quotaAndCollections.comAcctCollection}
                 />
                 <Separator my={1} borderColor="gray.50" />
-                <MetricRow
+                <RowItem
                   label="Non-Comm. Accounts Due"
                   value={quotaAndCollections.nComAcctDue}
                 />
-                <MetricRow
+                <RowItem
                   label="Non-Comm. Accounts Collected"
                   value={quotaAndCollections.nComAcctCollection}
-                  last
                 />
               </Box>
             </Card>

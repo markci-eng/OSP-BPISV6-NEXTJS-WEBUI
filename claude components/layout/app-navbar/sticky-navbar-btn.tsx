@@ -29,7 +29,7 @@ export const StickyNavbarBtn = (params: {
     <Box
       as="button"
       onClick={onClickEvent}
-      px="14px"
+      px="10px"
       py="10px"
       borderRadius="2xl"
       position="relative"
@@ -67,11 +67,12 @@ export const StickyNavbarBtn = (params: {
           }}
         />
         <Box
-          fontSize="xs"
+          fontSize="2xs"
           fontWeight={isActive ? "700" : "500"}
           letterSpacing="0.06em"
           lineHeight="1"
-          maxW="52px"
+          maxW="60px"
+          minW={"50px"}
           overflow="hidden"
           whiteSpace="nowrap"
           textOverflow="ellipsis"

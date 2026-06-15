@@ -49,6 +49,7 @@ export const SideBarItemsBranch: NavItem[] = [
     icon: RiUser2Line,
     activeIcon: RiUser2Fill,
     label: "Sales Agent Management",
+    displayName: "Agents",
     subItems: [
       {
         label: "Sales Agent Profile",
