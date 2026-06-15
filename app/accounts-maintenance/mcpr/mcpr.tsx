@@ -34,7 +34,6 @@ import MCPRDataPage from "./mcpr-data";
 import LookUp from "@/components/common/reusable-lookup/dynamic-lookup";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 
-
 export default function MCPRPage() {
   const [selectedAgent, setSelectedAgent] =
     useState<SalesForceLookUpData | null>(null);
@@ -54,60 +53,66 @@ export default function MCPRPage() {
   useEffect(() => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; osp_user=`);
-    const role = parts.length === 2 ? decodeURIComponent(parts.pop()!.split(";").shift() ?? "") : null;
+    const role =
+      parts.length === 2
+        ? decodeURIComponent(parts.pop()!.split(";").shift() ?? "")
+        : null;
     setIsBranch(role === "branch");
   }, []);
 
   return (
-    <Page.Root title="Monthly Collection and Performance Report">
+    <Page.Root
+      title="MCPR"
+      description="Monthly Collection and Performance Report"
+    >
       <Page.MainContent>
         {isBranch && (
           <Page.Row>
-          <Box
-            p={3}
-            bg="white"
-            boxShadow="sm"
-            borderRadius="lg"
-            borderWidth="0.5px"
-          >
-            <Strong color="var(--chakra-colors-primary)">Sales Force</Strong>
-            <Separator my={2} />
-
-            <Grid
-              templateColumns={{
-                base: "1fr",
-                sm: "1fr",
-                md: "1fr 1fr",
-                lg: "max-content auto",
-              }}
-              gap={4}
-              justifyContent="end"
+            <Box
+              p={3}
+              bg="white"
+              boxShadow="sm"
+              borderRadius="lg"
+              borderWidth="0.5px"
             >
-              {/* Row 2 - Select Month */}
-              <GridItem>
-                <SelectFloatingLabel
-                  label="Select Transaction Month"
-                  collection={TrxMonth}
-                  w={{ base: "100%", md: "360px" }}
-                />
-              </GridItem>
+              <Strong color="var(--chakra-colors-primary)">Sales Force</Strong>
+              <Separator my={2} />
 
-              <GridItem>
-                <Box w={{ base: "100%", md: "360px" }} mt={2}>
-                  <LookUp<SalesForceLookUpData>
-                    placeholder="Select Sales Force"
-                    modalTitle="Sales Force List"
-                    data={salesForceLookUp}
-                    headers={salesForceHeaders}
-                    onSelect={setSelectedAgent}
-                    getInputValue={(item) =>
-                      `${item.AgentName} (${item.SalesForceCode})`
-                    }
+              <Grid
+                templateColumns={{
+                  base: "1fr",
+                  sm: "1fr",
+                  md: "1fr 1fr",
+                  lg: "max-content auto",
+                }}
+                gap={4}
+                justifyContent="end"
+              >
+                {/* Row 2 - Select Month */}
+                <GridItem>
+                  <SelectFloatingLabel
+                    label="Select Transaction Month"
+                    collection={TrxMonth}
+                    w={{ base: "100%", md: "360px" }}
                   />
-                </Box>
-              </GridItem>
-            </Grid>
-          </Box>
+                </GridItem>
+
+                <GridItem>
+                  <Box w={{ base: "100%", md: "360px" }} mt={2}>
+                    <LookUp<SalesForceLookUpData>
+                      placeholder="Select Sales Force"
+                      modalTitle="Sales Force List"
+                      data={salesForceLookUp}
+                      headers={salesForceHeaders}
+                      onSelect={setSelectedAgent}
+                      getInputValue={(item) =>
+                        `${item.AgentName} (${item.SalesForceCode})`
+                      }
+                    />
+                  </Box>
+                </GridItem>
+              </Grid>
+            </Box>
           </Page.Row>
         )}
 
@@ -116,19 +121,19 @@ export default function MCPRPage() {
         </Page.Row>
 
         <Page.Row>
-        <Grid
-          templateColumns={{
-            base: "1fr",
-          }}
-          gap={4}
-        >
-          {/* Button */}
-          <GridItem justifySelf={{ base: "stretch", lg: "end" }} mt={3}>
-            <PrimaryMdButton onClick={handlePrint}>
-              View Incentives
-            </PrimaryMdButton>
-          </GridItem>
-        </Grid>
+          <Grid
+            templateColumns={{
+              base: "1fr",
+            }}
+            gap={4}
+          >
+            {/* Button */}
+            <GridItem justifySelf={{ base: "stretch", lg: "end" }} mt={3}>
+              <PrimaryMdButton onClick={handlePrint}>
+                View Incentives
+              </PrimaryMdButton>
+            </GridItem>
+          </Grid>
         </Page.Row>
       </Page.MainContent>
     </Page.Root>

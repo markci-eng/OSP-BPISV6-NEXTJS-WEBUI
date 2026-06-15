@@ -4,6 +4,11 @@ import SummaryForm from "@/components/common/text/SummaryForm";
 import SummaryHeader from "@/components/common/text/SummaryHeader";
 import LabelText from "@/components/texts/LabelText";
 import React from "react";
+import InfoCard from "@/claude components/info-card/info-card";
+import { Card } from "@/claude components/card-accordion/card";
+import { LuUser } from "react-icons/lu";
+import { RowItem } from "@/claude components/info-card/row-item";
+import { PrimaryMdFlexButton } from "st-peter-ui";
 
 interface RevRIProps {
   selectedPlans: CheckedPlanType[] | undefined;
@@ -11,12 +16,11 @@ interface RevRIProps {
   onBack: () => void;
 }
 
-export function ChangeModeSummaryPage({ selectedPlans }: RevRIProps) {
+export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
   if (!selectedPlans) return;
 
   return (
     <>
-      <SummaryForm title={"Change of Mode Summary"} data={[]} />
       <Box mt={-10}>
         {selectedPlans.map((plan, index) => {
           const items = [
@@ -34,19 +38,20 @@ export function ChangeModeSummaryPage({ selectedPlans }: RevRIProps) {
 
           return (
             <Box key={index} my={5}>
-              <SummaryHeader>{`LPA #: ${plan.lpa_no}`}</SummaryHeader>
-              <Box pt={{ base: 3, md: 5 }}>
+              <Card
+                activeIcon={<LuUser />}
+                title={"Change of Mode Summary"}
+                subtitle={""}
+              >
                 {items.map((item, idx) => (
-                  <React.Fragment key={idx}>
-                    <LabelText label={item.label} value={item.value} />
-                    {idx < items.length - 1 && (
-                      <Box display={{ base: "block", lg: "none" }}>
-                        <Separator my={2} />
-                      </Box>
-                    )}
-                  </React.Fragment>
+                  <RowItem label={item.label} value={item.value} />
                 ))}
-              </Box>
+
+                <Separator mb={3} />
+                <PrimaryMdFlexButton onClick={onSubmit}>
+                  Submit Application
+                </PrimaryMdFlexButton>
+              </Card>
             </Box>
           );
         })}

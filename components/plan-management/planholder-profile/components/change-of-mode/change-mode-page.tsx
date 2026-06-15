@@ -69,7 +69,20 @@ export function ChangeModePage({
       content: (
         <ChangeModeSummaryPage
           selectedPlans={checkedPlans}
-          onSubmit={() => {}}
+          onSubmit={async () => {
+            const confirmed = await messageBox({
+              title: "Confirm Submission",
+              message: "Are you sure you want to submit this application?",
+              variant: "warning",
+              confirmText: "Yes",
+              showCancel: true,
+              cancelText: "No",
+            });
+
+            if (confirmed) {
+              window.location.href = window.location.href + "/success";
+            }
+          }}
           onBack={() => {}}
         />
       ),

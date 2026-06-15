@@ -1,15 +1,22 @@
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import { RowItem } from "@/claude components/info-card/row-item";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import SummaryForm from "@/components/common/text/SummaryForm";
-import { Flex } from "@chakra-ui/react";
+import InfoItem from "@/components/new-planholder-profile/components/info-item/info-item";
+import { Flex, Separator } from "@chakra-ui/react";
 import { SummaryItems, SummarySection } from "@splpi/operations";
 import {
   LuCircleUserRound,
   LuClipboardCheck,
+  LuFileText,
   LuUser,
   LuUsersRound,
 } from "react-icons/lu";
-import { PrimaryMdButton } from "st-peter-ui";
+import { PrimaryMdButton, PrimaryMdFlexButton } from "st-peter-ui";
 
 export default function TFReviewApplicationPage() {
+  const { messageBox } = useMessageDialog();
+
   const summaryItems = () => [
     { label: "LPA Number", value: "L25031417H" },
     { label: "Plan Type", value: "ST. GREGORY" },
@@ -55,45 +62,78 @@ export default function TFReviewApplicationPage() {
 
   return (
     <Flex direction={"column"} gap={5}>
-      <SummaryForm
-        title="Transfer of Rights Summary"
-        subtitle="Verify the information below before creating transfer request."
-        data={[
-          {
-            title: "Transfer of Rights Summary",
-            data: summaryItems(),
-          },
-          {
-            title: "New Planholder Information",
-            data: summaryItems1(),
-          },
-          {
-            title: "Beneficiaries",
-            data: summaryItems2(),
-          },
-        ]}
-      />
-      {/* <SummarySection
-        columns={4}
-        items={summaryItems()}
-        icon={<LuClipboardCheck />}
-        title={"Transfer of Rights Summary"}
-      />
+      <InfoCardAccordion
+        icon={<LuFileText />}
+        title={"Plan Details"}
+        defaultOpen
+      >
+        <RowItem label="LPA Number" value="L25031417H" />
+        <RowItem label="Plan Type" value="ST. GREGORY" />
+        <RowItem label="Mode" value="MONTHLY" />
+        <RowItem label="Term" value=" 5YEARS" />
+      </InfoCardAccordion>
 
-      <SummarySection
-        columns={4}
-        items={summaryItems1()}
-        icon={<LuCircleUserRound />}
-        title={"New Planholder Information"}
-      />
+      <InfoCardAccordion
+        icon={<LuUser />}
+        title={"New Planholder Info"}
+        defaultOpen
+      >
+        <RowItem label="Last Name" value="DELA CRUZ" />{" "}
+        <RowItem label="First Name" value="JUAN" />{" "}
+        <RowItem label="Middle Name" value="GO" />{" "}
+        <RowItem label="Date of Birth" value="09/11/1912" />{" "}
+        <RowItem label="Gender" value="MALE" />{" "}
+        <RowItem label="Civil Status" value="WIDOWED" />{" "}
+        <RowItem label="Contact Number" value="+63-987-654-3210" />{" "}
+        <RowItem label="Insurability" value="NOT INSURABLE" />{" "}
+        <RowItem label="Lot No." value="LOT 12-B" />{" "}
+        <RowItem label="Street" value="MAPLE STREET" />{" "}
+        <RowItem label="Barangay" value="SAMPALOC" />{" "}
+        <RowItem label="District" value="DISTRICT II" />{" "}
+        <RowItem label="City" value="DASMARINAS" />{" "}
+        <RowItem label="Province" value="CAVITE" />{" "}
+      </InfoCardAccordion>
 
-      <SummarySection
-        columns={4}
-        items={summaryItems2()}
+      <InfoCardAccordion
         icon={<LuUsersRound />}
         title={"Beneficiaries"}
-      /> */}
-      {/* <PrimaryMdButton>Submit Application</PrimaryMdButton> */}
+        defaultOpen
+      >
+        <RowItem label="Name" value="LIZ ANN L. RIVAS" />
+        <RowItem label="Relationship" value="COUSIN" />
+        <RowItem label="Date of Birth" value="11/02/1990" />
+        <InfoItem
+          label="Address"
+          value="B2 L8 CAMERON ST PRICETOWN SUBDIVISION CONGRESSIONAL ROAD EXTENSION BAGUMBONG BARANGAY 171"
+        />
+        <Separator my={2} />
+        <RowItem label="Name" value="LIZ ANN L. RIVAS" />
+        <RowItem label="Relationship" value="COUSIN" />
+        <RowItem label="Date of Birth" value="11/02/1990" />
+        <InfoItem
+          label="Address"
+          value="B2 L8 CAMERON ST PRICETOWN SUBDIVISION CONGRESSIONAL ROAD EXTENSION BAGUMBONG BARANGAY 171"
+        />
+      </InfoCardAccordion>
+      <Separator my={2} />
+      <PrimaryMdFlexButton
+        onClick={async () => {
+          const confirmed = await messageBox({
+            title: "Confirm Submission",
+            message: "Are you sure you want to submit this application?",
+            variant: "warning",
+            confirmText: "Yes",
+            showCancel: true,
+            cancelText: "No",
+          });
+
+          if (confirmed) {
+            window.location.href = window.location.href + "/success";
+          }
+        }}
+      >
+        Submit Application
+      </PrimaryMdFlexButton>
     </Flex>
   );
 }
