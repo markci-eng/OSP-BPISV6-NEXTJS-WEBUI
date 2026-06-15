@@ -2,6 +2,7 @@
 
 import React from "react";
 import {
+  Box,
   Button,
   CloseButton,
   Dialog,
@@ -115,62 +116,65 @@ const ClaimsPage = () => {
         description="Please fill out the following details."
       >
         <Page.MainContent>
-        <FormSteps
-          stepsData={steps}
-          title="Claim Application"
-          description="Please fill out the following details."
-          currentStep={currentStep}
-          setCurrentStep={setCurrentStep}
-        />
-
-        <Dialog.Root
-          open={confirmOpen}
-          onOpenChange={(e) => setConfirmOpen(e.open)}
-          size={{ base: "full", md: "md" }}
-          lazyMount
-        >
-          <Portal>
-            <Dialog.Backdrop />
-            <Dialog.Positioner p={{ base: 0, md: undefined }}>
-              <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
-                <Dialog.Header>
-                  <Flex align="center" gap={2}>
-                    <LuTriangleAlert color="var(--chakra-colors-orange-500)" />
-                    <Dialog.Title>
-                      <Strong color="gray.700">Confirm Claim Submission</Strong>
-                    </Dialog.Title>
-                  </Flex>
-                </Dialog.Header>
-                <Dialog.Body>
-                  <Text color="gray.600">
-                    Please note that this claim is{" "}
-                    <Text as="span" fontWeight="bold">
-                      subject to review and confirmation
-                    </Text>{" "}
-                    by our Claims Department. You will be notified once the
-                    verification process has been completed.
-                  </Text>
-                  <Text color="gray.600" mt={3}>
-                    Are you sure you want to submit this claim?
-                  </Text>
-                </Dialog.Body>
-                <Dialog.Footer>
-                  <Dialog.ActionTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      Cancel
-                    </Button>
-                  </Dialog.ActionTrigger>
-                  <PrimaryMdButton onClick={handleConfirmSubmit}>
-                    Confirm &amp; Submit
-                  </PrimaryMdButton>
-                </Dialog.Footer>
-                <Dialog.CloseTrigger asChild>
-                  <CloseButton size="sm" />
-                </Dialog.CloseTrigger>
-              </Dialog.Content>
-            </Dialog.Positioner>
-          </Portal>
-        </Dialog.Root>
+          <Box mt={"-30px"}>
+            <FormSteps
+              stepsData={steps}
+              title=""
+              description=""
+              currentStep={currentStep}
+              setCurrentStep={setCurrentStep}
+            />
+          </Box>
+          <Dialog.Root
+            open={confirmOpen}
+            onOpenChange={(e) => setConfirmOpen(e.open)}
+            size={{ base: "full", md: "md" }}
+            lazyMount
+          >
+            <Portal>
+              <Dialog.Backdrop />
+              <Dialog.Positioner p={{ base: 0, md: undefined }}>
+                <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
+                  <Dialog.Header>
+                    <Flex align="center" gap={2}>
+                      <LuTriangleAlert color="var(--chakra-colors-orange-500)" />
+                      <Dialog.Title>
+                        <Strong color="gray.700">
+                          Confirm Claim Submission
+                        </Strong>
+                      </Dialog.Title>
+                    </Flex>
+                  </Dialog.Header>
+                  <Dialog.Body>
+                    <Text color="gray.600">
+                      Please note that this claim is{" "}
+                      <Text as="span" fontWeight="bold">
+                        subject to review and confirmation
+                      </Text>{" "}
+                      by our Claims Department. You will be notified once the
+                      verification process has been completed.
+                    </Text>
+                    <Text color="gray.600" mt={3}>
+                      Are you sure you want to submit this claim?
+                    </Text>
+                  </Dialog.Body>
+                  <Dialog.Footer>
+                    <Dialog.ActionTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        Cancel
+                      </Button>
+                    </Dialog.ActionTrigger>
+                    <PrimaryMdButton onClick={handleConfirmSubmit}>
+                      Confirm &amp; Submit
+                    </PrimaryMdButton>
+                  </Dialog.Footer>
+                  <Dialog.CloseTrigger asChild>
+                    <CloseButton size="sm" />
+                  </Dialog.CloseTrigger>
+                </Dialog.Content>
+              </Dialog.Positioner>
+            </Portal>
+          </Dialog.Root>
         </Page.MainContent>
       </Page.Root>
     </>
