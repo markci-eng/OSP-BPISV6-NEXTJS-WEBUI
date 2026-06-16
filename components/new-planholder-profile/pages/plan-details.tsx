@@ -7,7 +7,7 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import React from "react";
-import LabelText from "@/components/texts/LabelText";
+import { RowItem } from "@/components/info-card/row-item";
 
 export function PlanDetailsPage({
   planDetails,
@@ -21,86 +21,64 @@ export function PlanDetailsPage({
         templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }}
         gap={2}
       >
-        <LabelText label="LPA Number" value={planDetails.lpaNumber} />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem label="LPA Number" value={planDetails.lpaNumber} />
+        <RowItem
           label="Account Status"
           value={planDetails?.accountStatus ?? "N/A"}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem
           label="Termination Status"
           value={planDetails?.terminationStatus ?? "N/A"}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText label="Plan" value={planDetails?.planDescription ?? "N/A"} />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText label="Mode" value={planDetails?.mode ?? "N/A"} />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText label="Term" value={(planDetails?.term ?? "0") + " YEARS"} />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText label="Plan Class" value={planDetails?.planClass ?? "N/A"} />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem label="Plan" value={planDetails?.planDescription ?? "N/A"} />
+        <RowItem label="Mode" value={planDetails?.mode ?? "N/A"} />
+        <RowItem label="Term" value={(planDetails?.term ?? "0") + " YEARS"} />
+        <RowItem label="Plan Class" value={planDetails?.planClass ?? "N/A"} />
+        <RowItem
           label="Account Class"
           value={planDetails?.accountClass ?? "N/A"}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText label="Plan Code" value={planDetails?.planCode ?? "N/A"} />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem label="Plan Code" value={planDetails?.planCode ?? "N/A"} />
+        <RowItem
           label="Contract Price"
           value={"₱ " + planDetails?.contractPrice.toLocaleString()}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem
           label="Installment Amount"
           value={"₱ " + planDetails?.installmentAmount.toLocaleString()}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem
           label="Total Amount Payable"
           value={"₱ " + planDetails?.totalAmountPayable.toLocaleString()}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem
           label="Effectivity Date"
           value={planDetails?.effectivityDate.toLocaleDateString() ?? "N/A"}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem
           label="New Effectivity Date"
           value={planDetails?.newEffectivityDate.toLocaleDateString() ?? "N/A"}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText label="Branch" value={planDetails?.branch ?? "N/A"} />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
-          label="COFP Number"
-          value={planDetails?.cfpNumber ?? "N/A"}
-        />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem label="Branch" value={planDetails?.branch ?? "N/A"} />
+        <RowItem label="COFP Number" value={planDetails?.cfpNumber ?? "N/A"} />
+        <RowItem
           label="COFP Date"
           value={planDetails?.cfpDate?.toLocaleDateString() ?? "N/A"}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem
           label="Service Only"
           value={planDetails?.isServiceOnly ? "YES" : "NO"}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem
           label="Sales Agent"
           value={planDetails?.salesAgent1 ?? "N/A"}
         />
-        {useBreakpointValue({ base: true, lg: false }) && <Separator />}
-        <LabelText
+        <RowItem
           label="Sales Agent 2"
           value={planDetails?.salesAgent2 ?? "N/A"}
         />
       </Grid>
-      <Strong>Remarks</Strong>
+      <Strong my={2}>Remarks</Strong>
       <Textarea
         minH={{ base: "200px", md: "auto" }}
         placeholder="Planholder Remarks"

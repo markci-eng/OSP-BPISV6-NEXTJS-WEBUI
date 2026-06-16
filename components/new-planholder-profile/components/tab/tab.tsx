@@ -18,11 +18,12 @@ export function Tab({ tabItems }: { tabItems: TabItem[] }) {
     <Tabs.Root
       value={selectedTab}
       onValueChange={(e) => setSelectedTab(e.value)}
-      variant="enclosed"
+      variant="line"
       defaultValue={"plan-details"}
       maxW={"full"}
+      colorPalette={"green"}
     >
-      <ScrollArea.Root width={"full"} size={"sm"}>
+      <ScrollArea.Root width={"full"} pb={1} size={"sm"}>
         <ScrollArea.Viewport
           css={{
             "--scroll-shadow-size": "2rem",
