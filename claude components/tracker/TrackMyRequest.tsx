@@ -1,6 +1,6 @@
 "use client";
 
-import { Flex, VStack, Box, Heading, Text, Input } from "@chakra-ui/react";
+import { Flex, VStack, Box, Text, Input, Badge } from "@chakra-ui/react";
 import React from "react";
 import { IconType } from "react-icons";
 import {
@@ -14,33 +14,45 @@ import JourneyTimeline, { JourneyStep } from "./JourneyTimeline";
 import { PrimarySmButton, SecondarySmButton } from "st-peter-ui";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ActionButtons, {
-  ActionButtonItem,
-} from "@/components/buttons/ActionButtons";
-import PageHeader from "./PageHeader";
+import { useColorModeValue } from "@/components/ui/color-mode";
+import {
+  FileText,
+  Calendar,
+  Hash,
+  Clock,
+  HelpCircle,
+  CheckCircle2,
+  ClipboardCheck,
+  Settings,
+  FileCheck,
+  Check,
+  Route,
+} from "lucide-react";
+import Page from "@/claude components/layout/page/Page";
 import { Card } from "../card-accordion/card";
 
 interface TrackRequestPageProps {
   requestId?: string;
   progressIcon?: IconType;
-  actionButtons?: ActionButtonItem[];
 }
 
-export default function TrackRequestPage({
-  requestId,
-  actionButtons,
-}: TrackRequestPageProps) {
+const SUMMARY_PHASES = [
+  { label: "Received", Icon: ClipboardCheck },
+  { label: "Processing", Icon: Settings },
+  { label: "Finalizing", Icon: FileCheck },
+  { label: "Completed", Icon: CheckCircle2 },
+];
+
+export default function TrackRequestPage({ requestId }: TrackRequestPageProps) {
   const [journey, setJourney] = useState<JourneyStep[]>(
     requestId ? [] : fallbackJourney,
   );
-
   const [searched, setSearched] = useState(!!requestId);
   const [currentRef, setCurrentRef] = useState(requestId ?? "");
 
   const handleSearch = (referenceNo: string) => {
     const prefix = referenceNo.split("-")[0].toUpperCase();
     const foundJourney = journeys[prefix] || fallbackJourney;
-
     setJourney(foundJourney);
     setSearched(true);
     setCurrentRef(referenceNo);
@@ -52,200 +64,291 @@ export default function TrackRequestPage({
     setCurrentRef("");
   };
 
-  // ✅ PROGRESS CALCULATION
   const completedCount = journey.filter((s) => s.status === "Done").length;
-
   const progressPercent =
     journey.length > 0 ? (completedCount / journey.length) * 100 : 0;
-
   const clampedProgress = Math.min(100, Math.max(0, progressPercent));
+  const currentStep = journey.find((s) => s.status === "Current");
+  const isComplete = clampedProgress === 100;
 
-  const progressText = `${completedCount}/${journey.length} `;
+  const cardBg = useColorModeValue("white", "gray.800");
 
-  const actionButtonsDef: ActionButtonItem[] = [
-    {
-      label: "Service Information",
-      href: `/serviceinfo/${currentRef}`,
-      icon: () => <MdDescription size={16} />,
-    },
+  /* ── Summarise journey into 4 phases ── */
+  const summarizedSteps = SUMMARY_PHASES.map((phase, i) => {
+    const total = journey.length;
+    const chunkSize = Math.ceil(total / 4);
+    const start = i * chunkSize;
+    const end = Math.min(start + chunkSize, total);
+    const chunk = journey.slice(start, end);
 
-    currentRef.toUpperCase() === "RR-1234567"
-      ? {
-          label: "Reservation Details",
-          href: `/reservation/room/RR-123456`,
-          icon: () => <MdEditCalendar size={16} />,
-        }
-      : {
-          label: "Reserve Room",
-          href: `/reservation/room/new`,
-          icon: () => <MdEditCalendar size={16} />,
-        },
+    const allDone = chunk.length > 0 && chunk.every((s) => s.status === "Done");
+    const hasCurrent = chunk.some((s) => s.status === "Current");
+    const status: "done" | "current" | "pending" = allDone
+      ? "done"
+      : hasCurrent
+        ? "current"
+        : "pending";
+    const dateTime = allDone
+      ? (chunk[chunk.length - 1]?.dateTime ?? "")
+      : hasCurrent
+        ? (chunk.find((s) => s.status === "Current")?.dateTime ?? "")
+        : "";
 
-    {
-      label: "Statement Of Account",
-      href: `/contract/${currentRef}/soa`,
-      icon: () => <MdCreditCard size={16} />,
-    },
-  ];
+    return { ...phase, status, dateTime };
+  });
 
-  return (
-    <Box minH="100vh">
+  const currentStatusCard = (
+    <Box
+      w="100%"
+      p={4}
+      borderRadius="2xl"
+      bg={cardBg}
+      shadow="sm"
+      transition="all 0.25s ease"
+      _hover={{ transform: "translateY(-3px)", shadow: "lg" }}
+      overflow="hidden"
+    >
       {/* HEADER */}
-      {/* <Box mb={4}>
-        <Heading size="2xl" fontWeight="semibold">
-          Track Request
-        </Heading>
-        <Text fontSize="sm" color="gray.600" mt={1}>
-          Monitor your request journey
-        </Text>
-
-        <ActionButtons buttons={actionButtonsDef ?? []} />
-      </Box> */}
-
-      <Flex justify="space-between" align="flex-start" flexWrap="wrap" gap={2}>
-        {/* Left side: PageHeader */}
-        <Box flex="1" minW="200px">
-          <PageHeader
-            title="Track Request"
-            subtitle="Monitor your request journey"
-          />
-        </Box>
-        {/* Desktop & Mobile Actions */}
-        <ActionButtons buttons={actionButtonsDef} />
-      </Flex>
-
-      {/* REQUEST CARD */}
-      <RequestCard
-        description="Request details"
-        dateTime="2025-03-31 09:00 AM"
-        onSearch={handleSearch}
-        onReset={handleReset}
-        searched={searched}
-        initialReferenceNo={requestId}
-      />
-
-      {/* MAIN CONTENT */}
-      {journey.length > 0 && (
-        <Flex
-          mt={4}
-          direction={{ base: "column", lg: "row" }}
-          align={{ lg: "flex-start" }}
-          gap={{ lg: 8 }}
-        >
-          {/* LEFT PANEL */}
-          <VStack
-            w={{ base: "100%", lg: "50%" }}
-            gap={3}
-            order={{ base: 0, lg: 1 }}
-          >
-            {/* CURRENT STATUS */}
-            <Box
-              mb={3}
-              bg="white"
-              shadow="md"
-              rounded="lg"
-              p={4}
-              w="100%"
-              position="relative"
+      <Flex justify="space-between" align="center" mb={5}>
+        <Flex align="center" gap={2}>
+          <Box p={2} borderRadius="full" bg="gray.100">
+            {isComplete ? <CheckCircle2 size={18} /> : <Clock size={18} />}
+          </Box>
+          <Box>
+            <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
+              Current Status
+            </Text>
+            <Text
+              fontSize="xs"
+              color="gray.500"
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+              maxW="160px"
             >
-              {/* HEADER ROW (TITLE + % RIGHT SIDE) */}
-              <Flex justify="space-between" align="center" mb={1}>
-                <Heading size="sm">Current Status</Heading>
-
-                {/* PROGRESS % (UPPER RIGHT) */}
-                <Text fontSize="xs" fontWeight="semibold" color="green.600">
-                  {/* {progressText} */}
-                  {Math.round(clampedProgress)}%
-                </Text>
-                {/* <Text fontSize="xs" color="gray.600" mb={1}>
-                  
-                </Text> */}
-              </Flex>
-
-              <Text fontSize="xs" color="gray.600">
-                {journey.find((s) => s.status === "Current")?.title ??
-                  "Completed"}
-              </Text>
-
-              {/* HORIZONTAL TIMELINE */}
-              <Flex align="center" gap={0} flex={1} mt={3}>
-                {Array.from({ length: journey.length }).map((_, i) => {
-                  const currentIdx = journey.findIndex(
-                    (s) => s.status === "Current",
-                  );
-                  const current =
-                    currentIdx === -1 ? journey.length + 1 : currentIdx + 1;
-                  return (
-                    <React.Fragment key={i}>
-                      {i > 0 && (
-                        <Box
-                          flex={1}
-                          h="1.5px"
-                          bg={
-                            i < current
-                              ? "var(--chakra-colors-primary)"
-                              : "gray.200"
-                          }
-                          minW="10px"
-                          transition="background 0.3s"
-                        />
-                      )}
-                      <Box
-                        w={i === current - 1 ? "10px" : "7px"}
-                        h={i === current - 1 ? "10px" : "7px"}
-                        borderRadius="full"
-                        bg={
-                          i < current
-                            ? "var(--chakra-colors-primary)"
-                            : "gray.200"
-                        }
-                        boxShadow={
-                          i === current - 1
-                            ? "0 0 0 3px var(--chakra-colors-primary-disabled)"
-                            : "none"
-                        }
-                        flexShrink={0}
-                        transition="all 0.2s"
-                      />
-                    </React.Fragment>
-                  );
-                })}
-              </Flex>
-            </Box>
-
-            {/* HELP BOX */}
-            <Box bg="white" shadow="md" rounded="lg" p={4} w="100%" mb={3}>
-              <Heading size="sm" mb={1}>
-                Need Help?
-              </Heading>
-
-              <Text fontSize="xs" color="gray.600">
-                If you need assistance, please contact{" "}
-                <Link href="mailto:support@example.com">
-                  support@example.com
-                </Link>
-                .
-              </Text>
-            </Box>
-          </VStack>
-
-          {/* TIMELINE */}
-          <Box
-            w={{ base: "100%", lg: "50%" }}
-            order={{ base: 1, lg: 0 }}
-            mt={3}
-          >
-            <JourneyTimeline journey={journey} />
+              {currentStep?.title ?? "All steps completed"}
+            </Text>
           </Box>
         </Flex>
-      )}
+
+        <Flex align="center" gap={2}>
+          <Box
+            w="2"
+            h="2"
+            borderRadius="full"
+            bg={isComplete ? "green.400" : "blue.400"}
+          />
+          <Badge
+            variant="subtle"
+            px={2}
+            py={1}
+            fontSize="0.75rem"
+            bg={isComplete ? "green.50" : "blue.50"}
+            color={isComplete ? "green.700" : "blue.700"}
+          >
+            {Math.round(clampedProgress)}%
+          </Badge>
+        </Flex>
+      </Flex>
+
+      {/* SHOPEE-STYLE 4-STEP TRACKER */}
+      <Flex align="flex-start">
+        {summarizedSteps.map((step, i) => (
+          <React.Fragment key={step.label}>
+            {/* Step column */}
+            <Flex direction="column" align="center" flex="1" minW="0">
+              {/* Circle */}
+              <Box
+                w="36px"
+                h="36px"
+                borderRadius="full"
+                flexShrink={0}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                position="relative"
+                bg={
+                  step.status === "done"
+                    ? "green.500"
+                    : step.status === "current"
+                      ? "blue.500"
+                      : "gray.100"
+                }
+                color={step.status === "pending" ? "gray.400" : "white"}
+                transition="all 0.3s"
+                boxShadow={
+                  step.status === "current"
+                    ? "0 0 0 4px rgba(59,130,246,0.18)"
+                    : "none"
+                }
+              >
+                {step.status === "done" ? (
+                  <Check size={16} />
+                ) : (
+                  <step.Icon size={16} />
+                )}
+              </Box>
+
+              {/* Label */}
+              <Text
+                fontSize="xs"
+                fontWeight={step.status !== "pending" ? "semibold" : "normal"}
+                mt={2}
+                textAlign="center"
+                lineHeight="1.2"
+                color={
+                  step.status === "pending"
+                    ? "gray.400"
+                    : step.status === "current"
+                      ? "blue.600"
+                      : "gray.700"
+                }
+              >
+                {step.label}
+              </Text>
+
+              {/* Timestamp or status hint */}
+              {step.dateTime ? (
+                <Text
+                  fontSize="9px"
+                  color="gray.400"
+                  textAlign="center"
+                  mt="2px"
+                  lineHeight="1.3"
+                  px={1}
+                >
+                  {step.dateTime}
+                </Text>
+              ) : step.status === "current" ? (
+                <Text
+                  fontSize="9px"
+                  color="blue.400"
+                  textAlign="center"
+                  mt="2px"
+                  fontWeight="medium"
+                >
+                  In Progress
+                </Text>
+              ) : null}
+            </Flex>
+
+            {/* Connector line */}
+            {i < summarizedSteps.length - 1 && (
+              <Box
+                h="2px"
+                flex="1"
+                mt="17px"
+                flexShrink={0}
+                bg={step.status === "done" ? "green.400" : "gray.200"}
+                transition="background 0.3s"
+              />
+            )}
+          </React.Fragment>
+        ))}
+      </Flex>
     </Box>
+  );
+
+  return (
+    <Page.Root
+      title={"Track My Request"}
+      description={
+        "Track and monitor the status of submitted requests and their progress."
+      }
+    >
+      <Page.MainContent>
+        {/* SEARCH / REFERENCE CARD */}
+        <RequestCard
+          description="Request details"
+          dateTime="2025-03-31 09:00 AM"
+          onSearch={handleSearch}
+          onReset={handleReset}
+          searched={searched}
+          initialReferenceNo={requestId}
+          cardBg={cardBg}
+          journey={journey}
+          progressPercent={clampedProgress}
+          completedCount={completedCount}
+          isComplete={isComplete}
+        />
+
+        {/* MOBILE: CURRENT STATUS (shown right after RequestCard on mobile) */}
+        {journey.length > 0 && (
+          <Box display={{ base: "block", lg: "none" }} mb={3}>
+            {currentStatusCard}
+          </Box>
+        )}
+
+        {/* JOURNEY CONTENT */}
+        {journey.length > 0 && (
+          <Flex
+            mt={3}
+            direction={{ base: "column", lg: "row" }}
+            align={{ lg: "flex-start" }}
+            gap={3}
+          >
+            {/* ===== TIMELINE (mobile: first, desktop: left) ===== */}
+            <Box w={{ base: "100%", lg: "55%" }} order={{ base: 0, lg: 0 }}>
+              <Card
+                activeIcon={<Route size={18} />}
+                title="Request Journey"
+                subtitle={`${completedCount} of ${journey.length} steps completed`}
+              >
+                <JourneyTimeline journey={journey} />
+              </Card>
+            </Box>
+
+            {/* ===== SIDE PANEL (mobile: second, desktop: right) ===== */}
+            <VStack
+              w={{ base: "100%", lg: "45%" }}
+              gap={3}
+              order={{ base: 1, lg: 1 }}
+            >
+              {/* CURRENT STATUS CARD — desktop only (mobile shown above) */}
+              <Box display={{ base: "none", lg: "block" }} w="100%">
+                {currentStatusCard}
+              </Box>
+
+              {/* HELP CARD */}
+              <Box
+                w="100%"
+                p={4}
+                borderRadius="2xl"
+                bg={cardBg}
+                shadow="sm"
+                transition="all 0.25s ease"
+                _hover={{ transform: "translateY(-3px)", shadow: "lg" }}
+              >
+                <Flex align="center" gap={2} mb={2}>
+                  <Box p={2} borderRadius="full" bg="gray.100">
+                    <HelpCircle size={18} />
+                  </Box>
+                  <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
+                    Need Help?
+                  </Text>
+                </Flex>
+
+                <Text fontSize="xs" color="gray.500" pl={10}>
+                  For assistance, contact{" "}
+                  <Link
+                    href="mailto:support@example.com"
+                    style={{ color: "#2e7d32", fontWeight: 600 }}
+                  >
+                    support@example.com
+                  </Link>
+                </Text>
+              </Box>
+            </VStack>
+          </Flex>
+        )}
+      </Page.MainContent>
+    </Page.Root>
   );
 }
 
-// ---------------------------
-// REQUEST CARD (UNCHANGED LOGIC, CLEANED ONLY SAFETY)
-// ---------------------------
+/* ===========================
+   REQUEST CARD
+   =========================== */
 
 interface RequestCardProps {
   description: string;
@@ -254,6 +357,11 @@ interface RequestCardProps {
   onReset: () => void;
   searched: boolean;
   initialReferenceNo?: string;
+  cardBg: string;
+  journey: JourneyStep[];
+  progressPercent: number;
+  completedCount: number;
+  isComplete: boolean;
 }
 
 const RequestCard = ({
@@ -263,9 +371,13 @@ const RequestCard = ({
   onReset,
   searched,
   initialReferenceNo,
+  cardBg,
+  journey,
+  progressPercent,
+  completedCount,
+  isComplete,
 }: RequestCardProps) => {
   const [referenceNo, setReferenceNo] = useState(initialReferenceNo ?? "");
-
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -277,62 +389,189 @@ const RequestCard = ({
   const handleSearch = (ref?: string) => {
     const refToUse = ref ?? referenceNo;
     if (!refToUse.trim()) return;
-
     setIsLoading(true);
-
     setTimeout(() => {
       setIsLoading(false);
       onSearch(refToUse);
     }, 800);
   };
 
-  return (
-    <Box mb={4}>
-      <Card
-        activeIcon={<MdDescription size={16} />}
-        title={searched || initialReferenceNo ? referenceNo : "Reference No"}
-        subtitle={
-          searched || initialReferenceNo
-            ? [description, dateTime].filter(Boolean).join(" · ")
-            : "Enter your reference number"
-        }
-      >
-        <Flex justify="flex-end" align="center" flexWrap="wrap" gap={2}>
-          {!searched && !initialReferenceNo && (
-            <Input
-              flex="1"
-              minW="160px"
-              placeholder="Enter Reference No"
-              size="sm"
-              value={referenceNo}
-              onChange={(e) => setReferenceNo(e.target.value)}
-            />
-          )}
+  const isSearched = searched || !!initialReferenceNo;
 
-          {initialReferenceNo ? (
-            <PrimarySmButton onClick={() => handleSearch()} loading={isLoading}>
-              <MdRefresh className={isLoading ? "spin" : ""} /> Refresh
-            </PrimarySmButton>
-          ) : !searched ? (
-            <PrimarySmButton onClick={() => handleSearch()} loading={isLoading}>
-              Search
-            </PrimarySmButton>
-          ) : (
-            <>
+  return (
+    <Box
+      mb={4}
+      w="100%"
+      p={4}
+      borderRadius="2xl"
+      bg={cardBg}
+      shadow="sm"
+      transition="all 0.25s ease"
+      _hover={{ transform: "translateY(-3px)", shadow: "lg" }}
+      overflow="hidden"
+    >
+      {/* HEADER — icon + title/badge inline, no cramped space-between */}
+      <Flex align="center" gap={3} mb={3}>
+        <Box p={2} borderRadius="full" bg="gray.100" flexShrink={0}>
+          <FileText size={18} />
+        </Box>
+
+        <Box flex={1} minW={0}>
+          {/* Title + status badge wrap together */}
+          <Flex align="center" gap={2} flexWrap="wrap" mb="2px">
+            <Text
+              fontWeight="bold"
+              fontSize="md"
+              lineHeight="1.2"
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+              maxW={{ base: "160px", sm: "260px", md: "100%" }}
+            >
+              {isSearched ? referenceNo : "Track Your Request"}
+            </Text>
+
+            {isSearched && (
+              <Badge
+                variant="subtle"
+                px={2}
+                py="1px"
+                borderRadius="full"
+                fontSize="0.7rem"
+                bg={isComplete ? "green.50" : "blue.50"}
+                color={isComplete ? "green.700" : "blue.700"}
+                display="flex"
+                alignItems="center"
+                gap={1}
+                flexShrink={0}
+              >
+                <Box
+                  w="1.5"
+                  h="1.5"
+                  borderRadius="full"
+                  bg={isComplete ? "green.400" : "blue.400"}
+                  display="inline-block"
+                />
+                {isComplete ? "Completed" : "In Progress"}
+              </Badge>
+            )}
+          </Flex>
+
+          {/* Subtitle */}
+          <Text fontSize="xs" color="gray.500" lineHeight="1.3">
+            {isSearched ? description : "Enter your reference number below"}
+          </Text>
+        </Box>
+      </Flex>
+
+      {/* CHIPS (when searched) — scrollable on mobile */}
+      {isSearched && (
+        <Flex
+          gap={2}
+          mb={3}
+          overflowX={{ base: "auto", md: "visible" }}
+          flexWrap={{ base: "nowrap", md: "wrap" }}
+          pb={{ base: "2px", md: 0 }}
+          css={{ "&::-webkit-scrollbar": { display: "none" } }}
+        >
+          <Box
+            px={2}
+            py={1}
+            fontSize="xs"
+            borderRadius="full"
+            bg="gray.50"
+            display="flex"
+            alignItems="center"
+            gap={1}
+            flexShrink={0}
+          >
+            <Calendar size={11} />
+            {dateTime}
+          </Box>
+          <Box
+            px={2}
+            py={1}
+            fontSize="xs"
+            borderRadius="full"
+            bg="gray.50"
+            display="flex"
+            alignItems="center"
+            gap={1}
+            flexShrink={0}
+          >
+            <Hash size={11} />
+            {completedCount} / {journey.length} steps done
+          </Box>
+        </Flex>
+      )}
+
+      {/* INPUT — inline with Search button on mobile */}
+      {!isSearched && (
+        <Flex gap={2} mb={3}>
+          <Input
+            placeholder="e.g. RR-1234567"
+            size="sm"
+            borderRadius="xl"
+            flex={1}
+            value={referenceNo}
+            onChange={(e) => setReferenceNo(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          />
+          <PrimarySmButton
+            style={{ borderRadius: "15px", flexShrink: 0 }}
+            onClick={() => handleSearch()}
+            loading={isLoading}
+          >
+            Search
+          </PrimarySmButton>
+        </Flex>
+      )}
+
+      {/* FOOTER — hint hidden on mobile; buttons full-width on mobile */}
+      {isSearched && (
+        <Flex
+          justify={{ base: "flex-end", sm: "space-between" }}
+          align="center"
+          mt={2}
+          gap={2}
+        >
+          <Text
+            fontSize="xs"
+            color="gray.400"
+            display={{ base: "none", sm: "block" }}
+          >
+            Showing journey progress
+          </Text>
+
+          <Flex gap={2} w={{ base: "full", sm: "auto" }}>
+            {initialReferenceNo ? (
               <PrimarySmButton
+                style={{ borderRadius: "15px", flex: 1 }}
                 onClick={() => handleSearch()}
                 loading={isLoading}
               >
                 <MdRefresh className={isLoading ? "spin" : ""} /> Refresh
               </PrimarySmButton>
-
-              <SecondarySmButton onClick={onReset}>
-                Search Another
-              </SecondarySmButton>
-            </>
-          )}
+            ) : (
+              <>
+                <PrimarySmButton
+                  style={{ borderRadius: "15px", flex: 1 }}
+                  onClick={() => handleSearch()}
+                  loading={isLoading}
+                >
+                  <MdRefresh className={isLoading ? "spin" : ""} /> Refresh
+                </PrimarySmButton>
+                <SecondarySmButton
+                  style={{ borderRadius: "15px", flex: 1 }}
+                  onClick={onReset}
+                >
+                  Search Another
+                </SecondarySmButton>
+              </>
+            )}
+          </Flex>
         </Flex>
-      </Card>
+      )}
     </Box>
   );
 };

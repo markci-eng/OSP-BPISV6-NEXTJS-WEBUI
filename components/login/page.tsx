@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LoginPage } from "./LoginPage";
+import { LoginPage } from "./new-login-page";
 
 interface ApiResponse {
   id: string;
@@ -102,11 +102,5 @@ export default function Login() {
     }
   };
 
-  return (
-    <LoginPage
-      onLogin={handleSignIn}
-      onSignUp={handleSignUp}
-      loginError={loginError}
-    />
-  );
+  return <LoginPage onLogin={handleSignIn} />;
 }
