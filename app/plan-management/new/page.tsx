@@ -11,7 +11,7 @@ import Page from "@/claude components/layout/page/Page";
 import FormSteps from "@/components/FormSteps";
 import { SetStateAction } from "react";
 import { Box } from "st-peter-ui";
-import SharedLifePlanApplication from "@/claude components/add-new-sale/steps/SharedLifePlanApplication";
+import { SharedLifePlanApplication } from "@splpi/estore-shared-components";
 export default function NewSalePage() {
   const { messageBox } = useMessageDialog();
 
@@ -34,11 +34,13 @@ export default function NewSalePage() {
   ];
 
   return (
-    <Page.Root title="" hideBackButton>
+    <Page.Root
+      title="Add New Sale"
+      description="Complete the life plan application, add beneficiaries, and declare health information."
+      hideBackButton
+    >
       <Page.MainContent>
-        <Box mt={"-20px"} mx={"-20px"}>
-          <SharedLifePlanApplication />
-        </Box>
+        <SharedLifePlanApplication />
         {/* <FormSteps
           stepsData={stepsData}
           title={"New Sales Application"}
