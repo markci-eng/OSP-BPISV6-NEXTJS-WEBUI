@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/common/reusable-tableV2/DataTable";
 import { PlanDetailsDialog } from "./plan-details-dialog";
+import { LuChevronRight } from "react-icons/lu";
 
 export function ChangeModeForm({
   activePlans,
@@ -74,7 +75,13 @@ export function ChangeModeForm({
 
   return (
     <Box py={3}>
-      <Flex justify="space-between" align="center" mb={4} gap={3} flexWrap="wrap">
+      <Flex
+        justify="space-between"
+        align="center"
+        mb={4}
+        gap={3}
+        flexWrap="wrap"
+      >
         <Box>
           <H4>Active Plans</H4>
           <Small fontStyle="italic">
@@ -91,16 +98,21 @@ export function ChangeModeForm({
           py={2}
           w={{ base: "full", md: "auto" }}
         >
-          <CheckCircle2
-            size={28}
-            color="var(--chakra-colors-primary)"
-          />
+          <CheckCircle2 size={28} color="var(--chakra-colors-primary)" />
           <Box>
-            <Small color="var(--chakra-colors-primary-hover)" fontWeight="medium">
+            <Small
+              color="var(--chakra-colors-primary-hover)"
+              fontWeight="medium"
+            >
               Plans Selected
             </Small>
             <HStack gap={1} align="baseline">
-              <Text fontSize="xl" fontWeight="bold" color="var(--chakra-colors-primary-hover)" lineHeight="1">
+              <Text
+                fontSize="xl"
+                fontWeight="bold"
+                color="var(--chakra-colors-primary-hover)"
+                lineHeight="1"
+              >
                 {checkedPlans.length}
               </Text>
               <Text fontSize="sm" color="gray.500" lineHeight="1">
@@ -159,9 +171,20 @@ export function ChangeModeForm({
                     bg="green.500"
                   />
                 )}
-                <HStack align="flex-start" justify="space-between" gap={2} px={3} py={3}>
+                <HStack
+                  align="flex-start"
+                  justify="space-between"
+                  gap={2}
+                  px={3}
+                  py={3}
+                >
                   <Box flex="1" minW={0}>
-                    <Text fontSize="sm" fontWeight="bold" color="gray.900" letterSpacing="wide">
+                    <Text
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color="gray.900"
+                      letterSpacing="wide"
+                    >
                       {row.lpa_no}
                     </Text>
                     <Text fontSize="xs" color="gray.500" mt={0.5}>
@@ -173,14 +196,24 @@ export function ChangeModeForm({
                   </Box>
                   <HStack gap={1} flexShrink={0}>
                     <OSPBadge>{row.mode}</OSPBadge>
-                    {isChecked && (
-                      <OSPBadge type="success">Selected</OSPBadge>
-                    )}
+                    {isChecked && <OSPBadge type="success">Selected</OSPBadge>}
                   </HStack>
                 </HStack>
-                <Box borderTopWidth="1px" borderColor="gray.100" px={3} py={2.5}>
+                <Box
+                  borderTopWidth="1px"
+                  borderColor="gray.100"
+                  px={3}
+                  py={2.5}
+                >
                   <RowItem label="Plan Code" value={row.plan_code} />
                   <RowItem label="Mode" value={row.mode} />
+                  {/* FOOTER */}
+                  <Flex justify="space-between" align="center" mt={2}>
+                    <Text fontSize="xs" color="gray.400">
+                      Tap to select
+                    </Text>
+                    <LuChevronRight color="#a1a1aa" />
+                  </Flex>
                 </Box>
               </Box>
             );

@@ -24,6 +24,7 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
       <Box mt={-10}>
         {selectedPlans.map((plan, index) => {
           const items = [
+            // { label: "LPA Number", value: plan.lpa_no },
             { label: "New Plan Code", value: plan.new_plan_code },
             { label: "New Mode", value: plan.new_mode },
             {
@@ -41,10 +42,14 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
               <Card
                 activeIcon={<LuUser />}
                 title={"Change of Mode Summary"}
-                subtitle={""}
+                subtitle={plan.lpa_no}
               >
                 {items.map((item) => (
-                  <RowItem key={item.label} label={item.label} value={item.value} />
+                  <RowItem
+                    key={item.label}
+                    label={item.label}
+                    value={item.value}
+                  />
                 ))}
               </Card>
             </Box>
