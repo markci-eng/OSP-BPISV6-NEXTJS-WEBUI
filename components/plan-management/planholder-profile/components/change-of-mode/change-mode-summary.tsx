@@ -1,4 +1,4 @@
-import { Box, Separator } from "@chakra-ui/react";
+import { Box, Separator, Text } from "@chakra-ui/react";
 import type { CheckedPlanType } from "./change-mode.types";
 import SummaryForm from "@/components/common/text/SummaryForm";
 import SummaryHeader from "@/components/common/text/SummaryHeader";
@@ -39,10 +39,14 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
 
           return (
             <Box key={index} my={5}>
+              <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
+                Change of Mode Summary
+              </Text>
+              <Separator my={3} />
               <Card
                 activeIcon={<LuUser />}
-                title={"Change of Mode Summary"}
-                subtitle={"LPA #: " + plan.lpa_no}
+                title={plan.lpa_no}
+                subtitle={"LPA Number"}
               >
                 {items.map((item) => (
                   <RowItem
