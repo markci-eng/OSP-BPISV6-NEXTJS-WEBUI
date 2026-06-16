@@ -546,57 +546,71 @@ export function ListOfPlans({
         open={modalOpen}
         onOpenChange={(e) => setModalOpen(e.open)}
         size="full"
+        placement={"bottom"}
       >
         <Portal>
           <Drawer.Backdrop />
           <Drawer.Positioner>
             <Drawer.Content>
-              <Drawer.Header
-                borderBottomWidth={1}
-                borderColor="gray.100"
-                px={4}
-                py={3}
-              >
+              <Drawer.Header px={4} pt={4} pb={0} borderBottomWidth={0}>
                 <Flex
                   id="tour-plan-lpa-header"
-                  align="center"
-                  gap={3}
-                  flex={1}
-                  minW={0}
+                  align="flex-start"
+                  justify="space-between"
+                  w="full"
                 >
-                  <FaRegFileAlt
-                    size={28}
-                    color="var(--chakra-colors-primary)"
-                  />
-                  <Box flex={1} minW={0}>
-                    <Text fontSize="xs" color="gray.400" lineHeight="short">
-                      LPA Number
-                    </Text>
-                    <Text
-                      fontSize="md"
-                      fontWeight="bold"
-                      color="var(--chakra-colors-primary)"
-                      lineHeight="short"
+                  <Flex align="center" gap={3} flex={1} minW={0}>
+                    <Flex
+                      align="center"
+                      justify="center"
+                      w={10}
+                      h={10}
+                      borderRadius="lg"
+                      bg="var(--chakra-colors-primary-disabled)/30"
+                      flexShrink={0}
                     >
-                      {planDetails?.lpaNumber}
-                    </Text>
-                    <Flex gap={2} mt={1} flexWrap="wrap">
-                      <OSPBadge
-                        type={
-                          planDetails?.accountStatus === "LAPSED"
-                            ? "warning"
-                            : "success"
-                        }
-                      >
-                        {planDetails?.accountStatus}
-                      </OSPBadge>
-                      <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
+                      <FaRegFileAlt
+                        size={18}
+                        color="var(--chakra-colors-primary)"
+                      />
                     </Flex>
-                  </Box>
+                    <Box flex={1} minW={0}>
+                      <Text
+                        fontSize="2xs"
+                        color="gray.400"
+                        letterSpacing="wider"
+                        textTransform="uppercase"
+                      >
+                        LPA Number
+                      </Text>
+                      <Text
+                        fontSize="lg"
+                        fontWeight="bold"
+                        color="var(--chakra-colors-primary)"
+                        lineHeight="tight"
+                        mt={0.5}
+                      >
+                        {planDetails?.lpaNumber}
+                      </Text>
+                      <Flex gap={1.5} mt={2} flexWrap="wrap">
+                        <OSPBadge
+                          type={
+                            planDetails?.accountStatus === "LAPSED"
+                              ? "warning"
+                              : "success"
+                          }
+                        >
+                          {planDetails?.accountStatus}
+                        </OSPBadge>
+                        <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
+                      </Flex>
+                    </Box>
+                  </Flex>
+                  <Drawer.CloseTrigger asChild>
+                    <CloseButton size="sm" mt={0.5} />
+                  </Drawer.CloseTrigger>
                 </Flex>
-                <Drawer.CloseTrigger asChild>
-                  <CloseButton size="sm" />
-                </Drawer.CloseTrigger>
+                <Separator mt={4} borderColor="gray.100" />
               </Drawer.Header>
 
               {actionButtons && (

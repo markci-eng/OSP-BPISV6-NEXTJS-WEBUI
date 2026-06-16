@@ -1,4 +1,4 @@
-import { Box, Separator, Text } from "@chakra-ui/react";
+import { Box, Separator } from "@chakra-ui/react";
 import type { CheckedPlanType } from "./change-mode.types";
 import SummaryForm from "@/components/common/text/SummaryForm";
 import SummaryHeader from "@/components/common/text/SummaryHeader";
@@ -6,10 +6,9 @@ import LabelText from "@/components/texts/LabelText";
 import React from "react";
 import InfoCard from "@/claude components/info-card/info-card";
 import { Card } from "@/claude components/card-accordion/card";
-import { LuFileText, LuUser } from "react-icons/lu";
+import { LuUser } from "react-icons/lu";
 import { RowItem } from "@/claude components/info-card/row-item";
 import { PrimaryMdFlexButton } from "st-peter-ui";
-import { InfoCardAccordion } from "@/claude components/add-new-sale/info-card-accordion";
 
 interface RevRIProps {
   selectedPlans: CheckedPlanType[] | undefined;
@@ -22,13 +21,9 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
 
   return (
     <>
-      <Box>
-        <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
-          Change of Mode Summary
-        </Text>
+      <Box mt={-10}>
         {selectedPlans.map((plan, index) => {
           const items = [
-            // { label: "LPA Number", value: plan.lpa_no },
             { label: "New Plan Code", value: plan.new_plan_code },
             { label: "New Mode", value: plan.new_mode },
             {
@@ -43,20 +38,15 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
 
           return (
             <Box key={index} my={5}>
-              <InfoCardAccordion
-                icon={<LuFileText />}
-                title={plan.lpa_no}
-                subtitle={"LPA Number"}
-                defaultOpen
+              <Card
+                activeIcon={<LuUser />}
+                title={"Change of Mode Summary"}
+                subtitle={""}
               >
                 {items.map((item) => (
-                  <RowItem
-                    key={item.label}
-                    label={item.label}
-                    value={item.value}
-                  />
+                  <RowItem key={item.label} label={item.label} value={item.value} />
                 ))}
-              </InfoCardAccordion>
+              </Card>
             </Box>
           );
         })}

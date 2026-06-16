@@ -362,7 +362,7 @@ export function PlanDetailsDialog({
               </SimpleGrid>
 
               {/* Action */}
-              <Box mt={2} justifySelf={"center"}>
+              <Box mt={2}>
                 {isChecked ? (
                   selectedMode?.new_mode === value ? (
                     <UnselectSolidButton
