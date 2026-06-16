@@ -6,7 +6,7 @@ import LabelText from "@/components/texts/LabelText";
 import React from "react";
 import InfoCard from "@/claude components/info-card/info-card";
 import { Card } from "@/claude components/card-accordion/card";
-import { LuUser } from "react-icons/lu";
+import { LuFileText, LuUser } from "react-icons/lu";
 import { RowItem } from "@/claude components/info-card/row-item";
 import { PrimaryMdFlexButton } from "st-peter-ui";
 import { InfoCardAccordion } from "@/claude components/add-new-sale/info-card-accordion";
@@ -45,9 +45,10 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
           return (
             <Box key={index} my={5}>
               <InfoCardAccordion
-                icon={<LuUser />}
+                icon={<LuFileText />}
                 title={plan.lpa_no}
                 subtitle={"LPA Number"}
+                defaultOpen
               >
                 {items.map((item) => (
                   <RowItem
