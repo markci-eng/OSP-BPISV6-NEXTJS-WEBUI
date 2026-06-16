@@ -10,7 +10,7 @@ import {
   Steps,
   Text,
 } from "@chakra-ui/react";
-import { NextButton, SecondaryMdButton } from "st-peter-ui";
+import { NextButton, PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { useRef } from "react";
 
@@ -25,6 +25,8 @@ interface FormStepsProps {
   stepsData: StepItem[];
   title: string;
   description: string;
+  onStepsComplete: () => void;
+  submitButtonText: string;
 
   // ✅ FIXED TYPE (this is REQUIRED)
   currentStep: number;
@@ -37,6 +39,8 @@ const FormSteps: React.FC<FormStepsProps> = ({
   description,
   currentStep,
   setCurrentStep,
+  onStepsComplete,
+  submitButtonText,
 }) => {
   const formTopRef = useRef<HTMLDivElement | null>(null);
 
@@ -175,13 +179,24 @@ const FormSteps: React.FC<FormStepsProps> = ({
               </IconButton>
             </Steps.PrevTrigger>
 
-            {currentStep !== stepsData.length - 1 && (
+            {currentStep !== stepsData.length - 1 ? (
               <IconButton
                 aria-label="Next step"
                 size="sm"
                 variant="outline"
                 onClick={handleNext}
               >
+                <LuChevronRight />
+              </IconButton>
+            ) : (
+              <IconButton
+                aria-label="submit"
+                size="sm"
+                variant="solid"
+                onClick={onStepsComplete}
+                px={3}
+              >
+                {submitButtonText}
                 <LuChevronRight />
               </IconButton>
             )}
@@ -198,8 +213,12 @@ const FormSteps: React.FC<FormStepsProps> = ({
                 <SecondaryMdButton>Previous</SecondaryMdButton>
               </Steps.PrevTrigger>
 
-              {currentStep !== stepsData.length - 1 && (
+              {currentStep !== stepsData.length - 1 ? (
                 <NextButton onClick={handleNext} />
+              ) : (
+                <PrimaryMdButton onClick={onStepsComplete}>
+                  {submitButtonText}
+                </PrimaryMdButton>
               )}
             </Flex>
           </ButtonGroup>

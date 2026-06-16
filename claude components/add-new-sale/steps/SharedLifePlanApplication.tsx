@@ -2,18 +2,10 @@
 
 import { Box } from "@chakra-ui/react";
 import { useState } from "react";
-// import {
-//   TransactionService,
-//   PayMongoService,
-// } from "@/services/API/PayMongoService";
-// import {
-//   createEmptyApplicationData,
-//   loadApplicationDataFromLocalStorage,
-// } from "@/lib/utils/applicationDataFactory";
-import Page from "@/claude components/layout/page/Page";
+import Page from "@/components/layout/page/Page";
+import { CartItem } from "../cartItem";
 import HorizontalStepper from "../horizontal-stepper";
 import { createLifePlanSteps } from "../lifePlanSteps";
-import { CartItem } from "../cartItem";
 
 type SharedLifePlanApplicationProps = {
   title?: string;
@@ -48,7 +40,7 @@ const SharedLifePlanApplication = ({
     applicationSection,
     applicationSectionKey,
     onApplicationValidChange: setApplicationValid,
-    onEdit: (section: any) => {
+    onEdit: (section) => {
       setApplicationSection(section ?? "personal");
       setApplicationSectionKey((key) => key + 1);
       setCurrentStep(0);
@@ -79,23 +71,12 @@ const SharedLifePlanApplication = ({
         throw new Error("No items to checkout");
       }
 
-      // const applicationData =
-      //   loadApplicationDataFromLocalStorage() ?? createEmptyApplicationData();
-
-      // await TransactionService.insert(applicationData);
-
       const checkoutPayload = items.map((item) => ({
         planDesc: item.planDesc,
         ipInstAmt: Number(item.price),
         planTerm: item.planTerm,
         quantity: item.quantity ?? 1,
       }));
-      // const { checkoutUrl } =
-      //   await PayMongoService.createCheckout(checkoutPayload);
-
-      // if (!checkoutUrl) throw new Error("Checkout URL not found");
-
-      // window.location.href = checkoutUrl;
     } catch (error) {
       console.error(error);
       onPaymentError?.(error);

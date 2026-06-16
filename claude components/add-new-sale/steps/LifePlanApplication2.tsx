@@ -230,7 +230,7 @@ const LifePlanApplication2 = ({
 }: LifePlanApplication2Props) => {
   const OCRValue =
     typeof window === "undefined" ? null : localStorage.getItem("ocrResult");
-  // const { runOCR, data } = useOcr();
+
   const [lot, setLot] = useState("123");
   const [street, setStreet] = useState("Mabini Street");
   const [city, setCity] = useState("Makati");
@@ -238,32 +238,9 @@ const LifePlanApplication2 = ({
   const [district, setDistrict] = useState("Taguig");
   const [barangay, setBarangay] = useState("San Juan");
 
-  // const parseAddress = async (address: string) => {
-  //   if (!address) return;
-
-  //   try {
-  //     const result = await GeoApifyService.autocompleteAddress(address);
-
-  //     setLot(result.houseNumber ?? "");
-  //     setStreet(result.street ?? "");
-  //     setCity(result.city ?? "");
-  //     setDistrict(result.suburb ?? "");
-  //     setProvince(result.province ?? "");
-  //   } catch (error) {
-  //     console.error("Error parsing address:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   if (OCRValue != null) {
-  //     const ocrData = JSON.parse(OCRValue);
-  //     const address = ocrData.addressLine || "";
-  //     parseAddress(address);
-  //   } else if (data?.response) {
-  //     const address = data.response.addressLine || "";
-  //     parseAddress(address);
-  //   }
-  // }, [OCRValue, data]);
+  const parseAddress = async (address: string) => {
+    if (!address) return;
+  };
 
   useEffect(() => {
     onAddressUpdate?.({
@@ -275,10 +252,6 @@ const LifePlanApplication2 = ({
       province,
     });
   }, [lot, street, barangay, city, province, district]);
-
-  // useEffect(() => {
-  //   runOCR();
-  // }, []);
 
   return (
     <Box

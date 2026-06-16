@@ -9,11 +9,6 @@ import {
 } from "@chakra-ui/react";
 import { Body, H4 } from "st-peter-ui";
 import { UploadFile } from "osp-chakra-reusable-components";
-// import {
-//   loadApplicationDataFromLocalStorage,
-//   saveApplicationDataToLocalStorage,
-//   createEmptyApplicationData,
-// } from "@/lib/utils/applicationDataFactory";
 
 const HealthDeclaration = () => {
   const [value, setValue] = useState([""]);
@@ -24,36 +19,9 @@ const HealthDeclaration = () => {
     healthDeclaration4: false,
   });
 
-  // Load health declaration values from localStorage on mount
-  // useEffect(() => {
-  //   let appData = loadApplicationDataFromLocalStorage();
-
-  //   // If no data exists, create empty application data
-  //   if (!appData) {
-  //     appData = createEmptyApplicationData();
-  //     saveApplicationDataToLocalStorage(appData);
-  //   }
-
-  //   if (appData && appData.healthDeclaration) {
-  //     setHealthDeclarationValues(appData.healthDeclaration);
-  //   }
-  // }, []);
-
   // Save health declaration values to localStorage only when component unmounts
   // This ensures data is saved once when user navigates away from this step
-  // useEffect(() => {
-  //   return () => {
-  //     const appData = loadApplicationDataFromLocalStorage();
-  //     if (appData) {
-  //       appData.healthDeclaration = healthDeclarationValues;
-  //       saveApplicationDataToLocalStorage(appData);
-  //       console.log(
-  //         "Health Declaration saved to localStorage",
-  //         healthDeclarationValues,
-  //       );
-  //     }
-  //   };
-  // }, [healthDeclarationValues]);
+
   const items = [
     {
       value: "first-item",

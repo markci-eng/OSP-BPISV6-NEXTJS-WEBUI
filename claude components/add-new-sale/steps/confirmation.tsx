@@ -18,11 +18,11 @@ import { FaRegUser } from "react-icons/fa";
 import { IoIosInformationCircleOutline } from "react-icons/io";
 import { useEffect, useState } from "react";
 import type { IconType } from "react-icons";
+import { InfoCardAccordion } from "../info-card-accordion";
 import { RowItem } from "@/claude components/info-card/row-item";
 import { CartItem } from "../cartItem";
 import { ITransactionData } from "../planholder";
 import { checkboxList } from "../checkBoxList";
-import { InfoCardAccordion } from "../info-card-accordion";
 
 export type ConfirmationProps = {
   onAllAcceptedChange?: (allAccepted: boolean) => void;

@@ -8,9 +8,9 @@ import { ChangeModeSummaryPage } from "./change-mode-summary";
 // import PaymentPage from "../reinstatement-page/payment";
 import { FaFileAlt } from "react-icons/fa";
 import { FaCcMastercard, FaFileShield } from "react-icons/fa6";
-import FormSteps from "@/components/FormSteps";
 import Page from "@/components/layout/page/Page";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import FormSteps from "@/claude components/FormSteps";
 
 const steps = ["Select Plan", "Application Summary"];
 
@@ -107,6 +107,21 @@ export function ChangeModePage({
             description=""
             currentStep={currentStep}
             setCurrentStep={setCurrentStep}
+            onStepsComplete={async () => {
+              const confirmed = await messageBox({
+                title: "Confirm Submission",
+                message: "Are you sure you want to submit this application?",
+                variant: "warning",
+                confirmText: "Yets",
+                showCancel: true,
+                cancelText: "No",
+              });
+
+              if (confirmed) {
+                window.location.href = window.location.href + "/success";
+              }
+            }}
+            submitButtonText={"Submit Application"}
           />
         </Box>
       </Page.MainContent>

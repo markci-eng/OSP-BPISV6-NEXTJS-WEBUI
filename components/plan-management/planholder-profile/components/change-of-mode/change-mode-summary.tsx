@@ -46,11 +46,6 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
                 {items.map((item, idx) => (
                   <RowItem label={item.label} value={item.value} />
                 ))}
-
-                <Separator mb={3} />
-                <PrimaryMdFlexButton onClick={onSubmit}>
-                  Submit Application
-                </PrimaryMdFlexButton>
               </Card>
             </Box>
           );

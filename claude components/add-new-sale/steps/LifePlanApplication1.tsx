@@ -47,8 +47,6 @@ const LifePlanApplication1 = ({
   initialData,
   onUpdate,
 }: LifePlanApplication1Props) => {
-  // const { runOCR } = useOcr();
-
   const [formData, setFormData] = useState<IPersonalInfo>({
     firstName: initialData?.firstName ?? "Juan",
     middleName: initialData?.middleName ?? "Santos",
@@ -74,10 +72,6 @@ const LifePlanApplication1 = ({
     setFormData(nextData);
     onUpdate?.(nextData);
   };
-
-  // useEffect(() => {
-  //   runOCR();
-  // }, []);
 
   useEffect(() => {
     const OCRValue =

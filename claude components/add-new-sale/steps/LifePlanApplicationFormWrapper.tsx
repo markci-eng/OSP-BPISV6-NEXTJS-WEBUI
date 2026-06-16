@@ -8,21 +8,18 @@ import { FaRegAddressCard, FaRegUser } from "react-icons/fa";
 import { IoIosInformationCircleOutline } from "react-icons/io";
 import { LuChevronsDown, LuChevronsUp } from "react-icons/lu";
 import { useCallback, useEffect, useState } from "react";
+
+import { STANDARD_SPACING } from "@/lib/theme/standard-design-tokens";
+
+import { TertiarySmButton } from "st-peter-ui";
 import {
   IAddress,
   IApplicationData,
   IEmployment,
   IPersonalInfo,
 } from "../planholder";
-// import {
-//   createEmptyApplicationData,
-//   loadApplicationDataFromLocalStorage,
-//   saveApplicationDataToLocalStorage,
-// } from "@/lib/utils/applicationDataFactory";
-import { STANDARD_SPACING } from "@/lib/theme/standard-design-tokens";
-import { TertiarySmButton } from "st-peter-ui";
-import InfoCard from "@/claude components/info-card/info-card";
 import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
+import InfoCard from "@/claude components/info-card/info-card";
 
 const hasText = (value: unknown) => String(value ?? "").trim() !== "";
 
@@ -69,34 +66,8 @@ const LifePlanApplicationFormWrapper = ({
   openSectionKey?: number;
   onValidChange?: (valid: boolean) => void;
 }) => {
-  // const [applicationData, setApplicationData] = useState<IApplicationData>(
-  //   createEmptyApplicationData,
-  // );
   const [hydrated, setHydrated] = useState(false);
   const [openSections, setOpenSections] = useState<string[]>(["personal"]);
-
-  // useEffect(() => {
-  //   const timeoutId = window.setTimeout(() => {
-  //     const saved = loadApplicationDataFromLocalStorage();
-  //     if (saved) setApplicationData(saved);
-  //     setHydrated(true);
-  //   }, 0);
-
-  //   return () => window.clearTimeout(timeoutId);
-  // }, []);
-
-  // useEffect(() => {
-  //   if (!hydrated) return;
-  //   saveApplicationDataToLocalStorage(applicationData);
-  // }, [applicationData, hydrated]);
-
-  // const isComplete =
-  //   isPersonalComplete(applicationData.personalInfo) &&
-  //   isAddressComplete(applicationData.address);
-
-  // useEffect(() => {
-  //   onValidChange?.(isComplete);
-  // }, [isComplete, onValidChange]);
 
   useEffect(() => {
     if (!openSection) return;
@@ -113,50 +84,19 @@ const LifePlanApplicationFormWrapper = ({
     return () => window.clearTimeout(timer);
   }, [openSection, openSectionKey]);
 
-  // const handlePersonalInfoUpdate = useCallback(
-  //   (personalInfo: IPersonalInfo) => {
-  //     setApplicationData((prev) => ({
-  //       ...prev,
-  //       personalInfo,
-  //     }));
-  //   },
-  //   [],
-  // );
-
-  // const handleAddressUpdate = useCallback((address: IAddress) => {
-  //   setApplicationData((prev) => ({
-  //     ...prev,
-  //     address,
-  //   }));
-  // }, []);
-
-  // const handleEmploymentUpdate = useCallback((employment: IEmployment) => {
-  //   setApplicationData((prev) => ({
-  //     ...prev,
-  //     employment,
-  //   }));
-  // }, []);
-
   const sections = [
     {
       icon: FaRegUser,
       label: "Personal Info",
       description: "Identification and full name",
       value: "personal",
-      // complete: isPersonalComplete(applicationData.personalInfo),
-      page: (
-        <LifePlanApplication1
-        // initialData={applicationData.personalInfo}
-        // onUpdate={handlePersonalInfoUpdate}
-        />
-      ),
+      page: <LifePlanApplication1 />,
     },
     {
       icon: FaRegAddressCard,
       label: "Address",
       description: "Where you currently live",
       value: "address",
-      // complete: isAddressComplete(applicationData.address),
       page: <LifePlanApplication2 />,
     },
     {
@@ -164,13 +104,7 @@ const LifePlanApplicationFormWrapper = ({
       label: "Employment",
       description: "Work and income details",
       value: "employment",
-      // complete: isEmploymentComplete(applicationData.employment),
-      page: (
-        <LifePlanApplication3
-        // initialData={applicationData.employment}
-        // onUpdate={handleEmploymentUpdate}
-        />
-      ),
+      page: <LifePlanApplication3 />,
     },
   ];
 
@@ -224,9 +158,8 @@ const LifePlanApplicationFormWrapper = ({
               subtitle={section.description}
               isOpen={openSections.includes(section.value)}
               onToggle={() => toggleSection(section.value)}
-              // isComplete={section.complete}
             >
-              {hydrated ? section.page : null}
+              {section.page}
             </InputCardAccordion>
           </Box>
         ))}

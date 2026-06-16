@@ -1,95 +1,151 @@
 "use client";
 
-import { Breadcrumb, H4, Small } from "st-peter-ui";
-import { Box, Separator, Text, Flex, Strong } from "@chakra-ui/react";
-import { LuUser, LuNotebook, LuBuilding2, LuFileText } from "react-icons/lu";
-import AgentEmploymentForm from "@/components/saleforce/forms/agent-employment-form";
-import AgentContactForm from "@/components/saleforce/forms/agent-contact-form";
-import AgentAddressForm from "@/components/saleforce/forms/agent-address-form";
-import AgentPersonalInfoForm from "@/components/saleforce/forms/agent-personal-info-form";
-import AgentSummary from "@/components/saleforce/pages/agent-summary";
-import Page from "@/components/layout/page/Page";
-import FormTitle from "@/components/texts/FormTitle";
-import Caption from "@/components/texts/Caption";
-import Card from "@/components/cards/Card";
 import { useState } from "react";
-import FormSteps from "@/components/FormSteps";
+import { Box, Flex, Grid } from "@chakra-ui/react";
+import {
+  LuUser,
+  LuPhone,
+  LuMapPin,
+  LuBuilding2,
+  LuFileText,
+  LuCalendar,
+  LuCreditCard,
+  LuNotebook,
+} from "react-icons/lu";
+import Page from "@/claude components/layout/page/Page";
+import FormSteps from "@/claude components/FormSteps";
+import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
+import { InputFloatingLabel } from "st-peter-ui";
+import AgentSummary from "@/components/saleforce/pages/agent-summary";
 
-const steps = [
+const PersonalInfoStep = () => (
+  <Flex flexDir="column" gap={3}>
+    <InputCardAccordion
+      icon={<LuUser size={16} />}
+      title="Full Name"
+      subtitle="Last, First, Middle, Suffix"
+      defaultOpen
+    >
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={2}>
+        <InputFloatingLabel label="Last Name" value="Doe" />
+        <InputFloatingLabel label="First Name" value="John" />
+        <InputFloatingLabel label="Middle Name" value="M" />
+        <InputFloatingLabel label="Suffix" value="Jr." />
+      </Grid>
+    </InputCardAccordion>
+
+    <InputCardAccordion
+      icon={<LuCalendar size={16} />}
+      title="Birth Information"
+      subtitle="Date and place of birth"
+      defaultOpen
+    >
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={2}>
+        <InputFloatingLabel label="Date of Birth" value="September 9, 1998" />
+        <InputFloatingLabel label="Place of Birth" value="Lopez, Quezon" />
+      </Grid>
+    </InputCardAccordion>
+
+    <InputCardAccordion
+      icon={<LuNotebook size={16} />}
+      title="Demographic Information"
+      subtitle="Gender, civil status, and nationality"
+      defaultOpen
+    >
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={2}>
+        <InputFloatingLabel label="Gender" value="Male" />
+        <InputFloatingLabel label="Civil Status" value="Single" />
+        <InputFloatingLabel label="Nationality" value="Filipino" />
+        <InputFloatingLabel label="Naturalization Date" value="Jan 1, 2000" />
+      </Grid>
+    </InputCardAccordion>
+  </Flex>
+);
+
+const ContactAddressStep = () => (
+  <Flex flexDir="column" gap={3}>
+    <InputCardAccordion
+      icon={<LuPhone size={16} />}
+      title="Contact Information"
+      subtitle="Email and phone numbers"
+      defaultOpen
+    >
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={2}>
+        <InputFloatingLabel label="Email" value="john.doe@example.com" />
+        <InputFloatingLabel label="Mobile Number" value="09123456789" />
+        <InputFloatingLabel label="Landline Number" value="021234567" />
+      </Grid>
+    </InputCardAccordion>
+
+    <InputCardAccordion
+      icon={<LuMapPin size={16} />}
+      title="Address"
+      subtitle="Residential address details"
+      defaultOpen
+    >
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={2}>
+        <InputFloatingLabel label="Lot/Bldg/Unit No." value="Lot 123" />
+        <InputFloatingLabel label="Street" value="Main Street" />
+        <InputFloatingLabel label="Barangay" value="Barangay 1" />
+        <InputFloatingLabel label="District" value="District 1" />
+        <InputFloatingLabel label="City" value="City Name" />
+        <InputFloatingLabel label="Province" value="Province Name" />
+        <InputFloatingLabel label="Zip Code" value="1234" />
+      </Grid>
+    </InputCardAccordion>
+  </Flex>
+);
+
+const EmploymentStep = () => (
+  <Flex flexDir="column" gap={3}>
+    <InputCardAccordion
+      icon={<LuBuilding2 size={16} />}
+      title="Employment Details"
+      subtitle="Employer and position information"
+      defaultOpen
+    >
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={2}>
+        <InputFloatingLabel label="Employer" value="St. Peter Life Plan Inc." />
+        <InputFloatingLabel label="Position" value="SA2" />
+        <InputFloatingLabel
+          label="Hire Date"
+          value="Feb 19, 2025"
+          type="date"
+        />
+        <InputFloatingLabel label="Employment Status" value="Active" />
+      </Grid>
+    </InputCardAccordion>
+
+    <InputCardAccordion
+      icon={<LuCreditCard size={16} />}
+      title="Government IDs"
+      subtitle="NBI, TIN, and SSS numbers"
+      defaultOpen
+    >
+      <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={2}>
+        <InputFloatingLabel label="NBI Number" value="NBI123456" />
+        <InputFloatingLabel label="TIN Number" value="TIN123456" />
+        <InputFloatingLabel label="SSS Number" value="SSS123456" />
+      </Grid>
+    </InputCardAccordion>
+  </Flex>
+);
+
+const stepsData = [
   {
     title: "Personal Info",
     icon: LuUser,
-    content: (
-      <AgentPersonalInfoForm
-        lastName="Doe"
-        firstName="John"
-        middleName="M"
-        suffix="Jr."
-        dateOfBirth="September 9, 1998"
-        placeOfBirth="Lopez, Quezon"
-        civilStatus="Single"
-        gender="Male"
-        nationality="Filipino"
-        naturalizationDate="Jan 1, 2000"
-      />
-    ),
+    content: <PersonalInfoStep />,
   },
   {
     title: "Contact & Address",
-    icon: LuNotebook,
-    content: (
-      <Card.Root>
-        <Card.MainContent>
-          <FormTitle label="Contact and Address" />
-          <Caption>Please fill out the following details.</Caption>
-          <Separator
-            my={{
-              base: 2,
-            }}
-          />
-
-          <Flex
-            flexDir={"column"}
-            gap={4}
-            paddingX={{
-              base: 1,
-              md: 2,
-            }}
-          >
-            <AgentContactForm
-              email="john.doe@example.com"
-              mobileNumber="09123456789"
-              landlineNumber="021234567"
-            />
-
-            <AgentAddressForm
-              lotNumber="Lot 123"
-              street="Main Street"
-              barangay="Barangay 1"
-              district="District 1"
-              city="City Name"
-              province="Province Name"
-              zipCode="1234"
-            />
-          </Flex>
-        </Card.MainContent>
-      </Card.Root>
-    ),
+    icon: LuPhone,
+    content: <ContactAddressStep />,
   },
   {
     title: "Employment",
     icon: LuBuilding2,
-    content: (
-      <AgentEmploymentForm
-        employer="St. Peter Life Plan Inc."
-        position="SA2"
-        hiredate="Feb 19, 2025"
-        employmentStatus="Active"
-        nbiNumber="NBI123456"
-        tinNumber="TIN123456"
-        sssNumber="SSS123456"
-      />
-    ),
+    content: <EmploymentStep />,
   },
   {
     title: "Summary",
@@ -98,29 +154,27 @@ const steps = [
   },
 ];
 
-export const CreateSalesForcePage = () => {
+export default function CreateSalesForcePage() {
   const [currentStep, setCurrentStep] = useState(0);
 
   return (
-    <>
-      <Page.Root
-        title="New Sales Agent"
-        description="Please fill out the following details."
-      >
-        <Page.MainContent>
-          <Box mt={"-30px"}>
-            <FormSteps
-              stepsData={steps}
-              title=""
-              description=""
-              currentStep={currentStep}
-              setCurrentStep={setCurrentStep}
-            />
-          </Box>
-        </Page.MainContent>
-      </Page.Root>
-    </>
+    <Page.Root
+      title="New Sales Agent"
+      description="Complete all required sections to register a new sales agent."
+    >
+      <Page.MainContent>
+        <Box mt={"-30px"}>
+          <FormSteps
+            stepsData={stepsData}
+            title=""
+            description=""
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            onStepsComplete={() => {}}
+            submitButtonText="Create Agent"
+          />
+        </Box>
+      </Page.MainContent>
+    </Page.Root>
   );
-};
-
-export default CreateSalesForcePage;
+}

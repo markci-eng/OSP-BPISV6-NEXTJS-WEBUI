@@ -10,9 +10,8 @@ import { LuHeartPulse, LuUsersRound } from "react-icons/lu";
 import Page from "@/claude components/layout/page/Page";
 import FormSteps from "@/components/FormSteps";
 import { SetStateAction } from "react";
-import SharedLifePlanApplication from "@/claude components/add-new-sale/steps/SharedLifePlanApplication";
 import { Box } from "st-peter-ui";
-
+import SharedLifePlanApplication from "@/claude components/add-new-sale/steps/SharedLifePlanApplication";
 export default function NewSalePage() {
   const { messageBox } = useMessageDialog();
 
@@ -37,7 +36,7 @@ export default function NewSalePage() {
   return (
     <Page.Root title="" hideBackButton>
       <Page.MainContent>
-        <Box mt={"-40px"} mx={"-20px"}>
+        <Box mt={"-20px"} mx={"-20px"}>
           <SharedLifePlanApplication />
         </Box>
         {/* <FormSteps

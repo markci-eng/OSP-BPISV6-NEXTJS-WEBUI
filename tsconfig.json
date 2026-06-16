@@ -28,7 +28,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    "app/plan-management/change-of-mode/success/page.tsx"
   ],
   "exclude": ["node_modules"]
 }

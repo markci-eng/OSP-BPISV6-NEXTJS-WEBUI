@@ -1,9 +1,9 @@
-import LifePlanApplicationWrapper from "@/components/plan-management/lifeplan-application/lifeplan-application-wrapper";
 import Beneficiary from "./steps/beneficiary";
 import Confirmation, { type ConfirmationProps } from "./steps/confirmation";
 import HealthDeclaration from "./steps/HealthDeclaration";
 import { FaClipboardCheck, FaFileSignature, FaRegUser } from "react-icons/fa";
 import { IoIosInformationCircleOutline } from "react-icons/io";
+import LifePlanApplicationFormWrapper from "./steps/LifePlanApplicationFormWrapper";
 
 export const createLifePlanSteps = (
   confirmationProps?: ConfirmationProps & {
@@ -20,10 +20,10 @@ export const createLifePlanSteps = (
     description: "Complete the application form",
     icon: FaFileSignature,
     component: (
-      <LifePlanApplicationWrapper
-      // openSection={confirmationProps?.applicationSection}
-      // openSectionKey={confirmationProps?.applicationSectionKey}
-      // onValidChange={confirmationProps?.onApplicationValidChange}
+      <LifePlanApplicationFormWrapper
+        openSection={confirmationProps?.applicationSection}
+        openSectionKey={confirmationProps?.applicationSectionKey}
+        onValidChange={confirmationProps?.onApplicationValidChange}
       />
     ),
   },

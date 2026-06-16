@@ -1,3 +1,4 @@
+import { RowItem } from "@/claude components/info-card/row-item";
 import {
   VStack,
   Box,
@@ -26,14 +27,8 @@ import {
   SecondaryMdButton,
   PrimaryMdButton,
 } from "st-peter-ui";
-import { RowItem } from "@/claude components/info-card/row-item";
 import { IBeneficiary } from "../planholder";
 import FloatingLabelInput from "../floating-label-input";
-// import {
-//   createEmptyApplicationData,
-//   loadApplicationDataFromLocalStorage,
-//   saveApplicationDataToLocalStorage,
-// } from "@/lib/utils/applicationDataFactory";
 
 const beneficiaryTypes = createListCollection({
   items: [
@@ -123,68 +118,7 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
       contingent.length > 0 ? contingent[0] : undefined,
       allBeneficiaries,
     );
-
-    // const currentData =
-    //   loadApplicationDataFromLocalStorage() ?? createEmptyApplicationData();
-
-    // saveApplicationDataToLocalStorage({
-    //   ...currentData,
-    //   beneficiaries: allBeneficiaries,
-    //   principalBeneficiary: principal.length > 0 ? principal[0] : undefined,
-    //   contingentBeneficiary: contingent.length > 0 ? contingent[0] : undefined,
-    // });
   };
-
-  // useEffect(() => {
-  //   const timeoutId = window.setTimeout(() => {
-  //     const currentData = loadApplicationDataFromLocalStorage();
-  //     if (!currentData) return;
-
-  //     const storedBeneficiaries = currentData.beneficiaries ?? [];
-
-  //     let principalFromStorage = storedBeneficiaries.filter(
-  //       (beneficiary) => beneficiary.beneficiaryClass === "principal",
-  //     );
-  //     let contingentFromStorage = storedBeneficiaries.filter(
-  //       (beneficiary) => beneficiary.beneficiaryClass === "contingent",
-  //     );
-
-  //     if (storedBeneficiaries.length === 0) {
-  //       if (currentData.principalBeneficiary) {
-  //         principalFromStorage = [
-  //           {
-  //             ...currentData.principalBeneficiary,
-  //             beneficiaryClass:
-  //               currentData.principalBeneficiary.beneficiaryClass ||
-  //               "principal",
-  //           },
-  //         ];
-  //       }
-
-  //       if (currentData.contingentBeneficiary) {
-  //         contingentFromStorage = [
-  //           {
-  //             ...currentData.contingentBeneficiary,
-  //             beneficiaryClass:
-  //               currentData.contingentBeneficiary.beneficiaryClass ||
-  //               "contingent",
-  //           },
-  //         ];
-  //       }
-  //     }
-
-  //     setPrincipalBeneficiaries(principalFromStorage);
-  //     setContingentBeneficiaries(contingentFromStorage);
-
-  //     onUpdate?.(
-  //       principalFromStorage.length > 0 ? principalFromStorage[0] : undefined,
-  //       contingentFromStorage.length > 0 ? contingentFromStorage[0] : undefined,
-  //       [...principalFromStorage, ...contingentFromStorage],
-  //     );
-  //   }, 0);
-
-  //   return () => window.clearTimeout(timeoutId);
-  // }, [onUpdate]);
 
   const handleSaveAddBeneficiary = () => {
     if (
@@ -354,7 +288,7 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                             : []
                         }
                         onValueChange={(details) =>
-                          setAddFormBeneficiary((prev: any) => ({
+                          setAddFormBeneficiary((prev) => ({
                             ...prev,
                             beneficiaryClass:
                               (details.value?.[0] as
@@ -396,7 +330,7 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                             : []
                         }
                         onValueChange={(details) =>
-                          setAddFormBeneficiary((prev: any) => ({
+                          setAddFormBeneficiary((prev) => ({
                             ...prev,
                             relationship: details.value?.[0] ?? "",
                           }))
@@ -439,8 +373,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                           type="text"
                           label="First Name"
                           value={addFormBeneficiary.firstName}
-                          onChange={(e: any) =>
-                            setAddFormBeneficiary((prev: any) => ({
+                          onChange={(e) =>
+                            setAddFormBeneficiary((prev) => ({
                               ...prev,
                               firstName: e.target.value,
                             }))
@@ -457,8 +391,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                           type="text"
                           label="Last Name"
                           value={addFormBeneficiary.lastName}
-                          onChange={(e: any) =>
-                            setAddFormBeneficiary((prev: any) => ({
+                          onChange={(e) =>
+                            setAddFormBeneficiary((prev) => ({
                               ...prev,
                               lastName: e.target.value,
                             }))
@@ -475,8 +409,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                           type="text"
                           label="Middle Initial"
                           value={addFormBeneficiary.middleInitial}
-                          onChange={(e: any) =>
-                            setAddFormBeneficiary((prev: any) => ({
+                          onChange={(e) =>
+                            setAddFormBeneficiary((prev) => ({
                               ...prev,
                               middleInitial: e.target.value,
                             }))
@@ -494,8 +428,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                         type="text"
                         label="Address"
                         value={addFormBeneficiary.address}
-                        onChange={(e: any) =>
-                          setAddFormBeneficiary((prev: any) => ({
+                        onChange={(e) =>
+                          setAddFormBeneficiary((prev) => ({
                             ...prev,
                             address: e.target.value,
                           }))
@@ -511,8 +445,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                         id="dateOfBirth"
                         type="date"
                         value={addFormBeneficiary.birthDate}
-                        onChange={(e: any) =>
-                          setAddFormBeneficiary((prev: any) => ({
+                        onChange={(e) =>
+                          setAddFormBeneficiary((prev) => ({
                             ...prev,
                             birthDate: e.target.value,
                           }))
@@ -744,8 +678,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                       <Field.Label>First Name</Field.Label>
                       <Input
                         value={formBeneficiary.firstName}
-                        onChange={(e: any) =>
-                          setFormBeneficiary((prev: any) => ({
+                        onChange={(e) =>
+                          setFormBeneficiary((prev) => ({
                             ...prev,
                             firstName: e.target.value,
                           }))
@@ -758,8 +692,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                       <Field.Label>Middle Initial</Field.Label>
                       <Input
                         value={formBeneficiary.middleInitial}
-                        onChange={(e: any) =>
-                          setFormBeneficiary((prev: any) => ({
+                        onChange={(e) =>
+                          setFormBeneficiary((prev) => ({
                             ...prev,
                             middleInitial: e.target.value,
                           }))
@@ -772,8 +706,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                       <Field.Label>Last Name</Field.Label>
                       <Input
                         value={formBeneficiary.lastName}
-                        onChange={(e: any) =>
-                          setFormBeneficiary((prev: any) => ({
+                        onChange={(e) =>
+                          setFormBeneficiary((prev) => ({
                             ...prev,
                             lastName: e.target.value,
                           }))
@@ -787,8 +721,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                       <Input
                         type="date"
                         value={formBeneficiary.birthDate}
-                        onChange={(e: any) =>
-                          setFormBeneficiary((prev: any) => ({
+                        onChange={(e) =>
+                          setFormBeneficiary((prev) => ({
                             ...prev,
                             birthDate: e.target.value,
                           }))
@@ -806,7 +740,7 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                             : []
                         }
                         onValueChange={(details) =>
-                          setFormBeneficiary((prev: any) => ({
+                          setFormBeneficiary((prev) => ({
                             ...prev,
                             relationship: details.value?.[0] ?? "",
                           }))
@@ -841,8 +775,8 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
                       <Field.Label>Address</Field.Label>
                       <Input
                         value={formBeneficiary.address}
-                        onChange={(e: any) =>
-                          setFormBeneficiary((prev: any) => ({
+                        onChange={(e) =>
+                          setFormBeneficiary((prev) => ({
                             ...prev,
                             address: e.target.value,
                           }))
