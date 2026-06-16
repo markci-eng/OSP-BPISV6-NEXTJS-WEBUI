@@ -201,6 +201,8 @@ const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
 
             <PendingRequests requests={MOCK_AGENT_REQUESTS} />
 
+            <AgentInfoTabsMobile agent={selectedAgent} />
+
             <Flex borderColor="gray.200" borderRadius="md">
               <DataTable
                 columns={columns}
@@ -231,8 +233,6 @@ const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
                 }
               />
             </Flex>
-
-            <AgentInfoTabsMobile agent={selectedAgent} />
 
             <TeamMemberDrawer
               agent={selectedTeamMember}
