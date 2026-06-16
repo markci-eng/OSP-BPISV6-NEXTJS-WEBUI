@@ -42,7 +42,7 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
               <Card
                 activeIcon={<LuUser />}
                 title={"Change of Mode Summary"}
-                subtitle={plan.lpa_no}
+                subtitle={"LPA #: " + plan.lpa_no}
               >
                 {items.map((item) => (
                   <RowItem
