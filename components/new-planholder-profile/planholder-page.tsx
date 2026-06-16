@@ -249,12 +249,12 @@ export default function PlanholderProfilePage({
 
   const actionButtonDefs = [
     {
-      label: "Edit Planholder Information",
+      label: "Edit",
       href: `/plan-management/planholder/${props.planholderInfo?.personId}/edit`,
       icon: () => <LuUserPen size={16} />,
     },
     {
-      label: "Delete Planholder",
+      label: "Delete",
       icon: () => <LuTrash2 size={16} />,
       onClick: () =>
         messageBox({
@@ -360,18 +360,6 @@ export default function PlanholderProfilePage({
             lg: "block",
           }}
         >
-          {/* Expand / Collapse strip */}
-          <Flex justify="flex-end" gap={2} mb={1}>
-            <TertiarySmButton onClick={expandAll}>
-              <LuChevronsDown size={14} />
-              Expand All
-            </TertiarySmButton>
-            <TertiarySmButton onClick={collapseAll}>
-              <LuChevronsUp size={14} />
-              Collapse All
-            </TertiarySmButton>
-          </Flex>
-
           {/* Unified 2-column profile grid */}
           <Grid
             templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
@@ -381,7 +369,7 @@ export default function PlanholderProfilePage({
             {/* Left column — identity & details */}
             <GridItem>
               <Flex direction="column" gap={4}>
-                <Box id="tour-profile-header">
+                <Box id="tour-profile-header" pt={3}>
                   <ProfileHeaderCard
                     name={
                       props.planholderInfo
@@ -434,6 +422,19 @@ export default function PlanholderProfilePage({
                   />
                   <PendingRequests requests={MOCK_REQUESTS} />
                 </Show>
+
+                {/* Expand / Collapse strip */}
+                <Flex justify="flex-end" gap={2} mb={1}>
+                  <TertiarySmButton onClick={expandAll}>
+                    <LuChevronsDown size={14} />
+                    Expand All
+                  </TertiarySmButton>
+                  <TertiarySmButton onClick={collapseAll}>
+                    <LuChevronsUp size={14} />
+                    Collapse All
+                  </TertiarySmButton>
+                </Flex>
+
                 <Box id="tour-planholder-info">
                   <PlanholderInfo
                     planholder={props.planholderInfo ?? undefined}

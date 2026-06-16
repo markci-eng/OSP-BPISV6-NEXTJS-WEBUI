@@ -43,8 +43,8 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
                 title={"Change of Mode Summary"}
                 subtitle={""}
               >
-                {items.map((item, idx) => (
-                  <RowItem label={item.label} value={item.value} />
+                {items.map((item) => (
+                  <RowItem key={item.label} label={item.label} value={item.value} />
                 ))}
               </Card>
             </Box>

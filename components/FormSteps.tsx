@@ -107,30 +107,33 @@ const FormSteps: React.FC<FormStepsProps> = ({
           step={currentStep}
           onStepChange={(e) => handleStepChange(e.step)}
         >
-          <Steps.List
-            flexDirection="row"
-            w="full"
-            py={2}
-            alignItems="flex-start"
-          >
+          <Steps.List flexDirection="row" w="full" py={2} alignItems="center">
             {stepsData.map((stepItem, index) => (
-              <Steps.Item
-                key={index}
-                index={index}
-                title={stepItem.title}
-                minW={{ base: "0px", md: "auto" }}
-              >
-                <Steps.Trigger
+              <Flex justify={"space-between"}>
+                <Steps.Item
+                  key={index}
+                  index={index}
+                  title={stepItem.title}
+                  minW={{ base: "0px", md: "auto" }}
                   flexDirection="column"
                   alignItems="center"
                   gap={1}
-                  onClick={() => handleStepChange(index)}
                 >
-                  <Steps.Indicator>
-                    <Box as={stepItem.icon} w={4} h={4} />
-                  </Steps.Indicator>
+                  <Flex align="center" w="full" justify={"center"}>
+                    <Steps.Trigger
+                      onClick={() => handleStepChange(index)}
+                      flexShrink={0}
+                    >
+                      <Steps.Indicator>
+                        <Box as={stepItem.icon} w={4} h={4} />
+                      </Steps.Indicator>
+                    </Steps.Trigger>
+
+                    <Steps.Separator display={{ base: "none", md: "block" }} />
+                  </Flex>
 
                   <Steps.Title
+                    truncate
                     fontSize={{ base: "xs", md: "sm" }}
                     textAlign="center"
                     whiteSpace="normal"
@@ -138,10 +141,8 @@ const FormSteps: React.FC<FormStepsProps> = ({
                   >
                     {stepItem.title}
                   </Steps.Title>
-                </Steps.Trigger>
-
-                <Steps.Separator display={{ base: "none", md: "block" }} />
-              </Steps.Item>
+                </Steps.Item>
+              </Flex>
             ))}
           </Steps.List>
 

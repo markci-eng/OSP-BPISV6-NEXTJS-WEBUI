@@ -1,4 +1,5 @@
-import { Box, Dialog, Flex, HStack, Text, VStack } from "@chakra-ui/react";
+import { Box, Flex, HStack, Text } from "@chakra-ui/react";
+import { RowItem } from "@/components/info-card/row-item";
 import { OSPBadge } from "@/components/common/badge/badge";
 import { CheckCircle2 } from "lucide-react";
 import type { CheckedPlanType, PlanDetails } from "./change-mode.types";
@@ -178,20 +179,8 @@ export function ChangeModeForm({
                   </HStack>
                 </HStack>
                 <Box borderTopWidth="1px" borderColor="gray.100" px={3} py={2.5}>
-                  <VStack align="stretch" gap={2}>
-                    <HStack justify="space-between" gap={4}>
-                      <Text fontSize="xs" color="gray.500" minW="110px">Plan Code</Text>
-                      <Text fontSize="xs" color="gray.900" fontWeight="600" textAlign="right" flex="1">
-                        {row.plan_code}
-                      </Text>
-                    </HStack>
-                    <HStack justify="space-between" gap={4}>
-                      <Text fontSize="xs" color="gray.500" minW="110px">Mode</Text>
-                      <Text fontSize="xs" color="gray.900" fontWeight="600" textAlign="right" flex="1">
-                        {row.mode}
-                      </Text>
-                    </HStack>
-                  </VStack>
+                  <RowItem label="Plan Code" value={row.plan_code} />
+                  <RowItem label="Mode" value={row.mode} />
                 </Box>
               </Box>
             );
@@ -199,24 +188,19 @@ export function ChangeModeForm({
         }}
       />
 
-      <Dialog.Root
-        open={dialogOpen}
-        onOpenChange={({ open }) => setDialogOpen(open)}
-        size={{ base: "full", md: "xl" }}
-        placement="center"
-      >
-        {dialogPlan && (
-          <PlanDetailsDialog
-            key={dialogPlan.lpa_no}
-            checked={checkedPlans.some((p) => p.lpa_no === dialogPlan.lpa_no)}
-            plan={dialogPlan}
-            onCheckedChange={(checked, values) => {
-              handleCheckedChange(checked, values);
-              setDialogOpen(false);
-            }}
-          />
-        )}
-      </Dialog.Root>
+      {dialogPlan && (
+        <PlanDetailsDialog
+          key={dialogPlan.lpa_no}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          checked={checkedPlans.some((p) => p.lpa_no === dialogPlan.lpa_no)}
+          plan={dialogPlan}
+          onCheckedChange={(checked, values) => {
+            handleCheckedChange(checked, values);
+            setDialogOpen(false);
+          }}
+        />
+      )}
     </Box>
   );
 }
