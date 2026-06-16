@@ -9,9 +9,6 @@ import {
   getSubordinates,
   SalesAgent,
 } from "@/components/common/agent-lookup/agent-lookup.type";
-import InfoItem from "@/components/common/info-item/info-item";
-import LabelText from "@/components/texts/LabelText";
-import SummaryForm from "@/components/common/text/SummaryForm";
 import Page from "@/components/layout/page/Page";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import {
@@ -19,29 +16,32 @@ import {
   Badge,
   Box,
   Flex,
-  Grid,
-  GridItem,
   HStack,
   IconButton,
   Input,
-  Separator,
-  Strong,
   Text,
 } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
 import {
   LuArrowLeft,
+  LuBriefcase,
   LuCheck,
+  LuChevronLeft,
   LuChevronRight,
+  LuChevronsUpDown,
   LuSearch,
+  LuUser,
   LuUserRound,
+  LuUsers,
   LuUsersRound,
   LuX,
-  LuChevronsUpDown
 } from "react-icons/lu";
 import { Body, H4, PrimaryMdButton, Small } from "st-peter-ui";
 import Summary from "@/components/forms/Summary";
+import { RowItem } from "@/claude components/info-card/row-item";
+import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
+import InfoCard from "@/claude components/info-card/info-card";
 
 interface ReassignPageWebProps {
   superior: SalesAgent | null;
@@ -50,7 +50,6 @@ interface ReassignPageWebProps {
 
 type ViewMode = "form" | "summary";
 
-const breadItem = [{ label: "Home", href: "/" }, { label: "Re-Organization" }];
 const matchesQuery = (agent: SalesAgent, query: string) => {
   const q = query.trim().replace(/\s+/g, "").toLowerCase();
   if (!q) return true;
@@ -72,56 +71,13 @@ const formatDate = (iso: string) =>
     day: "numeric",
   });
 
-interface StepHeaderProps {
-  index: number;
-  title: string;
-  hint: string;
-  state: "active" | "done" | "upcoming";
-}
-
-const StepHeader = ({ index, title, hint, state }: StepHeaderProps) => {
-  const color =
-    state === "upcoming"
-      ? "var(--chakra-colors-gray-400)"
-      : "var(--chakra-colors-primary)";
-
-  return (
-    <Flex align="flex-start" gap={3} mb={4}>
-      <Flex
-        borderRadius="full"
-        h="28px"
-        w="28px"
-        minW="28px"
-        bg={state === "done" ? color : "transparent"}
-        borderColor={color}
-        borderWidth={2}
-        align="center"
-        justify="center"
-        color={state === "done" ? "white" : color}
-      >
-        {state === "done" ? (
-          <LuCheck size={14} />
-        ) : (
-          <Strong fontSize="14px">{index}</Strong>
-        )}
-      </Flex>
-      <Flex flexDir="column" gap={0.5}>
-        <Strong color={color} fontSize="16px">
-          {title}
-        </Strong>
-        <Body color="gray.600">{hint}</Body>
-      </Flex>
-    </Flex>
-  );
-};
-
-const ReassignPageWeb = (params: ReassignPageWebProps) => {
-  const { superior, setSuperior } = params;
-
+const ReassignPageWeb = ({ superior, setSuperior }: ReassignPageWebProps) => {
   const [searchVal, setSearchVal] = React.useState("");
   const [data, setData] = React.useState<SalesAgent[]>([]);
   const [selectedSubs, setSelectedSubs] = React.useState<SalesAgent[]>([]);
   const [view, setView] = React.useState<ViewMode>("form");
+  const [step1Open, setStep1Open] = React.useState(true);
+  const [step2Open, setStep2Open] = React.useState(false);
 
   const runSearch = () => {
     setData(getAllAgents().filter((a) => matchesQuery(a, searchVal)));
@@ -132,6 +88,15 @@ const ReassignPageWeb = (params: ReassignPageWebProps) => {
     setSuperior(null);
     setSearchVal("");
     setSelectedSubs([]);
+    setStep1Open(true);
+    setStep2Open(false);
+  };
+
+  const handleSuperiorSelect = (agent: SalesAgent) => {
+    setSuperior(getAgentById(agent.id)!);
+    setSearchVal(agent.firstName + " " + agent.lastName);
+    setStep1Open(false);
+    setStep2Open(true);
   };
 
   const possibleSubs = React.useMemo(
@@ -154,36 +119,59 @@ const ReassignPageWeb = (params: ReassignPageWebProps) => {
     );
   }
 
-  return (
-    <>
-      <Page.Root
-        title="Re-Organization"
-        description="Move sales agents under a new superior in two quick steps."
-      >
-        <Page.MainContent>
-        <Flex flexDir="column" gap={6} p={{ base: 0 }}>
-          {/* STEP 1 */}
-          <Flex flexDir="column" marginTop={{ base: "10px", md: 0 }}>
-            <StepHeader
-              index={1}
-              title="Choose the new superior"
-              hint="Search by ID, name, or position. The person you pick here will receive the agents you select in Step 2."
-              state={superior ? "done" : "active"}
-            />
+  const step1Subtitle = superior
+    ? `${superior.firstName} ${superior.lastName} · ${superior.id}`
+    : "Search and select the receiving superior";
 
+  const step2Subtitle =
+    selectedSubs.length > 0
+      ? `${selectedSubs.length} agent${selectedSubs.length > 1 ? "s" : ""} selected`
+      : "Tick agents to move under this superior";
+
+  return (
+    <Page.Root
+      title="Re-Organization"
+      description="Move sales agents under a new superior in two quick steps."
+    >
+      <Page.MainContent>
+        <Flex flexDir="column" gap={4} mt={{ base: "10px", md: 0 }}>
+          {/* STEP 1 — Choose the new superior */}
+          <InputCardAccordion
+            icon={<LuUser size={16} />}
+            title="Choose the New Superior"
+            subtitle={step1Subtitle}
+            isOpen={step1Open}
+            onToggle={() => setStep1Open((p) => !p)}
+            isComplete={superior !== null}
+          >
             <Flex flexDir="column" gap={4}>
+              {!superior && (
+                <InfoCard>
+                  Search by Agent ID, full name, or position. The person you
+                  pick here will receive the agents you select in Step 2.
+                </InfoCard>
+              )}
+
+              {/* Search bar */}
               <HStack
                 w="full"
                 gap={0}
                 border="1.5px solid"
-                borderColor={superior !== null ? "var(--chakra-colors-primary-disabled)" : "gray.200"}
+                borderColor={
+                  superior !== null
+                    ? "var(--chakra-colors-primary-disabled)"
+                    : "gray.200"
+                }
                 borderRadius="lg"
                 bg="white"
                 boxShadow="xs"
                 overflow="hidden"
                 transition="border-color 0.15s, box-shadow 0.15s"
                 _hover={{
-                  borderColor: superior !== null ? "var(--chakra-colors-primary)" : "gray.300",
+                  borderColor:
+                    superior !== null
+                      ? "var(--chakra-colors-primary)"
+                      : "gray.300",
                   boxShadow: "sm",
                 }}
                 _focusWithin={{
@@ -195,7 +183,11 @@ const ReassignPageWeb = (params: ReassignPageWebProps) => {
                 <Flex
                   align="center"
                   pl={3}
-                  color={superior !== null ? "var(--chakra-colors-primary)" : "gray.400"}
+                  color={
+                    superior !== null
+                      ? "var(--chakra-colors-primary)"
+                      : "gray.400"
+                  }
                   flexShrink={0}
                   pointerEvents="none"
                 >
@@ -227,7 +219,9 @@ const ReassignPageWeb = (params: ReassignPageWebProps) => {
 
                 <Flex align="center" pr={2} flexShrink={0}>
                   <IconButton
-                    aria-label={superior !== null ? "Clear selected superior" : "Search"}
+                    aria-label={
+                      superior !== null ? "Clear selected superior" : "Search"
+                    }
                     variant="ghost"
                     size="xs"
                     borderRadius="full"
@@ -238,70 +232,74 @@ const ReassignPageWeb = (params: ReassignPageWebProps) => {
                       else runSearch();
                     }}
                   >
-                    {superior !== null ? <LuX size={12} /> : <LuChevronsUpDown size={12} />}
+                    {superior !== null ? (
+                      <LuX size={12} />
+                    ) : (
+                      <LuChevronsUpDown size={12} />
+                    )}
                   </IconButton>
                 </Flex>
               </HStack>
 
+              {/* Results: table or selected superior card */}
               {superior === null ? (
-                <Grid>
-                  <GridItem minW={0} boxShadow="md" borderRadius="md">
-                    <DataTable<SalesAgent>
-                      columns={columns}
-                      data={data}
-                      getRowId={(row) => row.id}
-                      onRowClick={(row) => {
-                        setSuperior(getAgentById(row.id)!);
-                        setSearchVal(row.firstName + " " + row.lastName);
-                      }}
-                      emptyState={
-                        <Flex
-                          flexDir="column"
-                          align="center"
-                          gap={2}
-                          py={10}
-                          color="gray.500"
-                        >
-                          <LuUserRound size={32} />
-                          <Body>
-                            Search above to find the agent you want to promote
-                            to superior.
-                          </Body>
-                        </Flex>
-                      }
-                      features={{
-                        search: true,
-                        filtering: true,
-                        sorting: true,
-                        pagination: true,
-                        columnToggle: true,
-                        selection: false,
-                        draggable: false,
-                        detailSidebar: false,
-                      }}
-                      mobileConfig={{ viewMode: "card", primaryField: "name", secondaryField: "position" }}
-                    />
-                  </GridItem>
-                </Grid>
+                <Box boxShadow="md" borderRadius="md">
+                  <DataTable<SalesAgent>
+                    columns={columns}
+                    data={data}
+                    getRowId={(row) => row.id}
+                    onRowClick={(row) => handleSuperiorSelect(row)}
+                    emptyState={
+                      <Flex
+                        flexDir="column"
+                        align="center"
+                        gap={2}
+                        py={10}
+                        color="gray.500"
+                      >
+                        <LuUserRound size={32} />
+                        <Body>
+                          Search above to find the agent you want to promote to
+                          superior.
+                        </Body>
+                      </Flex>
+                    }
+                    features={{
+                      search: true,
+                      filtering: true,
+                      sorting: true,
+                      pagination: true,
+                      columnToggle: true,
+                      selection: false,
+                      draggable: false,
+                      detailSidebar: false,
+                    }}
+                    mobileConfig={{
+                      viewMode: "card",
+                      primaryField: "name",
+                      secondaryField: "position",
+                    }}
+                  />
+                </Box>
               ) : (
                 <SuperiorCard superior={superior} onClear={clearSuperior} />
               )}
             </Flex>
-          </Flex>
+          </InputCardAccordion>
 
           {/* STEP 2 — only after superior is picked */}
           {superior !== null && (
-            <Flex flexDirection="column" minW={0} height="100%">
-              <Flex flexDir="column">
-                <StepHeader
-                  index={2}
-                  title={`Pick agents to assign under ${superior.firstName} ${superior.lastName}`}
-                  hint="Tick every agent you want to move. Only agents eligible to report to this superior are listed."
-                  state={selectedSubs.length > 0 ? "done" : "active"}
-                />
-
+            <InputCardAccordion
+              icon={<LuUsers size={16} />}
+              title={`Assign Agents to ${superior.firstName} ${superior.lastName}`}
+              subtitle={step2Subtitle}
+              isOpen={step2Open}
+              onToggle={() => setStep2Open((p) => !p)}
+              isComplete={selectedSubs.length > 0}
+            >
+              <Flex flexDir="column" gap={4}>
                 {selectedSubs.length > 0 && (
-                  <Flex mb={3} align="center" gap={2}>
+                  <Flex align="center">
                     <Badge
                       colorPalette="green"
                       variant="subtle"
@@ -347,16 +345,14 @@ const ReassignPageWeb = (params: ReassignPageWebProps) => {
                     draggable: false,
                     detailSidebar: false,
                   }}
-                  mobileConfig={{ viewMode: "card", primaryField: "name", secondaryField: "position" }}
+                  mobileConfig={{
+                    viewMode: "card",
+                    primaryField: "name",
+                    secondaryField: "position",
+                  }}
                 />
 
-                <Flex
-                  w="100%"
-                  mt="20px"
-                  justifyContent="flex-end"
-                  align="center"
-                  gap={3}
-                >
+                <Flex w="100%" justifyContent="flex-end" align="center" gap={3}>
                   <Body color="gray.500">
                     {selectedSubs.length === 0
                       ? "Select at least one agent to continue."
@@ -370,132 +366,117 @@ const ReassignPageWeb = (params: ReassignPageWebProps) => {
                   </PrimaryMdButton>
                 </Flex>
               </Flex>
-            </Flex>
+            </InputCardAccordion>
           )}
         </Flex>
-        </Page.MainContent>
-      </Page.Root>
-    </>
+      </Page.MainContent>
+    </Page.Root>
   );
 };
+
+/* ─── Superior Card ──────────────────────────────────────────────────────── */
 
 interface SuperiorCardProps {
   superior: SalesAgent;
   onClear: () => void;
 }
 
-const SuperiorCard = ({ superior, onClear }: SuperiorCardProps) => (
-  <Flex
-    flexDir="column"
-    gap={2}
-    p={4}
-    boxShadow={"md"}
-    borderRadius={{ base: "2xl", md: "md" }}
-  >
-    <Flex gap={4} align="center" justify="space-between">
-      <Flex gap={4} align="center">
-        <Avatar.Root size="2xl">
-          <Avatar.Fallback color="var(--chakra-colors-primary)">
-            {superior.firstName.charAt(0)}
-            {superior.lastName.charAt(0)}
-          </Avatar.Fallback>
-        </Avatar.Root>
+const SuperiorCard = ({ superior, onClear }: SuperiorCardProps) => {
+  const subordinates = getSubordinates(superior.id);
 
-        <Flex flexDir="column" justifyContent="center">
-          <H4 color="var(--chakra-colors-primary)">
-            {superior.firstName + " " + superior.lastName}
-          </H4>
-          <Small>{superior.id}</Small>
-        </Flex>
-      </Flex>
-
-      <Badge
-        colorPalette="green"
-        variant="subtle"
-        px={3}
-        py={1}
-        borderRadius="full"
-        cursor="pointer"
-        onClick={onClear}
-      >
-        <LuCheck />
-        <Text ml={1}>Selected — change</Text>
-      </Badge>
-    </Flex>
-
-    <Flex flexDir="column" gap={2} p={3}>
-      <Strong color="var(--chakra-colors-primary)">Information</Strong>
-
-      {/* Desktop */}
-      <Grid
-        display={{ base: "none", md: "grid" }}
-        templateColumns="repeat(3, 1fr)"
+  return (
+    <Flex flexDir="column" gap={3}>
+      {/* Profile row */}
+      <Flex
         gap={4}
+        align="center"
+        justify="space-between"
+        px={2}
+        py={3}
+        borderRadius="xl"
+        bg="gray.50"
       >
-        <InfoItem
-          label="Position"
-          value={getPositionDesc(superior.position) ?? superior.position}
-        />
-        <InfoItem
-          label="Current Superior"
-          value={getAgentNameById(superior.superiorId ?? "") ?? "N/A"}
-        />
-        <InfoItem label="Date Hired" value={formatDate(superior.hireDate)} />
-      </Grid>
+        <Flex gap={3} align="center">
+          <Avatar.Root size="lg">
+            <Avatar.Fallback color="var(--chakra-colors-primary)">
+              {superior.firstName.charAt(0)}
+              {superior.lastName.charAt(0)}
+            </Avatar.Fallback>
+          </Avatar.Root>
+          <Flex flexDir="column">
+            <H4 color="var(--chakra-colors-primary)">
+              {superior.firstName} {superior.lastName}
+            </H4>
+            <Small color="gray.500">{superior.id}</Small>
+          </Flex>
+        </Flex>
 
-      {/* Mobile */}
-      <Flex display={{ base: "flex", md: "none" }} flexDir="column" gap={2} paddingX={2}>
-        <LabelText
-          label="Position"
-          value={getPositionDesc(superior.position) ?? superior.position}
-        />
-        <Separator />
-        <LabelText
-          label="Current Superior"
-          value={getAgentNameById(superior.superiorId ?? "") ?? "N/A"}
-        />
-        <Separator />
-        <LabelText label="Date Hired" value={formatDate(superior.hireDate)} />
+        <Badge
+          colorPalette="green"
+          variant="subtle"
+          px={3}
+          py={1}
+          borderRadius="full"
+          cursor="pointer"
+          onClick={onClear}
+        >
+          <LuCheck />
+          <Text ml={1}>Selected — change</Text>
+        </Badge>
       </Flex>
-    </Flex>
 
-    <Flex flexDir="column" gap={2} p={3}>
-      <Strong color="var(--chakra-colors-primary)">Current Team</Strong>
+      {/* Agent details */}
+      <InputCardAccordion
+        icon={<LuBriefcase size={16} />}
+        title="Agent Details"
+        subtitle="Position and employment info"
+        defaultOpen
+      >
+        <Flex flexDir="column">
+          <RowItem
+            label="Position"
+            value={getPositionDesc(superior.position) ?? superior.position}
+          />
+          <RowItem
+            label="Current Superior"
+            value={getAgentNameById(superior.superiorId ?? "") ?? "N/A"}
+          />
+          <RowItem label="Date Hired" value={formatDate(superior.hireDate)} />
+        </Flex>
+      </InputCardAccordion>
 
-      <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}>
-        {(() => {
-          const subordinates = getSubordinates(superior.id);
-          return subordinates.length > 0 ? (
-            subordinates.map((sub) => (
-              <Flex
-                flexDir={{ base: "row" }}
-                justify={{ base: "space-between", md: "flex-start" }}
-                align={{ base: "center" }}
-                gap={2}
+      {/* Current team */}
+      <InputCardAccordion
+        icon={<LuUsers size={16} />}
+        title="Current Team"
+        subtitle={
+          subordinates.length > 0
+            ? `${subordinates.length} subordinate${subordinates.length > 1 ? "s" : ""}`
+            : "No existing team"
+        }
+        defaultOpen
+      >
+        {subordinates.length > 0 ? (
+          <Flex flexDir="column">
+            {subordinates.map((sub) => (
+              <RowItem
                 key={sub.id}
-                p={2}
-              >
-                <Text color="gray.800">
-                  {sub.firstName} {sub.lastName}
-                </Text>
-                <Text display={{ base: "none", md: "block" }} color="gray.500">
-                  -
-                </Text>
-                <Text fontSize={{ base: "16px" }} color="gray.500">
-                  {getPositionDesc(sub.position) ?? sub.position}
-                </Text>
-              </Flex>
-            ))
-          ) : (
-            <GridItem colSpan={2}>
-              <Small>No subordinates yet — this will be a new team.</Small>
-            </GridItem>
-          );
-        })()}
-      </Grid>
+                label={`${sub.firstName} ${sub.lastName}`}
+                value={getPositionDesc(sub.position) ?? sub.position}
+              />
+            ))}
+          </Flex>
+        ) : (
+          <Small color="gray.500">
+            No subordinates yet — this will be a new team.
+          </Small>
+        )}
+      </InputCardAccordion>
     </Flex>
-  </Flex>
-);
+  );
+};
+
+/* ─── Summary Page ───────────────────────────────────────────────────────── */
 
 interface ReassignSummaryProps {
   superior: SalesAgent;
@@ -517,24 +498,6 @@ const ReassignSummary = ({
       title="Review Re-organization"
       description="Double-check the new superior and the agents being moved before submitting."
     >
-      <Page.ToolContent>
-        <Flex align="center" gap={3}>
-          <Flex
-            as="button"
-            align="center"
-            gap={2}
-            color="var(--chakra-colors-primary)"
-            onClick={onBack}
-            cursor="pointer"
-          >
-            <LuArrowLeft />
-            <Strong>Back to edit</Strong>
-          </Flex>
-          <PrimaryMdButton onClick={handleSubmit}>
-            Submit Re-organization
-          </PrimaryMdButton>
-        </Flex>
-      </Page.ToolContent>
       <Page.MainContent>
         <Summary
           title="Re-organization Summary"
@@ -561,7 +524,7 @@ const ReassignSummary = ({
               ],
             },
             {
-              title: `Agents to Re-organized (${agents.length})`,
+              title: `Agents to Re-organize (${agents.length})`,
               data: agents.map((a) => ({
                 label: `${a.firstName} ${a.lastName} · ${a.id}`,
                 value: `${
@@ -571,10 +534,39 @@ const ReassignSummary = ({
             },
           ]}
         />
+        <Flex
+          w="full"
+          justify="space-between"
+          align="center"
+          mb={1}
+          display={{ base: "flex", md: "none" }}
+        >
+          <IconButton
+            aria-label="Previous step"
+            size="sm"
+            variant="outline"
+            onClick={onBack}
+          >
+            <LuChevronLeft />
+          </IconButton>
+
+          <IconButton
+            aria-label="submit"
+            size="sm"
+            variant="solid"
+            onClick={handleSubmit}
+            px={3}
+          >
+            Submit Re-organization
+            <LuChevronRight />
+          </IconButton>
+        </Flex>
       </Page.MainContent>
     </Page.Root>
   );
 };
+
+/* ─── Column Definitions ─────────────────────────────────────────────────── */
 
 const columns: ColumnDef<SalesAgent>[] = [
   {
@@ -594,7 +586,7 @@ const columns: ColumnDef<SalesAgent>[] = [
     header: "Position",
     enableColumnFilter: true,
     cell: (info) => <Small>{getPositionDesc(String(info.getValue()))}</Small>,
-  }
+  },
 ];
 
 export default ReassignPageWeb;

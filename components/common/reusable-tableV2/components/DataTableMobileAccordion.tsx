@@ -13,7 +13,8 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { ChevronDown, ChevronRight, Eye } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye } from "lucide-react";
+import { RowItem } from "@/components/info-card/row-item";
 
 import type {
   DataTableFeatures,
@@ -270,9 +271,9 @@ export function DataTableMobileAccordion<TData>({
                       size="xs"
                     >
                       {isOpen ? (
-                        <ChevronDown size={16} />
+                        <ChevronUp size={16} />
                       ) : (
-                        <ChevronRight size={16} />
+                        <ChevronDown size={16} />
                       )}
                     </IconButton>
                   </HStack>
@@ -289,27 +290,11 @@ export function DataTableMobileAccordion<TData>({
                   {visibleFields.length > 0 && (
                     <VStack align="stretch" gap={2}>
                       {visibleFields.map((field) => (
-                        <HStack
+                        <RowItem
                           key={field}
-                          justify="space-between"
-                          align="flex-start"
-                          gap={4}
-                        >
-                          <Text fontSize="xs" color="gray.500" minW="110px">
-                            {getLabel(field, mobileConfig.labelMap)}
-                          </Text>
-
-                          <Text
-                            fontSize="xs"
-                            color="gray.900"
-                            fontWeight="600"
-                            textAlign="right"
-                            lineClamp={2}
-                            flex="1"
-                          >
-                            {getDisplayValue(original, field, mobileConfig)}
-                          </Text>
-                        </HStack>
+                          label={getLabel(field, mobileConfig.labelMap)}
+                          value={getDisplayValue(original, field, mobileConfig)}
+                        />
                       ))}
                     </VStack>
                   )}

@@ -233,8 +233,8 @@ export function ApprovalDetailContent({
         rounded="lg"
         borderWidth="1px"
         borderColor={statusMeta.borderColor}
-        borderLeftWidth="4px"
-        borderLeftColor={statusMeta.color}
+        // borderLeftWidth="4px"
+        // borderLeftColor={statusMeta.color}
         bg={statusMeta.bg}
         p={4}
       >

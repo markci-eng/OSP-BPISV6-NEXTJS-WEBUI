@@ -1,6 +1,7 @@
 "use client";
 
-import { Box, Separator, Text, VStack } from "@chakra-ui/react";
+import { Box, HStack, Separator, Text, VStack } from "@chakra-ui/react";
+import { User, FileText } from "lucide-react";
 import {
   SalesAgent,
   getAgentNameById,
@@ -11,7 +12,10 @@ import BottomQuickActions, {
 } from "@/claude components/drawer/bottom-quick-actions";
 import { RowItem } from "@/claude components/info-card/row-item";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { STANDARD_RADIUS, STANDARD_SPACING } from "@/lib/theme/standard-design-tokens";
+import {
+  STANDARD_RADIUS,
+  STANDARD_SPACING,
+} from "@/lib/theme/standard-design-tokens";
 
 interface TeamMemberDrawerProps {
   agent: SalesAgent | null;
@@ -26,33 +30,43 @@ function getInitials(name: string): string {
 
 function SectionCard({
   title,
+  icon,
   children,
 }: {
   title: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <Box
-      bg={BRAND_COLORS.subtleBg}
-      borderRadius={STANDARD_RADIUS.lg}
+      rounded="lg"
       borderWidth="1px"
-      borderColor={BRAND_COLORS.neutralBorder}
-      px={STANDARD_SPACING.sm}
-      pt="12px"
-      pb="10px"
+      borderColor="border.muted"
+      overflow="hidden"
     >
-      <Text
-        fontSize="11px"
-        fontWeight="700"
-        letterSpacing="0.06em"
-        textTransform="uppercase"
-        color={BRAND_COLORS.grey}
-        mb="8px"
+      <HStack
+        gap={2}
+        px={4}
+        py={2.5}
+        borderBottomWidth="1px"
+        borderColor="border.muted"
+        bg="bg.subtle"
       >
-        {title}
-      </Text>
-      <Separator borderColor={BRAND_COLORS.neutralBorder} mb="10px" />
-      {children}
+        {icon && <Box color="fg.muted">{icon}</Box>}
+        <Text
+          fontSize="xs"
+          fontWeight="semibold"
+          color="fg.muted"
+          textTransform="uppercase"
+          letterSpacing="wider"
+        >
+          {title}
+        </Text>
+      </HStack>
+
+      <Box bg="bg" p={{ base: 3, md: 4 }}>
+        {children}
+      </Box>
     </Box>
   );
 }
@@ -70,7 +84,7 @@ export function TeamMemberDrawer({
         meta={`${getPositionDesc(agent.position)} · ${agent.branch}`}
       />
 
-      <SectionCard title="Basic Information">
+      <SectionCard title="Basic Information" icon={<User size={14} />}>
         <RowItem label="Agent ID" value={agent.id} />
         <RowItem label="Position" value={getPositionDesc(agent.position)} />
         <RowItem label="Status" value={agent.employeeStatus} />
@@ -82,7 +96,7 @@ export function TeamMemberDrawer({
         />
       </SectionCard>
 
-      <SectionCard title="Document Status">
+      <SectionCard title="Document Status" icon={<FileText size={14} />}>
         <RowItem
           label="Contract"
           value={agent.isContractPrinted ? "Printed" : "Not Printed"}

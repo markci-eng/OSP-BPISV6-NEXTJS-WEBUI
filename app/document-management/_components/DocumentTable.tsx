@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Box, Text, Badge, HStack, Separator } from "@chakra-ui/react";
-import { Plus, Trash2, Ban, ArrowRightLeft } from "lucide-react";
+import { Box, Text, Badge, HStack, Separator, VStack, Flex } from "@chakra-ui/react";
+import { Plus, Trash2, Ban, ArrowRightLeft, FileText, User } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -133,74 +133,179 @@ const assignedDocumentColumns: ColumnDef<AssignedDocRow>[] = [
   },
 ];
 
-function AssignedDocumentDetail({ row }: { row: AssignedDocRow }) {
-  const detailItems = [
-    ["Document Type", row.documentType],
-    ["Doc Code", row.documentCode],
-    ["Control No", row.controlNo],
-    [
-      "Range",
-      `${row.documentStart}-${row.documentEnd}${
-        row.documentExt ? ` (${row.documentExt})` : ""
-      }`,
-    ],
-    ["Qty In Unit", row.qtyInUnit],
-    ["Remaining", String(row.remainingQtyNum)],
-    ["Expiry", row.expiryDate],
-    ["Status", row.assignedStatus],
-  ] as const;
+const ASSIGNED_STATUS_META = {
+  Assigned: {
+    colorPalette: "green",
+    color: "green.600",
+    bg: "green.50",
+    borderColor: "green.200",
+  },
+  Unassigned: {
+    colorPalette: "gray",
+    color: "gray.600",
+    bg: "gray.50",
+    borderColor: "gray.200",
+  },
+  "Unknown Employee": {
+    colorPalette: "orange",
+    color: "orange.600",
+    bg: "orange.50",
+    borderColor: "orange.200",
+  },
+} as const;
 
+function AssignedDocStatusBadge({ status }: { status: string }) {
+  const meta =
+    ASSIGNED_STATUS_META[status as keyof typeof ASSIGNED_STATUS_META] ??
+    ASSIGNED_STATUS_META.Unassigned;
   return (
-    <Box
-      rounded="xl"
-      borderWidth="1px"
-      borderColor="border.muted"
-      bg="bg"
-      p={4}
-      boxShadow="md"
-    >
-      <HStack gap={3} align="center">
-        <Box
-          w="48px"
-          h="48px"
-          borderRadius="full"
-          borderColor={"black"}
-          bg="darkgrey"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          fontWeight="semibold"
-          fontSize="lg"
-        >
-          {(row.employeeName || "?").charAt(0)}
-        </Box>
+    <Badge colorPalette={meta.colorPalette} variant="subtle" flexShrink={0}>
+      {status}
+    </Badge>
+  );
+}
 
-        <Box>
-          <Text fontWeight="semibold">{row.employeeName}</Text>
-          <Text fontSize="12px" color="fg.muted">
-            {row.salesForceId || "(no salesForceId)"}
-          </Text>
-        </Box>
-      </HStack>
-
-      <Box
-        mt={6}
-        display="grid"
-        gridTemplateColumns="repeat(2, minmax(0, 1fr))"
-        gap={4}
+function DocSectionCard({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <Box rounded="lg" borderWidth="1px" borderColor="border.muted" overflow="hidden">
+      <HStack
+        gap={2}
+        px={4}
+        py={2.5}
+        borderBottomWidth="1px"
+        borderColor="border.muted"
+        bg="bg.subtle"
       >
-        {detailItems.map(([label, value]) => (
-          <Box key={label}>
-            <Text fontSize="11px" color="fg.muted" mb="0.5">
-              {label}
-            </Text>
-            <Text fontSize="sm" fontWeight="medium" color="fg">
-              {value}
-            </Text>
-          </Box>
-        ))}
+        {icon && <Box color="fg.muted">{icon}</Box>}
+        <Text
+          fontSize="xs"
+          fontWeight="semibold"
+          color="fg.muted"
+          textTransform="uppercase"
+          letterSpacing="wider"
+        >
+          {title}
+        </Text>
+      </HStack>
+      <Box bg="bg" p={{ base: 3, md: 4 }}>
+        {children}
       </Box>
     </Box>
+  );
+}
+
+function DocDetailItem({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <Box width="full">
+      <Flex align="center" py={1.5} fontSize="sm">
+        <Text color="gray.500" whiteSpace="nowrap">
+          {label}
+        </Text>
+        <Box
+          flex="1"
+          mx={3}
+          borderBottom="1px dashed"
+          borderColor="gray.300"
+          transform="translateY(2px)"
+        />
+        <Text fontWeight="medium" textAlign="right" whiteSpace="nowrap">
+          {value ?? "-"}
+        </Text>
+      </Flex>
+    </Box>
+  );
+}
+
+function AssignedDocumentDetail({ row }: { row: AssignedDocRow }) {
+  const statusMeta =
+    ASSIGNED_STATUS_META[row.assignedStatus as keyof typeof ASSIGNED_STATUS_META] ??
+    ASSIGNED_STATUS_META.Unassigned;
+
+  const range = `${row.documentStart}-${row.documentEnd}${
+    row.documentExt ? ` (${row.documentExt})` : ""
+  }`;
+
+  return (
+    <VStack align="stretch" gap={{ base: 3, md: 4 }}>
+      <Box
+        rounded="lg"
+        borderWidth="1px"
+        borderColor={statusMeta.borderColor}
+        bg={statusMeta.bg}
+        p={4}
+      >
+        <HStack justify="space-between" align="start" gap={3}>
+          <Box minW={0}>
+            <Text
+              fontSize="10px"
+              fontWeight="700"
+              letterSpacing="0.08em"
+              textTransform="uppercase"
+              color="fg.muted"
+              mb={1}
+            >
+              Assigned Document
+            </Text>
+            <Text fontSize="md" fontWeight="semibold" lineClamp={2} color="fg">
+              {row.documentType}
+            </Text>
+          </Box>
+          <AssignedDocStatusBadge status={row.assignedStatus} />
+        </HStack>
+      </Box>
+
+      <DocSectionCard title="Assignee" icon={<User size={13} />}>
+        <HStack gap={3} align="center">
+          <Box
+            w="40px"
+            h="40px"
+            borderRadius="full"
+            bg="bg.subtle"
+            borderWidth="1px"
+            borderColor="border.muted"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            fontWeight="semibold"
+            fontSize="md"
+            color="fg"
+            flexShrink={0}
+          >
+            {(row.employeeName || "?").charAt(0)}
+          </Box>
+          <Box minW={0}>
+            <Text fontWeight="semibold" fontSize="sm">
+              {row.employeeName}
+            </Text>
+            <Text fontSize="xs" color="fg.muted">
+              {row.salesForceId || "(no salesForceId)"}
+            </Text>
+          </Box>
+        </HStack>
+      </DocSectionCard>
+
+      <DocSectionCard title="Document Details" icon={<FileText size={13} />}>
+        <DocDetailItem label="Document Type" value={row.documentType} />
+        <DocDetailItem label="Doc Code" value={row.documentCode} />
+        <DocDetailItem label="Control No" value={row.controlNo} />
+        <DocDetailItem label="Range" value={range} />
+        <DocDetailItem label="Qty In Unit" value={row.qtyInUnit} />
+        <DocDetailItem label="Remaining" value={String(row.remainingQtyNum)} />
+        <DocDetailItem label="Expiry" value={row.expiryDate} />
+        <DocDetailItem
+          label="Status"
+          value={<AssignedDocStatusBadge status={row.assignedStatus} />}
+        />
+      </DocSectionCard>
+    </VStack>
   );
 }
 
@@ -328,13 +433,13 @@ export default function DocumentTable({
     () => [
       {
         id: "block-document",
-        label: "Block Document",
+        label: "Block",
         icon: Ban,
         onClick: (row) => openBlockModal(row),
       },
       {
         id: "reassign-document",
-        label: "Reassign Document",
+        label: "Reassign",
         icon: ArrowRightLeft,
         separator: true,
         onClick: (row) => openReassignModal(row),

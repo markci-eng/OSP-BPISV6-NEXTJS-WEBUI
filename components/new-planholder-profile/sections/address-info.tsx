@@ -93,21 +93,32 @@ export function AddressCard({
                 display="flex"
                 alignItems="center"
                 gap={1}
-                px={2}
+                px={2.5}
                 py={1}
                 borderRadius="full"
                 border="1px solid"
-                borderColor="gray.200"
-                color="gray.400"
+                borderColor="rgba(255,255,255,0.55)"
+                color="var(--chakra-colors-primary)"
                 fontSize="xs"
-                fontWeight="medium"
-                _hover={{
-                  borderColor: "var(--chakra-colors-primary)",
-                  color: "var(--chakra-colors-primary)",
-                  bg: "var(--chakra-colors-primary-disabled)/10",
-                }}
-                transition="all 0.15s"
+                fontWeight="semibold"
                 cursor="pointer"
+                userSelect="none"
+                style={{
+                  background:
+                    "linear-gradient(160deg, rgba(255,255,255,0.38) 0%, rgba(255,255,255,0.10) 100%), var(--chakra-colors-primary-disabled)/50",
+                  boxShadow:
+                    "inset 0 1.5px 0 rgba(255,255,255,0.80), inset 0 -0.5px 0 rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.08)",
+                  backdropFilter: "blur(12px) saturate(160%)",
+                  WebkitBackdropFilter: "blur(12px) saturate(160%)",
+                  transition:
+                    "background 0.22s ease, box-shadow 0.22s ease, transform 0.14s ease",
+                }}
+                _hover={{
+                  bg: "linear-gradient(160deg, rgba(255,255,255,0.50) 0%, rgba(255,255,255,0.18) 100%), var(--chakra-colors-primary-disabled)/70",
+                  boxShadow:
+                    "inset 0 1.5px 0 rgba(255,255,255,0.90), inset 0 -0.5px 0 rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.12)",
+                }}
+                _active={{ transform: "scale(0.92)" }}
               >
                 <LuMapPin size={11} />
                 <Text as="span" fontSize="10px">

@@ -53,18 +53,6 @@ const AgentInfoTabsMobile = ({ agent }: AgentInfoTabsMobileProps) => {
         onToggle={() => setPersonalOpen((p) => !p)}
       />
 
-      <AgentEmploymentInfoCard
-        agent={agent}
-        isOpen={employmentOpen}
-        onToggle={() => setEmploymentOpen((p) => !p)}
-      />
-
-      <AgentContactInfoCard
-        agent={agent}
-        isOpen={contactOpen}
-        onToggle={() => setContactOpen((p) => !p)}
-      />
-
       <PlanholderAddressCard
         phAddress={
           agent?.address
@@ -88,6 +76,18 @@ const AgentInfoTabsMobile = ({ agent }: AgentInfoTabsMobileProps) => {
         }
         isOpen={addressOpen}
         onToggle={() => setAddressOpen((p) => !p)}
+      />
+
+      <AgentContactInfoCard
+        agent={agent}
+        isOpen={contactOpen}
+        onToggle={() => setContactOpen((p) => !p)}
+      />
+
+      <AgentEmploymentInfoCard
+        agent={agent}
+        isOpen={employmentOpen}
+        onToggle={() => setEmploymentOpen((p) => !p)}
       />
     </Flex>
   );
