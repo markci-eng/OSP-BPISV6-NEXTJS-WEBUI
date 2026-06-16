@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
-import { Box, Flex, Separator, Strong } from "@chakra-ui/react";
-import { LuUser } from "react-icons/lu";
+import { Box, Flex, Separator } from "@chakra-ui/react";
+import { LuFileBadge2, LuUsers } from "react-icons/lu";
+
 import { PlanholderInfoType } from "@/components/plan-management/planholders/planholders.types";
+import { Card } from "@/claude components/card-accordion/card";
+import InfoCard from "@/claude components/info-card/info-card";
+import { RowItem } from "@/claude components/info-card/row-item";
+
 import { ClaimInfoState, PayeeInfo, composePayeeName } from "./claims.types";
-import Summary from "@/components/forms/Summary";
 
 interface ClaimFormSummaryProps {
   planholder?: PlanholderInfoType;
@@ -39,126 +42,80 @@ const ClaimFormSummary = ({
   claimInfo,
   payees,
 }: ClaimFormSummaryProps) => {
-  const isPlural = payees.length > 1;
-
   return (
-      <Summary
-        title="Claim Summary"
-        subtitle="Verify the information below before submitting the claim."
-        data={[
-          {
-            title: "Planholder Information",
-            data: [
-              { label: "Name", value: composePlanholderName(planholder) },
-              {
-                label: "Date of Birth",
-                value: formatDate(planholder?.dateOfBirth?.toDateString()),
-              },
-              { label: "Gender", value: planholder?.gender ?? "—" },
-              { label: "Civil Status", value: planholder?.civilStatus ?? "—" },
-              { label: "Nationality", value: planholder?.nationality ?? "—" },
-            ],
-          },
-          {
-            title: "Claim Information",
-            data: [
-              { label: "LPA Number", value: planholder?.lpaNumber ?? "—" },
-              {
-                label: "Incident Date",
-                value: formatDate(claimInfo.incidentDate),
-              },
-              { label: "Incident Type", value: claimInfo.incidentType || "—" },
-              { label: "Claim Type", value: claimInfo.claimType || "—" },
-            ],
-          },
-        ]}
-      >
-        <Summary.BottomBox>
-          <Box px={{ base: 4, md: 6 }} pb={{ base: 4, md: 6 }}>
-            <Strong color="var(--chakra-colors-primary)">
-              {isPlural ? `Claimants (${payees.length})` : "Claimant"}
-            </Strong>
+    <Box py={3}>
+      <InfoCard>
+        Please review all the information below before submitting. Once
+        submitted, changes may require additional processing time.
+      </InfoCard>
 
-            <Separator my={3} />
+      <Flex direction="column" gap={4} mt={5}>
+        {/* Planholder */}
+        <Card
+          activeIcon={<LuFileBadge2 />}
+          title="Planholder Information"
+          subtitle={planholder?.lpaNumber ?? ""}
+        >
+          <RowItem label="LPA Number" value={planholder?.lpaNumber} />
+          <RowItem label="Full Name" value={composePlanholderName(planholder)} />
+          <RowItem
+            label="Date of Birth"
+            value={formatDate(planholder?.dateOfBirth?.toDateString())}
+          />
+          <RowItem label="Gender" value={planholder?.gender} />
+          <RowItem label="Civil Status" value={planholder?.civilStatus} />
+          <RowItem label="Nationality" value={planholder?.nationality} />
+        </Card>
 
-            <Flex flexDir="column" gap={4} mt={3} px={1}>
-              {payees.length === 0 ? (
-                <Box
-                  p={6}
-                  borderRadius="md"
-                  borderWidth={1}
-                  borderStyle="dashed"
-                  borderColor="border"
-                  textAlign="center"
-                  color="gray.500"
-                >
-                  No claimants have been added.
-                </Box>
-              ) : (
-                payees.map((payee, index) => (
-                  <Box
-                    key={payee.id}
-                    pt={index === 0 ? 0 : 5}
-                    borderTopWidth={index === 0 ? 0 : 1}
-                    borderColor="border"
-                    px={1}
-                  >
-                    <Flex gap={2} align="center" mb={4}>
-                      <Strong fontSize="md">
-                        {composePayeeName(payee)}
-                      </Strong>
-                    </Flex>
+        {/* Claim Info */}
+        <Card
+          activeIcon={<LuFileBadge2 />}
+          title="Claim Information"
+          subtitle=""
+        >
+          <RowItem
+            label="Incident Date"
+            value={formatDate(claimInfo.incidentDate)}
+          />
+          <RowItem label="Incident Type" value={claimInfo.incidentType} />
+          <RowItem label="Claim Type" value={claimInfo.claimType} />
+        </Card>
 
-                    <Flex flexDir="column" gap={{ base: 2, md: 4 }}>
-                      <Summary.Box
-                        title=""
-                        data={[
-                          {
-                            label: "Relationship",
-                            value: payee.relToPh || "—",
-                          },
-                          { label: "Email", value: payee.email || "—" },
-                          {
-                            label: "Contact",
-                            value: payee.contactNumber || "—",
-                          },
-                        ]}
-                      />
-
-                      <Box>
-                        <Flex gap={2} align="center" mb={4}>
-                          <Strong fontSize="md">
-                            Bank / Payout Information
-                          </Strong>
-                        </Flex>
-                        <Summary.Box
-                          title=""
-                          data={[
-                            {
-                              label: "Payout Channel",
-                              value: payee.channel || "—",
-                            },
-                            { label: "Bank Name", value: payee.bankName || "—" },
-                            {
-                              label: "Account Name",
-                              value: payee.accountName || "—",
-                            },
-                            {
-                              label: "Account No.",
-                              value: payee.accountNo || "—",
-                            },
-                          ]}
-                        />
-                      </Box>
-
-                    </Flex>
-                  </Box>
-                ))
-              )}
-            </Flex>
+        {/* Claimants */}
+        {payees.length === 0 ? (
+          <Box
+            p={6}
+            borderRadius="md"
+            borderWidth={1}
+            borderStyle="dashed"
+            borderColor="border"
+            textAlign="center"
+            color="gray.500"
+            fontSize="sm"
+          >
+            No claimants have been added.
           </Box>
-        </Summary.BottomBox>
-      </Summary>
+        ) : (
+          payees.map((payee) => (
+            <Card
+              key={payee.id}
+              activeIcon={<LuUsers />}
+              title={composePayeeName(payee)}
+              subtitle={payee.relToPh || "Claimant"}
+            >
+              <RowItem label="Relationship" value={payee.relToPh} />
+              <RowItem label="Email" value={payee.email} />
+              <RowItem label="Contact Number" value={payee.contactNumber} />
+              <Separator my={3} />
+              <RowItem label="Payout Channel" value={payee.channel} />
+              <RowItem label="Bank Name" value={payee.bankName} />
+              <RowItem label="Account Name" value={payee.accountName} />
+              <RowItem label="Account No." value={payee.accountNo} />
+            </Card>
+          ))
+        )}
+      </Flex>
+    </Box>
   );
 };
 

@@ -1,10 +1,15 @@
 "use client";
 
 import React from "react";
-import { LuTrash, LuPlus, LuTriangleAlert } from "react-icons/lu";
+import {
+  LuTrash,
+  LuPlus,
+  LuTriangleAlert,
+} from "react-icons/lu";
 import {
   Accordion,
   Badge,
+  Box,
   Button,
   Flex,
   Grid,
@@ -17,10 +22,12 @@ import {
   SecondaryLgFlexButton,
   SelectFloatingLabel,
 } from "st-peter-ui";
-import { PayeeInfo, blankPayee, composePayeeName } from "./claims.types";
+
 import FormTitle from "@/components/texts/FormTitle";
-import Caption from "@/components/texts/Caption";
 import SectionTitle from "@/components/texts/SectionTitle";
+import InfoCard from "@/claude components/info-card/info-card";
+
+import { PayeeInfo, blankPayee, composePayeeName } from "./claims.types";
 
 const SOFT_PAYEE_LIMIT = 3;
 
@@ -58,15 +65,13 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
   const overSoftLimit = payees.length > SOFT_PAYEE_LIMIT;
 
   return (
-    <Flex flexDir="column" gap={4} marginX="auto" w="full">
-      <Flex flexDir="column">
-        <Caption>
-          We've pre-filled the form using the uploaded claimant documents.
-          Please review and correct if needed.
-        </Caption>
-      </Flex>
+    <Flex flexDir="column" gap={4} w="full" py={3}>
+      <InfoCard>
+        We've pre-filled the form using the uploaded claimant documents. Please
+        review and correct the details if needed.
+      </InfoCard>
 
-      {overSoftLimit ? (
+      {overSoftLimit && (
         <Flex
           align="center"
           gap={2}
@@ -76,11 +81,12 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
           color="yellow.800"
           borderWidth={1}
           borderColor="yellow.200"
+          fontSize="xs"
         >
-          <LuTriangleAlert />
-          <Caption>{`More than ${SOFT_PAYEE_LIMIT} claimants have been added. This is allowed only for special cases and may require additional review.`}</Caption>
+          <Box as={LuTriangleAlert} flexShrink={0} />
+          {`More than ${SOFT_PAYEE_LIMIT} claimants have been added. This is allowed only for special cases and may require additional review.`}
         </Flex>
-      ) : null}
+      )}
 
       <Accordion.Root
         multiple
@@ -148,10 +154,7 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
                       <SectionTitle>Personal Information</SectionTitle>
                       <Separator my={2} />
                       <Grid
-                        templateColumns={{
-                          base: "1fr",
-                          md: "repeat(2, 1fr)",
-                        }}
+                        templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
                         gapX={3}
                         gapY={0}
                         pt={1}
@@ -213,15 +216,12 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
                       </Grid>
                     </Flex>
 
-                    {/* Bank Info */}
+                    {/* Bank / Payout Info */}
                     <Flex flexDir="column">
                       <SectionTitle>Bank / Payout Information</SectionTitle>
                       <Separator my={2} />
                       <Grid
-                        templateColumns={{
-                          base: "1fr",
-                          md: "repeat(2, 1fr)",
-                        }}
+                        templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
                         gapX={3}
                         gapY={0}
                         pt={1}

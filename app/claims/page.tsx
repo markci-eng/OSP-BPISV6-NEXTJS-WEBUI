@@ -1,28 +1,17 @@
 "use client";
 
 import React from "react";
-import {
-  Box,
-  Button,
-  CloseButton,
-  Dialog,
-  Flex,
-  Portal,
-  Strong,
-  Text,
-} from "@chakra-ui/react";
-import { PrimaryMdButton } from "st-peter-ui";
+import { Box } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import {
-  LuFileBadge2,
-  LuUsers,
-  LuFileText,
-  LuTriangleAlert,
-} from "react-icons/lu";
+import { FaFileAlt } from "react-icons/fa";
+import { FaFileShield } from "react-icons/fa6";
+import { LuUsers } from "react-icons/lu";
 
-import FormSteps, { StepItem } from "@/components/FormSteps";
+import FormSteps from "@/claude components/FormSteps";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { PlanholderInfoData } from "@/app/plan-management/data/planholder-info.data";
 import { PlanholderInfoType } from "@/components/plan-management/planholders/planholders.types";
+import Page from "@/components/layout/page/Page";
 
 import ClaimInfoForm from "./claim-info-form";
 import ClaimsPayeeForm from "./claim-payee";
@@ -33,7 +22,6 @@ import {
   initialClaimInfo,
   initialPayees,
 } from "./claims.types";
-import Page from "@/components/layout/page/Page";
 
 const PLANHOLDER_STORAGE_KEY = "claim:planholder-lpa";
 
@@ -47,13 +35,14 @@ const resolvePlanholder = (
 
 const ClaimsPage = () => {
   const router = useRouter();
+  const { messageBox } = useMessageDialog();
+
   const [planholder, setPlanholder] = React.useState<
     PlanholderInfoType | undefined
   >(() => PlanholderInfoData[0]);
   const [claimInfo, setClaimInfo] =
     React.useState<ClaimInfoState>(initialClaimInfo);
   const [payees, setPayees] = React.useState<PayeeInfo[]>(initialPayees);
-  const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [currentStep, setCurrentStep] = React.useState(0);
 
   // Resolve planholder from ?lpa=... or sessionStorage on mount.
@@ -72,17 +61,25 @@ const ClaimsPage = () => {
     setPlanholder(resolvePlanholder(fromQuery ?? stored));
   }, []);
 
-  const handleSubmitClick = () => setConfirmOpen(true);
-
-  const handleConfirmSubmit = () => {
-    setConfirmOpen(false);
-    router.push("/claims/success");
+  const handleSubmit = async () => {
+    const confirmed = await messageBox({
+      title: "Confirm Claim Submission",
+      message:
+        "This claim is subject to review and confirmation by our Claims Department. You will be notified once verification is complete. Are you sure you want to submit?",
+      variant: "warning",
+      confirmText: "Confirm & Submit",
+      showCancel: true,
+      cancelText: "Cancel",
+    });
+    if (confirmed) {
+      router.push("/claims/success");
+    }
   };
 
-  const steps: StepItem[] = [
+  const stepsData = [
     {
       title: "Claim Info",
-      icon: LuFileBadge2,
+      icon: FaFileAlt,
       content: (
         <ClaimInfoForm
           planholder={planholder}
@@ -92,13 +89,13 @@ const ClaimsPage = () => {
       ),
     },
     {
-      title: "Payee",
+      title: "Claimants",
       icon: LuUsers,
       content: <ClaimsPayeeForm payees={payees} onPayeesChange={setPayees} />,
     },
     {
       title: "Summary",
-      icon: LuFileText,
+      icon: FaFileShield,
       content: (
         <ClaimFormSummary
           planholder={planholder}
@@ -110,74 +107,24 @@ const ClaimsPage = () => {
   ];
 
   return (
-    <>
-      <Page.Root
-        title="Claim Application"
-        description="Please fill out the following details."
-      >
-        <Page.MainContent>
-          <Box mt={"-30px"}>
-            <FormSteps
-              stepsData={steps}
-              title=""
-              description=""
-              currentStep={currentStep}
-              setCurrentStep={setCurrentStep}
-            />
-          </Box>
-          <Dialog.Root
-            open={confirmOpen}
-            onOpenChange={(e) => setConfirmOpen(e.open)}
-            size={{ base: "full", md: "md" }}
-            lazyMount
-          >
-            <Portal>
-              <Dialog.Backdrop />
-              <Dialog.Positioner p={{ base: 0, md: undefined }}>
-                <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
-                  <Dialog.Header>
-                    <Flex align="center" gap={2}>
-                      <LuTriangleAlert color="var(--chakra-colors-orange-500)" />
-                      <Dialog.Title>
-                        <Strong color="gray.700">
-                          Confirm Claim Submission
-                        </Strong>
-                      </Dialog.Title>
-                    </Flex>
-                  </Dialog.Header>
-                  <Dialog.Body>
-                    <Text color="gray.600">
-                      Please note that this claim is{" "}
-                      <Text as="span" fontWeight="bold">
-                        subject to review and confirmation
-                      </Text>{" "}
-                      by our Claims Department. You will be notified once the
-                      verification process has been completed.
-                    </Text>
-                    <Text color="gray.600" mt={3}>
-                      Are you sure you want to submit this claim?
-                    </Text>
-                  </Dialog.Body>
-                  <Dialog.Footer>
-                    <Dialog.ActionTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        Cancel
-                      </Button>
-                    </Dialog.ActionTrigger>
-                    <PrimaryMdButton onClick={handleConfirmSubmit}>
-                      Confirm &amp; Submit
-                    </PrimaryMdButton>
-                  </Dialog.Footer>
-                  <Dialog.CloseTrigger asChild>
-                    <CloseButton size="sm" />
-                  </Dialog.CloseTrigger>
-                </Dialog.Content>
-              </Dialog.Positioner>
-            </Portal>
-          </Dialog.Root>
-        </Page.MainContent>
-      </Page.Root>
-    </>
+    <Page.Root
+      title="Claim Application"
+      description="Please fill out the following details."
+    >
+      <Page.MainContent>
+        <Box mt="-30px">
+          <FormSteps
+            stepsData={stepsData}
+            title=""
+            description=""
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            onStepsComplete={handleSubmit}
+            submitButtonText="Submit Claim"
+          />
+        </Box>
+      </Page.MainContent>
+    </Page.Root>
   );
 };
 

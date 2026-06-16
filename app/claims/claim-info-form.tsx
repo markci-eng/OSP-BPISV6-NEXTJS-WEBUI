@@ -3,11 +3,15 @@
 import React from "react";
 import { Box, createListCollection, Flex, Grid, Text } from "@chakra-ui/react";
 import { InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
+import { LuCalendar, LuUpload, LuUser } from "react-icons/lu";
+
 import SingleFileUpload from "@/components/inputs/single-file-upload";
 import { PlanholderInfoType } from "@/components/plan-management/planholders/planholders.types";
+import { Card } from "@/claude components/card-accordion/card";
+import InfoCard from "@/claude components/info-card/info-card";
+import { RowItem } from "@/claude components/info-card/row-item";
+
 import { ClaimInfoState } from "./claims.types";
-import Caption from "@/components/texts/Caption";
-import Card from "@/components/cards/Card";
 
 interface DocReqLabel {
   label: string;
@@ -65,16 +69,17 @@ const incidentTypes = createListCollection({
 });
 
 const composePlanholderName = (p?: PlanholderInfoType): string => {
-  if (!p) return "";
-  return [p.firstName, p.middleName, p.lastName, p.suffix]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  if (!p) return "—";
+  return (
+    [p.firstName, p.middleName, p.lastName, p.suffix]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || "—"
+  );
 };
 
-// Wraps SingleFileUpload so a tap anywhere on the card opens the file picker
-// (one click). Clicks on the component's own buttons (Upload/Replace/Remove)
-// are left alone so they keep their existing behavior.
+// Wraps SingleFileUpload so a tap anywhere on the card opens the file picker.
+// Clicks on the component's own buttons (Upload/Replace/Remove) are left alone.
 const ClickableUpload = ({ doc }: { doc: DocReqLabel }) => {
   const ref = React.useRef<HTMLDivElement>(null);
   const [file, setFile] = React.useState<File | null>(null);
@@ -97,8 +102,6 @@ const ClickableUpload = ({ doc }: { doc: DocReqLabel }) => {
       borderColor={uploaded ? "green.500" : "border"}
       transition="border-color 0.15s"
       css={{
-        // make the inner card fill the wrapper so cards align in height;
-        // drop its own border/bg so the wrapper is the single visible frame
         "& > div": {
           height: "100%",
           width: "100%",
@@ -106,10 +109,8 @@ const ClickableUpload = ({ doc }: { doc: DocReqLabel }) => {
           boxShadow: "none",
           background: uploaded ? "var(--chakra-colors-green-50)" : undefined,
         },
-        // remove the leading document icon, keep button icons
         "& svg": { display: "none" },
         "& button svg": { display: "inline-block" },
-        // on mobile, let the action button take the full width
         "@media (max-width: 48em)": {
           "& button": { width: "100%" },
         },
@@ -140,74 +141,55 @@ const ClaimInfoForm = ({
   const planholderName = composePlanholderName(planholder);
 
   return (
-    <Flex flexDir="column" gap={4}>
-      {/* Planholder Detail */}
-      <Card.Root title="Planholder Detail">
-        <Card.MainContent>
-          <Grid
-            templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
-            gapX={{
-              base: 2,
-            }}
-          >
-            <InputFloatingLabel
-              label="LPA Number"
-              value={planholder?.lpaNumber ?? ""}
-              readOnly
-            />
-            <InputFloatingLabel
-              label="Planholder Name"
-              value={planholderName}
-              readOnly
-            />
-            <InputFloatingLabel
-              label="Date of Birth"
-              type="date"
-              value={
-                planholder?.dateOfBirth
-                  ? new Date(planholder.dateOfBirth).toISOString().split("T")[0]
-                  : ""
-              }
-              readOnly
-            />
-            <InputFloatingLabel
-              label="Gender"
-              value={planholder?.gender ?? ""}
-              readOnly
-            />
-            <InputFloatingLabel
-              label="Civil Status"
-              value={planholder?.civilStatus ?? ""}
-              readOnly
-            />
-            <InputFloatingLabel
-              label="Nationality"
-              value={planholder?.nationality ?? ""}
-              readOnly
-            />
-          </Grid>
-        </Card.MainContent>
-      </Card.Root>
+    <Box py={3}>
+      <InfoCard>
+        Please ensure all required documents are ready and the incident details
+        are accurate before proceeding to the next step.
+      </InfoCard>
 
-      {/* Claim Info */}
-      <Card.Root title="Incident Details">
-        <Card.MainContent>
-          <Caption>Provide the incident details for this claim.</Caption>
+      <Flex flexDir="column" gap={4} mt={5}>
+        {/* Planholder Detail */}
+        <Card
+          activeIcon={<LuUser />}
+          title="Planholder Detail"
+          subtitle={planholder?.lpaNumber ?? ""}
+        >
+          <RowItem label="LPA Number" value={planholder?.lpaNumber} />
+          <RowItem label="Full Name" value={planholderName} />
+          <RowItem
+            label="Date of Birth"
+            value={
+              planholder?.dateOfBirth
+                ? new Date(planholder.dateOfBirth).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                : "—"
+            }
+          />
+          <RowItem label="Gender" value={planholder?.gender} />
+          <RowItem label="Civil Status" value={planholder?.civilStatus} />
+          <RowItem label="Nationality" value={planholder?.nationality} />
+        </Card>
+
+        {/* Incident Details */}
+        <Card
+          activeIcon={<LuCalendar />}
+          title="Incident Details"
+          subtitle="Provide the details of the incident for this claim"
+        >
           <Grid
             templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
-            gapX={{
-              base: 2,
-            }}
+            gap={3}
+            mt={2}
           >
             <InputFloatingLabel
               label="Incident Date"
               type="date"
               value={claimInfo.incidentDate}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                onClaimInfoChange({
-                  ...claimInfo,
-                  incidentDate: e.target.value,
-                })
+                onClaimInfoChange({ ...claimInfo, incidentDate: e.target.value })
               }
             />
             <SelectFloatingLabel
@@ -222,33 +204,33 @@ const ClaimInfoForm = ({
               }
             />
           </Grid>
-        </Card.MainContent>
-      </Card.Root>
+        </Card>
 
-      {/* Required Documents */}
-      <Card.Root title="Required Documents">
-        <Card.MainContent>
-          <Box mb={2}>
-            <Caption>
-              Upload one document per item. PDF, PNG or JPG up to 20MB.
-            </Caption>
-          </Box>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={2}>
+        {/* Required Documents */}
+        <Card
+          activeIcon={<LuUpload />}
+          title="Required Documents"
+          subtitle="Upload one document per item — PDF, PNG or JPG up to 20 MB"
+        >
+          <Grid
+            templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+            gap={2}
+            mt={2}
+          >
             {requiredDocs.map((doc, index) => (
               <ClickableUpload key={index} doc={doc} />
             ))}
           </Grid>
-
-          <Text fontSize="xs" color="gray.400" mt={2} px={2}>
+          <Text fontSize="xs" color="gray.400" mt={3}>
             Items marked with{" "}
             <Text as="span" color="red.500">
               *
             </Text>{" "}
             are required.
           </Text>
-        </Card.MainContent>
-      </Card.Root>
-    </Flex>
+        </Card>
+      </Flex>
+    </Box>
   );
 };
 

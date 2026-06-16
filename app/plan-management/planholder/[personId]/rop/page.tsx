@@ -1,34 +1,18 @@
 "use client";
 
-import { Box } from "@chakra-ui/react";
-import { useRouter } from "next/navigation";
-import { Breadcrumb } from "st-peter-ui";
+import { useParams, useRouter } from "next/navigation";
+import { RopPage } from "@/components/plan-management/planholder-profile/components/rop/rop-page";
 
-import { RopPage } from "@splpi/operations";
-
-const page = () => {
-  const breadcrumbItems = [
-    {
-      label: "Home",
-      href: "/",
-    },
-
-    {
-      label: "Return of Premium",
-      href: "/rop",
-    },
-  ];
+export default function Page() {
   const router = useRouter();
-  return (
-    <Box p={4} mx="auto">
-      <Breadcrumb items={breadcrumbItems} />
-      <RopPage
-        onClick={() =>
-          router.push("/plan-management/planholder/PI13253/rop-payout")
-        }
-      />
-    </Box>
-  );
-};
+  const params = useParams();
+  const personId = params?.personId as string;
 
-export default page;
+  return (
+    <RopPage
+      onProceed={() =>
+        router.push(`/plan-management/planholder/${personId}/rop-payout`)
+      }
+    />
+  );
+}

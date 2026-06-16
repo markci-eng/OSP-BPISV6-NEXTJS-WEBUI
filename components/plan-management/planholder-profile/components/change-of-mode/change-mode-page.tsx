@@ -62,7 +62,7 @@ export function ChangeModePage({
       },
     },
     {
-      title: "Application Summary",
+      title: "Summary",
       icon: FaFileShield,
       content: (
         <ChangeModeSummaryPage

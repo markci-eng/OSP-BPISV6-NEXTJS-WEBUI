@@ -1,37 +1,19 @@
 "use client";
 
-import { Box, Flex } from "@chakra-ui/react";
-import { RopStepPage } from "@splpi/operations";
-import React from "react";
-import { useRouter } from "next/navigation";
-import { Breadcrumb } from "st-peter-ui";
-const page = () => {
+import { useParams, useRouter } from "next/navigation";
+import { RopPayoutPage } from "@/components/plan-management/planholder-profile/components/rop/rop-payout-page";
+
+export default function Page() {
   const router = useRouter();
-  const breadcrumbItems = [
-    {
-      label: "Home",
-      href: "/",
-    },
+  const params = useParams();
+  const personId = params?.personId as string;
 
-    {
-      label: "Return of Premium",
-      href: "/rop",
-    },
-  ];
-  
   return (
-    <Box p={4} mx="auto">
-      <Breadcrumb items={breadcrumbItems} />
-      <Box px={5}>
-        <RopStepPage
-        onClickHome={function (): void {
-          throw new Error("Function not implemented.");
-        }}
-        onClickTrack={() => router.push("/transaction/PY-02910910")}
-      />
-      </Box>
-    </Box>
+    <RopPayoutPage
+      onClickHome={() => router.push("/")}
+      onClickTrack={() =>
+        router.push(`/plan-management/planholder/${personId}`)
+      }
+    />
   );
-};
-
-export default page;
+}
