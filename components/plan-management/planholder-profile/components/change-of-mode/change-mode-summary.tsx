@@ -22,11 +22,10 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
 
   return (
     <>
-      <Box mt={-10}>
+      <Box>
         <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
           Change of Mode Summary
         </Text>
-        <Separator my={3} />
         {selectedPlans.map((plan, index) => {
           const items = [
             // { label: "LPA Number", value: plan.lpa_no },
