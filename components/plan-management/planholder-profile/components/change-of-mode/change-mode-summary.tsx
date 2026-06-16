@@ -9,6 +9,7 @@ import { Card } from "@/claude components/card-accordion/card";
 import { LuUser } from "react-icons/lu";
 import { RowItem } from "@/claude components/info-card/row-item";
 import { PrimaryMdFlexButton } from "st-peter-ui";
+import { InfoCardAccordion } from "@/claude components/add-new-sale/info-card-accordion";
 
 interface RevRIProps {
   selectedPlans: CheckedPlanType[] | undefined;
@@ -22,6 +23,10 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
   return (
     <>
       <Box mt={-10}>
+        <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
+          Change of Mode Summary
+        </Text>
+        <Separator my={3} />
         {selectedPlans.map((plan, index) => {
           const items = [
             // { label: "LPA Number", value: plan.lpa_no },
@@ -39,12 +44,8 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
 
           return (
             <Box key={index} my={5}>
-              <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
-                Change of Mode Summary
-              </Text>
-              <Separator my={3} />
-              <Card
-                activeIcon={<LuUser />}
+              <InfoCardAccordion
+                icon={<LuUser />}
                 title={plan.lpa_no}
                 subtitle={"LPA Number"}
               >
@@ -55,7 +56,7 @@ export function ChangeModeSummaryPage({ selectedPlans, onSubmit }: RevRIProps) {
                     value={item.value}
                   />
                 ))}
-              </Card>
+              </InfoCardAccordion>
             </Box>
           );
         })}
