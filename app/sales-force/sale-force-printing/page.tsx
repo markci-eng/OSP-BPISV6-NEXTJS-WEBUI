@@ -37,7 +37,7 @@ const CONTRACT_START_DATE = new Date(2026, 6, 1); // July 1, 2026 (predetermined
 const CONTRACT_END_DATE = new Date(
   CONTRACT_START_DATE.getFullYear(),
   CONTRACT_START_DATE.getMonth() + CONTRACT_DURATION_MONTHS,
-  CONTRACT_START_DATE.getDate()
+  CONTRACT_START_DATE.getDate(),
 );
 
 const formatDate = (d: Date) =>
@@ -50,15 +50,49 @@ const formatDate = (d: Date) =>
 const POSITIONS = ["Sales Agent 1", "Sales Agent 2", "Sales Team Leader"];
 
 const FIRST_NAMES = [
-  "Emily", "Michael", "Sophia", "William", "Olivia", "James", "Ava",
-  "Benjamin", "Mia", "Ethan", "Isabella", "Lucas", "Charlotte", "Henry",
-  "Amelia", "Daniel", "Harper", "Jack", "Evelyn", "Owen",
+  "Emily",
+  "Michael",
+  "Sophia",
+  "William",
+  "Olivia",
+  "James",
+  "Ava",
+  "Benjamin",
+  "Mia",
+  "Ethan",
+  "Isabella",
+  "Lucas",
+  "Charlotte",
+  "Henry",
+  "Amelia",
+  "Daniel",
+  "Harper",
+  "Jack",
+  "Evelyn",
+  "Owen",
 ];
 
 const LAST_NAMES = [
-  "Johnson", "Smith", "Lee", "Brown", "Davis", "Wilson", "Martinez",
-  "Anderson", "Taylor", "Thomas", "Moore", "Garcia", "Cruz", "Reyes",
-  "Santos", "Bautista", "Ramos", "Mendoza", "Aquino", "Castro",
+  "Johnson",
+  "Smith",
+  "Lee",
+  "Brown",
+  "Davis",
+  "Wilson",
+  "Martinez",
+  "Anderson",
+  "Taylor",
+  "Thomas",
+  "Moore",
+  "Garcia",
+  "Cruz",
+  "Reyes",
+  "Santos",
+  "Bautista",
+  "Ramos",
+  "Mendoza",
+  "Aquino",
+  "Castro",
 ];
 
 const generateAgents = (count: number): AgentPrintingData[] =>
@@ -75,7 +109,7 @@ const BATCH_SIZES = [5, 10, 20, 50, 100];
 
 const SaleforcePrintingPage = () => {
   const [agents, setAgents] = React.useState<AgentPrintingData[]>(() =>
-    generateAgents(248)
+    generateAgents(248),
   );
   const [batchSize, setBatchSize] = React.useState<number>(10);
   const [isPrinting, setIsPrinting] = React.useState(false);
@@ -99,8 +133,8 @@ const SaleforcePrintingPage = () => {
     setTimeout(() => {
       setAgents((prev) =>
         prev.map((a) =>
-          idsToPrint.includes(a.id) ? { ...a, status: "Printed" } : a
-        )
+          idsToPrint.includes(a.id) ? { ...a, status: "Printed" } : a,
+        ),
       );
       setIsPrinting(false);
     }, 900);
@@ -112,160 +146,160 @@ const SaleforcePrintingPage = () => {
       description="Re-print the contract and SFID of sales force agents whose contracts are up for renewal."
     >
       <Page.MainContent>
-      <Flex flexDir="column" gap={{ base: 4, md: 6 }} my={6}>
-        <Grid
-          templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
-          gap={{ base: 4, md: 6 }}
-        >
-          <GridItem>
-            <Card.Root title="Contract Period">
-              <Card.MainContent>
-                <Flex flexDir="column" gap={2} px={1}>
-                  <Box>
-                    <Small color="gray.500" display="block">
-                      Contract Expiry Date
+        <Flex flexDir="column" gap={{ base: 4, md: 6 }} my={6}>
+          <Grid
+            templateColumns={{ base: "1fr", lg: "1fr 1fr" }}
+            gap={{ base: 4, md: 6 }}
+          >
+            <GridItem>
+              <Card.Root title="Contract Period">
+                <Card.MainContent>
+                  <Flex flexDir="column" gap={2} px={1}>
+                    <Box>
+                      <Small color="gray.500" display="block">
+                        Contract Expiry Date
+                      </Small>
+                      <Strong
+                        fontSize={{ base: "md", md: "lg" }}
+                        color="var(--chakra-colors-primary)"
+                      >
+                        {formatDate(CONTRACT_END_DATE)}
+                      </Strong>
+                    </Box>
+                    <Separator />
+                    <Box>
+                      <Small color="gray.500" display="block">
+                        Start Date (predetermined)
+                      </Small>
+                      <Text fontSize="sm">
+                        {formatDate(CONTRACT_START_DATE)} — finalized once the
+                        agent signs the contract
+                      </Text>
+                    </Box>
+                    <Small color="gray.500">
+                      All contracts are valid for {CONTRACT_DURATION_MONTHS}{" "}
+                      months and expire on the date above.
                     </Small>
-                    <Strong
-                      fontSize={{ base: "md", md: "lg" }}
-                      color="var(--chakra-colors-primary)"
-                    >
-                      {formatDate(CONTRACT_END_DATE)}
-                    </Strong>
-                  </Box>
-                  <Separator />
-                  <Box>
-                    <Small color="gray.500" display="block">
-                      Start Date (predetermined)
-                    </Small>
-                    <Text fontSize="sm">
-                      {formatDate(CONTRACT_START_DATE)} — finalized once the
-                      agent signs the contract
-                    </Text>
-                  </Box>
-                  <Small color="gray.500">
-                    All contracts are valid for {CONTRACT_DURATION_MONTHS}{" "}
-                    months and expire on the date above.
-                  </Small>
-                </Flex>
-              </Card.MainContent>
-            </Card.Root>
-          </GridItem>
+                  </Flex>
+                </Card.MainContent>
+              </Card.Root>
+            </GridItem>
 
-          <GridItem>
-            <Card.Root title="Renewal Progress">
-              <Card.MainContent>
-                <Flex flexDir="column" gap={3} px={1}>
+            <GridItem>
+              <Card.Root title="Renewal Progress">
+                <Card.MainContent>
+                  <Flex flexDir="column" gap={3} px={1}>
+                    <Wrap gap={2}>
+                      <Badge colorPalette="blue" size="lg">
+                        Total: {total}
+                      </Badge>
+                      <Badge colorPalette="orange" size="lg">
+                        Pending: {pendingCount}
+                      </Badge>
+                      <Badge colorPalette="green" size="lg">
+                        Printed: {printedCount}
+                      </Badge>
+                    </Wrap>
+                    <Progress.Root value={progressValue} size="sm">
+                      <Progress.Track>
+                        <Progress.Range />
+                      </Progress.Track>
+                    </Progress.Root>
+                    <Small color="gray.500">
+                      {progressValue}% of contracts printed
+                    </Small>
+                  </Flex>
+                </Card.MainContent>
+              </Card.Root>
+            </GridItem>
+          </Grid>
+
+          <Card.Root title="Batch Printing">
+            <Card.MainContent>
+              <Flex flexDir="column" gap={4} px={1}>
+                <Body color="gray.600">
+                  Printing all contracts at once can take a long time. Select a
+                  batch size and the system will automatically pick the next set
+                  of pending agents to print.
+                </Body>
+
+                <Box>
+                  <Small color="gray.500" mb={2} display="block">
+                    Batch size
+                  </Small>
                   <Wrap gap={2}>
-                    <Badge colorPalette="blue" size="lg">
-                      Total: {total}
-                    </Badge>
-                    <Badge colorPalette="orange" size="lg">
-                      Pending: {pendingCount}
-                    </Badge>
-                    <Badge colorPalette="green" size="lg">
-                      Printed: {printedCount}
-                    </Badge>
+                    {BATCH_SIZES.map((size) => (
+                      <Button
+                        key={size}
+                        size="sm"
+                        variant={batchSize === size ? "solid" : "outline"}
+                        colorPalette={batchSize === size ? "blue" : "gray"}
+                        onClick={() => setBatchSize(size)}
+                        disabled={isPrinting}
+                      >
+                        {size}
+                      </Button>
+                    ))}
                   </Wrap>
-                  <Progress.Root value={progressValue} size="sm">
-                    <Progress.Track>
-                      <Progress.Range />
-                    </Progress.Track>
-                  </Progress.Root>
-                  <Small color="gray.500">
-                    {progressValue}% of contracts printed
-                  </Small>
-                </Flex>
-              </Card.MainContent>
-            </Card.Root>
-          </GridItem>
-        </Grid>
-
-        <Card.Root title="Batch Printing">
-          <Card.MainContent>
-            <Flex flexDir="column" gap={4} px={1}>
-              <Body color="gray.600">
-                Printing all contracts at once can take a long time. Select a
-                batch size and the system will automatically pick the next set
-                of pending agents to print.
-              </Body>
-
-              <Box>
-                <Small color="gray.500" mb={2} display="block">
-                  Batch size
-                </Small>
-                <Wrap gap={2}>
-                  {BATCH_SIZES.map((size) => (
-                    <Button
-                      key={size}
-                      size="sm"
-                      variant={batchSize === size ? "solid" : "outline"}
-                      colorPalette={batchSize === size ? "blue" : "gray"}
-                      onClick={() => setBatchSize(size)}
-                      disabled={isPrinting}
-                    >
-                      {size}
-                    </Button>
-                  ))}
-                </Wrap>
-              </Box>
-
-              <DataTable
-                data={agents}
-                columns={desktopColumns}
-                title="Agents for Renewal"
-                description="All sales force agents whose contracts are up for renewal."
-                size="sm"
-                features={{
-                  search: true,
-                  filtering: true,
-                  sorting: true,
-                  pagination: true,
-                  columnToggle: false,
-                  selection: false,
-                  draggable: false,
-                  detailSidebar: false,
-                }}
-                mobileConfig={{
-                  viewMode: "card",
-                  primaryField: "fullName",
-                  titleTransform: "capitalize",
-                  secondaryField: "id",
-                  badgeField: "status",
-                  visibleFields: ["position"],
-                  badgeColorMap: { Printed: "green", Pending: "orange" },
-                }}
-              />
-
-              <Separator />
-
-              <Flex
-                direction={{ base: "column", sm: "row" }}
-                gap={3}
-                justify="space-between"
-                align={{ base: "stretch", sm: "center" }}
-              >
-                <Small color="gray.500">
-                  Next batch will print up to{" "}
-                  <Strong>{Math.min(batchSize, pendingCount)}</Strong> of{" "}
-                  {pendingCount} pending contract(s).
-                </Small>
-                <Box w={{ base: "full", sm: "auto" }}>
-                  <PrimaryMdButton
-                    onClick={handlePrintBatch}
-                    disabled={isPrinting || pendingCount === 0}
-                  >
-                    {isPrinting
-                      ? "Printing..."
-                      : pendingCount === 0
-                      ? "All Printed"
-                      : `Print Batch (${Math.min(batchSize, pendingCount)})`}
-                  </PrimaryMdButton>
                 </Box>
+
+                <DataTable
+                  data={agents}
+                  columns={desktopColumns}
+                  title="Agents for Renewal"
+                  description="All sales force agents whose contracts are up for renewal."
+                  size="sm"
+                  features={{
+                    search: true,
+                    filtering: true,
+                    sorting: true,
+                    pagination: true,
+                    columnToggle: false,
+                    selection: false,
+                    draggable: false,
+                    detailSidebar: false,
+                  }}
+                  mobileConfig={{
+                    viewMode: "card",
+                    primaryField: "fullName",
+                    titleTransform: "capitalize",
+                    secondaryField: "id",
+                    badgeField: "status",
+                    visibleFields: ["position"],
+                    badgeColorMap: { Printed: "green", Pending: "orange" },
+                  }}
+                />
+
+                <Separator />
+
+                <Flex
+                  direction={{ base: "column", sm: "row" }}
+                  gap={3}
+                  justify="space-between"
+                  align={{ base: "stretch", sm: "center" }}
+                >
+                  <Small color="gray.500">
+                    Next batch will print up to{" "}
+                    <Strong>{Math.min(batchSize, pendingCount)}</Strong> of{" "}
+                    {pendingCount} pending contract(s).
+                  </Small>
+                  <Box w={{ base: "full", sm: "auto" }}>
+                    <PrimaryMdButton
+                      onClick={handlePrintBatch}
+                      disabled={isPrinting || pendingCount === 0}
+                    >
+                      {isPrinting
+                        ? "Printing..."
+                        : pendingCount === 0
+                          ? "All Printed"
+                          : `Print Batch (${Math.min(batchSize, pendingCount)})`}
+                    </PrimaryMdButton>
+                  </Box>
+                </Flex>
               </Flex>
-            </Flex>
-          </Card.MainContent>
-        </Card.Root>
-      </Flex>
+            </Card.MainContent>
+          </Card.Root>
+        </Flex>
       </Page.MainContent>
     </Page.Root>
   );

@@ -15,7 +15,7 @@ interface AgentInfoTabsMobileProps {
 }
 
 const AgentInfoTabsMobile = ({ agent }: AgentInfoTabsMobileProps) => {
-  const [personalOpen, setPersonalOpen] = useState(true);
+  const [personalOpen, setPersonalOpen] = useState(false);
   const [employmentOpen, setEmploymentOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [addressOpen, setAddressOpen] = useState(false);

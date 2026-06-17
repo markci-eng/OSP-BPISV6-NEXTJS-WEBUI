@@ -329,7 +329,6 @@ const AgentEditForm: React.FC<AgentEditFormProps> = ({
 
       {!hideActions && (
         <Flex
-          position="sticky"
           bottom={0}
           bg="white"
           py={3}
@@ -340,9 +339,7 @@ const AgentEditForm: React.FC<AgentEditFormProps> = ({
           borderColor="gray.100"
         >
           <SecondaryMdButton onClick={onCancel}>Cancel</SecondaryMdButton>
-          <PrimaryMdButton onClick={onSubmitted}>
-            Save Changes
-          </PrimaryMdButton>
+          <PrimaryMdButton onClick={onSubmitted}>Save Changes</PrimaryMdButton>
         </Flex>
       )}
     </Flex>

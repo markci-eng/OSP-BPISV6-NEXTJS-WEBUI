@@ -239,14 +239,15 @@ export function DataTableMobileCards<TData>({
                     <DataTableRowActions row={original} actions={rowActions} />
                   </Box>
                 ) : (
-                  <IconButton
-                    aria-label="Open details"
-                    variant="ghost"
-                    size="xs"
-                    flexShrink={0}
-                  >
-                    <ChevronRight size={16} />
-                  </IconButton>
+                  // <IconButton
+                  //   aria-label="Open details"
+                  //   variant="ghost"
+                  //   size="xs"
+                  //   flexShrink={0}
+                  // >
+                  //   <ChevronRight size={16} />
+                  // </IconButton>
+                  <></>
                 )}
               </HStack>
             </HStack>

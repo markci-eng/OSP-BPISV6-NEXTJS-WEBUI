@@ -67,7 +67,7 @@ export function AgentReassignForm({
         }}
       >
         <Flex align="center" gap={2}>
-          <FormTitle label={"Re-Organized Agent"} />
+          <FormTitle label={"Re-Organize Agent"} />
         </Flex>
 
         <Caption>

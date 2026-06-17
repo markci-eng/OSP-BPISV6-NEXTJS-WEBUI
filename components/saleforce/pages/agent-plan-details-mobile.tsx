@@ -34,6 +34,7 @@ import ActionButtons, {
 } from "@/components/buttons/ActionButtons";
 import Page from "@/claude components/layout/page/Page";
 import ReferralPage from "./referral-page";
+import { BackButton } from "st-peter-ui";
 
 const MOCK_AGENT_REQUESTS: RequestProps[] = [
   {
@@ -79,7 +80,7 @@ const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
   const actionButtonDefs: ActionButtonItem[] = [
     { label: "Edit", icon: LuUserPen, onClick: () => setPage("edit") },
     {
-      label: "Re-Organized",
+      label: "Re-Organize",
       icon: LuReplace,
       onClick: () => setPage("reassign"),
     },
@@ -259,18 +260,7 @@ const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
             onSubmitted={() => setPage("default")}
           />
         ) : page === "referral" ? (
-          <Box>
-            <Flex justify="flex-start" mb={2}>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage("default")}
-              >
-                <LuArrowLeft /> Back
-              </Button>
-            </Flex>
-            <ReferralPage />
-          </Box>
+          <ReferralPage />
         ) : null}
       </Page.MainContent>
     </Page.Root>

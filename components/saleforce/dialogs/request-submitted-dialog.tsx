@@ -51,7 +51,7 @@ export function RequestSubmittedDialog({
                 </Flex>
               </Dialog.Title>
               <Dialog.CloseTrigger asChild>
-                <CloseButton size="sm" />
+                <CloseButton size="sm" onClick={() => onConfirm?.()} />
               </Dialog.CloseTrigger>
             </Dialog.Header>
 
@@ -67,7 +67,10 @@ export function RequestSubmittedDialog({
                     borderColor="green.200"
                   >
                     <Small color="gray.600">Transaction Reference</Small>
-                    <Text fontWeight="bold" color="var(--chakra-colors-primary)">
+                    <Text
+                      fontWeight="bold"
+                      color="var(--chakra-colors-primary)"
+                    >
                       {transactionId}
                     </Text>
                   </Box>
@@ -79,7 +82,7 @@ export function RequestSubmittedDialog({
               </Flex>
             </Dialog.Body>
 
-            <Dialog.Footer>
+            {/* <Dialog.Footer>
               <Dialog.ActionTrigger asChild>
                 <Button variant="outline" onClick={() => onOpenChange(false)}>
                   CANCEL
@@ -91,9 +94,9 @@ export function RequestSubmittedDialog({
                   onOpenChange(false);
                 }}
               >
-                SUBMIT
+                Close
               </PrimaryMdButton>
-            </Dialog.Footer>
+            </Dialog.Footer> */}
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>
