@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { Body, PrimaryMdButton, Small } from "st-peter-ui";
+import { Body, PrimaryMdButton, PrimaryMdFlexButton, Small } from "st-peter-ui";
 import { CellContext, ColumnDef } from "@tanstack/react-table";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import {
@@ -284,7 +284,7 @@ const SaleforcePrintingPage = () => {
                     {pendingCount} pending contract(s).
                   </Small>
                   <Box w={{ base: "full", sm: "auto" }}>
-                    <PrimaryMdButton
+                    <PrimaryMdFlexButton
                       onClick={handlePrintBatch}
                       disabled={isPrinting || pendingCount === 0}
                     >
@@ -293,7 +293,7 @@ const SaleforcePrintingPage = () => {
                         : pendingCount === 0
                           ? "All Printed"
                           : `Print Batch (${Math.min(batchSize, pendingCount)})`}
-                    </PrimaryMdButton>
+                    </PrimaryMdFlexButton>
                   </Box>
                 </Flex>
               </Flex>

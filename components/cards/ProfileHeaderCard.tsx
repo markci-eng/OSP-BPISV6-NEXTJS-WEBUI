@@ -73,6 +73,7 @@ const ProfileHeaderCard = ({
       shadow="sm"
       overflow="hidden"
       transition="all 0.25s ease"
+      mt={5}
     >
       {/* Trigger area — accordion toggle */}
       <Box
