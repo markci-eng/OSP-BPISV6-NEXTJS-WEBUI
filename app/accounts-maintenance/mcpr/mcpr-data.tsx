@@ -1,65 +1,54 @@
 import React from "react";
-import { Body, Box, PrimaryMdButton, Small } from "st-peter-ui";
+import { Flex, SimpleGrid, Text } from "@chakra-ui/react";
+import { LuChartBar, LuCoins, LuFileText } from "react-icons/lu";
+
+import { Card } from "@/claude components/card-accordion/card";
+import { RowItem } from "@/claude components/info-card/row-item";
+import { BRAND_COLORS } from "@/lib/theme/brand-colors";
+
 import MCPRList from "./mcpr-list";
-import {
-  Flex,
-  Grid,
-  GridItem,
-  Separator,
-  SimpleGrid,
-  Span,
-  Strong,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
 
 export default function MCPRDataPage() {
   return (
-    <>
-      <Box flex="1" overflow="auto">
-        <MCPRList />
-      </Box>
-      
-      {/* Summary Section */}
+    <Flex direction="column" gap={4}>
+      <MCPRList />
+
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
-        {/* No Of Accounts */}
-        <Box bg="white" boxShadow="sm" borderRadius="lg" borderWidth="0.5px" p={4}>
-          <Strong color="var(--chakra-colors-primary)">No Of Accounts</Strong>
-          <Separator my={2} />
-          <Flex justify="center">
-            <Text fontSize={{ base: "xl", md: "2xl" }}>150</Text>
+        <Card
+          activeIcon={<LuFileText size={18} />}
+          title="No. of Accounts"
+          subtitle="Total active accounts"
+        >
+          <Flex justify="center" align="center" py={3}>
+            <Text
+              fontSize="4xl"
+              fontWeight="800"
+              color={BRAND_COLORS.primaryGreen}
+              lineHeight="1"
+            >
+              150
+            </Text>
           </Flex>
-        </Box>
+        </Card>
 
-        {/* Quota */}
-        <Box bg="white" boxShadow="sm" borderRadius="lg" borderWidth="0.5px" p={4}>
-          <Strong color="var(--chakra-colors-primary)">Quota:</Strong>
-          <Separator my={2} />
-          <SimpleGrid columns={{ base: 1, sm: 2 }} gap={4}>
-            <InfoItem label="Commission" value="50,000" />
-            <InfoItem label="Non-Commission" value="50,000" />
-          </SimpleGrid>
-        </Box>
+        <Card
+          activeIcon={<LuChartBar size={18} />}
+          title="Quota"
+          subtitle="Target collection amounts"
+        >
+          <RowItem label="Commission" value="₱50,000.00" />
+          <RowItem label="Non-Commission" value="₱50,000.00" />
+        </Card>
 
-        {/* Collection */}
-        <Box bg="white" boxShadow="sm" borderRadius="lg" borderWidth="0.5px" p={4}>
-          <Strong color="var(--chakra-colors-primary)">Collection:</Strong>
-          <Separator my={2} />
-          <SimpleGrid columns={{ base: 1, sm: 2 }} gap={4}>
-            <InfoItem label="Commission" value="50,000" />
-            <InfoItem label="Non-Commission" value="50,000" />
-          </SimpleGrid>
-        </Box>
+        <Card
+          activeIcon={<LuCoins size={18} />}
+          title="Collection"
+          subtitle="Actual collection amounts"
+        >
+          <RowItem label="Commission" value="₱50,000.00" />
+          <RowItem label="Non-Commission" value="₱50,000.00" />
+        </Card>
       </SimpleGrid>
-    </>
+    </Flex>
   );
 }
-
-const InfoItem = ({ label, value }: { label: string; value: string }) => (
-  <VStack gap={1} align="start" minW={0}>
-    <Small color="gray.500">{label}</Small>
-    <Body>
-      <Span fontWeight="regular">{value}</Span>
-    </Body>
-  </VStack>
-);

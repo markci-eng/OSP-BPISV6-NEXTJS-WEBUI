@@ -2,7 +2,6 @@
 
 import {
   Box,
-  Button,
   Flex,
   Grid,
   HStack,
@@ -12,11 +11,11 @@ import {
 } from "@chakra-ui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useEffect, useMemo, useState } from "react";
-import { LuChevronRight } from "react-icons/lu";
+import { LuChevronRight, LuSlidersHorizontal } from "react-icons/lu";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { AddButton, Body, PrimaryMdFlexButton } from "st-peter-ui";
+import { Body, PrimaryMdFlexButton } from "st-peter-ui";
 
 import Card from "@/components/cards/Card";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
@@ -28,22 +27,19 @@ import {
   type LookupColumn,
 } from "@/components/common/reusable-lookup/LookUpField";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import type {
-  BulkAction,
-  RowAction,
-} from "@/components/common/reusable-tableV2/types";
+import type { RowAction } from "@/components/common/reusable-tableV2/types";
 import InfoItem from "@/components/common/info-item/info-item";
 import Page from "@/components/layout/page/Page";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 
 import { DepositHdr } from "@/app/payment/data/payment.types";
 import { drsItems, tableItems } from "@/app/payment/data/paymentDetails";
 
 /* ------------------------------------------------------------------ */
-/* Local view-model: a payment record that has been added for release */
+/* Local view-model                                                     */
 /* ------------------------------------------------------------------ */
 type DisbursementType = "COM" | "TE";
 
-/** Shape of an eligible "Subject for Release" record (from payment mock data). */
 type EligibleRecord = (typeof tableItems)[number];
 
 type DisbursementItem = EligibleRecord & {
@@ -55,11 +51,7 @@ type DisbursementItem = EligibleRecord & {
 const TYPE_OPTIONS: { value: DisbursementType; label: string; hint: string }[] =
   [
     { value: "COM", label: "Commission", hint: "Agent commission release" },
-    {
-      value: "TE",
-      label: "Transportation Exp.",
-      hint: "Reimbursable TE claims",
-    },
+    { value: "TE", label: "Transportation Exp.", hint: "Reimbursable TE claims" },
   ];
 
 const EMPLOYEE_COLUMNS: LookupColumn<EmployeeLookupType>[] = [
@@ -93,27 +85,17 @@ const DRS_COLUMNS: LookupColumn<DepositHdr>[] = [
   { key: "AccountNo", header: "Account No" },
 ];
 
-const DRS_SEARCH_KEYS: (keyof DepositHdr)[] = [
-  "name",
-  "AccountNo",
-  "BankBranch",
-];
+const DRS_SEARCH_KEYS: (keyof DepositHdr)[] = ["name", "AccountNo", "BankBranch"];
 
-const drsDisplay = (d: DepositHdr) =>
-  `${d.name} · ${peso(parsePeso(d.Amount))}`;
+const drsDisplay = (d: DepositHdr) => `${d.name} · ${peso(parsePeso(d.Amount))}`;
 
 const peso = (n: number) =>
-  "₱" +
-  n.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const parsePeso = (s: string) => Number(String(s).replace(/[^0-9.]/g, "")) || 0;
 
 const eligibleRowId = (row: EligibleRecord) => `${row.LPANo}-${row.SI}`;
 
-/** Subject for Release columns: LPA#, Full Name, Sales Invoice, Amount. */
 const ELIGIBLE_COLUMNS: ColumnDef<EligibleRecord, any>[] = [
   { accessorKey: "LPANo", header: "LPA#" },
   { accessorKey: "name", header: "Full Name" },
@@ -132,12 +114,10 @@ export default function Disbursement() {
   const [selectedType, setSelectedType] = useState<DisbursementType | "">("");
 
   const [addedItems, setAddedItems] = useState<DisbursementItem[]>([]);
-  const [selectedEligible, setSelectedEligible] = useState<EligibleRecord[]>(
-    [],
-  );
-  const [eligibleKey, setEligibleKey] = useState(0); // remount key to reset table selection
+  const [selectedEligible, setSelectedEligible] = useState<EligibleRecord[]>([]);
+  const [eligibleKey, setEligibleKey] = useState(0);
+  const [setupOpen, setSetupOpen] = useState(true);
 
-  // Hydrate a DRS pre-selected from another screen (kept from previous behaviour)
   useEffect(() => {
     const data = sessionStorage.getItem("selectedDRS");
     if (data) {
@@ -149,7 +129,11 @@ export default function Disbursement() {
 
   const ready = Boolean(selectedDrs && selectedType);
 
-  // Eligible records for the chosen DRS/type, minus what's already on the list
+  // Auto-collapse setup when all fields are filled
+  useEffect(() => {
+    if (ready) setSetupOpen(false);
+  }, [ready]);
+
   const eligibleRecords = useMemo(() => {
     if (!ready) return [];
     const taken = new Set(addedItems.map((i) => eligibleRowId(i)));
@@ -167,7 +151,7 @@ export default function Disbursement() {
     setEligibleKey((k) => k + 1);
   };
 
-  const handleAddToList: BulkAction<EligibleRecord>["onClick"] = (rows) => {
+  const handleAddToList = (rows: EligibleRecord[]) => {
     if (!selectedType) return;
     setAddedItems((prev) => {
       const existing = new Set(prev.map((i) => eligibleRowId(i)));
@@ -187,7 +171,6 @@ export default function Disbursement() {
   const removeItem = (item: DisbursementItem) =>
     setAddedItems((prev) => prev.filter((i) => i._key !== item._key));
 
-  // Header action: add the selected eligible records to the list.
   const handleAddSelected = () => {
     if (!ready || selectedEligible.length === 0) return;
     handleAddToList(selectedEligible);
@@ -224,9 +207,7 @@ export default function Disbursement() {
       return;
     }
     toast.success(
-      `${addedItems.length} record${addedItems.length > 1 ? "s" : ""} released · ${peso(
-        totals.disburse,
-      )} disbursed from ${selectedDrs?.name}`,
+      `${addedItems.length} record${addedItems.length > 1 ? "s" : ""} released · ${peso(totals.disburse)} disbursed from ${selectedDrs?.name}`,
     );
     resetWorkflow();
     setSelectedType("");
@@ -270,15 +251,19 @@ export default function Disbursement() {
   return (
     <Page.Root
       title="Disbursement"
-      description="Manage your Commission and Transportation Expense"
+      description="Manage Commission and Transportation Expense releases"
     >
-      <Page.MainContent
-        flex="1"
-        minH="calc(100% - var(--sticky-header-h, 0px))"
-      >
-        {/* COMMAND BAR — employee → remittance slip → disbursement type */}
-        <Card.Root>
-          <Card.MainContent>
+      <Page.MainContent flex="1" minH="calc(100% - var(--sticky-header-h, 0px))">
+
+        {/* SETUP — employee → remittance slip → disbursement type */}
+        <Page.Row>
+          <InfoCardAccordion
+            icon={<LuSlidersHorizontal size={18} />}
+            title="Disbursement Setup"
+            subtitle="Select employee, remittance slip, and disbursement type"
+            isOpen={setupOpen}
+            onToggle={() => setSetupOpen((v) => !v)}
+          >
             <Flex
               align={{ base: "stretch", xl: "flex-end" }}
               gap={{ base: 4, xl: 5 }}
@@ -324,7 +309,7 @@ export default function Disbursement() {
 
               <CommandSep />
 
-              {/* Disbursement type — clickable cards */}
+              {/* Disbursement type */}
               <Box flex="1.4" minW={0}>
                 <Flex
                   direction={{ base: "column", sm: "row" }}
@@ -366,20 +351,11 @@ export default function Disbursement() {
                         aria-pressed={active}
                         onClick={() => !disabled && changeType(opt.value)}
                       >
-                        <Flex
-                          align="center"
-                          justify="space-between"
-                          gap={2}
-                          mb={0.5}
-                        >
+                        <Flex align="center" justify="space-between" gap={2} mb={0.5}>
                           <Text
                             fontSize="sm"
                             fontWeight="semibold"
-                            color={
-                              active
-                                ? "var(--chakra-colors-primary)"
-                                : "gray.700"
-                            }
+                            color={active ? "var(--chakra-colors-primary)" : "gray.700"}
                             lineClamp={1}
                           >
                             {opt.label}
@@ -397,15 +373,17 @@ export default function Disbursement() {
                 </Flex>
               </Box>
             </Flex>
-          </Card.MainContent>
-        </Card.Root>
+          </InfoCardAccordion>
+        </Page.Row>
 
         {/* WORKFLOW */}
         {!selectedDrs ? (
-          <EmptyStateCard
-            title="No Remittance Slip Selected"
-            description="Choose an employee and remittance slip above to begin."
-          />
+          <Page.Row>
+            <EmptyStateCard
+              title="No Remittance Slip Selected"
+              description="Choose an employee and remittance slip above to begin."
+            />
+          </Page.Row>
         ) : (
           <Flex direction="column" flex="1" minH={0} gap={5}>
             {/* SIDE-BY-SIDE TABLES */}
@@ -451,9 +429,7 @@ export default function Disbursement() {
                       ml="auto"
                     >
                       <PrimaryMdFlexButton
-                        // size="sm"
                         h="36px"
-                        // variant="solid"
                         flexShrink={0}
                         whiteSpace="nowrap"
                         onClick={handleAddSelected}
@@ -475,9 +451,7 @@ export default function Disbursement() {
                   emptyState={
                     <EmptyStateCard
                       title={
-                        selectedType
-                          ? "No eligible records"
-                          : "Choose a disbursement type"
+                        selectedType ? "No eligible records" : "Choose a disbursement type"
                       }
                       description={
                         selectedType
@@ -534,17 +508,10 @@ export default function Disbursement() {
                       type: (v) => (v === "COM" ? "Commission" : "TE"),
                     },
                   }}
-                  // summaryRows={[
-                  //   {
-                  //     label: "Total to Disburse",
-                  //     labelColumnId: "name",
-                  //     values: { release: () => peso(totals.disburse) },
-                  //   },
-                  // ]}
                   emptyState={
                     <EmptyStateCard
                       title="No records added yet"
-                      description="Select eligible records above and choose “Add to List”."
+                      description={`Select eligible records above and choose "Add to List".`}
                       border="none"
                     />
                   }
@@ -552,7 +519,7 @@ export default function Disbursement() {
               </Box>
             </Grid>
 
-            {/* STICKY FOOTER SUMMARY BAR — anchored to bottom */}
+            {/* STICKY FOOTER SUMMARY BAR */}
             <Box
               position="sticky"
               bottom={{ base: "-20px", lg: "-56px" }}
@@ -575,21 +542,9 @@ export default function Disbursement() {
                     {/* Stats */}
                     <HStack gap={{ base: 4, md: 6 }} flexWrap="wrap">
                       <InfoItem label="Balance" value={peso(totals.balance)} />
-                      <Stat
-                        label="Total Com"
-                        value={peso(totals.com)}
-                        dot="green.500"
-                      />
-                      <Stat
-                        label="Total TE"
-                        value={peso(totals.te)}
-                        dot="blue.500"
-                      />
-                      <Separator
-                        orientation="vertical"
-                        height="8"
-                        hideBelow="md"
-                      />
+                      <Stat label="Total Com" value={peso(totals.com)} dot="green.500" />
+                      <Stat label="Total TE" value={peso(totals.te)} dot="blue.500" />
+                      <Separator orientation="vertical" height="8" hideBelow="md" />
                       <InfoItem
                         label="To Disburse"
                         value={peso(totals.disburse)}
@@ -623,10 +578,7 @@ export default function Disbursement() {
                         <Body fontSize="xs" color="gray.500">
                           {allocatedPct}% of balance allocated
                         </Body>
-                        <Body
-                          fontSize="xs"
-                          color={over ? "red.500" : "gray.500"}
-                        >
+                        <Body fontSize="xs" color={over ? "red.500" : "gray.500"}>
                           {over
                             ? `Over by ${peso(Math.abs(totals.remaining))}`
                             : `${peso(totals.remaining)} left`}
@@ -652,10 +604,7 @@ export default function Disbursement() {
                         </Text>
                       )}
                       <Box w={{ base: "full", lg: "auto" }} minW={{ lg: "44" }}>
-                        <PrimaryMdFlexButton
-                          onClick={handleSave}
-                          disabled={!canSave}
-                        >
+                        <PrimaryMdFlexButton onClick={handleSave} disabled={!canSave}>
                           Save &amp; Release
                         </PrimaryMdFlexButton>
                       </Box>
@@ -672,7 +621,7 @@ export default function Disbursement() {
 }
 
 /* ------------------------------------------------------------------ */
-/* Small presentational helpers (local to this screen)               */
+/* Presentational helpers                                               */
 /* ------------------------------------------------------------------ */
 
 function CommandSep() {

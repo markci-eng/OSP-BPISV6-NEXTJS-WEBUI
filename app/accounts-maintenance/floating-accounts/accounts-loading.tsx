@@ -1,34 +1,26 @@
-import {
-  Flex,
-  Grid,
-  GridItem,
-  Separator,
-  SimpleGrid,
-  Strong,
-} from "@chakra-ui/react";
-import {
-  Box,
-  PrimaryMdButton,
-  PrimarySmButton,
-  SelectFloatingLabel,
-} from "st-peter-ui";
+"use client";
+
+import { useState } from "react";
+import { Grid, GridItem } from "@chakra-ui/react";
+import { Box, PrimaryMdButton, SelectFloatingLabel } from "st-peter-ui";
+import { LuFilter, LuUserCheck } from "react-icons/lu";
+
 import Page from "@/components/layout/page/Page";
+import LookUp from "@/components/common/reusable-lookup/dynamic-lookup";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+
 import { STLList, TrxMonth } from "../data/transaction-month";
-import FloatingAccountList from "./floating-list";
 import {
   salesForceHeaders,
   salesForceLookUp,
   SalesForceLookUpData,
 } from "../accounts-transfer/sales-force-lookup_data";
-import { useState } from "react";
-import LookUp from "../../../components/common/reusable-lookup/dynamic-lookup";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-
+import FloatingAccountList from "./floating-list";
 
 export default function AccountsLoadingPage() {
   const [selectedAgent, setSelectedAgent] =
     useState<SalesForceLookUpData | null>(null);
-
   const { messageBox } = useMessageDialog();
 
   const confirmLoad = async () => {
@@ -41,138 +33,85 @@ export default function AccountsLoadingPage() {
     });
 
     if (confirmed) {
-      await loadAccounts();
+      await messageBox({
+        title: "SUCCESS",
+        message: "Account(s) successfully loaded.",
+        confirmText: "Ok",
+        variant: "success",
+      });
     }
   };
-
-  const loadAccounts = async () => {
-    await messageBox({
-      title: "SUCCESS",
-      message: "Account(s) successfully loaded.",
-      confirmText: "Ok",
-      variant: "success",
-    });
-  };
-
-  // const confirmLoad = async () => {
-  //   await messageBox({
-  //     title: "CONFIRMATION",
-  //     message: "Do you want to load account(s)?",
-  //     confirmText: "Yes",
-  //     cancelText: "No",
-  //     variant: "confirmation",
-  //     onConfirm: () => {
-  //       loadAccounts();
-  //     },
-  //   });
-
-  //   // if (confirmed) {
-  //   //   await loadAccounts();
-  //   // }
-  // };
-
-  // const loadAccounts = async () => {
-  //   await messageBox({
-  //     title: "SUCCESS",
-  //     message: "Account(s) successfully loaded.",
-  //     confirmText: "Ok",
-  //     variant: "success",
-  //   });
-  // };
 
   return (
     <Page.Root title="Floating Accounts">
       <Page.MainContent>
+        {/* FILTER */}
         <Page.Row>
-        <Box
-          p={3}
-          bg="white"
-          boxShadow="sm"
-          borderRadius="lg"
-          borderWidth="0.5px"
-        >
-          <Strong color="var(--chakra-colors-primary)">
-            Sales Team Leader\Transaction Month
-          </Strong>
-          <Separator my={2} />
-
-          <Grid
-            templateColumns={{
-              base: "1fr",
-              sm: "1fr",
-              md: "1fr 1fr",
-              lg: "max-content auto",
-            }}
-            gap={4}
+          <InfoCardAccordion
+            icon={<LuFilter size={18} />}
+            title="Sales Team Leader"
+            subtitle="Filter by transaction month and team leader"
+            defaultOpen
           >
-            {/* Row 2 - Select Month */}
-            <GridItem>
-              <SelectFloatingLabel
-                label="Select Transaction Month"
-                collection={TrxMonth}
-                w={{ base: "100%", md: "360px" }}
-              />
-            </GridItem>
-
-            <GridItem>
-              <SelectFloatingLabel
-                label="Select Sales Team Leader"
-                collection={STLList}
-                w={{ base: "100%", md: "360px" }}
-              />
-            </GridItem>
-          </Grid>
-        </Box>
+            <Grid
+              templateColumns={{ base: "1fr", md: "1fr 1fr" }}
+              gap={4}
+            >
+              <GridItem>
+                <SelectFloatingLabel
+                  label="Select Transaction Month"
+                  collection={TrxMonth}
+                />
+              </GridItem>
+              <GridItem>
+                <SelectFloatingLabel
+                  label="Select Sales Team Leader"
+                  collection={STLList}
+                />
+              </GridItem>
+            </Grid>
+          </InfoCardAccordion>
         </Page.Row>
 
+        {/* ACCOUNT LIST */}
         <Page.Row>
           <FloatingAccountList />
         </Page.Row>
 
+        {/* ASSIGN TO AGENT */}
         <Page.Row>
-        <Box
-          p={3}
-          bg="white"
-          boxShadow="sm"
-          borderRadius="lg"
-          borderWidth="0.5px"
-        >
-          <Strong color="var(--chakra-colors-primary)">Sales Agent 2</Strong>
-          <Separator my={2} />
-
-          <Grid
-            templateColumns={{
-              base: "1fr",
-              md: "1fr 1fr",
-              lg: "max-content auto",
-            }}
-            gap={4}
-            justifyContent="end"
+          <InfoCardAccordion
+            icon={<LuUserCheck size={18} />}
+            title="Assign to Agent"
+            subtitle="Select a Sales Agent 2 and load the selected accounts"
+            defaultOpen
           >
-            {/* Search Employee */}
-            <GridItem>
-              <Box w={{ base: "100%", md: "360px" }}>
-                <LookUp<SalesForceLookUpData>
-                  placeholder="Search Sales Agent 2"
-                  modalTitle="Sales Force List"
-                  data={salesForceLookUp}
-                  headers={salesForceHeaders}
-                  onSelect={setSelectedAgent}
-                  getInputValue={(item) =>
-                    `${item.AgentName} (${item.SalesForceCode})`
-                  }
-                />
-              </Box>
-            </GridItem>
-
-            {/* Button */}
-            <GridItem justifySelf={{ base: "stretch", lg: "end" }}>
-              <PrimaryMdButton onClick={confirmLoad}>
-                Load Account/s
-              </PrimaryMdButton>
-            </GridItem>
-          </Grid>
-        </Box>
+            <Grid
+              templateColumns={{ base: "1fr", md: "1fr auto" }}
+              gap={4}
+              alignItems="end"
+            >
+              <GridItem>
+                <Box mt={2}>
+                  <LookUp<SalesForceLookUpData>
+                    placeholder="Search Sales Agent 2"
+                    modalTitle="Sales Force List"
+                    data={salesForceLookUp}
+                    headers={salesForceHeaders}
+                    onSelect={setSelectedAgent}
+                    getInputValue={(item) =>
+                      `${item.AgentName} (${item.SalesForceCode})`
+                    }
+                  />
+                </Box>
+              </GridItem>
+              <GridItem justifySelf={{ base: "stretch", md: "end" }}>
+                <PrimaryMdButton onClick={confirmLoad}>
+                  Load Account/s
+                </PrimaryMdButton>
+              </GridItem>
+            </Grid>
+          </InfoCardAccordion>
         </Page.Row>
       </Page.MainContent>
     </Page.Root>

@@ -1,24 +1,58 @@
 "use client";
 
-import { Box, Flex, Grid, GridItem, Text } from "@chakra-ui/react";
-import { PrimaryMdFlexButton, SelectFloatingLabel } from "st-peter-ui";
-import { TrxMonth } from "../data/transaction-month";
 import { useState } from "react";
+import { Box, Flex, Text } from "@chakra-ui/react";
+import { PrimaryMdFlexButton, SelectFloatingLabel } from "st-peter-ui";
+import { LuCalendar, LuCircleCheck, LuLoader } from "react-icons/lu";
+
+import Page from "@/components/layout/page/Page";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { PremiumCircularProgress } from "@/components/common/progressbar/dynamic-progress-bar";
 import { useProgressController } from "@/components/common/progressbar/progress-bar-controller";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import Page from "@/components/layout/page/Page";
-import Card from "@/components/cards/Card";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import InfoCard from "@/claude components/info-card/info-card";
+
+import { TrxMonth } from "../data/transaction-month";
 
 const accounts = [
-  { id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 },
-  { id: 5 }, { id: 5 }, { id: 5 }, { id: 5 }, { id: 5 },
-  { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 5 },
-  { id: 5 }, { id: 5 }, { id: 5 }, { id: 5 }, { id: 1 },
-  { id: 2 }, { id: 3 }, { id: 4 }, { id: 5 }, { id: 5 },
-  { id: 5 }, { id: 5 }, { id: 5 }, { id: 5 }, { id: 2 },
-  { id: 3 }, { id: 4 }, { id: 5 }, { id: 5 }, { id: 5 },
-  { id: 5 }, { id: 5 }, { id: 5 },
+  { id: 1 },
+  { id: 2 },
+  { id: 3 },
+  { id: 4 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 2 },
+  { id: 3 },
+  { id: 4 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 1 },
+  { id: 2 },
+  { id: 3 },
+  { id: 4 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 2 },
+  { id: 3 },
+  { id: 4 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
+  { id: 5 },
 ];
 
 export default function NextMonthLoadingPage() {
@@ -59,7 +93,6 @@ export default function NextMonthLoadingPage() {
 
     for (const account of accounts) {
       await new Promise((res) => setTimeout(res, 200));
-      console.log("Processing account:", account.id);
       progress.increment();
     }
 
@@ -68,7 +101,7 @@ export default function NextMonthLoadingPage() {
 
     messageBox({
       title: "SUCCESS",
-      message: "Next monthload successfully processed.",
+      message: "Next month load successfully processed.",
       confirmText: "Ok",
       variant: "success",
     });
@@ -80,79 +113,79 @@ export default function NextMonthLoadingPage() {
       description="Process the next billing cycle for all active accounts"
     >
       <Page.MainContent>
+        {/* TRANSACTION MONTH */}
         <Page.Row>
-          <Card.Root title="Transaction Month">
-            <Card.MainContent>
-              <Grid
-                templateColumns={{ base: "1fr", md: "380px 1fr" }}
-                gap={4}
-                alignItems="start"
-                mt={2}
-              >
-                <GridItem>
-                  <SelectFloatingLabel
-                    label="Select Transaction Month"
-                    collection={TrxMonth}
-                    w="full"
-                    onValueChanged={(value) => {
-                      setSelectedMonth(value[0]);
-                      setErrorMessage("");
-                    }}
-                  />
-                  {errorMessage && (
-                    <Text color="red.500" fontSize="sm" mt="6px">
-                      {errorMessage}
-                    </Text>
-                  )}
-                </GridItem>
-
-                {selectedMonth && (
-                  <GridItem>
-                    <Box
-                      p={3}
-                      bg="gray.50"
-                      borderRadius="md"
-                      borderWidth={1}
-                      borderColor="gray.200"
-                    >
-                      <Text
-                        fontSize="10px"
-                        color="gray.500"
-                        fontWeight={700}
-                        letterSpacing="0.06em"
-                        textTransform="uppercase"
-                        mb={1}
-                      >
-                        Selected Month
-                      </Text>
-                      <Text fontSize="md" fontWeight={600} color="gray.700">
-                        {selectedMonthLabel}
-                      </Text>
-                    </Box>
-                  </GridItem>
+          <InfoCardAccordion
+            icon={<LuCalendar size={18} />}
+            title="Transaction Month"
+            subtitle="Select the billing cycle month to process"
+            defaultOpen
+          >
+            <Flex
+              // direction={{ base: "column", md: "row" }}
+              gap={4}
+              align="flex-start"
+            >
+              <Box flex="1" maxW={"full"}>
+                <SelectFloatingLabel
+                  label="Select Transaction Month"
+                  collection={TrxMonth}
+                  w="full"
+                  onValueChanged={(value) => {
+                    setSelectedMonth(value[0]);
+                    setErrorMessage("");
+                  }}
+                />
+                {errorMessage && (
+                  <Text color="red.500" fontSize="sm" mt="6px">
+                    {errorMessage}
+                  </Text>
                 )}
-              </Grid>
-            </Card.MainContent>
-          </Card.Root>
+              </Box>
+
+              {selectedMonth && (
+                <Box flex="1" pt={{ base: 0, md: "6px" }}>
+                  <InfoCard icon={LuCalendar}>
+                    Selected month: <strong>{selectedMonthLabel}</strong>
+                  </InfoCard>
+                </Box>
+              )}
+            </Flex>
+          </InfoCardAccordion>
         </Page.Row>
 
+        {/* PROCESSING STATUS */}
         {(isProcessing || isComplete) && (
           <Page.Row>
-            <Card.Root title="Processing Status">
-              <Card.MainContent>
-                <Flex direction="column" align="center" py={8}>
-                  <PremiumCircularProgress
-                    value={progress.percentage}
-                    size={200}
-                    loadingLabel={`${progress.current} of ${progress.total} accounts processed`}
-                    completeLabel="All accounts processed successfully"
-                  />
-                </Flex>
-              </Card.MainContent>
-            </Card.Root>
+            <InfoCardAccordion
+              icon={
+                isComplete ? (
+                  <LuCircleCheck size={18} />
+                ) : (
+                  <LuLoader size={18} />
+                )
+              }
+              title={isComplete ? "Processing Complete" : "Processing…"}
+              subtitle={
+                isComplete
+                  ? `All ${accounts.length} accounts processed successfully`
+                  : `${progress.current} of ${progress.total} accounts processed`
+              }
+              defaultOpen
+            >
+              <Flex justify="center" py={6}>
+                <PremiumCircularProgress
+                  value={progress.percentage}
+                  size={200}
+                  loadingLabel={`${progress.current} of ${progress.total} accounts processed`}
+                  completeLabel="All accounts processed successfully"
+                />
+              </Flex>
+            </InfoCardAccordion>
           </Page.Row>
         )}
 
+        {/* ACTION */}
         <Page.Row>
           <Flex justify="flex-end">
             <Box w={{ base: "full", md: "auto" }}>
