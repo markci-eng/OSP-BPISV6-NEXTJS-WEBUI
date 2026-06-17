@@ -169,16 +169,16 @@ export default function AppHeader({
               <LuMenu />
             </IconButton>
             <Box
-              w="24px"
-              h="24px"
+              w="28px"
+              h="28px"
               display="flex"
               justifyContent="center"
               alignItems="center"
             >
               <Image
                 src={logoIcon.src}
-                width={24}
-                height={24}
+                width={28}
+                height={28}
                 style={{ objectFit: "contain" }}
               />
             </Box>
