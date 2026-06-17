@@ -93,7 +93,7 @@ function PlanTabs({
   planholderAddress?: string;
 }) {
   const [openStates, setOpenStates] = useState<boolean[]>(() =>
-    Array.from({ length: SECTION_COUNT }, (_, i) => i === 0),
+    Array(SECTION_COUNT).fill(false),
   );
   const toggle = (i: number) =>
     setOpenStates((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
