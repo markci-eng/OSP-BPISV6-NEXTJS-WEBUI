@@ -17,7 +17,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
     "@splpi/dms-estore-upload": "^1.0.7",
-    "@splpi/estore-shared-components": "^0.0.4",
+    "@splpi/estore-shared-components": "^0.0.5",
     "@splpi/new-sales-page-component": "^0.0.8",
     "@splpi/operations": "^0.1.0",
     "@splpi/plan-management": "^0.1.4",
