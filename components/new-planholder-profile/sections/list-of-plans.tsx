@@ -24,6 +24,8 @@ import {
   LuArrowRight,
   LuChevronLeft,
   LuChevronRight,
+  LuChevronsDown,
+  LuChevronsUp,
   LuPointer,
   LuSearch,
   LuTrash,
@@ -34,20 +36,25 @@ import { OnboardingTutorial } from "../onboarding-tutorial";
 import { PlanDetailType } from "@/components/plan-management/planholder-profile/planholder-profile-page";
 import { EmptyState } from "../components/empty-state/empty-state";
 import { LPANumberButton } from "../components/buttons/lpa-button";
-import { H4, PrimaryMdButton, PrimarySmButton, Small } from "st-peter-ui";
+import {
+  H4,
+  PrimaryMdButton,
+  PrimarySmButton,
+  Small,
+  TertiarySmButton,
+} from "st-peter-ui";
 import { HiRefresh } from "react-icons/hi";
-import { Tab } from "../components/tab/tab";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import { FiFileText } from "react-icons/fi";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
 import { MdHealthAndSafety } from "react-icons/md";
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";
-import { GiClick, GiMartyrMemorial } from "react-icons/gi";
+import { GiMartyrMemorial } from "react-icons/gi";
 import { PlanDetailsPage } from "../pages/plan-details";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { Beneficiaries } from "../pages/beneficiaries";
 import { StatementOfAccount } from "../pages/statement-of-accounts";
 import { HealthDeclaration } from "../pages/health-declaration";
-import { FaRegHandPointer } from "react-icons/fa6";
 
 const PLAN_DETAIL_STEPS = [
   {
@@ -76,6 +83,8 @@ export interface PhBeneficiaries {
   type: "principal" | "contingent";
 }
 
+const SECTION_COUNT = 8;
+
 function PlanTabs({
   planDetails,
   planholderAddress,
@@ -83,114 +92,152 @@ function PlanTabs({
   planDetails: PlanDetailType;
   planholderAddress?: string;
 }) {
+  const [openStates, setOpenStates] = useState<boolean[]>(() =>
+    Array.from({ length: SECTION_COUNT }, (_, i) => i === 0),
+  );
+  const toggle = (i: number) =>
+    setOpenStates((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
+
   return (
-    <Tab
-      tabItems={[
-        {
-          icon: FiFileText,
-          label: "Plan Details",
-          value: "plan-details",
-          page: <PlanDetailsPage planDetails={planDetails} />,
-        },
-        {
-          icon: LuUsersRound,
-          label: "Beneficiaries",
-          value: "beneficiaries",
-          page: (
-            <Beneficiaries
-              beneficiaries={[
-                {
-                  personId: "PI10001",
-                  lpaNumber: "L25053226I",
-                  beneficiaryClass: "PRINCIPAL",
-                  lastName: "DELA ROSA",
-                  firstName: "ROLAND",
-                  middleInitial: "C",
-                  relationship: "SON",
-                  age: 23,
-                  address: "CALOOCAN CITY",
-                },
-              ]}
-              planholderAddress={planholderAddress}
-            />
-          ),
-        },
-        {
-          icon: HiOutlineDocumentCurrencyDollar,
-          label: "Statement of Accounts",
-          value: "statement-of-accounts",
-          page: (
-            <StatementOfAccount
-              props={{
-                lpaNumber: planDetails.lpaNumber,
-                dueDate: new Date("2026-05-23"),
-                term: planDetails.term,
-                mode: planDetails.mode,
-                installmentNumber: 7,
-                installmentAmount: planDetails.installmentAmount,
-                totalAmountPayable: planDetails.totalAmountPayable,
-                totalPayments: planDetails.installmentAmount * 7,
-                balance:
-                  planDetails.totalAmountPayable -
-                  planDetails.installmentAmount * 7,
-                terminationValue: 600,
-                paymentRecords: [],
-              }}
-            />
-          ),
-        },
-        {
-          icon: MdHealthAndSafety,
-          label: "Health Declaration",
-          value: "health-declaration",
-          page: <HealthDeclaration />,
-        },
-        {
-          icon: LiaHandHoldingUsdSolid,
-          label: "Loan",
-          value: "loan",
-          page: (
-            <EmptyState
-              title={"No Record Found"}
-              description={"Loan details displays here."}
-            />
-          ),
-        },
-        {
-          icon: GiMartyrMemorial,
-          label: "Service",
-          value: "service",
-          page: (
-            <EmptyState
-              title={"No Record Found"}
-              description={"Service Information displays here."}
-            />
-          ),
-        },
-        {
-          icon: FiFileText,
-          label: "ROP History",
-          value: "rop-history",
-          page: (
-            <EmptyState
-              title={"No Record Found"}
-              description={"ROP history displays here."}
-            />
-          ),
-        },
-        {
-          icon: LuUsersRound,
-          label: "Transfer History",
-          value: "transfer-history",
-          page: (
-            <EmptyState
-              title={"No Record Found"}
-              description={"Transfer history displays here."}
-            />
-          ),
-        },
-      ]}
-    />
+    <Flex direction="column" gap={2}>
+      <Flex justify="flex-end" gap={2} mb={1}>
+        <TertiarySmButton
+          onClick={() => setOpenStates(Array(SECTION_COUNT).fill(true))}
+        >
+          <LuChevronsDown size={14} />
+          Expand All
+        </TertiarySmButton>
+        <TertiarySmButton
+          onClick={() => setOpenStates(Array(SECTION_COUNT).fill(false))}
+        >
+          <LuChevronsUp size={14} />
+          Collapse All
+        </TertiarySmButton>
+      </Flex>
+
+      <InfoCardAccordion
+        icon={<FiFileText size={16} />}
+        title="Plan Details"
+        subtitle="Coverage & premium info"
+        isOpen={openStates[0]}
+        onToggle={() => toggle(0)}
+      >
+        <PlanDetailsPage planDetails={planDetails} />
+      </InfoCardAccordion>
+
+      <InfoCardAccordion
+        icon={<LuUsersRound size={16} />}
+        title="Beneficiaries"
+        subtitle="Named beneficiaries"
+        isOpen={openStates[1]}
+        onToggle={() => toggle(1)}
+      >
+        <Beneficiaries
+          beneficiaries={[
+            {
+              personId: "PI10001",
+              lpaNumber: "L25053226I",
+              beneficiaryClass: "PRINCIPAL",
+              lastName: "DELA ROSA",
+              firstName: "ROLAND",
+              middleInitial: "C",
+              relationship: "SON",
+              age: 23,
+              address: "CALOOCAN CITY",
+            },
+          ]}
+          planholderAddress={planholderAddress}
+        />
+      </InfoCardAccordion>
+
+      <InfoCardAccordion
+        icon={<HiOutlineDocumentCurrencyDollar size={16} />}
+        title="Statement of Accounts"
+        subtitle="Payment history & balance"
+        isOpen={openStates[2]}
+        onToggle={() => toggle(2)}
+      >
+        <StatementOfAccount
+          props={{
+            lpaNumber: planDetails.lpaNumber,
+            dueDate: new Date("2026-05-23"),
+            term: planDetails.term,
+            mode: planDetails.mode,
+            installmentNumber: 7,
+            installmentAmount: planDetails.installmentAmount,
+            totalAmountPayable: planDetails.totalAmountPayable,
+            totalPayments: planDetails.installmentAmount * 7,
+            balance:
+              planDetails.totalAmountPayable -
+              planDetails.installmentAmount * 7,
+            terminationValue: 600,
+            paymentRecords: [],
+          }}
+        />
+      </InfoCardAccordion>
+
+      <InfoCardAccordion
+        icon={<MdHealthAndSafety size={16} />}
+        title="Health Declaration"
+        subtitle="Medical disclosures"
+        isOpen={openStates[3]}
+        onToggle={() => toggle(3)}
+      >
+        <HealthDeclaration />
+      </InfoCardAccordion>
+
+      <InfoCardAccordion
+        icon={<LiaHandHoldingUsdSolid size={16} />}
+        title="Loan"
+        subtitle="Loan records"
+        isOpen={openStates[4]}
+        onToggle={() => toggle(4)}
+      >
+        <EmptyState
+          title="No Record Found"
+          description="Loan details displays here."
+        />
+      </InfoCardAccordion>
+
+      <InfoCardAccordion
+        icon={<GiMartyrMemorial size={16} />}
+        title="Service"
+        subtitle="Service records"
+        isOpen={openStates[5]}
+        onToggle={() => toggle(5)}
+      >
+        <EmptyState
+          title="No Record Found"
+          description="Service Information displays here."
+        />
+      </InfoCardAccordion>
+
+      <InfoCardAccordion
+        icon={<FiFileText size={16} />}
+        title="ROP History"
+        subtitle="Return of premium history"
+        isOpen={openStates[6]}
+        onToggle={() => toggle(6)}
+      >
+        <EmptyState
+          title="No Record Found"
+          description="ROP history displays here."
+        />
+      </InfoCardAccordion>
+
+      <InfoCardAccordion
+        icon={<LuUsersRound size={16} />}
+        title="Transfer History"
+        subtitle="Plan transfer records"
+        isOpen={openStates[7]}
+        onToggle={() => toggle(7)}
+      >
+        <EmptyState
+          title="No Record Found"
+          description="Transfer history displays here."
+        />
+      </InfoCardAccordion>
+    </Flex>
   );
 }
 
@@ -237,7 +284,7 @@ export function ListOfPlans({
                     "/reinstatement")
                 }
               >
-                <HiRefresh /> Reinstate Plan
+                <HiRefresh /> Reinstate
               </PrimaryMdButton>
             </Show>
             <Show when={isMobile}>
@@ -250,7 +297,7 @@ export function ListOfPlans({
                     "/reinstatement")
                 }
               >
-                <HiRefresh /> Reinstate Plan
+                <HiRefresh /> Reinstate
               </PrimarySmButton>
             </Show>
           </Box>
@@ -282,7 +329,7 @@ export function ListOfPlans({
                     "/transfer-of-rights")
                 }
               >
-                <HiRefresh /> Transfer Plan
+                <HiRefresh /> Transfer
               </PrimarySmButton>
             </Show>
           </Box>
@@ -311,7 +358,7 @@ export function ListOfPlans({
             }
           }}
         >
-          <LuTrash /> Delete Plan
+          <LuTrash /> Delete
         </Button>
       )}
     </Flex>
