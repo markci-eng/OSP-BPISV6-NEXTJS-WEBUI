@@ -58,24 +58,6 @@ export function AgentReassignForm({
 
   return (
     <Box my={2}>
-      <Flex
-        direction="column"
-        gap={2}
-        mb={{
-          base: 2,
-          md: 4,
-        }}
-      >
-        <Flex align="center" gap={2}>
-          <FormTitle label={"Re-Organize Agent"} />
-        </Flex>
-
-        <Caption>
-          Assign a new superior for this sales agent. The request will be
-          submitted for approval.
-        </Caption>
-      </Flex>
-
       <Flex gap={6} alignItems="start" direction="column">
         {/* LEFT — agent + current superior details */}
         <AgentProfileHeaderCard agent={selectedAgent} />

@@ -34,6 +34,45 @@ interface ContactEntry {
   landline: string;
 }
 
+const mockAgent: SalesAgent = {
+  id: "SA21",
+  name: "Lim, Carlo",
+  firstName: "Carlo",
+  lastName: "Lim",
+  middleName: "Santos",
+  suffix: "",
+  placeOfBirth: "Manila",
+  birthDate: "1993-05-11",
+  gender: "MALE",
+  civilStatus: "Single",
+  nationality: "Filipino",
+  naturalizationDate: "N/A",
+  height: "5'6\"",
+  weight: "150 lbs",
+  position: "SA2",
+  hireDate: "2022-01-01",
+  employeeStatus: "Active",
+  branch: "Makati",
+  superiorId: "STL1",
+  sssNumber: "34-1234568-4",
+  nbiNumber: "12-345678907-8",
+  tinNumber: "1000-0007-0007",
+  landline: "800-7007",
+  mobile: "+63 917 111 1007",
+  email: "carlo.lim@stpeter.com.ph",
+  address: {
+    unit: "Unit 9F",
+    street: "Legazpi St.",
+    barangay: "Legazpi Village",
+    district: "District 1",
+    city: "Makati",
+    province: "Metro Manila",
+    zipCode: "1229",
+  },
+  isContractPrinted: true,
+  isSFIDPrinted: true,
+};
+
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 const emptyAddress = (): AddressEntry => ({
@@ -55,7 +94,7 @@ const emptyContact = (): ContactEntry => ({
 });
 
 const AgentEditForm: React.FC<AgentEditFormProps> = ({
-  selectedAgent,
+  selectedAgent = mockAgent,
   onCancel,
   onSubmitted,
   hideActions,
@@ -109,51 +148,51 @@ const AgentEditForm: React.FC<AgentEditFormProps> = ({
           >
             <InputFloatingLabel
               label="Last Name"
-              defaultValue={selectedAgent?.lastName ?? ""}
+              value={selectedAgent?.lastName ?? ""}
             />
             <InputFloatingLabel
               label="First Name"
-              defaultValue={selectedAgent?.firstName ?? ""}
+              value={selectedAgent?.firstName ?? ""}
             />
             <InputFloatingLabel
               label="Middle Name"
-              defaultValue={selectedAgent?.middleName ?? ""}
+              value={selectedAgent?.middleName ?? ""}
             />
             <InputFloatingLabel
               label="Suffix"
-              defaultValue={selectedAgent?.suffix ?? ""}
+              value={selectedAgent?.suffix ?? ""}
             />
             <InputFloatingLabel
               label="Gender"
-              defaultValue={selectedAgent?.gender ?? ""}
+              value={selectedAgent?.gender ?? ""}
             />
             <InputFloatingLabel
               label="Date of Birth"
-              defaultValue={selectedAgent?.birthDate ?? ""}
+              value={selectedAgent?.birthDate ?? ""}
             />
             <InputFloatingLabel
               label="Place of Birth"
-              defaultValue={selectedAgent?.placeOfBirth ?? ""}
+              value={selectedAgent?.placeOfBirth ?? ""}
             />
             <InputFloatingLabel
               label="Civil Status"
-              defaultValue={selectedAgent?.civilStatus ?? ""}
+              value={selectedAgent?.civilStatus ?? ""}
             />
             <InputFloatingLabel
               label="Nationality"
-              defaultValue={selectedAgent?.nationality ?? ""}
+              value={selectedAgent?.nationality ?? ""}
             />
             <InputFloatingLabel
               label="Naturalization Date"
-              defaultValue={selectedAgent?.naturalizationDate ?? ""}
+              value={selectedAgent?.naturalizationDate ?? ""}
             />
             <InputFloatingLabel
               label="Height"
-              defaultValue={selectedAgent?.height ?? ""}
+              value={selectedAgent?.height ?? ""}
             />
             <InputFloatingLabel
               label="Weight"
-              defaultValue={selectedAgent?.weight ?? ""}
+              value={selectedAgent?.weight ?? ""}
             />
           </Grid>
         </Card.MainContent>

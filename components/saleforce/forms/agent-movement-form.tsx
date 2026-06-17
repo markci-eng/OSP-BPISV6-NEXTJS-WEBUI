@@ -115,16 +115,6 @@ export function AgentMovementForm({
 
   return (
     <Box my={2}>
-      <Flex direction="column" gap={1} mb={4}>
-        <Flex align="center" gap={2}>
-          <FormTitle label="Agent Movement" />
-        </Flex>
-        <Caption>
-          Submit a promotion, demotion, or lateral movement request for this
-          sales agent. The request will be subject to approval.
-        </Caption>
-      </Flex>
-
       <Flex gap={6} alignItems="start" direction="column">
         <AgentProfileHeaderCard agent={selectedAgent} />
 
