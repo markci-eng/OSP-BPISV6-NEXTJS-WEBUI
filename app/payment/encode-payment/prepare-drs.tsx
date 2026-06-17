@@ -3,34 +3,29 @@
 import {
   Box,
   Flex,
-  Text,
-  Heading,
   Badge,
-  Separator,
   Dialog,
   Portal,
   CloseButton,
   Button,
   IconButton,
-  Grid,
 } from "@chakra-ui/react";
 
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Body, DynamicButton, SaveButton } from "st-peter-ui";
-import DrsDataTable, { columns } from "../components/drsDataTable";
+import { Body, DynamicButton } from "st-peter-ui";
 import { DrsRowData, PaymentRecord } from "../data/payment.types";
+import { columns } from "../components/drsDataTable";
 
 import { DrsFunction } from "../utils/drsFunction";
 
 import DrsPaymentSummary from "../components/drsPaymentSummary";
-import Card from "@/components/cards/Card";
 import { BsPrinter } from "react-icons/bs";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import { ColumnDef } from "@tanstack/react-table";
 import { TblLoanHdrData } from "@/app/Model/Data/rawData";
-import LabelText from "@/components/texts/LabelText";
+import { Card } from "@/claude components/card-accordion/card";
+import { RowItem } from "@/claude components/info-card/row-item";
 
 type Props = {
   payments: PaymentRecord[];
@@ -39,12 +34,14 @@ type Props = {
 export default function PrepareDRS({ payments }: Props) {
   const [open, setOpen] = useState(false);
   const { rows, totals } = DrsFunction(payments);
+
   type LafRowData = DrsRowData & {
     LAFNo?: string;
     ARDate?: string;
     ARNo?: number;
     ARAmount?: number;
   };
+
   const Lafcolumns: ColumnDef<LafRowData>[] = [
     { accessorKey: "LAFNo", header: "LAF" },
     { accessorKey: "LPANo", header: "LPA" },
@@ -55,12 +52,11 @@ export default function PrepareDRS({ payments }: Props) {
     { accessorKey: "ARNo", header: "AR Number", meta: { numeric: true } },
     { accessorKey: "ARAmount", header: "AR Amount", meta: { numeric: true } },
   ];
+
   const LPColumns: ColumnDef<LafRowData>[] = columns;
   const isLaf = TblLoanHdrData.some((a) => a.LAFNo === payments[0]?.LPANo);
   const drsColumns = isLaf ? Lafcolumns : LPColumns;
 
-  // For LOAN entries the source PaymentRecord stores the LAF number in LPANo,
-  // the AR number in SI, the AR date in SIDate, and the AR amount in GrossCom.
   const lafRows: LafRowData[] = useMemo(() => {
     if (!isLaf) return [];
     return rows.map((row) => {
@@ -81,6 +77,7 @@ export default function PrepareDRS({ payments }: Props) {
     () => lafRows.reduce((sum, r) => sum + (r.ARAmount ?? 0), 0),
     [lafRows],
   );
+
   const [drsNo] = useState(
     () => `DRS${Math.floor(100000000000 + Math.random() * 900000000000)}`,
   );
@@ -221,187 +218,148 @@ export default function PrepareDRS({ payments }: Props) {
 
   return (
     <Box mx="auto">
-      <Card.Root title={"Digital Remittance"}>
-        <Card.ButtonSection>
-          <IconButton onClick={handlePrint} aria-label="Print DRS report">
+      <Card
+        activeIcon={<BsPrinter />}
+        title="Digital Remittance"
+        subtitle={drsNo}
+      >
+        <Flex justify="flex-end" mb={3}>
+          <IconButton
+            size="sm"
+            variant="outline"
+            onClick={handlePrint}
+            aria-label="Print DRS report"
+          >
             <BsPrinter />
           </IconButton>
-        </Card.ButtonSection>
-        <Card.MainContent>
-          {/* <Separator my={4} /> */}
+        </Flex>
 
-          {/* TABLE */}
-          <Box overflowX="auto">
-            <DataTable
-              columns={drsColumns}
-              data={drsRows}
-              features={{
-                search: false,
-                sorting: false,
-                draggable: false,
-                selection: false,
-                filtering: false,
-                columnToggle: false,
-              }}
-              headerContent={
-                <Flex justify="space-between" align="flex-start" w="full" gap={4} wrap="wrap">
-                  <Box>
-                    <Body>REMITTANCE (HEAD OFFICE)</Body>
-                    <Body mt={1} fontWeight="bold">
-                      KIRK PATRICK OLIVAR
-                    </Body>
-                  </Box>
-                  <Box textAlign={{ base: "left", md: "right" }}>
-                    <Body fontSize="sm">
-                      Payment Type <Badge colorPalette="green">CASH</Badge>
-                    </Body>
-                    <Body fontWeight="bold">{drsNo}</Body>
-                  </Box>
-                </Flex>
-              }
-              summaryRows={[
-                isLaf
-                  ? {
-                      id: "assigned-documents-summary",
-                      label: "Total",
-                      labelColumnId: "LPANo",
-                      aggregations: {
-                        ARAmount: "sum",
-                      },
-                    }
-                  : {
-                      id: "assigned-documents-summary",
-                      label: "Total",
-                      labelColumnId: "LPANo",
-                      aggregations: {
-                        GrossCom: "sum",
-                        ncom: "sum",
-                        ComDue: "sum",
-                        others: "sum",
-                        TEPCV: "sum",
-                        COMPCV: "sum",
-                        net: "sum",
-                      },
+        <Box overflowX="auto">
+          <DataTable
+            columns={drsColumns}
+            data={drsRows}
+            features={{
+              search: false,
+              sorting: false,
+              draggable: false,
+              selection: false,
+              filtering: false,
+              columnToggle: false,
+            }}
+            headerContent={
+              <Flex
+                justify="space-between"
+                align="flex-start"
+                w="full"
+                gap={4}
+                wrap="wrap"
+              >
+                <Box>
+                  <Body>REMITTANCE (HEAD OFFICE)</Body>
+                  <Body mt={1} fontWeight="bold">
+                    KIRK PATRICK OLIVAR
+                  </Body>
+                </Box>
+                <Box textAlign={{ base: "left", md: "right" }}>
+                  <Body fontSize="sm">
+                    Payment Type <Badge colorPalette="green">CASH</Badge>
+                  </Body>
+                  <Body fontWeight="bold">{drsNo}</Body>
+                </Box>
+              </Flex>
+            }
+            summaryRows={[
+              isLaf
+                ? {
+                    id: "assigned-documents-summary",
+                    label: "Total",
+                    labelColumnId: "LPANo",
+                    aggregations: { ARAmount: "sum" },
+                  }
+                : {
+                    id: "assigned-documents-summary",
+                    label: "Total",
+                    labelColumnId: "LPANo",
+                    aggregations: {
+                      GrossCom: "sum",
+                      ncom: "sum",
+                      ComDue: "sum",
+                      others: "sum",
+                      TEPCV: "sum",
+                      COMPCV: "sum",
+                      net: "sum",
                     },
-              ]}
-              renderDetail={(row) => (
-                <Card.Root title={`${row.SI} - ${row.LPANo}`}>
-                  <Card.MainContent>
-                    <Grid
-                      templateColumns={{
-                        base: "1fr",
-                      }}
-                      gap={2}
-                    >
-                      <LabelText label="Name" value={row.name} />
-                      <LabelText label="SI Date" value={row.SIDate} />
-                      <LabelText
-                        label="Installment Number"
-                        value={row.InstNo}
-                      />
-                      <LabelText label="Pay Class" value={row.PayClass} />
-                      <LabelText
-                        label="Amount"
-                        value={
-                          row.GrossCom && row.GrossCom !== 0
-                            ? row.GrossCom.toString()
-                            : (row.ncom?.toString() ?? "0")
-                        }
-                      />
-                      <LabelText
-                        label="CBI"
-                        value={row.ComDue?.toString() ?? "0"}
-                      />
-                      <LabelText
-                        label="Commission"
-                        value={row.COMPCV?.toString() ?? "0"}
-                      />
-                      <LabelText
-                        label="TE"
-                        value={row.TEPCV?.toString() ?? "0"}
-                      />
+                  },
+            ]}
+            renderDetail={(row) => (
+              <Box px={2} py={3}>
+                <RowItem label="Name" value={row.name} />
+                <RowItem label="SI Date" value={row.SIDate} />
+                <RowItem label="Installment Number" value={row.InstNo} />
+                <RowItem label="Pay Class" value={row.PayClass} />
+                <RowItem
+                  label="Amount"
+                  value={
+                    row.GrossCom && row.GrossCom !== 0
+                      ? row.GrossCom.toString()
+                      : (row.ncom?.toString() ?? "0")
+                  }
+                />
+                <RowItem label="CBI" value={row.ComDue?.toString() ?? "0"} />
+                <RowItem
+                  label="Commission"
+                  value={row.COMPCV?.toString() ?? "0"}
+                />
+                <RowItem label="TE" value={row.TEPCV?.toString() ?? "0"} />
+                <RowItem label="NET" value={row.net?.toString() ?? "0"} />
+              </Box>
+            )}
+          />
 
-                      <LabelText
-                        label="NET"
-                        value={row.net?.toString() ?? "0"}
-                      />
-                    </Grid>
-                  </Card.MainContent>
-                </Card.Root>
-              )}
+          <Box display={{ base: "block", md: "none" }}>
+            <DrsPaymentSummary
+              totals={totals}
+              items={
+                isLaf
+                  ? [{ label: "AR Total Amount", value: totalARAmount }]
+                  : undefined
+              }
             />
-            {/* <DrsDataTable
-            columns={columns}
-            data={rows}
-            totals={totals}
-            onRowClick={(row) => console.log("Clicked:", row)}
-          /> */}
-            {/* <DrsDataTable
-              payments={payments}
-              onRowClick={(row) => console.log(row)}
-            /> */}
-            <Box display={{ base: "block", md: "none" }}>
-              <DrsPaymentSummary
-                totals={totals}
-                items={
-                  isLaf
-                    ? [{ label: "AR Total Amount", value: totalARAmount }]
-                    : undefined
-                }
-              />
-            </Box>
-            {/* <Flex justify="flex-end" mt={2}>
-            <SaveButton onClick={handleConfirm} />
-          </Flex> */}
           </Box>
+        </Box>
 
-          {/* CONFIRM DIALOG */}
-          <Dialog.Root
-            open={open}
-            size={{ base: "full", md: "md" }}
-            placement="center"
-          >
-            <Portal>
-              <Dialog.Backdrop />
-              <Dialog.Positioner p={{ base: 0, md: undefined }}>
-                <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
-                  <Dialog.Header>
-                    <Dialog.Title>Confirmation</Dialog.Title>
-                  </Dialog.Header>
+        <Dialog.Root
+          open={open}
+          size={{ base: "full", md: "md" }}
+          placement="center"
+        >
+          <Portal>
+            <Dialog.Backdrop />
+            <Dialog.Positioner p={{ base: 0, md: undefined }}>
+              <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
+                <Dialog.Header>
+                  <Dialog.Title>Confirmation</Dialog.Title>
+                </Dialog.Header>
 
-                  <Dialog.Body>
-                    <Body>
-                      Would you like to create Digital Remittance Slip?
-                    </Body>
-                  </Dialog.Body>
+                <Dialog.Body>
+                  <Body>Would you like to create Digital Remittance Slip?</Body>
+                </Dialog.Body>
 
-                  <Dialog.Footer>
-                    <DynamicButton
-                      label="YES"
-                      onClick={() => {
-                        // handleYes();
-                        setOpen(false);
-                      }}
-                    />
+                <Dialog.Footer>
+                  <DynamicButton label="YES" onClick={() => setOpen(false)} />
+                  <Button bg="red.600" w="120px" onClick={() => setOpen(false)}>
+                    NO
+                  </Button>
+                </Dialog.Footer>
 
-                    <Button
-                      bg="red.600"
-                      w="120px"
-                      onClick={() => setOpen(false)}
-                    >
-                      NO
-                    </Button>
-                  </Dialog.Footer>
-
-                  <Dialog.CloseTrigger asChild>
-                    <CloseButton size="sm" onClick={() => setOpen(false)} />
-                  </Dialog.CloseTrigger>
-                </Dialog.Content>
-              </Dialog.Positioner>
-            </Portal>
-          </Dialog.Root>
-        </Card.MainContent>
-      </Card.Root>
+                <Dialog.CloseTrigger asChild>
+                  <CloseButton size="sm" onClick={() => setOpen(false)} />
+                </Dialog.CloseTrigger>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        </Dialog.Root>
+      </Card>
     </Box>
   );
 }

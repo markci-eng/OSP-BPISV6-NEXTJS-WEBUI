@@ -16,7 +16,7 @@ import {
   Spinner,
   Text,
 } from "@chakra-ui/react";
-import { ChevronDown, ChevronUp, Receipt, Repeat, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Receipt, Trash2 } from "lucide-react";
 import {
   Body,
   Box,
@@ -42,7 +42,6 @@ import {
 } from "@/components/common/reusable-lookup/LookUpField";
 
 import { PaymentRecord } from "../data/payment.types";
-import { useDisclosure } from "@chakra-ui/react";
 import { Employee } from "@/data/doc-management/employeeSelector";
 import { EMPLOYEES } from "@/data/doc-management/documenttype";
 import { PlanholderLookupItem } from "@/app/Model/Types/global.types";
@@ -52,19 +51,18 @@ import { computePayments } from "../utils/paymentComputation";
 import SectionTitle from "@/components/texts/SectionTitle";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import LabelText from "@/components/texts/LabelText";
 import { TblLoanHdrData } from "@/app/Model/Data/rawData";
 import { RowAction } from "@/components/common/reusable-tableV2/types";
-import Card from "@/components/cards/Card";
 import { OSPBadge } from "@/components/common/badge/badge";
+import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
+import { LuSearch } from "react-icons/lu";
+import { RowItem } from "@/claude components/info-card/row-item";
 
 type Props = {
   payments: PaymentRecord[];
   setPayments: React.Dispatch<React.SetStateAction<PaymentRecord[]>>;
 };
 
-// Account type filter for the planholder lookup.
-// ALL → both Life Plan (PH) and Lending (LOAN) records.
 const ACCOUNT_FILTER_ALL = "ALL";
 const ACCOUNT_FILTER_LIFE_PLAN = "LP";
 const ACCOUNT_FILTER_LENDING = "LN";
@@ -83,8 +81,9 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
   const [accountFilter, setAccountFilter] = useState(ACCOUNT_FILTER_ALL);
   const [selectPlanholder, setSelectPlanholder] =
     useState<PlanholderLookupItem | null>(null);
+  const [searchOpen, setSearchOpen] = useState(true);
+  const [paymentOpen, setPaymentOpen] = useState(false);
 
-  // Restrict the lookup data source to the account type chosen in the dropdown.
   const filteredLookup = useMemo(() => {
     if (accountFilter === ACCOUNT_FILTER_LIFE_PLAN) {
       return planholderLookup.filter((item) => item.EntryType === "PH");
@@ -95,8 +94,6 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     return planholderLookup;
   }, [accountFilter]);
 
-  // Keep the dropdown and lookup in sync. When a record is picked while the
-  // filter is still "All", inherit the record's account type into the dropdown.
   const handleSelectPlanholder = (item: PlanholderLookupItem | null) => {
     setSelectPlanholder(item);
     if (item && accountFilter === ACCOUNT_FILTER_ALL) {
@@ -106,10 +103,12 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
           : ACCOUNT_FILTER_LIFE_PLAN,
       );
     }
+    if (item) {
+      setSearchOpen(false);
+      setPaymentOpen(true);
+    }
   };
 
-  // Changing the dropdown immediately refreshes the lookup; clear any selection
-  // that no longer matches the chosen account type.
   const handleAccountFilterChange = (next: string) => {
     setAccountFilter(next);
     if (
@@ -122,6 +121,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
       setSelectPlanholder(null);
     }
   };
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [taxOpen, setTaxOpen] = useState(false);
   const [installmentAmount, setInstallmentAmount] = useState<number>(0);
@@ -129,21 +129,21 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
   const [selectedSIDate, setSelectedSIDate] = useState(() => {
     const today = new Date();
     const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0"); // month is 0-indexed
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
     const dd = String(today.getDate()).padStart(2, "0");
-    return `${yyyy}-${mm}-${dd}`; // "YYYY-MM-DD" format
+    return `${yyyy}-${mm}-${dd}`;
   });
-  const { open, onOpen, onClose } = useDisclosure();
+
   const defaultEmployee = EMPLOYEES[0];
+
   useEffect(() => {
     if (paymentClass === "CO" && payments) {
       setIsDialogOpen(true);
     }
   }, [paymentClass, payments, nextSI]);
 
-  // For LOAN planholders only Lending Payment (LE) / Lending Penalty (PL) are
-  // valid. Reset the payment class to a valid option when the entry type changes.
   const isLoan = selectPlanholder?.EntryType === "LOAN";
+
   useEffect(() => {
     if (isLoan) {
       if (paymentClass !== "LE" && paymentClass !== "PL") {
@@ -153,12 +153,11 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
       setPaymentClass("DC");
     }
   }, [isLoan, paymentClass]);
-  // Find selected planholder's plan details
+
   const planDetails = selectPlanholder;
 
   useEffect(() => {
     const amount = planDetails?.PlanData?.PlanType?.IntsAmt;
-
     setInstallmentAmount(amount ? amount : 0);
   }, [planDetails]);
 
@@ -172,21 +171,20 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
         setPayments((prev) => prev.filter((p) => p.SI !== row.SI));
         toast.success(`Deleted ${row.SI}`);
       },
-
       hidden: (row: any) => payments[0]?.SI !== row.SI,
     },
   ];
 
   const getNextInstNo = (lpaNumber: string) => {
     const lpaPayments = payments.filter((p) => p.LPANo === lpaNumber);
-    if (lpaPayments.length === 0) return 1; // first installment
+    if (lpaPayments.length === 0) return 1;
     const maxInst = Math.max(...lpaPayments.map((p) => p.InstNo as any));
     return maxInst + 1;
   };
-  // Compute next SI
+
   useEffect(() => {
     if (payments.length === 0) {
-      setNextSI("00000050"); // starting SI if no records
+      setNextSI("00000050");
     } else {
       const maxSI = payments.reduce(
         (max, p) => Math.max(max, parseInt(p.SI, 10)),
@@ -201,7 +199,6 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
       toast.error("Please select Planholder");
       return;
     }
-    // Loan AR payments are not installment-based, so InstNo stays fixed.
     const newInstNo = isLoan ? 1 : getNextInstNo(selectPlanholder.LPANo);
     const formattedSI = /^\d+$/.test(nextSI) ? nextSI.padStart(8, "0") : nextSI;
 
@@ -265,6 +262,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
         return { label: "UNKNOWN", color: "warning" };
     }
   };
+
   const SearchHeader: LookupColumn<PlanholderLookupItem>[] = [
     {
       key: "LAFNo",
@@ -274,14 +272,12 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
         const refNo = row.EntryType === "LOAN" ? row.LAFNo : row.LPANo;
         return (
           <div style={{ display: "flex", alignItems: "center" }}>
-            <OSPBadge type={badge.color}> {badge.label}</OSPBadge>
-
+            <OSPBadge type={badge.color}>{badge.label}</OSPBadge>
             <span>{refNo}</span>
           </div>
         );
       },
     },
-
     { key: "FirstName", header: "First Name" },
     { key: "LastName", header: "Last Name" },
     { key: "MiddleName", header: "Middle Name" },
@@ -296,8 +292,6 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     { key: "branch", header: "Branch" },
   ];
 
-  // Per-planholder commission / transportation expense.
-  // Displayed on selection and constant regardless of the payments list.
   const COMMISSION_PER_PLANHOLDER = 342;
   const TRANSPORTATION_EXPENSE_PER_PLANHOLDER = 76;
 
@@ -322,8 +316,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     chequeNumber: "",
   });
 
-  // ✅ MOCK OCR FUNCTION
-  const mockOCR = async (file: File) => {
+  const mockOCR = async (_file: File) => {
     return new Promise<typeof chequeData>((resolve) => {
       setTimeout(() => {
         resolve({
@@ -337,11 +330,8 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     });
   };
 
-  // ✅ FILE HANDLER
   const handleFileChange = async (files: File[]) => {
     if (!files || files.length === 0) return;
-
-    // // reset first
     setChequeData({
       actno: "",
       accname: "",
@@ -349,15 +339,12 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
       bankBranch: "",
       chequeNumber: "",
     });
-
     setIsProcessing(true);
-
     try {
       const result = await mockOCR(files[0]);
-
-      setChequeData(result); // only update once
+      setChequeData(result);
       toast.success("Cheque details extracted!");
-    } catch (err) {
+    } catch {
       toast.error("Failed to process cheque");
     } finally {
       setIsProcessing(false);
@@ -381,16 +368,26 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
 
   return (
     <Box mx="auto" maxW="full">
-      {/* PLANHOLDER SEARCH */}
-
-      <Card.Root>
-        <Card.MainContent>
+      <Flex flexDir="column" gap={4}>
+        {/* FIND PLANHOLDER */}
+        <InputCardAccordion
+          icon={<LuSearch size={16} />}
+          title="Find Planholder"
+          subtitle={
+            selectPlanholder
+              ? `${selectPlanholder.LastName}, ${selectPlanholder.FirstName} ${selectPlanholder.MiddleName}`
+              : "Search by Name / LPA# / LAF#"
+          }
+          isOpen={searchOpen}
+          onToggle={() => setSearchOpen((p) => !p)}
+          isComplete={!!selectPlanholder}
+        >
           <Flex
-            justify={"end"}
+            justify="end"
             gap={2}
             align="start"
             wrap="wrap"
-            alignItems={"center"}
+            alignItems="center"
           >
             <Box width={{ base: "full", md: "3xs" }}>
               <SelectFloatingLabel
@@ -415,44 +412,24 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   "MiddleName",
                 ]}
                 onSelect={handleSelectPlanholder}
-                renderDisplay={(a) => {
-                  if (a.EntryType === "LOAN") {
-                    return `LOAN: ${a.LAFNo} - ${a.FirstName} ${a.LastName}`;
-                  }
-
-                  return `PLAN: ${a.LPANo} - ${a.FirstName} ${a.LastName}`;
-                }}
+                renderDisplay={(a) =>
+                  a.EntryType === "LOAN"
+                    ? `LOAN: ${a.LAFNo} - ${a.FirstName} ${a.LastName}`
+                    : `PLAN: ${a.LPANo} - ${a.FirstName} ${a.LastName}`
+                }
                 value={selectPlanholder}
               />
             </Box>
           </Flex>
-        </Card.MainContent>
-      </Card.Root>
 
-      {/* PLANHOLDER DETAILS */}
-      <Box mt={5}>
-        {/* EMPTY STATE */}
-        {!selectPlanholder && (
-          <Card.Root title={"Planholder Details"}>
-            <Card.MainContent>
-              <EmptyStateCard
-                title="No Planholder Selected"
-                description="Search and select a planholder to display plan details."
-              />
-            </Card.MainContent>
-          </Card.Root>
-        )}
-
-        {selectPlanholder && (
-          <Card.Root>
-            <Card.MainContent>
+          {selectPlanholder && (
+            <Box mt={4}>
               <Flex
                 direction={{ base: "column", lg: "row" }}
                 justify="space-between"
                 align={{ base: "stretch", lg: "center" }}
                 gap={{ base: 3, lg: 4 }}
               >
-                {/* IDENTITY */}
                 <Flex
                   align="center"
                   gap={3}
@@ -520,7 +497,6 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   </Flex>
                 </Flex>
 
-                {/* DETAIL CHIPS */}
                 {selectPlanholder.EntryType == "PH" && (
                   <Grid
                     gap={2}
@@ -553,495 +529,438 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   </Grid>
                 )}
               </Flex>
-            </Card.MainContent>
-          </Card.Root>
-        )}
-      </Box>
-
-      {/* PAYMENT DETAILS */}
-      <Box mt={5} mx="auto">
-        {/* HEADER */}
-        <Card.Root
-          title={
-            selectPlanholder?.EntryType == "LOAN"
-              ? "Loan Payment Details"
-              : "Payment Details"
-          }
-        >
-          <Card.ButtonSection>
-            <Box
-              width={{ base: "full", md: "sm" }}
-              display={
-                selectPlanholder?.EntryType == "LOAN" || !selectPlanholder
-                  ? "none"
-                  : ""
-              }
-            >
-              <LookupField<Employee>
-                label=""
-                placeholder="Search by name or ID..."
-                modalTitle="Search Employee"
-                columns={employeeColumns}
-                dataSource={EMPLOYEES}
-                searchKeys={["id", "name", "branch"]}
-                onSelect={setSelectedEmployee}
-                renderDisplay={(emp) => `${emp.name} (${emp.id})`}
-                value={selectedEmployee || defaultEmployee}
-              />
             </Box>
-          </Card.ButtonSection>
+          )}
+        </InputCardAccordion>
 
-          <Card.MainContent>
-            {/* EMPTY STATE */}
-            {!selectPlanholder && (
-              <EmptyStateCard
-                title="No Planholder Selected"
-                description="Search and select a planholder to start entering payment details."
-              />
-            )}
+        {/* PAYMENT DETAILS */}
+        <InputCardAccordion
+          icon={<Receipt size={16} />}
+          title={isLoan ? "Loan Payment Details" : "Payment Details"}
+          subtitle={
+            !selectPlanholder
+              ? "Select a planholder first"
+              : payments.length > 0
+                ? `${payments.length} payment(s) encoded`
+                : "Enter payment information"
+          }
+          isOpen={paymentOpen}
+          onToggle={() => setPaymentOpen((p) => !p)}
+          isComplete={payments.length > 0}
+        >
+          {!selectPlanholder && (
+            <EmptyStateCard
+              title="No Planholder Selected"
+              description="Search and select a planholder to start entering payment details."
+            />
+          )}
 
-            {/* PAYMENT FORM */}
-            <Collapsible.Root open={selectPlanholder != null}>
-              <Collapsible.Content>
-                {/* PAYMENT GRID */}
-                <Grid
-                  templateColumns={{
-                    base: "1fr",
-                    sm: "repeat(1,1fr)",
-                    lg: "repeat(3,1fr)",
-                    xl: "repeat(4,1fr)",
-                  }}
-                  gapX={{ base: 1, md: 2 }}
-                  alignItems="center"
-                >
-                  <SelectFloatingLabel
-                    label="Payment Class"
-                    collection={isLoan ? LoanPayClass : PayClass}
-                    value={[paymentClass]}
-                    onValueChanged={(e) => setPaymentClass(e[0])}
-                  />
+          {selectPlanholder && (
+            <>
+              <Box
+                width={{ base: "full", md: "sm" }}
+                mb={3}
+                display={isLoan ? "none" : ""}
+              >
+                <LookupField<Employee>
+                  label=""
+                  placeholder="Search by name or ID..."
+                  modalTitle="Search Employee"
+                  columns={employeeColumns}
+                  dataSource={EMPLOYEES}
+                  searchKeys={["id", "name", "branch"]}
+                  onSelect={setSelectedEmployee}
+                  renderDisplay={(emp) => `${emp.name} (${emp.id})`}
+                  value={selectedEmployee || defaultEmployee}
+                />
+              </Box>
 
-                  <SelectFloatingLabel
-                    label="Payment Type"
-                    collection={PayType}
-                    value={[paymentType]}
-                    onValueChanged={(e) => setPaymentType(e[0])}
-                  />
+              <Grid
+                templateColumns={{
+                  base: "1fr",
+                  sm: "repeat(1,1fr)",
+                  lg: "repeat(3,1fr)",
+                  xl: "repeat(4,1fr)",
+                }}
+                gapX={{ base: 1, md: 2 }}
+                alignItems="center"
+              >
+                <SelectFloatingLabel
+                  label="Payment Class"
+                  collection={isLoan ? LoanPayClass : PayClass}
+                  value={[paymentClass]}
+                  onValueChanged={(e) => setPaymentClass(e[0])}
+                />
 
-                  <InputFloatingLabel
-                    key={nextSI}
-                    label={
-                      selectPlanholder?.EntryType == "PH"
-                        ? "Sales Invoice Number"
-                        : "AR Number"
+                <SelectFloatingLabel
+                  label="Payment Type"
+                  collection={PayType}
+                  value={[paymentType]}
+                  onValueChanged={(e) => setPaymentType(e[0])}
+                />
+
+                <InputFloatingLabel
+                  key={nextSI}
+                  label={
+                    selectPlanholder?.EntryType == "PH"
+                      ? "Sales Invoice Number"
+                      : "AR Number"
+                  }
+                  name="si"
+                  value={nextSI}
+                  onChange={(e) => setNextSI(e.currentTarget.value)}
+                  onBlur={(e) => {
+                    const raw = e.currentTarget.value.trim();
+                    if (/^\d+$/.test(raw)) {
+                      setNextSI(raw.padStart(8, "0"));
                     }
-                    name="si"
-                    value={nextSI}
-                    onChange={(e) => setNextSI(e.currentTarget.value)}
-                    onBlur={(e) => {
-                      const raw = e.currentTarget.value.trim();
-                      if (/^\d+$/.test(raw)) {
-                        setNextSI(raw.padStart(8, "0"));
+                  }}
+                />
+
+                <InputFloatingLabel
+                  label={
+                    selectPlanholder?.EntryType == "PH"
+                      ? "Sales Invoice Extension"
+                      : "AR Extension"
+                  }
+                  name="siext"
+                />
+
+                <HStack>
+                  <Button
+                    onClick={handleDecrease}
+                    display={selectPlanholder?.EntryType == "PH" ? "" : "none"}
+                  >
+                    -
+                  </Button>
+                  <InputFloatingLabel
+                    key={installmentAmount}
+                    label="Amount"
+                    name="amount"
+                    value={installmentAmount.toString()}
+                    onChange={(e) =>
+                      setInstallmentAmount(Number(e.currentTarget.value) || 0)
+                    }
+                  />
+                  <Button
+                    onClick={handleIncrease}
+                    display={selectPlanholder?.EntryType == "PH" ? "" : "none"}
+                  >
+                    +
+                  </Button>
+                </HStack>
+
+                <InputFloatingLabel
+                  label={
+                    selectPlanholder?.EntryType == "PH"
+                      ? "Sales Invoice Date"
+                      : "AR Date"
+                  }
+                  name="sidate"
+                  type="date"
+                  value={selectedSIDate}
+                  onChange={(e) => setSelectedSIDate(e.target.value)}
+                />
+
+                <GridItem
+                  colSpan={{ base: 1, lg: 3, xl: 2 }}
+                  display={selectPlanholder?.EntryType == "PH" ? "" : "none"}
+                  boxShadow="sm"
+                  p={3}
+                  borderRadius="sm"
+                >
+                  <Grid
+                    templateColumns={{ base: "1fr", md: "repeat(2,1fr)" }}
+                    gap={{ base: 1, md: 2, xl: 4 }}
+                  >
+                    <RowItem
+                      label="Com CBI"
+                      value={computed.comCBI.toFixed(2)}
+                    />
+                    <RowItem
+                      label="NCom CBI"
+                      value={computed.ncomCBI.toFixed(2)}
+                    />
+                    <RowItem
+                      label="Commission"
+                      value={computed.commission.toFixed(2)}
+                    />
+                    <RowItem
+                      label="Transportation Expense"
+                      value={computed.transportationExpense.toFixed(2)}
+                    />
+                  </Grid>
+                </GridItem>
+              </Grid>
+
+              {/* CHEQUE DETAILS */}
+              <Collapsible.Root
+                open={paymentType === "CK"}
+                unmountOnExit={false}
+              >
+                <Collapsible.Content>
+                  <Separator my={4} />
+                  <SectionTitle>Cheque Details</SectionTitle>
+                  <Separator my={3} />
+                  <Grid
+                    templateColumns={{
+                      base: "1fr",
+                      sm: "repeat(2,1fr)",
+                      lg: "repeat(3,1fr)",
+                      xl: "repeat(4,1fr)",
+                    }}
+                    gap={{ base: 1, md: 2, xl: 4 }}
+                    alignItems="center"
+                  >
+                    <InputFloatingLabel
+                      key={chequeData.actno}
+                      label="Account Number"
+                      value={chequeData.actno}
+                      onChange={(e) =>
+                        setChequeData((prev) => ({
+                          ...prev,
+                          actno: e.target.value,
+                        }))
+                      }
+                    />
+                    <InputFloatingLabel
+                      key={chequeData.accname}
+                      label="Account Name"
+                      name="accname"
+                      value={chequeData.accname}
+                      onChange={(e) =>
+                        setChequeData((prev) => ({
+                          ...prev,
+                          accname: e.target.value,
+                        }))
+                      }
+                    />
+                    <InputFloatingLabel
+                      key={chequeData.bankName}
+                      label="Bank Name"
+                      name="bankName"
+                      value={chequeData.bankName}
+                      disabled={isProcessing}
+                      onChange={(e) =>
+                        setChequeData((prev) => ({
+                          ...prev,
+                          bankName: e.target.value,
+                        }))
+                      }
+                    />
+                    <InputFloatingLabel
+                      key={chequeData.bankBranch}
+                      label="Bank Branch"
+                      name="bankBranch"
+                      value={chequeData.bankBranch}
+                      disabled={isProcessing}
+                      onChange={(e) =>
+                        setChequeData((prev) => ({
+                          ...prev,
+                          bankBranch: e.target.value,
+                        }))
+                      }
+                    />
+                    <InputFloatingLabel
+                      key={chequeData.chequeNumber}
+                      label="Cheque Number"
+                      name="chequeNumber"
+                      value={chequeData.chequeNumber}
+                      disabled={isProcessing}
+                      onChange={(e) =>
+                        setChequeData((prev) => ({
+                          ...prev,
+                          chequeNumber: e.target.value,
+                        }))
+                      }
+                    />
+                    <GridItem colSpan={{ base: 1, md: 2 }}>
+                      <FileUpload.Root width="100%">
+                        <FileUpload.HiddenInput
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            handleFileChange(files);
+                          }}
+                        />
+                        <FileUpload.Context>
+                          {({ acceptedFiles }) => (
+                            <Box
+                              asChild
+                              width="100%"
+                              border="1px solid"
+                              borderColor="gray.300"
+                              borderRadius="sm"
+                              cursor="pointer"
+                              p={2}
+                              fontSize="sm"
+                              _hover={{ borderColor: "gray.400" }}
+                            >
+                              <FileUpload.Trigger>
+                                {isProcessing ? (
+                                  <Flex align="center" gap={2}>
+                                    <Spinner size="sm" />
+                                    <Body>Processing cheque...</Body>
+                                  </Flex>
+                                ) : acceptedFiles.length === 0 ? (
+                                  <Body>Upload Cheque Slip</Body>
+                                ) : (
+                                  <Body>{acceptedFiles[0].name}</Body>
+                                )}
+                              </FileUpload.Trigger>
+                            </Box>
+                          )}
+                        </FileUpload.Context>
+                      </FileUpload.Root>
+                      {!isProcessing && chequeData.actno && (
+                        <Body fontSize="xs" color="green.500" mt={1}>
+                          ✔ OCR data loaded
+                        </Body>
+                      )}
+                    </GridItem>
+                  </Grid>
+                </Collapsible.Content>
+              </Collapsible.Root>
+
+              {/* TAX DETAILS */}
+              {selectPlanholder?.EntryType == "PH" && (
+                <Box
+                  mt={4}
+                  borderWidth="1px"
+                  borderColor="gray.200"
+                  borderRadius="md"
+                  overflow="hidden"
+                >
+                  <Flex
+                    onClick={() => setTaxOpen((p) => !p)}
+                    align="center"
+                    justify="space-between"
+                    gap={2}
+                    w="full"
+                    px={{ base: 3, md: 4 }}
+                    py={3}
+                    bg="green.50"
+                    cursor="pointer"
+                    _hover={{ bg: "green.100" }}
+                  >
+                    <Flex align="center" gap={2} color="green.700">
+                      <Text fontWeight="semibold" fontSize="sm">
+                        Tax Details
+                      </Text>
+                    </Flex>
+                    <Flex align="center" gap={2}>
+                      <Text fontSize="sm" color="gray.600">
+                        Net:
+                      </Text>
+                      <Text fontWeight="bold" fontSize="sm" color="green.600">
+                        {`₱${computed.totalAmountDue.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`}
+                      </Text>
+                      <Box color="green.700">
+                        {taxOpen ? (
+                          <ChevronUp size={18} />
+                        ) : (
+                          <ChevronDown size={18} />
+                        )}
+                      </Box>
+                    </Flex>
+                  </Flex>
+
+                  <Collapsible.Root open={taxOpen}>
+                    <Collapsible.Content>
+                      <Box px={{ base: 3, md: 4 }} py={4}>
+                        <RowItem
+                          label="Vatable Sales"
+                          value={computed.vatableSales.toFixed(2)}
+                        />
+                        <RowItem
+                          label="VAT Exempt Sales"
+                          value={computed.vatExemptSales.toFixed(2)}
+                        />
+                        <RowItem
+                          label="Total Sales"
+                          value={computed.totalSales.toFixed(2)}
+                        />
+                        <RowItem
+                          label="Less VAT"
+                          value={computed.lessVat.toFixed(2)}
+                        />
+                        <RowItem
+                          label="Add 12% VAT"
+                          value={computed.vat.toFixed(2)}
+                        />
+                        <RowItem
+                          label="Sub Total"
+                          value={computed.subTotal.toFixed(2)}
+                        />
+                        <RowItem
+                          label="Zero Rated Sales"
+                          value={computed.zeroRatedSales.toFixed(2)}
+                        />
+                        <RowItem
+                          label="VAT Amount"
+                          value={computed.vatAmount.toFixed(2)}
+                        />
+                        <RowItem
+                          label="Amount Net of VAT"
+                          value={computed.amountNetOfVat.toFixed(2)}
+                        />
+                        <RowItem
+                          label="Amount Due"
+                          value={computed.amountDue.toFixed(2)}
+                        />
+                        <RowItem
+                          label="Withholding Tax"
+                          value={computed.withholdingTax.toFixed(2)}
+                        />
+                        <RowItem
+                          label="Total Amount Due"
+                          value={computed.totalAmountDue.toFixed(2)}
+                        />
+                      </Box>
+                    </Collapsible.Content>
+                  </Collapsible.Root>
+                </Box>
+              )}
+
+              {/* ADD TO LIST */}
+              <Flex mt={{ base: 2, md: 3 }} justify="flex-end" flexWrap="wrap">
+                <Box
+                  w={{ base: "full", md: "1/12" }}
+                  minW={{ base: "full", md: "-webkit-fit-content" }}
+                >
+                  <PrimaryMdFlexButton
+                    onClick={() => {
+                      if (payments.length > 0) {
+                        const isLaf = TblLoanHdrData.some(
+                          (a) => a.LAFNo === payments[0].LPANo,
+                        );
+                        const entryType = selectPlanholder?.EntryType;
+                        const canProceed =
+                          (entryType === "PH" && !isLaf) ||
+                          (entryType === "LOAN" && isLaf);
+                        if (canProceed) {
+                          handleAddPayment();
+                        } else {
+                          toast.info(
+                            "Payment cannot be saved. Please prepare drs the current encoded payment to proceed.",
+                          );
+                        }
+                      } else {
+                        handleAddPayment();
                       }
                     }}
-                  />
-
-                  <InputFloatingLabel
-                    label={
-                      selectPlanholder?.EntryType == "PH"
-                        ? "Sales Invoice Extension"
-                        : "AR Extension"
-                    }
-                    name="siext"
-                  />
-                  <HStack>
-                    <Button
-                      onClick={handleDecrease}
-                      display={
-                        selectPlanholder?.EntryType == "PH" ? "" : "none"
-                      }
-                    >
-                      -
-                    </Button>
-
-                    <InputFloatingLabel
-                      key={installmentAmount}
-                      label="Amount"
-                      name="amount"
-                      value={installmentAmount.toString()}
-                      onChange={(e) => {
-                        setInstallmentAmount(
-                          Number(e.currentTarget.value) || 0,
-                        );
-                      }}
-                    />
-
-                    <Button
-                      onClick={handleIncrease}
-                      display={
-                        selectPlanholder?.EntryType == "PH" ? "" : "none"
-                      }
-                    >
-                      +
-                    </Button>
-                  </HStack>
-                  {/* <InfoItem label={"Amount"} value={installmentAmount} /> */}
-
-                  <InputFloatingLabel
-                    label={
-                      selectPlanholder?.EntryType == "PH"
-                        ? "Sales Invoice Date"
-                        : "AR Date"
-                    }
-                    name="sidate"
-                    type="date"
-                    value={selectedSIDate}
-                    onChange={(e) => setSelectedSIDate(e.target.value)}
-                  />
-
-                  <GridItem
-                    colSpan={{ base: 1, lg: 3, xl: 2 }}
-                    display={selectPlanholder?.EntryType == "PH" ? "" : "none"}
-                    boxShadow="sm"
-                    p={3}
-                    borderRadius="sm"
                   >
-                    <Grid
-                      templateColumns={{
-                        base: "1fr",
-                        md: "repeat(2,1fr)",
-                        lg: "repeat(2,1fr)",
-                      }}
-                      gap={{ base: 1, md: 2, xl: 4 }}
-                    >
-                      <LabelText
-                        label="Com CBI"
-                        value={computed.comCBI.toFixed(2)}
-                      />
-                      <LabelText
-                        label="NCom CBI"
-                        value={computed.ncomCBI.toFixed(2)}
-                      />
-                      <LabelText
-                        label="Commission"
-                        value={computed.commission.toFixed(2)}
-                      />
-                      <LabelText
-                        label={"Transportation Expense"}
-                        value={computed.transportationExpense.toFixed(2)}
-                      />
-                    </Grid>
-                  </GridItem>
-                </Grid>
+                    Add to List
+                  </PrimaryMdFlexButton>
+                </Box>
+              </Flex>
+            </>
+          )}
+        </InputCardAccordion>
 
-                {/* CHEQUE DETAILS */}
-                <Collapsible.Root
-                  open={paymentType === "CK"}
-                  unmountOnExit={false}
-                >
-                  <Collapsible.Content>
-                    <Separator my={4} />
-                    <SectionTitle>Cheque Details</SectionTitle>
-                    <Separator my={3} />
-
-                    <Grid
-                      templateColumns={{
-                        base: "1fr",
-                        sm: "repeat(2,1fr)",
-                        lg: "repeat(3,1fr)",
-                        xl: "repeat(4,1fr)",
-                      }}
-                      gap={{ base: 1, md: 2, xl: 4 }}
-                      alignItems="center"
-                    >
-                      <InputFloatingLabel
-                        key={chequeData.actno}
-                        label="Account Number"
-                        value={chequeData.actno}
-                        onChange={(e) =>
-                          setChequeData((prev) => ({
-                            ...prev,
-                            actno: e.target.value,
-                          }))
-                        }
-                      />
-                      <InputFloatingLabel
-                        key={chequeData.accname}
-                        label="Account Name"
-                        name="accname"
-                        value={chequeData.accname}
-                        onChange={(e) =>
-                          setChequeData((prev) => ({
-                            ...prev,
-                            accname: e.target.value,
-                          }))
-                        }
-                      />
-
-                      <InputFloatingLabel
-                        key={chequeData.bankName}
-                        label="Bank Name"
-                        name="bankName"
-                        value={chequeData.bankName}
-                        disabled={isProcessing}
-                        onChange={(e) =>
-                          setChequeData((prev) => ({
-                            ...prev,
-                            bankName: e.target.value,
-                          }))
-                        }
-                      />
-
-                      <InputFloatingLabel
-                        key={chequeData.bankBranch}
-                        label="Bank Branch"
-                        name="bankBranch"
-                        value={chequeData.bankBranch}
-                        disabled={isProcessing}
-                        onChange={(e) =>
-                          setChequeData((prev) => ({
-                            ...prev,
-                            bankBranch: e.target.value,
-                          }))
-                        }
-                      />
-
-                      <InputFloatingLabel
-                        key={chequeData.chequeNumber}
-                        label="Cheque Number"
-                        name="chequeNumber"
-                        value={chequeData.chequeNumber}
-                        disabled={isProcessing}
-                        onChange={(e) =>
-                          setChequeData((prev) => ({
-                            ...prev,
-                            chequeNumber: e.target.value,
-                          }))
-                        }
-                      />
-
-                      {/* FILE UPLOAD */}
-                      <GridItem colSpan={{ base: 1, md: 2 }}>
-                        <FileUpload.Root width="100%">
-                          <FileUpload.HiddenInput
-                            onChange={(e) => {
-                              const files = Array.from(e.target.files || []);
-                              handleFileChange(files);
-                            }}
-                          />
-
-                          <FileUpload.Context>
-                            {({ acceptedFiles }) => (
-                              <Box
-                                asChild
-                                width="100%"
-                                border="1px solid"
-                                borderColor="gray.300"
-                                borderRadius="sm"
-                                cursor="pointer"
-                                p={2}
-                                fontSize="sm"
-                                _hover={{ borderColor: "gray.400" }}
-                              >
-                                <FileUpload.Trigger>
-                                  {isProcessing ? (
-                                    <Flex align="center" gap={2}>
-                                      <Spinner size="sm" />
-                                      <Body>Processing cheque...</Body>
-                                    </Flex>
-                                  ) : acceptedFiles.length === 0 ? (
-                                    <Body>Upload Cheque Slip</Body>
-                                  ) : (
-                                    <Body>{acceptedFiles[0].name}</Body>
-                                  )}
-                                </FileUpload.Trigger>
-                              </Box>
-                            )}
-                          </FileUpload.Context>
-                        </FileUpload.Root>
-
-                        {/* ✅ OCR SUCCESS INDICATOR */}
-                        {!isProcessing && chequeData.actno && (
-                          <Body fontSize="xs" color="green.500" mt={1}>
-                            ✔ OCR data loaded
-                          </Body>
-                        )}
-                      </GridItem>
-                    </Grid>
-                  </Collapsible.Content>
-                </Collapsible.Root>
-
-                {/* TAX DETAILS (collapsible) */}
-                {selectPlanholder?.EntryType == "PH" && (
-                  <Box
-                    mt={4}
-                    borderWidth="1px"
-                    borderColor="gray.200"
-                    borderRadius="md"
-                    overflow="hidden"
-                  >
-                    {/* HEADER BAR */}
-                    <Flex
-                      onClick={() => setTaxOpen((p) => !p)}
-                      align="center"
-                      justify="space-between"
-                      gap={2}
-                      w="full"
-                      px={{ base: 3, md: 4 }}
-                      py={3}
-                      bg="green.50"
-                      cursor="pointer"
-                      _hover={{ bg: "green.100" }}
-                    >
-                      <Flex align="center" gap={2} color="green.700">
-                        {/* <Receipt size={18} /> */}
-                        <Text fontWeight="semibold" fontSize="sm">
-                          Tax Details
-                        </Text>
-                      </Flex>
-                      <Flex align="center" gap={2}>
-                        <Text fontSize="sm" color="gray.600">
-                          Net:
-                        </Text>
-                        <Text fontWeight="bold" fontSize="sm" color="green.600">
-                          {`₱${computed.totalAmountDue.toLocaleString(
-                            undefined,
-                            {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            },
-                          )}`}
-                        </Text>
-                        <Box color="green.700">
-                          {taxOpen ? (
-                            <ChevronUp size={18} />
-                          ) : (
-                            <ChevronDown size={18} />
-                          )}
-                        </Box>
-                      </Flex>
-                    </Flex>
-
-                    {/* BODY */}
-                    <Collapsible.Root open={taxOpen}>
-                      <Collapsible.Content>
-                        <Grid
-                          templateColumns={{
-                            base: "1fr",
-                            md: "repeat(2,1fr)",
-                          }}
-                          columnGap={{ base: 0, md: 10 }}
-                          rowGap={2}
-                          px={{ base: 3, md: 4 }}
-                          py={4}
-                        >
-                          <LabelText
-                            label="Vatable Sales"
-                            value={computed.vatableSales.toFixed(2)}
-                          />
-                          <LabelText
-                            label="VAT Exempt Sales"
-                            value={computed.vatExemptSales.toFixed(2)}
-                          />
-                          <LabelText
-                            label="Total Sales"
-                            value={computed.totalSales.toFixed(2)}
-                          />
-                          <LabelText
-                            label="Less VAT"
-                            value={computed.lessVat.toFixed(2)}
-                          />
-                          <LabelText
-                            label="Add 12% VAT"
-                            value={computed.vat.toFixed(2)}
-                          />
-                          <LabelText
-                            label="Sub Total"
-                            value={computed.subTotal.toFixed(2)}
-                          />
-                          <LabelText
-                            label="Zero Rated Sales"
-                            value={computed.zeroRatedSales.toFixed(2)}
-                          />
-                          <LabelText
-                            label="VAT Amount"
-                            value={computed.vatAmount.toFixed(2)}
-                          />
-                          <LabelText
-                            label="Amount Net of VAT"
-                            value={computed.amountNetOfVat.toFixed(2)}
-                          />
-                          <LabelText
-                            label="Amount Due"
-                            value={computed.amountDue.toFixed(2)}
-                          />
-                          <LabelText
-                            label="Withholding Tax"
-                            value={computed.withholdingTax.toFixed(2)}
-                          />
-                          <LabelText
-                            label="Total Amount Due"
-                            value={computed.totalAmountDue.toFixed(2)}
-                          />
-                        </Grid>
-                      </Collapsible.Content>
-                    </Collapsible.Root>
-                  </Box>
-                )}
-
-                {/* ACTION BUTTONS */}
-                <Flex
-                  // gap={{ base: 0 }}
-                  mt={{ base: 2, md: 3 }}
-                  justify={"flex-end"}
-                  flexWrap="wrap"
-                >
-                  {/* <ClearOutlineButton
-                width={{ base: "100%", md: "auto" }}
-                onClick={() => setInstallmentAmount("0")}
-              /> */}
-                  <Box
-                    w={{ base: "full", md: "1/12" }}
-                    minW={{ base: "full", md: "-webkit-fit-content" }}
-                  >
-                    <PrimaryMdFlexButton
-                      onClick={(e) => {
-                        if (payments.length > 0) {
-                          const isLaf = TblLoanHdrData.some(
-                            (a) => a.LAFNo === payments[0].LPANo,
-                          );
-
-                          // toast.info(`isLaf: ${isLaf}`);
-
-                          const entryType = selectPlanholder?.EntryType;
-
-                          const canProceed =
-                            (entryType === "PH" && !isLaf) ||
-                            (entryType === "LOAN" && isLaf);
-
-                          if (canProceed) {
-                            handleAddPayment();
-                          } else {
-                            toast.info(
-                              "Payment cannot be saved. Please prepare drs the current encoded payment to proceed.",
-                            );
-                          }
-                        } else {
-                          handleAddPayment();
-                        }
-                      }}
-                    >
-                      Add to List
-                    </PrimaryMdFlexButton>
-                  </Box>
-                </Flex>
-              </Collapsible.Content>
-            </Collapsible.Root>
-          </Card.MainContent>
-        </Card.Root>
-      </Box>
-      {/* ENCODED PAYMENT TABLE */}
-      <Box mt={5}>
+        {/* ENCODED PAYMENT TABLE */}
         <DataTable
           data={payments}
           columns={tableColumns}
@@ -1056,7 +975,6 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
           }}
           headerButton={{
             label: "DELETE ALL",
-            // icon: LuTrash,
             onClick: () => {
               setPayments([]);
               toast.success("Deleted All");
@@ -1064,47 +982,19 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
           }}
           rowActions={rowActions}
           renderDetail={(row) => (
-            <Card.Root title={`${row.SI} - ${row.LPANo}`}>
-              <Card.MainContent>
-                <Grid
-                  templateColumns={{
-                    base: "1fr",
-                  }}
-                  gap={2}
-                >
-                  <LabelText label="Name" value={row.name} />
-                  <LabelText label="SI Date" value={row.SIDate} />
-                  <LabelText label="Installment Number" value={row.InstNo} />
-                  <LabelText label="Pay Class" value={row.PayClass} />
-                  <LabelText label="Amount" value={row.SIAmount} />
-                  <LabelText label="commission" value={row.COMPCV} />
-                  <LabelText label="Transportation Expense" value={row.TEPCV} />
-                  <LabelText label="Encoded Date" value={row.AuditDate} />
-                </Grid>
-              </Card.MainContent>
-            </Card.Root>
+            <Grid templateColumns={{ base: "1fr" }} gap={2} px={2} py={3}>
+              <RowItem label="Name" value={row.name} />
+              <RowItem label="SI Date" value={row.SIDate} />
+              <RowItem label="Installment Number" value={row.InstNo} />
+              <RowItem label="Pay Class" value={row.PayClass} />
+              <RowItem label="Amount" value={row.SIAmount} />
+              <RowItem label="Commission" value={row.COMPCV} />
+              <RowItem label="Transportation Expense" value={row.TEPCV} />
+              <RowItem label="Encoded Date" value={row.AuditDate} />
+            </Grid>
           )}
-          // mobileConfig={{
-          //   viewMode: "accordion",
-          //   titleTransform: "uppercase",
-          //   primaryField: "SI",
-          //   secondaryField: "LPANo",
-          //   badgeField: "SIAmount",
-          //   visibleFields: ["name", "InstNo", "PayClass", "SIDate"],
-          //   labelMap: {
-          //     LPANo: "LPA Number",
-          //     InstNo: "Installment Number",
-          //     SIDate: "Sales Invoice Date",
-          //   },
-          //   valueFormatter: {
-          //     SIAmount: (value) => {
-          //       const num = Number(value);
-          //       return isNaN(num) ? String(num) : `₱: ${value}`;
-          //     },
-          //   },
-          // }}
         />
-      </Box>
+      </Flex>
 
       <Dialog.Root
         open={isDialogOpen}

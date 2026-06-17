@@ -416,52 +416,103 @@ const RequestCard = ({
           <FileText size={18} />
         </Box>
 
-        <Box flex={1} minW={0}>
-          {/* Title + status badge wrap together */}
-          <Flex align="center" gap={2} flexWrap="wrap" mb="2px">
-            <Text
-              fontWeight="bold"
-              fontSize="md"
-              lineHeight="1.2"
-              overflow="hidden"
-              textOverflow="ellipsis"
-              whiteSpace="nowrap"
-              maxW={{ base: "160px", sm: "260px", md: "100%" }}
+        <Box flex={1} minW={0} position="relative">
+          {/* Badge (top-right) — desktop only */}
+          {isSearched && (
+            <Badge
+              position="absolute"
+              top={0}
+              right={0}
+              variant="subtle"
+              px={2}
+              py="1px"
+              borderRadius="full"
+              fontSize="0.7rem"
+              bg={isComplete ? "green.50" : "blue.50"}
+              color={isComplete ? "green.700" : "blue.700"}
+              display={{ base: "none", md: "flex" }}
+              alignItems="center"
+              gap={1}
             >
-              {isSearched ? referenceNo : "Track Your Request"}
-            </Text>
-
-            {isSearched && (
-              <Badge
-                variant="subtle"
-                px={2}
-                py="1px"
+              <Box
+                w="1.5"
+                h="1.5"
                 borderRadius="full"
-                fontSize="0.7rem"
-                bg={isComplete ? "green.50" : "blue.50"}
-                color={isComplete ? "green.700" : "blue.700"}
-                display="flex"
-                alignItems="center"
-                gap={1}
-                flexShrink={0}
-              >
-                <Box
-                  w="1.5"
-                  h="1.5"
-                  borderRadius="full"
-                  bg={isComplete ? "green.400" : "blue.400"}
-                  display="inline-block"
-                />
-                {isComplete ? "Completed" : "In Progress"}
-              </Badge>
-            )}
-          </Flex>
+                bg={isComplete ? "green.400" : "blue.400"}
+                display="inline-block"
+              />
+              {isComplete ? "Completed" : "In Progress"}
+            </Badge>
+          )}
+
+          {/* Title */}
+          <Text
+            fontWeight="bold"
+            fontSize="md"
+            lineHeight="1.2"
+            overflow="hidden"
+            textOverflow="ellipsis"
+            whiteSpace="nowrap"
+            maxW="100%"
+            pr={isSearched ? { base: 0, md: "80px" } : 0}
+            mb="2px"
+          >
+            {isSearched ? referenceNo : "Track Your Request"}
+          </Text>
 
           {/* Subtitle */}
           <Text fontSize="xs" color="gray.500" lineHeight="1.3">
             {isSearched ? description : "Enter your reference number below"}
           </Text>
         </Box>
+
+        {/* Mobile/tablet: badge + refresh icon button — beside the title */}
+        {isSearched && (
+          <Flex
+            display={{ base: "flex", md: "none" }}
+            direction="row"
+            align="center"
+            gap={2}
+            flexShrink={0}
+          >
+            <Badge
+              variant="subtle"
+              px={2}
+              py="1px"
+              borderRadius="full"
+              fontSize="0.7rem"
+              bg={isComplete ? "green.50" : "blue.50"}
+              color={isComplete ? "green.700" : "blue.700"}
+              display="flex"
+              alignItems="center"
+              gap={1}
+            >
+              <Box
+                w="1.5"
+                h="1.5"
+                borderRadius="full"
+                bg={isComplete ? "green.400" : "blue.400"}
+                display="inline-block"
+              />
+              {isComplete ? "Completed" : "In Progress"}
+            </Badge>
+            <Box
+              as="button"
+              onClick={() => handleSearch()}
+              p="6px"
+              borderRadius="full"
+              bg="gray.100"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              _hover={{ bg: "gray.200" }}
+              _active={{ bg: "gray.300" }}
+              transition="background 0.15s"
+            >
+              <MdRefresh size={15} className={isLoading ? "spin" : ""} />
+            </Box>
+          </Flex>
+        )}
       </Flex>
 
       {/* CHIPS (when searched) — scrollable on mobile */}
@@ -545,22 +596,26 @@ const RequestCard = ({
 
           <Flex gap={2} w={{ base: "full", sm: "auto" }}>
             {initialReferenceNo ? (
-              <PrimarySmButton
-                style={{ borderRadius: "15px", flex: 1 }}
-                onClick={() => handleSearch()}
-                loading={isLoading}
-              >
-                <MdRefresh className={isLoading ? "spin" : ""} /> Refresh
-              </PrimarySmButton>
-            ) : (
-              <>
+              <Box display={{ base: "none", md: "block" }}>
                 <PrimarySmButton
-                  style={{ borderRadius: "15px", flex: 1 }}
+                  style={{ borderRadius: "15px" }}
                   onClick={() => handleSearch()}
                   loading={isLoading}
                 >
                   <MdRefresh className={isLoading ? "spin" : ""} /> Refresh
                 </PrimarySmButton>
+              </Box>
+            ) : (
+              <>
+                <Box display={{ base: "none", md: "block" }}>
+                  <PrimarySmButton
+                    style={{ borderRadius: "15px" }}
+                    onClick={() => handleSearch()}
+                    loading={isLoading}
+                  >
+                    <MdRefresh className={isLoading ? "spin" : ""} /> Refresh
+                  </PrimarySmButton>
+                </Box>
                 <SecondarySmButton
                   style={{ borderRadius: "15px", flex: 1 }}
                   onClick={onReset}

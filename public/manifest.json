@@ -11,13 +11,13 @@
     {
       "purpose": "maskable",
       "sizes": "520x520",
-      "src": "/images/logo/icon.png",
+      "src": "/images/logo/icon-520.png",
       "type": "image/png"
     },
     {
       "purpose": "any",
       "sizes": "520x520",
-      "src": "/images/logo/icon.png",
+      "src": "/images/logo/icon-520.png",
       "type": "image/png"
     },
     {

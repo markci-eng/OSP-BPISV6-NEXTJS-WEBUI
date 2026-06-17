@@ -4,7 +4,7 @@ import { Box, Flex, Grid, Separator, Text } from "@chakra-ui/react";
 import { InfoItem } from "@splpi/summary";
 import { H3, H4 } from "st-peter-ui";
 import Card from "@/components/cards/Card";
-import LabelText from "@/components/texts/LabelText";
+import { RowItem } from "@/claude components/info-card/row-item";
 
 interface TotalSummaryCardProps {
   totals: DrsTotals;
@@ -53,7 +53,7 @@ export default function DrsPaymentSummary({
             {items
               ? items.map((item) => (
                   <>
-                    <LabelText
+                    <RowItem
                       key={item.label}
                       label={item.label}
                       value={format(item.value)}
@@ -64,7 +64,7 @@ export default function DrsPaymentSummary({
               : Object.entries(totals)
                   .filter(([_, val]) => typeof val === "number")
                   .map(([key, val]) => (
-                    <LabelText
+                    <RowItem
                       key={key}
                       label={key.toUpperCase()}
                       value={format(val as number)}
