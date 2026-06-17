@@ -38,7 +38,7 @@
     "recharts": "^3.7.0",
     "sonner": "^2.0.7",
     "splpi-loan": "file:splpi-loan-0.2.2.tgz",
-    "st-peter-ui": "file:st-peter-ui-0.2.7.tgz"
+    "st-peter-ui": "^0.2.8"
   },
   "devDependencies": {
     "@types/node": "^20",
