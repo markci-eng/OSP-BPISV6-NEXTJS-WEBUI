@@ -103,7 +103,7 @@ export const SideBarItemsBranch: NavItem[] = [
     activeIcon: HiUsers,
     subItems: [
       { label: "Add New Sale", href: "/plan-management/new" },
-      { label: "Account Summary", href: "/plan-management/planholder" },
+      { label: "Planholder Profile", href: "/plan-management/planholder" },
       { label: "Change of Mode", href: "/plan-management/change-of-mode" },
     ],
   },
@@ -228,7 +228,7 @@ export const SideBarItemsEKolekta: NavItem[] = [
     activeIcon: HiUsers,
     subItems: [
       { label: "Add New Sale", href: "/plan-management/new" },
-      { label: "Account Summary", href: "/plan-management/planholder" },
+      { label: "Planholder Profile", href: "/plan-management/planholder" },
       { label: "Pre-filled LPA", href: "/plan-management/new" },
       { label: "Change of Mode", href: "/plan-management/change-of-mode" },
     ],

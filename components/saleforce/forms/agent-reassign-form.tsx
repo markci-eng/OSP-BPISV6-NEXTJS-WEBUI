@@ -4,6 +4,8 @@ import { Box, Flex, Grid } from "@chakra-ui/react";
 import { Body, PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
 import { LuArrowRight, LuTriangleAlert } from "react-icons/lu";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import {
   getAgentById,
   getPositionDesc,
@@ -21,6 +23,7 @@ interface AgentReassignFormProps {
   selectedAgent: SalesAgent;
   onCancel: () => void;
   onSubmitted?: () => void;
+  successLink?: string;
   hideActions?: boolean;
 }
 
@@ -28,8 +31,11 @@ export function AgentReassignForm({
   selectedAgent,
   onCancel,
   onSubmitted,
+  successLink,
   hideActions,
 }: AgentReassignFormProps) {
+  const router = useRouter();
+  const { messageBox } = useMessageDialog();
   const [newSuperior, setNewSuperior] = useState<SalesAgent | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
   const [txnId, setTxnId] = useState<string>("");
@@ -49,11 +55,23 @@ export function AgentReassignForm({
 
   const canSubmit = newSuperior != null && !isSame;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return;
+    const confirmed = await messageBox({
+      title: "CONFIRMATION",
+      message: `Submit a re-organization request for ${selectedAgent.name} to ${newSuperior?.name ?? ""}?`,
+      confirmText: "Yes",
+      cancelText: "No",
+      variant: "confirmation",
+    });
+    if (!confirmed) return;
     const id = `RA-${Date.now().toString().slice(-7)}`;
     setTxnId(id);
-    setSuccessOpen(true);
+    if (successLink) {
+      router.push(successLink);
+    } else {
+      setSuccessOpen(true);
+    }
   };
 
   return (

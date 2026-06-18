@@ -318,7 +318,7 @@ export default function PlanholderProfilePage({
 
   return (
     <Page.Root
-      title={"Account Summary"}
+      title={"Planholder Profile"}
       description="Clear Access to Every Planholder Detail."
     >
       <Page.ToolContent>

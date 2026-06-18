@@ -16,7 +16,7 @@ export default function MovementPage({ agent }: { agent: SalesAgent }) {
         <AgentMovementForm
           selectedAgent={agent}
           onCancel={() => router.back()}
-          onSubmitted={() => router.back()}
+          successLink={`/sales-force/profile/${agent.id}/movement/success`}
         />
       </Page.MainContent>
     </Page.Root>

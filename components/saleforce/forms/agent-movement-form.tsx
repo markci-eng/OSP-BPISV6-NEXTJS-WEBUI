@@ -18,6 +18,8 @@ import {
   LuTriangleAlert,
 } from "react-icons/lu";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import {
   getPositionDesc,
   Position,
@@ -34,6 +36,7 @@ interface AgentMovementFormProps {
   selectedAgent: SalesAgent;
   onCancel: () => void;
   onSubmitted?: () => void;
+  successLink?: string;
   hideActions?: boolean;
 }
 
@@ -81,8 +84,11 @@ export function AgentMovementForm({
   selectedAgent,
   onCancel,
   onSubmitted,
+  successLink,
   hideActions,
 }: AgentMovementFormProps) {
+  const router = useRouter();
+  const { messageBox } = useMessageDialog();
   const [newPosition, setNewPosition] = useState<Position | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
   const [txnId, setTxnId] = useState<string>("");
@@ -106,11 +112,23 @@ export function AgentMovementForm({
   const isSame = newPosition != null && newPosition === selectedAgent.position;
   const canSubmit = newPosition != null && !isSame;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return;
+    const confirmed = await messageBox({
+      title: "CONFIRMATION",
+      message: `Submit a ${movementType?.toLowerCase() ?? "movement"} request for ${selectedAgent.name} to ${newPosition ? getPositionDesc(newPosition) : ""}?`,
+      confirmText: "Yes",
+      cancelText: "No",
+      variant: "confirmation",
+    });
+    if (!confirmed) return;
     const id = `MV-${Date.now().toString().slice(-7)}`;
     setTxnId(id);
-    setSuccessOpen(true);
+    if (successLink) {
+      router.push(successLink);
+    } else {
+      setSuccessOpen(true);
+    }
   };
 
   return (

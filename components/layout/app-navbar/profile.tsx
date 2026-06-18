@@ -245,7 +245,7 @@ const ALL_NAV_OPTIONS: NavOptionDef[] = [
   },
   {
     key: "/plan-management/planholder",
-    title: "Account Summary",
+    title: "Planholder Profile",
     href: "/plan-management/planholder",
     Icon: HiOutlineUsers,
     activeIcon: HiUsers,

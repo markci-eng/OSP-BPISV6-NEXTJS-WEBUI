@@ -399,7 +399,7 @@ export default function Sidebar({
         transition="width 0.2s, left 0.3s"
         onMouseEnter={() => !isMobile && setIsExpanded(true)}
         onMouseLeave={() => !isMobile && setIsExpanded(false)}
-        gap={4}
+        gap={0}
         p={2}
         borderRight="1px solid"
         borderColor="gray.200"
@@ -543,18 +543,6 @@ export default function Sidebar({
             </Text>
           </Box>
         </Flex>
-
-        {/* Menu Label */}
-        <Body
-          color="gray.500"
-          px={2}
-          pt={2}
-          h="20px"
-          textAlign={isSidebarOpen ? "left" : "center"}
-        >
-          {isSidebarOpen ? "Menu" : "…"}
-        </Body>
-
         {/* Navigation */}
         <ScrollArea.Root maxW="lg" size={"xs"}>
           <ScrollArea.Viewport

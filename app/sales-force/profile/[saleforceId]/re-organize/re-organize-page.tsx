@@ -16,7 +16,7 @@ export default function ReOrganizePage({ agent }: { agent: SalesAgent }) {
         <AgentReassignForm
           selectedAgent={agent}
           onCancel={() => router.back()}
-          onSubmitted={() => router.back()}
+          successLink={`/sales-force/profile/${agent.id}/re-organize/success`}
         />
       </Page.MainContent>
     </Page.Root>

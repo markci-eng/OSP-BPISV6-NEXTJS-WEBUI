@@ -1,4 +1,7 @@
+"use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { Box, Flex, Grid, IconButton } from "@chakra-ui/react";
 import {
   InputFloatingLabel,
@@ -20,6 +23,7 @@ interface AgentEditFormProps {
   selectedAgent?: SalesAgent;
   onCancel?: () => void;
   onSubmitted?: () => void;
+  successLink?: string;
   hideActions?: boolean;
 }
 
@@ -104,8 +108,11 @@ const AgentEditForm: React.FC<AgentEditFormProps> = ({
   selectedAgent = mockAgent,
   onCancel,
   onSubmitted,
+  successLink,
   hideActions,
 }) => {
+  const router = useRouter();
+  const { messageBox } = useMessageDialog();
   const [personalInfo, setPersonalInfo] = useState<{
     lastName: string;
     firstName: string;
@@ -574,7 +581,21 @@ const AgentEditForm: React.FC<AgentEditFormProps> = ({
           borderColor="gray.100"
         >
           <SecondaryMdButton onClick={onCancel}>Cancel</SecondaryMdButton>
-          <PrimaryMdButton onClick={onSubmitted}>Save Changes</PrimaryMdButton>
+          <PrimaryMdButton onClick={async () => {
+            const confirmed = await messageBox({
+              title: "CONFIRMATION",
+              message: "Save changes to this agent's information?",
+              confirmText: "Yes",
+              cancelText: "No",
+              variant: "confirmation",
+            });
+            if (!confirmed) return;
+            if (successLink) {
+              router.push(successLink);
+            } else {
+              onSubmitted?.();
+            }
+          }}>Save Changes</PrimaryMdButton>
         </Flex>
       )}
     </Flex>
