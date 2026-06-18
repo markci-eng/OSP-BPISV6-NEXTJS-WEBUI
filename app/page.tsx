@@ -2,14 +2,12 @@
 import { useRouter } from "next/navigation";
 import {
   Box,
-  Button,
   Flex,
   Grid,
   IconButton,
-  Portal,
   ScrollArea,
   Separator,
-  Menu,
+  Tabs,
   Avatar,
 } from "@chakra-ui/react";
 import {
@@ -408,7 +406,8 @@ function readCookie(name: string): string | null {
 
 function getRoleLabel(role: string | null): string {
   if (role === "branch") return "Branch";
-  if (role === "bmstl") return "BM / STL";
+  if (role === "bm") return "Branch Manager";
+  if (role === "stl") return "Sales Team Leader";
   if (role === "sales-agent") return "Sales Agent";
   return "";
 }
@@ -479,7 +478,7 @@ export default function Dashboard() {
         padding: "10px 8px 108px",
       }}
     >
-      <UserWelcomeBanner firstName={"Joyce"} branch={"Head Office"} />
+      {/* <UserWelcomeBanner firstName={"Joyce"} branch={"Head Office"} /> */}
 
       {/* ── Account Overview ── */}
       <Flex direction="column" gap={3}>
@@ -786,24 +785,32 @@ export default function Dashboard() {
             subtitle="New plans enrolled per month"
           >
             <Flex justify="flex-end" mb={3}>
-              <Menu.Root>
-                <Menu.Trigger asChild>
-                  <Button variant="outline" size="sm" borderRadius="lg">
-                    {year}
-                  </Button>
-                </Menu.Trigger>
-                <Portal>
-                  <Menu.Positioner>
-                    <Menu.Content>
-                      {["2026", "2025", "2024"].map((y) => (
-                        <Menu.Item key={y} value={y} onClick={() => setYear(y)}>
-                          {y}
-                        </Menu.Item>
-                      ))}
-                    </Menu.Content>
-                  </Menu.Positioner>
-                </Portal>
-              </Menu.Root>
+              <Tabs.Root
+                value={year}
+                onValueChange={(details) => setYear(details.value)}
+                variant="subtle"
+                size="sm"
+              >
+                <Tabs.List dir="rtl">
+                  {["2026", "2025", "2024"].map((y) => (
+                    <Tabs.Trigger
+                      key={y}
+                      value={y}
+                      px={2.5}
+                      py={1}
+                      fontSize="xs"
+                      borderRadius="md"
+                      _selected={{
+                        bg: "var(--chakra-colors-primary)",
+                        color: "white",
+                        fontWeight: "semibold",
+                      }}
+                    >
+                      {y}
+                    </Tabs.Trigger>
+                  ))}
+                </Tabs.List>
+              </Tabs.Root>
             </Flex>
             <ResponsiveContainer width="100%" height={330}>
               <BarChart
@@ -966,8 +973,7 @@ const TileItem = ({
   return (
     <Box
       borderRadius="3xl"
-      p={6}
-      minH="150px"
+      p={4}
       position="relative"
       bg={`${color}18`}
       border="2px solid"
@@ -975,37 +981,39 @@ const TileItem = ({
       boxShadow="sm"
       overflow="hidden"
     >
-      <Flex justify="space-between" align="start">
-        <Flex direction="column" gap={3} align="start">
-          <Small as="div" fontWeight="700" style={{ color }}>
-            {title}
-          </Small>
+      <Flex align="center" gap={3}>
+        {/* Icon chip */}
+        <Box p={2.5} bg={`${color}20`} style={{ color }} borderRadius="2xl" flexShrink={0}>
+          <Icon size={22} />
+        </Box>
+        {/* Content */}
+        <Box flex={1} minW={0}>
+          <Flex justify="space-between" align="center" mb={1}>
+            <Small as="div" fontWeight="700" style={{ color }}>
+              {title}
+            </Small>
+            <OSPBadge type={isPositive ? "success" : "danger"} size="sm">
+              {monthOverMonthPercentage > 0 ? (
+                <LuArrowUp />
+              ) : monthOverMonthPercentage < 0 ? (
+                <LuArrowDown />
+              ) : null}{" "}
+              {Math.abs(monthOverMonthPercentage).toFixed(1)}%
+            </OSPBadge>
+          </Flex>
           <BaseText
             as="div"
-            fontSize="5xl"
+            fontSize="3xl"
             fontWeight="bold"
             color="gray.800"
             lineHeight="1"
           >
             {value}
           </BaseText>
-          <Small as="div" color="gray.500">
+          <Small as="div" color="gray.500" mt={1}>
             from {prevVal} prior month
           </Small>
-        </Flex>
-        <Box p={3} bg={`${color}20`} style={{ color }} borderRadius="2xl">
-          <Icon size={28} />
         </Box>
-      </Flex>
-      <Flex justify="flex-end" mt={3}>
-        <OSPBadge type={isPositive ? "success" : "danger"} size="md">
-          {monthOverMonthPercentage > 0 ? (
-            <LuArrowUp />
-          ) : monthOverMonthPercentage < 0 ? (
-            <LuArrowDown />
-          ) : null}{" "}
-          {Math.abs(monthOverMonthPercentage).toFixed(1)}%
-        </OSPBadge>
       </Flex>
     </Box>
   );
