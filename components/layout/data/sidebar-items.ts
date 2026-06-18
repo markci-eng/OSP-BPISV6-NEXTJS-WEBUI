@@ -241,16 +241,31 @@ export const SideBarItemsEKolekta: NavItem[] = [
   },
 ];
 
-export const SideBarItemsBMSTL: NavItem[] = [
+export const SideBarItemsBM: NavItem[] = [
   {
-    icon: RiDashboardLine,
-    activeIcon: RiDashboardFill,
-    label: "Dashboard",
+    icon: RiHome4Line,
+    activeIcon: RiHome4Fill,
+    label: "Home",
     href: "/",
   },
   {
-    icon: LuClipboardCheck,
-    activeIcon: LuClipboardCheck,
+    icon: RiFileCheckLine,
+    activeIcon: RiFileCheckFill,
+    label: "Approvals",
+    href: "/approvals",
+  },
+];
+
+export const SideBarItemsSTL: NavItem[] = [
+  {
+    icon: RiHome4Line,
+    activeIcon: RiHome4Fill,
+    label: "Home",
+    href: "/",
+  },
+  {
+    icon: RiFileCheckLine,
+    activeIcon: RiFileCheckFill,
     label: "Approvals",
     href: "/approvals",
   },

@@ -2,7 +2,8 @@
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import {
-  SideBarItemsBMSTL,
+  SideBarItemsBM,
+  SideBarItemsSTL,
   SideBarItemsBranch,
   SideBarItemsEKolekta,
 } from "@/components/layout/data/sidebar-items";
@@ -24,9 +25,11 @@ export function RenderPage({
   const navItems =
     userRole === "branch"
       ? SideBarItemsBranch
-      : userRole === "bmstl"
-        ? SideBarItemsBMSTL
-        : SideBarItemsEKolekta;
+      : userRole === "bm"
+        ? SideBarItemsBM
+        : userRole === "stl"
+          ? SideBarItemsSTL
+          : SideBarItemsEKolekta;
 
   return (
     <NotifyInstall appName={"One St. Peter: Life Plan"}>

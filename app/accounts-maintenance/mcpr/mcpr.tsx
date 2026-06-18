@@ -1,21 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Grid, GridItem } from "@chakra-ui/react";
-import { PrimaryMdButton, SelectFloatingLabel } from "st-peter-ui";
+import { Grid, GridItem } from "@chakra-ui/react";
+import {
+  PrimaryMdButton,
+  PrimaryMdFlexButton,
+  SelectFloatingLabel,
+} from "st-peter-ui";
 import { LuUsers } from "react-icons/lu";
 
 import Page from "@/components/layout/page/Page";
-import LookUp from "@/components/common/reusable-lookup/dynamic-lookup";
+import {
+  LookupField,
+  LookupColumn,
+} from "@/components/common/reusable-lookup/LookUpField";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 
 import { TrxMonth } from "../data/transaction-month";
 import {
-  salesForceHeaders,
   salesForceLookUp,
   SalesForceLookUpData,
 } from "../accounts-transfer/sales-force-lookup_data";
+
+const salesForceColumns: LookupColumn<SalesForceLookUpData>[] = [
+  { key: "SalesForceCode", header: "Sales Force Code" },
+  { key: "AgentName", header: "Agent Name" },
+  { key: "PosCode", header: "Position" },
+];
 import MCPRDataPage from "./mcpr-data";
 
 export default function MCPRPage() {
@@ -72,18 +84,18 @@ export default function MCPRPage() {
                   />
                 </GridItem>
                 <GridItem>
-                  <Box mt={2}>
-                    <LookUp<SalesForceLookUpData>
-                      placeholder="Select Sales Force"
-                      modalTitle="Sales Force List"
-                      data={salesForceLookUp}
-                      headers={salesForceHeaders}
-                      onSelect={setSelectedAgent}
-                      getInputValue={(item) =>
-                        `${item.AgentName} (${item.SalesForceCode})`
-                      }
-                    />
-                  </Box>
+                  <LookupField<SalesForceLookUpData>
+                    placeholder="Select Sales Force"
+                    modalTitle="Sales Force List"
+                    dataSource={salesForceLookUp}
+                    columns={salesForceColumns}
+                    searchKeys={["AgentName", "SalesForceCode"]}
+                    onSelect={setSelectedAgent}
+                    renderDisplay={(item) =>
+                      `${item.AgentName} (${item.SalesForceCode})`
+                    }
+                    value={selectedAgent}
+                  />
                 </GridItem>
               </Grid>
             </InfoCardAccordion>
@@ -96,9 +108,9 @@ export default function MCPRPage() {
 
         <Page.Row>
           <GridItem justifySelf={{ base: "stretch", lg: "end" }}>
-            <PrimaryMdButton onClick={handlePrint}>
+            <PrimaryMdFlexButton /*onClick={handlePrint}*/>
               View Incentives
-            </PrimaryMdButton>
+            </PrimaryMdFlexButton>
           </GridItem>
         </Page.Row>
       </Page.MainContent>

@@ -100,7 +100,7 @@ const ALL_NAV_OPTIONS: NavOptionDef[] = [
     Icon: LuHouse,
     activeIcon: LuHouse,
     match: (p) => p === "/",
-    roles: ["branch", "bmstl", "sales-agent"],
+    roles: ["branch", "bm", "stl", "sales-agent"],
   },
   {
     key: "/plans",
@@ -112,7 +112,7 @@ const ALL_NAV_OPTIONS: NavOptionDef[] = [
       p.startsWith("/plans") ||
       p.startsWith("/plan-details") ||
       p.startsWith("/plan-comparison"),
-    roles: ["branch", "bmstl", "sales-agent"],
+    roles: ["branch", "bm", "stl", "sales-agent"],
   },
   {
     key: "/pay-my-plan",
@@ -124,7 +124,7 @@ const ALL_NAV_OPTIONS: NavOptionDef[] = [
       p.startsWith("/pay-my-plan") ||
       p.startsWith("/account/pay-my-plan") ||
       p.startsWith("/order-summary"),
-    roles: ["branch", "bmstl", "sales-agent"],
+    roles: ["branch", "bm", "stl", "sales-agent"],
   },
   {
     key: "/claims",
@@ -133,7 +133,7 @@ const ALL_NAV_OPTIONS: NavOptionDef[] = [
     Icon: LuFileText,
     activeIcon: LuFileText,
     match: (p) => p.startsWith("/claims"),
-    roles: ["branch", "bmstl", "sales-agent"],
+    roles: ["branch", "bm", "stl", "sales-agent"],
   },
   {
     key: "/",
@@ -142,7 +142,7 @@ const ALL_NAV_OPTIONS: NavOptionDef[] = [
     Icon: RiDashboardLine,
     activeIcon: RiDashboardFill,
     match: (p) => p === "/" || p.startsWith("/dashboard"),
-    roles: ["branch", "bmstl", "sales-agent"],
+    roles: ["branch", "bm", "stl", "sales-agent"],
   },
   {
     key: "/approvals",
@@ -343,7 +343,8 @@ const FONT_SIZES = [
 
 const ROLE_LABELS: Record<string, string> = {
   branch: "Branch",
-  bmstl: "BM / STL",
+  bm: "Branch Manager",
+  stl: "Sales Team Leader",
   "sales-agent": "Sales Agent",
 };
 

@@ -22,6 +22,7 @@ const geistMono = Geist_Mono({
 
 export const viewport: Viewport = {
   userScalable: false,
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -41,12 +42,17 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      style={{ fontSize: "100%", maxHeight: "100vh", overflow: "auto" }}
+      style={{
+        fontSize: "100%",
+        maxHeight: "100vh",
+        overflow: "auto",
+        overscrollBehavior: "none",
+      }}
       suppressHydrationWarning
     >
       <body
         className={`${geistSans.variable} ${geistMono.variable}`}
-        style={{ background: "#fff" }}
+        style={{ background: "#fff", overscrollBehavior: "none" }}
       >
         <RootLayoutClient>
           <StPeterProvider font="Open Sans" theme="green">

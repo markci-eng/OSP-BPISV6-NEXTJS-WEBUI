@@ -14,6 +14,7 @@ import {
   Grid,
   GridItem,
   Show,
+  Avatar,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -24,6 +25,46 @@ import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 import { NavItem, SidebarProps } from "./app-layout.type";
 import logoIcon from "@/public/images/logo/icon.png";
 import { Body, Small } from "st-peter-ui";
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2)
+    return decodeURIComponent(parts.pop()!.split(";").shift() ?? "");
+  return null;
+}
+
+function parseDisplayName(session: string | null): string {
+  if (!session) return "";
+  try {
+    const json = session.split(".")[0];
+    const padded = json.replace(/-/g, "+").replace(/_/g, "/");
+    const padding = (4 - (padded.length % 4)) % 4;
+    const decoded = atob(padded + "=".repeat(padding));
+    const payload = JSON.parse(decoded) as { email?: string };
+    const email = payload.email ?? "";
+    const stored =
+      typeof localStorage !== "undefined"
+        ? localStorage.getItem("user-display-name")
+        : null;
+    return (
+      stored ||
+      (email.split("@")[0] ?? "")
+        .replace(/[._-]/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .trim()
+    );
+  } catch {
+    return "";
+  }
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  branch: "Branch",
+  bmstl: "BM / STL",
+  "sales-agent": "Sales Agent",
+};
 
 interface NavItemRowProps {
   item: NavItem;
@@ -300,6 +341,24 @@ export default function Sidebar({
   const [isExpanded, setIsExpanded] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [navItemExpanded, setNavItemExpanded] = useState<string>("");
+  const [displayName, setDisplayName] = useState("");
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    const session = readCookie("osp_session");
+    const _role = readCookie("osp_user") ?? "";
+    setDisplayName(parseDisplayName(session));
+    setDisplayName("Joyce Basilio-Ramos");
+    setRole(
+      _role == "branch"
+        ? "Branch Cashier/Encoder"
+        : _role == "bm"
+          ? "Branch Manager"
+          : _role == "stl"
+            ? "Sales Team Leader"
+            : _role,
+    );
+  }, []);
 
   // Detect mobile safely
   const isMobileRaw = useBreakpointValue({ base: true, lg: false });
@@ -430,6 +489,59 @@ export default function Sidebar({
               <RiCloseLine />
             </IconButton>
           )}
+        </Flex>
+
+        {/* User Profile Header */}
+        <Flex
+          align="center"
+          gap={2}
+          px={2}
+          py={2}
+          borderBottom="1px solid"
+          borderColor="gray.200"
+        >
+          <Box
+            p="2px"
+            borderRadius="full"
+            border="2px solid"
+            borderColor="var(--chakra-colors-primary-disabled)"
+            flexShrink={0}
+          >
+            <Avatar.Root
+              size="sm"
+              bg="var(--chakra-colors-primary-disabled)/30"
+            >
+              <Avatar.Image
+                src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
+                alt={displayName}
+              />
+              <Avatar.Fallback
+                color="var(--chakra-colors-primary)"
+                fontWeight="semibold"
+                name={displayName}
+              />
+            </Avatar.Root>
+          </Box>
+          <Box
+            overflow="hidden"
+            opacity={isSidebarOpen ? 1 : 0}
+            transition="opacity 0.2s, max-width 0.2s"
+            maxWidth={isSidebarOpen ? "220px" : "0px"}
+          >
+            <Text
+              fontWeight="semibold"
+              fontSize="sm"
+              whiteSpace="nowrap"
+              lineHeight="1.3"
+              color="gray.800"
+              truncate
+            >
+              {displayName || "—"}
+            </Text>
+            <Text fontSize="xs" color="primary" whiteSpace="nowrap">
+              {ROLE_LABELS[role] ?? role}
+            </Text>
+          </Box>
         </Flex>
 
         {/* Menu Label */}

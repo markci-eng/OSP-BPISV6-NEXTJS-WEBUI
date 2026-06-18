@@ -6,6 +6,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { NavItem, NotificationDataProps } from "./app-layout.type";
 import { StickyNavbarContext } from "./app-navbar/sticky-navbar-context";
 import { AppBottomNavBar } from "./app-navbar/app-bottom-navbar";
+import { ChatbotFAB } from "./chatbot-fab";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -32,9 +33,12 @@ export function AppLayout({
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!isSidebarOpen && window.innerWidth >= 992) {
-      setIsSidebarOpen(true);
-    }
+    const mql = window.matchMedia("(min-width: 992px)");
+
+    const sync = () => setIsSidebarOpen(mql.matches);
+    sync();
+    mql.addEventListener("change", sync);
+
     const fontSizeMap: Record<string, string> = {
       sm: "14px",
       md: "16px",
@@ -42,14 +46,17 @@ export function AppLayout({
     };
     const fontPref = localStorage.getItem("font-size-pref") ?? "md";
     document.documentElement.style.fontSize = fontSizeMap[fontPref] ?? "16px";
+
+    return () => mql.removeEventListener("change", sync);
   }, []);
 
   return (
     <Flex
-      h="100vh"
+      h="100dvh"
       fontFamily={font ? `'${font}', sans-serif` : undefined}
       bg={"white"}
       overflow="hidden"
+      style={{ overscrollBehavior: "none" }}
     >
       {/* LEFT: Sidebar (full height) */}
       <Sidebar
@@ -80,9 +87,11 @@ export function AppLayout({
           overflow="auto"
           ref={scrollRef}
           px={2}
+          style={{ overscrollBehavior: "contain" }}
         >
           <StickyNavbarContext refParent={scrollRef}>
             {children}
+            <ChatbotFAB />
             <AppBottomNavBar
               onToggleSidebar={toggleSidebar}
               notifications={notifications}

@@ -29,7 +29,7 @@ export default function RootLayoutClient({
 
   return (
     <ColorModeProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </ColorModeProvider>
   );
 }

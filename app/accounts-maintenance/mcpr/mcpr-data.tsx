@@ -31,7 +31,7 @@ export default function MCPRDataPage() {
           </Flex>
         </Card>
 
-        <Card
+        {/* <Card
           activeIcon={<LuChartBar size={18} />}
           title="Quota"
           subtitle="Target collection amounts"
@@ -47,7 +47,7 @@ export default function MCPRDataPage() {
         >
           <RowItem label="Commission" value="₱50,000.00" />
           <RowItem label="Non-Commission" value="₱50,000.00" />
-        </Card>
+        </Card> */}
       </SimpleGrid>
     </Flex>
   );

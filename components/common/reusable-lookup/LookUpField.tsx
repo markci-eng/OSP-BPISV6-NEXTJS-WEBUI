@@ -6,7 +6,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  ChevronsUpDown,
   ChevronUp,
   ChevronDown,
   ListFilter,
@@ -318,7 +317,7 @@ function ColumnFilterDropdown({
 function SortIcon({ direction }: { direction: "asc" | "desc" | false }) {
   if (direction === "asc") return <ChevronUp size={12} />;
   if (direction === "desc") return <ChevronDown size={12} />;
-  return <ChevronsUpDown size={12} opacity={0.35} />;
+  return <ChevronDown size={12} opacity={0.35} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -604,39 +603,30 @@ export function LookupField<T extends object>({
       )}
 
       {/* ── Trigger ── */}
-      <HStack
-        w="full"
-        gap={0}
-        border="1.5px solid"
-        borderColor={
-          value ? "var(--chakra-colors-primary-disabled)" : "gray.200"
-        }
-        borderRadius="lg"
-        bg="white"
-        boxShadow="xs"
-        overflow="hidden"
-        transition="border-color 0.15s, box-shadow 0.15s"
-        _hover={{
-          borderColor: value ? "var(--chakra-colors-primary)" : "gray.300",
-          boxShadow: "sm",
-        }}
-        _focusWithin={{
-          borderColor: "var(--chakra-colors-primary)",
-          boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
-        }}
-        minH="10"
-      >
-        <Flex
-          align="center"
-          pl={3}
-          color={value ? "var(--chakra-colors-primary)" : "gray.400"}
-          flexShrink={0}
-          pointerEvents="none"
+      <HStack gap={0} w="full">
+        <Box
+          flex={1}
+          border="1.5px solid"
+          borderColor={
+            value ? "var(--chakra-colors-primary-disabled)" : "gray.200"
+          }
+          borderRightWidth="0"
+          borderLeftRadius="lg"
+          bg="white"
+          boxShadow="xs"
+          overflow="hidden"
+          transition="border-color 0.15s, box-shadow 0.15s"
+          _hover={{
+            borderColor: value ? "var(--chakra-colors-primary)" : "gray.300",
+          }}
+          _focusWithin={{
+            borderColor: "var(--chakra-colors-primary)",
+            boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
+          }}
+          minH="10"
+          display="flex"
+          alignItems="center"
         >
-          <Search size={14} />
-        </Flex>
-
-        <Box flex={1}>
           <Input
             value={triggerValue}
             onChange={(e) => {
@@ -695,41 +685,46 @@ export function LookupField<T extends object>({
             bg="transparent"
             boxShadow="none"
             borderRadius="0"
-            px={2}
+            px={3}
             fontSize="sm"
             color={value ? "gray.800" : "gray.700"}
             fontWeight={value ? "medium" : "normal"}
             _placeholder={{ color: "gray.400" }}
             _focus={{ boxShadow: "none", outline: "none" }}
           />
+
+          {(value || searchText) && (
+            <Flex align="center" pr={2} flexShrink={0}>
+              <IconButton
+                aria-label="Clear selection"
+                variant="ghost"
+                size="xs"
+                borderRadius="full"
+                color="gray.400"
+                _hover={{ bg: "gray.100", color: "gray.600" }}
+                onClick={handleClearSelection}
+              >
+                <X size={12} />
+              </IconButton>
+            </Flex>
+          )}
         </Box>
 
-        <Flex align="center" pr={2} flexShrink={0}>
-          {value || searchText ? (
-            <IconButton
-              aria-label="Clear selection"
-              variant="ghost"
-              size="xs"
-              borderRadius="full"
-              color="gray.400"
-              _hover={{ bg: "gray.100", color: "gray.600" }}
-              onClick={handleClearSelection}
-            >
-              <X size={12} />
-            </IconButton>
-          ) : (
-            <Box
-              display="flex"
-              alignItems="center"
-              color="gray.300"
-              cursor="pointer"
-              px={1}
-              onClick={openModal}
-            >
-              <ChevronsUpDown size={14} />
-            </Box>
-          )}
-        </Flex>
+        <IconButton
+          aria-label="Open search"
+          onClick={openModal}
+          bg="var(--chakra-colors-primary)"
+          color="white"
+          borderLeftRadius="0"
+          borderRightRadius="lg"
+          h="10"
+          minW="10"
+          flexShrink={0}
+          _hover={{ opacity: 0.88 }}
+          _active={{ opacity: 0.75 }}
+        >
+          <Search size={15} />
+        </IconButton>
       </HStack>
 
       {/* ── Suggestions dropdown ── */}

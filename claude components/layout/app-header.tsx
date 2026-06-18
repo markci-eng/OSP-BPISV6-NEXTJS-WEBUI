@@ -14,7 +14,6 @@ import {
   Popover,
   Portal,
   Separator,
-  useBreakpointValue,
   Show,
   Image,
   Button,
@@ -31,8 +30,10 @@ import {
   LuFileText,
   LuTriangleAlert,
   LuCircleHelp,
-  LuBotMessageSquare,
+  LuArrowRight,
+  LuArrowLeft,
 } from "react-icons/lu";
+import { useRouter } from "next/navigation";
 import { NotificationDataProps } from "./app-layout.type";
 import { Body, Small } from "st-peter-ui";
 
@@ -105,23 +106,34 @@ export default function AppHeader({
   appSubtitle?: string;
   breadcrumb?: React.ReactNode;
 }) {
-  const isMobileBreak = useBreakpointValue({ base: true, lg: false });
-  const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+  const [isMobile, setIsMobile] = useState(false);
   const [avatarName, setAvatarName] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [searchTab, setSearchTab] = useState<"all" | "recent">("all");
+  const [trackerMode, setTrackerMode] = useState(false);
+
+  const handleTrackSubmit = () => {
+    const id = searchValue.trim();
+    if (!id) return;
+    setSearchOpen(false);
+    router.push(`/transaction/${encodeURIComponent(id)}`);
+  };
   const [readIds, setReadIds] = useState<Set<number>>(
     () => new Set(notifications.filter((n) => n.read).map((n) => n.id)),
   );
   const unreadCount = notifications.filter((n) => !readIds.has(n.id)).length;
   const markAllRead = () => setReadIds(new Set(notifications.map((n) => n.id)));
-  // Defer to client value only after mount to avoid SSR/client mismatch
-  const isMobile = isMounted ? isMobileBreak : false;
 
   useEffect(() => {
-    setIsMounted(true);
+    const mql = window.matchMedia("(min-width: 992px)");
+    const sync = () => setIsMobile(!mql.matches);
+    sync();
+    mql.addEventListener("change", sync);
     setAvatarName(parseAvatarName(readCookie("osp_session")));
+    return () => mql.removeEventListener("change", sync);
   }, []);
 
   const colorPalette = ["red", "blue", "green", "yellow", "purple", "orange"];
@@ -134,13 +146,14 @@ export default function AppHeader({
   return (
     <Flex
       className="no-print"
-      h={{ base: "80px", lg: "auto" }}
+      // h={{ base: "80px", lg: "auto" }}
       px={4}
       align="center"
       justify="space-between"
       bg="bg"
       _dark={{ bg: "rgba(20, 24, 36, 0.88)" }}
       borderBottom={{ base: 0, md: "1px solid #dbdbdbff" }}
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       {/* Left side */}
       <Flex align="center" gap={2}>
@@ -225,9 +238,12 @@ export default function AppHeader({
         <Dialog.Root
           size="full"
           motionPreset="slide-in-bottom"
+          open={searchOpen}
+          onOpenChange={(e) => setSearchOpen(e.open)}
           onExitComplete={() => {
             setSearchValue("");
             setSearchTab("all");
+            setTrackerMode(false);
           }}
         >
           <Dialog.Trigger asChild>
@@ -237,6 +253,7 @@ export default function AppHeader({
               aria-label="Search"
               size="xl"
               variant="ghost"
+              onClick={() => setSearchOpen(true)}
             >
               <LuSearch />
             </IconButton>
@@ -253,6 +270,21 @@ export default function AppHeader({
                   _dark={{ borderColor: "gray.700" }}
                 >
                   <Flex align="center" gap={2} px={3} pt={3} pb={3} w="full">
+                    {trackerMode && (
+                      <IconButton
+                        size="sm"
+                        variant="ghost"
+                        color="gray.500"
+                        aria-label="Back to search"
+                        flexShrink={0}
+                        onClick={() => {
+                          setTrackerMode(false);
+                          setSearchValue("");
+                        }}
+                      >
+                        <LuArrowLeft />
+                      </IconButton>
+                    )}
                     <Flex
                       flex={1}
                       minW={0}
@@ -264,13 +296,34 @@ export default function AppHeader({
                       px={3}
                       py={2}
                     >
-                      <Box color="gray.400" flexShrink={0}>
-                        <LuSearch size={16} />
+                      <Box
+                        color={trackerMode ? "green.500" : "gray.400"}
+                        flexShrink={0}
+                      >
+                        {trackerMode ? (
+                          <LuClipboardList size={16} />
+                        ) : (
+                          <LuSearch size={16} />
+                        )}
                       </Box>
                       <Input
                         value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
-                        placeholder="Search . . ."
+                        onChange={(e) =>
+                          setSearchValue(
+                            trackerMode
+                              ? e.target.value.toUpperCase()
+                              : e.target.value,
+                          )
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && trackerMode)
+                            handleTrackSubmit();
+                        }}
+                        placeholder={
+                          trackerMode
+                            ? "Enter reference number..."
+                            : "Search . . ."
+                        }
                         border="none"
                         bg="transparent"
                         p={0}
@@ -298,118 +351,213 @@ export default function AppHeader({
 
                 {/* Suggestions list */}
                 <Dialog.Body p={0}>
-                  {/* Filter tab pills */}
-                  <Flex
-                    gap={2}
-                    px={3}
-                    py={3}
-                    borderBottomWidth="1px"
-                    borderColor="gray.100"
-                    _dark={{ borderColor: "gray.700" }}
-                  >
-                    {(["all", "recent"] as const).map((tab) => (
+                  {trackerMode ? (
+                    /* Tracker mode body */
+                    <VStack gap={4} px={4} py={6} align="stretch">
                       <Box
-                        key={tab}
-                        px={4}
-                        py={1.5}
-                        borderRadius="full"
-                        bg={searchTab === tab ? "gray.800" : "gray.100"}
-                        color={searchTab === tab ? "white" : "gray.600"}
-                        cursor="pointer"
-                        fontSize="sm"
-                        fontWeight="medium"
-                        onClick={() => setSearchTab(tab)}
-                        _dark={{
-                          bg: searchTab === tab ? "white" : "gray.700",
-                          color: searchTab === tab ? "gray.900" : "gray.300",
-                        }}
+                        bg="green.50"
+                        _dark={{ bg: "green.900" }}
+                        borderRadius="xl"
+                        p={4}
                       >
-                        {tab === "all" ? "All" : "Recent"}
-                      </Box>
-                    ))}
-                  </Flex>
-                  <VStack gap={0} align="stretch">
-                    {[
-                      "Approvals",
-                      "Claims",
-                      "Payment",
-                      "Plan Management",
-                      "Disbursement",
-                      "Accounts Maintenance",
-                      "Sales Force",
-                      "Loan",
-                      "Document Management",
-                    ]
-                      .filter(
-                        (s) =>
-                          !searchValue ||
-                          s.toLowerCase().includes(searchValue.toLowerCase()),
-                      )
-                      .map((s) => (
-                        <Flex
-                          key={s}
-                          align="center"
-                          gap={3}
-                          px={4}
-                          py={3.5}
-                          borderBottomWidth="1px"
-                          borderColor="gray.100"
-                          _dark={{ borderColor: "gray.700" }}
-                          _hover={{ bg: "gray.50", cursor: "pointer" }}
-                        >
-                          <Box color="gray.400" flexShrink={0}>
-                            <LuSearch size={16} />
+                        <Flex align="center" gap={3} mb={2}>
+                          <Box
+                            w="36px"
+                            h="36px"
+                            borderRadius="full"
+                            bg="#D3EDEE"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            flexShrink={0}
+                          >
+                            <LuClipboardList size={18} color="#006838" />
                           </Box>
                           <Text
-                            fontSize="md"
+                            fontSize="sm"
+                            fontWeight="semibold"
                             color="gray.700"
                             _dark={{ color: "gray.200" }}
                           >
-                            {s}
+                            Track My Request
                           </Text>
                         </Flex>
-                      ))}
-                    {[
-                      "Approvals",
-                      "Claims",
-                      "Payment",
-                      "Plan Management",
-                      "Disbursement",
-                      "Accounts Maintenance",
-                      "Sales Force",
-                      "Loan",
-                      "Document Management",
-                    ].filter(
-                      (s) =>
-                        !searchValue ||
-                        s.toLowerCase().includes(searchValue.toLowerCase()),
-                    ).length === 0 && (
-                      <Text
-                        textAlign="center"
-                        py={10}
-                        color="gray.400"
-                        fontSize="sm"
+                        <Text
+                          fontSize="xs"
+                          color="gray.500"
+                          _dark={{ color: "gray.400" }}
+                        >
+                          Enter your transaction reference number below and
+                          press Track or hit Enter to view the status of your
+                          request.
+                        </Text>
+                      </Box>
+                      <Button
+                        colorScheme="green"
+                        bg="var(--chakra-colors-primary)"
+                        color="white"
+                        borderRadius="xl"
+                        size="lg"
+                        disabled={!searchValue.trim()}
+                        onClick={handleTrackSubmit}
+                        _hover={{ opacity: 0.9 }}
                       >
-                        No results found
-                      </Text>
-                    )}
-                  </VStack>
+                        Track Request
+                        <LuArrowRight />
+                      </Button>
+                    </VStack>
+                  ) : (
+                    <>
+                      {/* Filter tab pills */}
+                      <Flex
+                        gap={2}
+                        px={3}
+                        py={3}
+                        borderBottomWidth="1px"
+                        borderColor="gray.100"
+                        _dark={{ borderColor: "gray.700" }}
+                      >
+                        {(["all", "recent"] as const).map((tab) => (
+                          <Box
+                            key={tab}
+                            px={4}
+                            py={1.5}
+                            borderRadius="full"
+                            bg={searchTab === tab ? "gray.800" : "gray.100"}
+                            color={searchTab === tab ? "white" : "gray.600"}
+                            cursor="pointer"
+                            fontSize="sm"
+                            fontWeight="medium"
+                            onClick={() => setSearchTab(tab)}
+                            _dark={{
+                              bg: searchTab === tab ? "white" : "gray.700",
+                              color:
+                                searchTab === tab ? "gray.900" : "gray.300",
+                            }}
+                          >
+                            {tab === "all" ? "All" : "Recent"}
+                          </Box>
+                        ))}
+                      </Flex>
+                      <VStack gap={0} align="stretch">
+                        {/* Track My Request — always pinned at top */}
+                        {(!searchValue ||
+                          "Track My Request"
+                            .toLowerCase()
+                            .includes(searchValue.toLowerCase())) && (
+                          <Flex
+                            align="center"
+                            gap={3}
+                            px={4}
+                            py={3.5}
+                            borderBottomWidth="1px"
+                            borderColor="gray.100"
+                            _dark={{ borderColor: "gray.700" }}
+                            _hover={{ bg: "gray.50", cursor: "pointer" }}
+                            onClick={() => {
+                              setTrackerMode(true);
+                              setSearchValue("");
+                            }}
+                          >
+                            <Box color="green.600" flexShrink={0}>
+                              <LuClipboardList size={16} />
+                            </Box>
+                            <Text
+                              fontSize="md"
+                              color="gray.700"
+                              _dark={{ color: "gray.200" }}
+                              flex={1}
+                            >
+                              Track My Request
+                            </Text>
+                            <Box color="gray.400" flexShrink={0}>
+                              <LuArrowRight size={14} />
+                            </Box>
+                          </Flex>
+                        )}
+                        {[
+                          "Approvals",
+                          "Claims",
+                          "Payment",
+                          "Plan Management",
+                          "Disbursement",
+                          "Accounts Maintenance",
+                          "Sales Force",
+                          "Loan",
+                          "Document Management",
+                        ]
+                          .filter(
+                            (s) =>
+                              !searchValue ||
+                              s
+                                .toLowerCase()
+                                .includes(searchValue.toLowerCase()),
+                          )
+                          .map((s) => (
+                            <Flex
+                              key={s}
+                              align="center"
+                              gap={3}
+                              px={4}
+                              py={3.5}
+                              borderBottomWidth="1px"
+                              borderColor="gray.100"
+                              _dark={{ borderColor: "gray.700" }}
+                              _hover={{ bg: "gray.50", cursor: "pointer" }}
+                            >
+                              <Box color="gray.400" flexShrink={0}>
+                                <LuSearch size={16} />
+                              </Box>
+                              <Text
+                                fontSize="md"
+                                color="gray.700"
+                                _dark={{ color: "gray.200" }}
+                              >
+                                {s}
+                              </Text>
+                            </Flex>
+                          ))}
+                        {!(
+                          !searchValue ||
+                          "Track My Request"
+                            .toLowerCase()
+                            .includes(searchValue.toLowerCase())
+                        ) &&
+                          [
+                            "Approvals",
+                            "Claims",
+                            "Payment",
+                            "Plan Management",
+                            "Disbursement",
+                            "Accounts Maintenance",
+                            "Sales Force",
+                            "Loan",
+                            "Document Management",
+                          ].filter(
+                            (s) =>
+                              !searchValue ||
+                              s
+                                .toLowerCase()
+                                .includes(searchValue.toLowerCase()),
+                          ).length === 0 && (
+                            <Text
+                              textAlign="center"
+                              py={10}
+                              color="gray.400"
+                              fontSize="sm"
+                            >
+                              No results found
+                            </Text>
+                          )}
+                      </VStack>
+                    </>
+                  )}
                 </Dialog.Body>
                 <Dialog.Footer />
               </Dialog.Content>
             </Dialog.Positioner>
           </Portal>
         </Dialog.Root>
-
-        {/* Chatbot */}
-        <IconButton
-          aria-label="Chatbot"
-          size="xl"
-          variant="ghost"
-          _hover={{ bg: "green.50" }}
-        >
-          <LuBotMessageSquare />
-        </IconButton>
 
         {/* Notifications */}
         {isMobile ? (
