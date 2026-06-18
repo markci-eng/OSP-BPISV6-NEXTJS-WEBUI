@@ -36,7 +36,7 @@ export function RenderPage({
       <AppLayout
         navItems={navItems}
         notifications={Notifications}
-        appName="One St. Peter"
+        appName={userRole === "sales-agent" ? "eKolekta" : "One St. Peter"}
         appSubtitle="Life Plan Operations"
       >
         {children}
