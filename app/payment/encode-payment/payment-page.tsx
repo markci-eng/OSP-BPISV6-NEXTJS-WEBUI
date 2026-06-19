@@ -68,7 +68,7 @@ export default function PaymentPage() {
   return (
     <Page.Root
       title="Encode Payment"
-      description="Record and manage daily payment transactions."
+      description="Record daily payment transactions."
       headerButton="menu"
     >
       <Page.MainContent>

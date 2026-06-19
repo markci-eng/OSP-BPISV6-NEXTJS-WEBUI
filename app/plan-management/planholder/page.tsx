@@ -133,7 +133,7 @@ export default function PlanholderSearchPage() {
     <Page.Root
       headerButton="menu"
       title="Planholder Profile"
-      description="Search and select a planholder to view their profile."
+      description="Find a planholder to view their profile."
     >
       <Page.MainContent>
         <Page.Row>

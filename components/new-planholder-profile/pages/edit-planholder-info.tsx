@@ -1,5 +1,5 @@
 "use client";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import FormSteps from "@/components/FormSteps";
 import { LuFileText, LuUser } from "react-icons/lu";
 import { TransferDocumentsPage } from "@/app/plan-management/planholder/[personId]/transfer-of-rights/tf-documents-page";

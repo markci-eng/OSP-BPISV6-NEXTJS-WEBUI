@@ -21,7 +21,7 @@ export default function page() {
   return (
     <Page.Root
       title="Approvals"
-      description="Review & process pending requests across all types."
+      description="Review & process pending requests."
       headerButton="menu"
     >
       <Page.MainContent>

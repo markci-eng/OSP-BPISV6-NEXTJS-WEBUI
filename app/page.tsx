@@ -1051,57 +1051,99 @@ const TileItem = ({
       ? monthOverMonthPercentage >= 0
       : monthOverMonthPercentage <= 0;
 
+  const pct = Math.abs(monthOverMonthPercentage).toFixed(1);
+  const trendColor = isPositive ? "#1B9E57" : "#D32F2F";
+  const trendBg = isPositive ? "#E8F5E9" : "#FFEBEE";
+
   return (
     <Box
-      borderRadius="3xl"
-      p={4}
+      borderRadius="2xl"
       position="relative"
       bg={`${color}18`}
       border="2px solid"
-      borderColor={`${color}`}
-      boxShadow="sm"
+      borderColor={color}
+      boxShadow="0 1px 4px rgba(0,0,0,0.06)"
       overflow="hidden"
     >
-      <Flex align="center" gap={3}>
-        {/* Icon chip */}
-        <Box
-          p={2.5}
-          bg={`${color}20`}
-          style={{ color }}
-          borderRadius="2xl"
-          flexShrink={0}
-        >
-          <Icon size={22} />
-        </Box>
-        {/* Content */}
-        <Box flex={1} minW={0}>
-          <Flex justify="space-between" align="center" mb={1}>
-            <Small as="div" fontWeight="700" style={{ color }}>
-              {title}
-            </Small>
-            <OSPBadge type={isPositive ? "success" : "danger"} size="sm">
-              {monthOverMonthPercentage > 0 ? (
-                <LuArrowUp />
-              ) : monthOverMonthPercentage < 0 ? (
-                <LuArrowDown />
-              ) : null}{" "}
-              {Math.abs(monthOverMonthPercentage).toFixed(1)}%
-            </OSPBadge>
-          </Flex>
-          <BaseText
-            as="div"
-            fontSize="3xl"
-            fontWeight="bold"
-            color="gray.800"
-            lineHeight="1"
+      <Box p={4}>
+        {/* Header: icon + title */}
+        <Flex align="center" gap={2} mb={3}>
+          <Box
+            p={2}
+            bg={`${color}15`}
+            style={{ color }}
+            borderRadius="lg"
+            flexShrink={0}
           >
-            {value}
-          </BaseText>
-          <Small as="div" color="gray.500" mt={1}>
-            from {prevVal} prior month
+            <Icon size={17} />
+          </Box>
+          <Small fontWeight="600" color="gray.500">
+            {title}
           </Small>
-        </Box>
-      </Flex>
+        </Flex>
+
+        {/* Main value */}
+        <BaseText
+          as="div"
+          fontSize="3xl"
+          fontWeight="800"
+          color="gray.800"
+          lineHeight="1"
+          letterSpacing="-0.02em"
+        >
+          {value}
+        </BaseText>
+
+        {/* MoM section */}
+        <Flex
+          align="center"
+          justify="space-between"
+          mt={3}
+          pt={2.5}
+          borderTop="1px solid"
+          borderColor="gray.100"
+        >
+          {/* Prior month reference */}
+          <Box>
+            <Small
+              color="gray.400"
+              style={{
+                fontSize: "10px",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontWeight: 600,
+              }}
+            >
+              Prior Month
+            </Small>
+            <Small color="gray.500" fontWeight="semibold">
+              {prevVal}
+            </Small>
+          </Box>
+
+          {/* Trend pill */}
+          <Flex
+            align="center"
+            gap={1}
+            px={2.5}
+            py={1.5}
+            borderRadius="full"
+            style={{ background: trendBg }}
+          >
+            {monthOverMonthPercentage > 0 ? (
+              <LuArrowUp size={13} style={{ color: trendColor }} />
+            ) : monthOverMonthPercentage < 0 ? (
+              <LuArrowDown size={13} style={{ color: trendColor }} />
+            ) : null}
+            <Text
+              fontWeight="700"
+              style={{ color: trendColor, fontSize: "14px" }}
+            >
+              {pct}%
+            </Text>
+          </Flex>
+        </Flex>
+      </Box>
     </Box>
   );
 };

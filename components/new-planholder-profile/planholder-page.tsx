@@ -37,7 +37,9 @@ import {
   LuChevronsDown,
   LuChevronsUp,
 } from "react-icons/lu";
-import MenuButton, { MenuItemButton } from "../buttons/MenuButton";
+import MenuButton, {
+  MenuItemButton,
+} from "../../claude components/buttons/MenuButton";
 import { MdPayment } from "react-icons/md";
 import { useMessageDialog } from "../common/message-box/message-box-provider";
 import { TbMoneybagMove } from "react-icons/tb";
@@ -47,7 +49,7 @@ import {
   OnboardingTutorial,
 } from "./onboarding-tutorial";
 import { SecondarySmButton, TertiarySmButton } from "st-peter-ui";
-import ActionButtons from "../buttons/ActionButtons";
+import ActionButtons from "../../claude components/buttons/ActionButtons";
 
 export interface Hyperlinks {
   payMyPlan?: string | undefined;

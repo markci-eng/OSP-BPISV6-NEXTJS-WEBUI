@@ -19,7 +19,7 @@ const PrintingPage = () => {
       <Page.Root
         headerButton="menu"
         title="Contract and SFID Printing"
-        description="Generate and print official sales agent service contracts and SFID documents."
+        description="Print agent contracts and SFID docs."
       >
         <Page.ToolContent>
           <PrimaryMdButton onClick={() => window.print()} className={"print"}>

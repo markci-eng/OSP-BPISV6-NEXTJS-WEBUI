@@ -115,7 +115,7 @@ export default function SalesAgentListPage() {
     <Page.Root
       headerButton="menu"
       title="Sales Agent Profile"
-      description="Search and select an agent to view their profile."
+      description="Find an agent to view their profile."
     >
       <Page.MainContent>
         <Page.Row>

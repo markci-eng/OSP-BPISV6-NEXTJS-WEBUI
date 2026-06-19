@@ -132,7 +132,7 @@ const ReassignPageWeb = ({ superior, setSuperior }: ReassignPageWebProps) => {
     <Page.Root
       headerButton="menu"
       title="Re-Organization"
-      description="Move sales agents under a new superior in two quick steps."
+      description="Move agents to a new superior."
     >
       <Page.MainContent>
         <Flex flexDir="column" gap={4} mt={{ base: "10px", md: 0 }}>
@@ -497,7 +497,7 @@ const ReassignSummary = ({
   return (
     <Page.Root
       title="Review Re-organization"
-      description="Double-check the new superior and the agents being moved before submitting."
+      description="Confirm details before submitting."
     >
       <Page.MainContent>
         <Summary

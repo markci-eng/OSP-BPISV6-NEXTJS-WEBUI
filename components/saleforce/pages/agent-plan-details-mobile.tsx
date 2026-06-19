@@ -24,7 +24,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import ProfileHeaderCard from "@/components/cards/ProfileHeaderCard";
 import ActionButtons, {
   ActionButtonItem,
-} from "@/components/buttons/ActionButtons";
+} from "@/claude components/buttons/ActionButtons";
 import Page from "@/claude components/layout/page/Page";
 import { useRouter } from "next/navigation";
 
@@ -93,7 +93,7 @@ const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
   return (
     <Page.Root
       title="Sales Agent Profile"
-      description="View sales agent information and details."
+      description="View sales agent info and details."
     >
       <Page.ToolContent>
         <ActionButtons buttons={actionButtonDefs} />

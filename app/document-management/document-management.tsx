@@ -35,7 +35,7 @@ const DocumentManagement = () => {
   return (
     <Page.Root
       title="Document Management"
-      description="Search employees and manage their policy documents."
+      description="Manage employee policy documents."
       headerButton="menu"
     >
       <Page.MainContent>

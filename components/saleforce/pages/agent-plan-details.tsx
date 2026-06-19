@@ -32,10 +32,15 @@ import {
   SalesAgent,
 } from "../../common/agent-lookup/agent-lookup.type";
 import MCPRList from "@/app/accounts-maintenance/mcpr/mcpr-list";
-import MenuButton, { MenuItemButton } from "@/components/buttons/MenuButton";
+import MenuButton, {
+  MenuItemButton,
+} from "@/claude components/buttons/MenuButton";
 import { useRouter } from "next/navigation";
 import TeamMemberDrawer from "../drawers/team-member-drawer";
-import { PendingRequests, RequestProps } from "@/components/new-planholder-profile/sections/pending-requests";
+import {
+  PendingRequests,
+  RequestProps,
+} from "@/components/new-planholder-profile/sections/pending-requests";
 import AgentReassignForm from "../forms/agent-reassign-form";
 import AgentMovementForm from "../forms/agent-movement-form";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
@@ -191,7 +196,9 @@ export function AgentDetails(params: {
     </Flex>
   );
 
-  const pendingRequestsCard = <PendingRequests requests={MOCK_AGENT_REQUESTS} />;
+  const pendingRequestsCard = (
+    <PendingRequests requests={MOCK_AGENT_REQUESTS} />
+  );
 
   const agentPhAddress = addr
     ? [

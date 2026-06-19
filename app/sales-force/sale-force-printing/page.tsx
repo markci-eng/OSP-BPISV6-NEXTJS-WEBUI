@@ -144,7 +144,7 @@ const SaleforcePrintingPage = () => {
     <Page.Root
       headerButton="menu"
       title="Contract and SFID Renewal"
-      description="Re-print the contract and SFID of sales force agents whose contracts are up for renewal."
+      description="Reprint expiring agent contracts."
     >
       <Page.MainContent>
         <Flex flexDir="column" gap={{ base: 4, md: 6 }} my={6}>

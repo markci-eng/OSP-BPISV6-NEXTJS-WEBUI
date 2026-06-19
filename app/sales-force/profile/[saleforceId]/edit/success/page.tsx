@@ -21,10 +21,10 @@ const page = () => {
         hour12: true,
       })}
       onClickHome={() => {
-        router.push("/");
+        router.push(`/sales-force/profile/${params.saleforceId}`);
       }}
       onClickProceed={() => {
-        router.push(`/sales-force/profile/${params.saleforceId}`);
+        router.push("/transaction/ED-0000000");
       }}
     />
   );

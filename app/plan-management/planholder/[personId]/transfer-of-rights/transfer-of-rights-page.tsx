@@ -72,7 +72,7 @@ export function TransferOfRightsPage() {
   return (
     <Page.Root
       title={"Transfer of Rights"}
-      description={"Transfer your plan to your loved ones—simple and seamless."}
+      description="Transfer your plan to loved ones."
     >
       <Page.MainContent>
         <FormSteps

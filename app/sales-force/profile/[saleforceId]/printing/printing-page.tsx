@@ -22,7 +22,7 @@ export default function PrintingPage({ agent }: { agent: SalesAgent }) {
   return (
     <Page.Root
       title="Reprint SFID"
-      description="Reprint the SFID card and contract for this sales agent."
+      description="Reprint SFID card and contract."
     >
       <Page.MainContent>
         <Flex flexDir="column" gap={4} my={2}>

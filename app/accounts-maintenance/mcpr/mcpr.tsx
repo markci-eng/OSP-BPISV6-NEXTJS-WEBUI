@@ -59,7 +59,7 @@ export default function MCPRPage() {
   return (
     <Page.Root
       title="MCPR"
-      description="Monthly Collection and Performance Report"
+      description="Monthly Collection & Performance"
       headerButton="menu"
     >
       <Page.MainContent>

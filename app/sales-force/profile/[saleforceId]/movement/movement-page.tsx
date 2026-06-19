@@ -10,7 +10,7 @@ export default function MovementPage({ agent }: { agent: SalesAgent }) {
   return (
     <Page.Root
       title="Agent Movement"
-      description="Submit a promotion, demotion, or lateral movement request for this sales agent."
+      description="Submit a movement request."
     >
       <Page.MainContent>
         <AgentMovementForm

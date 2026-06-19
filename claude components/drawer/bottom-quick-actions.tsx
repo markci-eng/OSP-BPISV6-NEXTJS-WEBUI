@@ -7,20 +7,15 @@ import {
   Portal,
   HStack,
   VStack,
-  Flex,
-  Icon,
-  CloseButton,
   Text,
+  Separator,
+  CloseButton,
+  Icon,
 } from "@chakra-ui/react";
-import { LuChevronRight } from "react-icons/lu";
+import { ChevronRight, User } from "lucide-react";
+import { motion } from "framer-motion";
 import type { IconType } from "react-icons";
 import Link from "next/link";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SHADOWS,
-  STANDARD_SPACING,
-} from "@/lib/theme/standard-design-tokens";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,16 +30,16 @@ export type QuickAction = {
   onClick?: () => void;
   /** Wrap the item in a Next.js Link */
   href?: string;
-  /** Icon bubble background — defaults to brand muted gray */
+  /** Icon bubble background — defaults to subtle gradient */
   iconBg?: string;
-  /** Icon fill color — defaults to brand neutral text */
+  /** Icon fill color — defaults to brand green */
   iconColor?: string;
 };
 
 export type QuickActionsHeaderCardProps = {
   /** Short initials shown in the avatar circle (1–3 chars) */
   initials?: string;
-  /** Avatar circle background — defaults to brand dark green */
+  /** Avatar circle background — defaults to green gradient */
   avatarBg?: string;
   /** Bold primary label (e.g. a name or record title) */
   label: string;
@@ -73,188 +68,172 @@ export type BottomQuickActionsProps = {
   actions: QuickAction[];
 };
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
+// ─── Motion ───────────────────────────────────────────────────────────────────
 
-const SHEET_BG = BRAND_COLORS.white;
-const DRAG_COLOR = BRAND_COLORS.neutralBorder;
-const ITEM_BG = BRAND_COLORS.white;
-const ITEM_HOVER_BG = BRAND_COLORS.subtleBg;
-const ITEM_ACTIVE_BG = BRAND_COLORS.mutedBg;
-const ITEM_BORDER = BRAND_COLORS.neutralBorder;
-const DEFAULT_ICON_BG = BRAND_COLORS.mutedBg;
-const DEFAULT_ICON_COLOR = BRAND_COLORS.neutralText;
-const AVATAR_DEFAULT_BG = BRAND_COLORS.darkGreen;
-const HEADER_CARD_BG = BRAND_COLORS.subtleBg;
-const HEADER_CARD_BORDER = BRAND_COLORS.neutralBorder;
-const TITLE_COLOR = BRAND_COLORS.neutralText;
-const SUBTITLE_COLOR = BRAND_COLORS.grey;
-const LABEL_COLOR = BRAND_COLORS.neutralText;
-const DESC_COLOR = BRAND_COLORS.grey;
-const CHEVRON_COLOR = BRAND_COLORS.ashWhite;
+const MotionBox = motion(Box);
+const SHEET_CLOSE_THRESHOLD = 120;
 
 // ─── QuickActionsHeaderCard ───────────────────────────────────────────────────
 
-/**
- * Convenience header card for showing which record the actions apply to.
- * Pass this to `BottomQuickActions` via the `headerSlot` prop.
- */
 export const QuickActionsHeaderCard = React.memo(
   ({
     initials,
-    avatarBg = AVATAR_DEFAULT_BG,
+    avatarBg,
     label,
     meta,
     trailing,
   }: QuickActionsHeaderCardProps) => (
-    <HStack
-      gap={STANDARD_SPACING.sm}
-      px={STANDARD_SPACING.sm}
-      py="13px"
-      bg={HEADER_CARD_BG}
-      borderRadius={STANDARD_RADIUS.lg}
-      borderWidth="1px"
-      borderColor={HEADER_CARD_BORDER}
+    <Box
+      p={4}
+      borderRadius="2xl"
+      bg="rgba(255,255,255,0.80)"
+      backdropFilter="blur(14px)"
+      border="1px solid rgba(0,0,0,0.055)"
+      boxShadow="0 2px 14px rgba(0,0,0,0.07), 0 1px 0 rgba(255,255,255,0.85) inset"
     >
-      {initials && (
-        <Flex
-          w="40px"
-          h="40px"
-          borderRadius={STANDARD_RADIUS.full}
-          bg={avatarBg}
-          align="center"
-          justify="center"
+      <HStack gap={3} align="center">
+        <Box
+          p={2.5}
+          borderRadius="full"
+          bg={
+            avatarBg ??
+            "linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)"
+          }
+          color="#2e7d32"
           flexShrink={0}
+          boxShadow="0 2px 8px rgba(56,142,60,0.20)"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
         >
+          {initials ? (
+            <Text
+              fontSize="14px"
+              fontWeight="700"
+              color="#2e7d32"
+              lineHeight="1"
+            >
+              {initials}
+            </Text>
+          ) : (
+            <User size={20} />
+          )}
+        </Box>
+
+        <VStack align="start" gap={0.5} flex={1} minW={0}>
           <Text
-            fontSize="14px"
             fontWeight="700"
-            color={BRAND_COLORS.white}
-            lineHeight="1"
-          >
-            {initials}
-          </Text>
-        </Flex>
-      )}
-      <Box flex="1" minW={0}>
-        <Text
-          fontSize="15px"
-          fontWeight="700"
-          color={TITLE_COLOR}
-          lineHeight="1.25"
-          overflow="hidden"
-          whiteSpace="nowrap"
-          textOverflow="ellipsis"
-        >
-          {label}
-        </Text>
-        {meta && (
-          <Text
-            fontSize="12px"
-            color={SUBTITLE_COLOR}
-            mt="2px"
-            lineHeight="1.4"
+            fontSize="sm"
+            lineHeight="1.25"
             overflow="hidden"
-            whiteSpace="nowrap"
             textOverflow="ellipsis"
+            whiteSpace="nowrap"
           >
-            {meta}
+            {label}
           </Text>
-        )}
-      </Box>
-      {trailing}
-    </HStack>
+          {meta && (
+            <Text
+              fontSize="xs"
+              color="gray.500"
+              lineHeight="1.3"
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+            >
+              {meta}
+            </Text>
+          )}
+        </VStack>
+
+        {trailing}
+      </HStack>
+    </Box>
   ),
 );
 
-// ─── Action item ──────────────────────────────────────────────────────────────
+// ─── ActionItem ───────────────────────────────────────────────────────────────
 
-const ITEM_TRANSITION = {
-  transition: "background 0.15s ease, transform 0.1s ease",
-};
+const ActionItem = React.memo(
+  ({ action, onClose }: { action: QuickAction; onClose: () => void }) => {
+    const handleClick = () => {
+      action.onClick?.();
+      onClose();
+    };
 
-const ActionItem = React.memo(({ action }: { action: QuickAction }) => {
-  const iconBg = action.iconBg ?? DEFAULT_ICON_BG;
-  const iconColor = action.iconColor ?? DEFAULT_ICON_COLOR;
-
-  const inner = (
-    <HStack
-      gap={STANDARD_SPACING.sm}
-      px={STANDARD_SPACING.sm}
-      py="14px"
-      bg={ITEM_BG}
-      borderRadius={STANDARD_RADIUS.lg}
-      borderWidth="1px"
-      borderColor={ITEM_BORDER}
-      cursor="pointer"
-      role="button"
-      tabIndex={0}
-      userSelect="none"
-      boxShadow={STANDARD_SHADOWS.level1}
-      onClick={action.onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") action.onClick?.();
-      }}
-      _hover={{ bg: ITEM_HOVER_BG }}
-      _active={{ bg: ITEM_ACTIVE_BG, transform: "scale(0.99)" }}
-      style={ITEM_TRANSITION}
-    >
-      <Flex
-        w="40px"
-        h="40px"
-        borderRadius={STANDARD_RADIUS.md}
-        bg={iconBg}
-        align="center"
-        justify="center"
-        flexShrink={0}
+    const inner = (
+      <HStack
+        px={4}
+        py={3.5}
+        borderRadius="2xl"
+        bg="rgba(255,255,255,0.68)"
+        backdropFilter="blur(12px)"
+        border="1px solid rgba(0,0,0,0.055)"
+        boxShadow="0 1px 4px rgba(0,0,0,0.05), 0 1px 0 rgba(255,255,255,0.75) inset"
+        transition="all 0.18s ease"
+        cursor="pointer"
+        onClick={handleClick}
+        _hover={{
+          transform: "translateY(-1px)",
+          boxShadow:
+            "0 6px 20px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.8) inset",
+          bg: "rgba(255,255,255,0.90)",
+        }}
+        _active={{ transform: "scale(0.98)" }}
       >
-        <Icon as={action.icon} boxSize="20px" color={iconColor} />
-      </Flex>
-
-      <Box flex="1" minW={0}>
-        <Text
-          fontSize="15px"
-          fontWeight="600"
-          color={LABEL_COLOR}
-          lineHeight="1.25"
+        <Box
+          p={2.5}
+          borderRadius="xl"
+          bg={
+            action.iconBg ??
+            "linear-gradient(135deg, #f8fafc 0%, #f1f5f3 70%, #edf2f7 100%)"
+          }
+          color={action.iconColor ?? "#2e7d32"}
+          boxShadow="0 2px 6px rgba(46,125,50,0.10)"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
         >
-          {action.label}
-        </Text>
-        {action.description && (
-          <Text
-            fontSize="12px"
-            color={DESC_COLOR}
-            mt="2px"
-            lineHeight="1.4"
-            overflow="hidden"
-            whiteSpace="nowrap"
-            textOverflow="ellipsis"
-          >
-            {action.description}
+          <Icon as={action.icon} boxSize="16px" />
+        </Box>
+
+        <Box flex={1} minW={0}>
+          <Text fontSize="sm" fontWeight="600">
+            {action.label}
           </Text>
-        )}
-      </Box>
+          {action.description && (
+            <Text
+              fontSize="xs"
+              color="gray.500"
+              lineHeight="1.3"
+              overflow="hidden"
+              textOverflow="ellipsis"
+              whiteSpace="nowrap"
+            >
+              {action.description}
+            </Text>
+          )}
+        </Box>
 
-      <Icon
-        as={LuChevronRight}
-        boxSize="18px"
-        color={CHEVRON_COLOR}
-        flexShrink={0}
-      />
-    </HStack>
-  );
-
-  if (action.href) {
-    return (
-      <Link
-        href={action.href}
-        style={{ textDecoration: "none", display: "block" }}
-      >
-        {inner}
-      </Link>
+        <Box color="gray.300" flexShrink={0}>
+          <ChevronRight size={15} />
+        </Box>
+      </HStack>
     );
-  }
-  return inner;
-});
+
+    if (action.href) {
+      return (
+        <Link
+          href={action.href}
+          onClick={handleClick}
+          style={{ textDecoration: "none", display: "block", width: "100%" }}
+        >
+          {inner}
+        </Link>
+      );
+    }
+    return inner;
+  },
+);
 
 // ─── BottomQuickActions ───────────────────────────────────────────────────────
 
@@ -273,82 +252,127 @@ export const BottomQuickActions = ({
       placement="bottom"
     >
       <Portal>
-        <Drawer.Backdrop />
-        <Drawer.Positioner>
-          <Drawer.Content
-            borderTopRadius="lg"
-            borderBottomRadius="0"
-            bg={SHEET_BG}
-            maxW="480px"
-            mx="auto"
-            pb={`calc(${STANDARD_SPACING.sm} + env(safe-area-inset-bottom))`}
-            boxShadow={STANDARD_SHADOWS.level4}
-          >
-            {/* Drag handle */}
-            <Flex justify="center" pt="10px" pb="4px">
-              <Box
-                w="36px"
-                h="4px"
-                borderRadius={STANDARD_RADIUS.full}
-                bg={DRAG_COLOR}
-              />
-            </Flex>
+        <Drawer.Backdrop
+          bg="blackAlpha.400"
+          backdropFilter="blur(3px) saturate(150%)"
+        />
 
-            {/* Header: title + subtitle + close button */}
-            <Drawer.Header
-              px={STANDARD_SPACING.sm}
-              pt="12px"
-              pb="0"
-              borderBottomWidth="0"
+        <Drawer.Positioner>
+          <Drawer.Content asChild borderTopRadius="4xl" bg="transparent" shadow="none">
+            <MotionBox
+              initial={{ y: 500, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 500, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 28 }}
+              drag="y"
+              dragDirectionLock
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.35 }}
+              onDragEnd={(_, info) => {
+                const shouldClose =
+                  info.velocity.y > 500 ||
+                  info.point.y > SHEET_CLOSE_THRESHOLD;
+                if (shouldClose) onOpenChange(false);
+              }}
+              style={{
+                position: "relative",
+                background: "rgba(248, 249, 251, 0.90)",
+                backdropFilter: "blur(36px) saturate(200%)",
+                WebkitBackdropFilter: "blur(36px) saturate(200%)",
+                borderTopLeftRadius: "28px",
+                borderTopRightRadius: "28px",
+                maxHeight: "88vh",
+                overflow: "hidden",
+                boxShadow:
+                  "0 -28px 80px rgba(0,0,0,0.20), 0 -1px 0 rgba(255,255,255,0.65) inset",
+                borderTop: "1px solid rgba(255,255,255,0.55)",
+              }}
             >
-              <Flex align="flex-start" justify="space-between" gap="12px">
-                <Box flex="1" minW={0}>
-                  <Drawer.Title
-                    fontSize="18px"
+              {/* Gradient depth layer */}
+              <Box
+                position="absolute"
+                inset={0}
+                bg="linear-gradient(160deg, rgba(255,255,255,0.94) 0%, rgba(243,246,250,0.78) 100%)"
+                pointerEvents="none"
+                zIndex={0}
+              />
+
+              {/* Content */}
+              <Box position="relative" zIndex={1}>
+                {/* Drag handle */}
+                <Box pt={3} pb={1} display="flex" justifyContent="center">
+                  <Box
+                    w="38px"
+                    h="4px"
+                    bg="gray.300"
+                    borderRadius="full"
+                    opacity={0.55}
+                  />
+                </Box>
+
+                {/* Sheet label */}
+                <Box px={6} pt={3} pb={1}>
+                  <Text
+                    fontSize="xs"
                     fontWeight="700"
-                    color={TITLE_COLOR}
-                    lineHeight="1.25"
-                    letterSpacing="-0.02em"
+                    color="gray.400"
+                    letterSpacing="0.10em"
+                    textTransform="uppercase"
                   >
                     {title}
-                  </Drawer.Title>
+                  </Text>
                   {subtitle && (
-                    <Text
-                      fontSize="13px"
-                      color={SUBTITLE_COLOR}
-                      mt="3px"
-                      fontWeight="400"
-                      lineHeight="1.4"
-                    >
+                    <Text fontSize="xs" color="gray.400" mt={0.5}>
                       {subtitle}
                     </Text>
                   )}
                 </Box>
-                <Drawer.CloseTrigger asChild mt="2px" flexShrink={0}>
-                  <CloseButton
-                    size="sm"
-                    color={BRAND_COLORS.neutralText}
-                    borderRadius={STANDARD_RADIUS.full}
-                    _hover={{ bg: BRAND_COLORS.mutedBg }}
-                  />
-                </Drawer.CloseTrigger>
-              </Flex>
-            </Drawer.Header>
 
-            {/* Body: optional header card + action list */}
-            <Drawer.Body
-              px={STANDARD_SPACING.sm}
-              pt={STANDARD_SPACING.sm}
-              pb="4px"
-            >
-              {headerSlot && <Box mb={STANDARD_SPACING.xs}>{headerSlot}</Box>}
+                {/* Header slot (record card) */}
+                {headerSlot && (
+                  <Box px={4} pt={2} pb={3}>
+                    {headerSlot}
+                  </Box>
+                )}
 
-              <VStack gap={STANDARD_SPACING.xs} align="stretch">
-                {actions.map((action, i) => (
-                  <ActionItem key={i} action={action} />
-                ))}
-              </VStack>
-            </Drawer.Body>
+                <Separator opacity={0.25} />
+
+                {/* Actions */}
+                <Drawer.Body px={3} pt={3} pb={2}>
+                  <VStack gap={2} align="stretch">
+                    {actions.map((action, i) => (
+                      <ActionItem
+                        key={i}
+                        action={action}
+                        onClose={() => onOpenChange(false)}
+                      />
+                    ))}
+                  </VStack>
+                </Drawer.Body>
+
+                {/* Footer hint */}
+                <Box px={6} pt={2} pb={6}>
+                  <Text fontSize="xs" color="gray.400" textAlign="center">
+                    Swipe down to dismiss
+                  </Text>
+                </Box>
+              </Box>
+
+              {/* Close button */}
+              <Drawer.CloseTrigger asChild>
+                <CloseButton
+                  position="absolute"
+                  top="12px"
+                  right="12px"
+                  size="sm"
+                  borderRadius="full"
+                  bg="rgba(255,255,255,0.85)"
+                  backdropFilter="blur(10px)"
+                  shadow="md"
+                  zIndex={2}
+                />
+              </Drawer.CloseTrigger>
+            </MotionBox>
           </Drawer.Content>
         </Drawer.Positioner>
       </Portal>

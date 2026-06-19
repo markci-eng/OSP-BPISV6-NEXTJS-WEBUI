@@ -6,7 +6,7 @@ export default function ReferrallPage() {
   return (
     <Page.Root
       title="Referral"
-      description="Share your referral link, send it via email or SMS, and track referral history."
+      description="Share your referral link and track it."
     >
       <Page.MainContent>
         <ReferralPage />

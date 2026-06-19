@@ -266,7 +266,7 @@ export default function Disbursement() {
   return (
     <Page.Root
       title="Disbursement"
-      description="Manage Commission and Transportation Expense releases"
+      description="Manage COMTE expense releases."
       headerButton="menu"
     >
       <Page.MainContent

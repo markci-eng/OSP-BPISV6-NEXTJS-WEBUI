@@ -545,7 +545,7 @@ export function RopPayoutPage({
     <>
       <Page.Root
         title="Return of Premium"
-        description="Register your payout channel and review your application."
+        description="Register payout & review application."
       >
         <Page.MainContent>
           <FormSteps

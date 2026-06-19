@@ -10,7 +10,7 @@ export default function ReOrganizePage({ agent }: { agent: SalesAgent }) {
   return (
     <Page.Root
       title="Re-Organize Agent"
-      description="Assign a new superior for this sales agent. The request will be submitted for approval."
+      description="Assign a new superior for this agent."
     >
       <Page.MainContent>
         <AgentReassignForm

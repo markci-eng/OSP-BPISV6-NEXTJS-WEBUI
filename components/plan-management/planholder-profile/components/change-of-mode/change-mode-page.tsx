@@ -78,7 +78,7 @@ export function ChangeModePage({
     <Page.Root
       headerButton="menu"
       title={"Change of Mode Application"}
-      description="Switch your payment mode anytime—Quarterly, Semi-Annual, or Annual."
+      description="Switch your payment mode anytime."
     >
       <Page.MainContent>
         <FormSteps

@@ -546,7 +546,7 @@ export function RopPage({ onProceed }: { onProceed: () => void }) {
   return (
     <Page.Root
       title="Return of Premium"
-      description="Apply for a refund of premiums paid upon plan maturity."
+      description="Apply for a premium refund."
     >
       <Page.MainContent>
         <FormSteps

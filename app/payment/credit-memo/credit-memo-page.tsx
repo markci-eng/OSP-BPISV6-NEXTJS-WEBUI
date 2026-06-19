@@ -219,7 +219,7 @@ export default function CreditMemoPage() {
       headerButton="menu"
       title="Credit Memo"
       subtitle="CMDM Module · Special Remittances"
-      description="Record and process credit memo batch transactions for remittances and corrections."
+      description="Process credit memo transactions."
     >
       <Page.ToolContent>
         {batch.batchNo && (

@@ -161,7 +161,7 @@ export default function CreateSalesForcePage() {
     <Page.Root
       headerButton="menu"
       title="New Sales Agent"
-      description="Complete all required sections to register a new sales agent."
+      description="Fill in all sections to register."
     >
       <Page.MainContent>
         <FormSteps

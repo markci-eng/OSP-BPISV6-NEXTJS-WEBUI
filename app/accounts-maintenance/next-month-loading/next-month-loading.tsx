@@ -110,7 +110,7 @@ export default function NextMonthLoadingPage() {
   return (
     <Page.Root
       title="Next Month Loading"
-      description="Process the next billing cycle for all active accounts"
+      description="Process next billing cycle."
       headerButton="menu"
     >
       <Page.MainContent>
