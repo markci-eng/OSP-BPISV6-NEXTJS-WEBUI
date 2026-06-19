@@ -9,11 +9,8 @@ import { ChevronDown, ChevronUp, ChevronsUpDown } from "lucide-react";
 
 import type { DataTableFeatures, TableSize } from "../types";
 import { SIZE_STYLES } from "../types";
-import { ColumnFilterPopover } from "./ColumnFilterPopover";
-
 type DataTableHeaderProps<TData> = {
   table: TanStackTable<TData>;
-  data: TData[];
   features: Required<DataTableFeatures>;
   size: TableSize;
   actionsColumnId: string;
@@ -31,7 +28,6 @@ const stickyRightHeaderStyles = {
 
 export function DataTableHeader<TData>({
   table,
-  data,
   features,
   size,
   actionsColumnId,
@@ -134,16 +130,6 @@ export function DataTableHeader<TData>({
                     </Box>
                   )}
 
-                  {features.filtering &&
-                    header.column.getCanFilter() &&
-                    header.column.id !== actionsColumnId && (
-                      <Box flexShrink={0}>
-                        <ColumnFilterPopover
-                          column={header.column}
-                          data={data}
-                        />
-                      </Box>
-                    )}
                 </HStack>
               </Table.ColumnHeader>
             );

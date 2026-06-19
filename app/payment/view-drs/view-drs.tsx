@@ -34,7 +34,7 @@ import {
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import { OSPBadge } from "@/components/common/badge/badge";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
@@ -123,6 +123,7 @@ export default function ViewDrs() {
     <Page.Root
       title="Digital Remittance Slip"
       description="Manage your digital remittance slip"
+      headerButton="menu"
     >
       <Page.MainContent>
         <Grid
@@ -202,7 +203,8 @@ export default function ViewDrs() {
                   {sortedDrsItems.map((item) => {
                     const isSelected = selectedId === item.id;
                     const status = item.Status ?? "Pending";
-                    const styles = STATUS_STYLES[status] ?? STATUS_STYLES.Pending;
+                    const styles =
+                      STATUS_STYLES[status] ?? STATUS_STYLES.Pending;
                     const isLatest = sortedDrsItems[0]?.id === item.id;
 
                     return (
@@ -223,7 +225,11 @@ export default function ViewDrs() {
                         _hover={{ borderColor: "green.300", bg: "green.50" }}
                       >
                         <Flex justify="space-between" align="start" gap={2}>
-                          <Text fontWeight="bold" color="green.700" fontSize="sm">
+                          <Text
+                            fontWeight="bold"
+                            color="green.700"
+                            fontSize="sm"
+                          >
                             {item.name}
                           </Text>
                           <Text
@@ -236,7 +242,12 @@ export default function ViewDrs() {
                           </Text>
                         </Flex>
 
-                        <Flex justify="space-between" align="center" mt={2} gap={2}>
+                        <Flex
+                          justify="space-between"
+                          align="center"
+                          mt={2}
+                          gap={2}
+                        >
                           <Text fontSize="xs" color="fg.muted">
                             {formatSlipDate(item.SlipDate)}
                             {item.Planholders != null &&
@@ -311,7 +322,9 @@ export default function ViewDrs() {
                       <SecondaryMdFlexButton
                         width={{ base: "full", md: "auto" }}
                         onClick={() => {
-                          const selected = items.find((x) => x.id === selectedId);
+                          const selected = items.find(
+                            (x) => x.id === selectedId,
+                          );
                           sessionStorage.setItem(
                             "selectedDRS",
                             JSON.stringify(selected),
@@ -326,7 +339,9 @@ export default function ViewDrs() {
                       <PrimaryMdFlexButton
                         width={{ base: "full", md: "auto" }}
                         onClick={() => {
-                          const selected = items.find((x) => x.id === selectedId);
+                          const selected = items.find(
+                            (x) => x.id === selectedId,
+                          );
                           if (!selected) return;
                           const firstCreated = drsItems[0];
                           if (selected.id !== firstCreated?.id) {

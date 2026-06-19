@@ -1,6 +1,6 @@
 "use client";
 
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { salesAgents } from "@/data/saleforce/sales-agent-data";
 import {
   Box,
@@ -113,7 +113,7 @@ export default function SalesAgentListPage() {
 
   return (
     <Page.Root
-      hideBackButton={true}
+      headerButton="menu"
       title="Sales Agent Profile"
       description="Search and select an agent to view their profile."
     >

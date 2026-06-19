@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Box, HStack, IconButton, Menu, Portal, Text } from "@chakra-ui/react";
 import { ChevronDown, Filter, SlidersHorizontal } from "lucide-react";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { ApprovalsTable } from "./components/ApprovalsTable";
 import type { ApprovalView } from "./data/types";
 
@@ -22,6 +22,7 @@ export default function page() {
     <Page.Root
       title="Approvals"
       description="Review & process pending requests across all types."
+      headerButton="menu"
     >
       <Page.MainContent>
         {/* ── Request type selector ── */}

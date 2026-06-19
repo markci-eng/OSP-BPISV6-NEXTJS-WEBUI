@@ -424,58 +424,50 @@ export default function Sidebar({
           borderBottom="1px solid"
           borderColor="gray.200"
         >
-          <Flex align="center" gap={2}>
+          {/* User Profile Header */}
+          <Flex align="center" gap={2} px={2} py={2}>
             <Box
-              w="24px"
-              h="24px"
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
+              p="2px"
+              borderRadius="full"
+              border="2px solid"
+              borderColor="var(--chakra-colors-primary-disabled)"
+              flexShrink={0}
             >
-              <Image
-                src={logoIcon.src}
-                width={24}
-                height={24}
-                style={{ objectFit: "contain" }}
-              />
+              <Avatar.Root
+                size="sm"
+                bg="var(--chakra-colors-primary-disabled)/30"
+              >
+                <Avatar.Image
+                  src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
+                  alt={displayName}
+                />
+                <Avatar.Fallback
+                  color="var(--chakra-colors-primary)"
+                  fontWeight="semibold"
+                  name={displayName}
+                />
+              </Avatar.Root>
             </Box>
-            {/* <Show when={!isMobile}> */}
             <Box
               overflow="hidden"
-              transition="width 0.2s"
-              // width={isSidebarOpen ? "80px" : "0px"}
+              opacity={isSidebarOpen ? 1 : 0}
+              transition="opacity 0.2s, max-width 0.2s"
+              maxWidth={isSidebarOpen ? "220px" : "0px"}
             >
-              <Body
-                fontWeight="bold"
+              <Text
+                fontWeight="semibold"
+                fontSize="sm"
                 whiteSpace="nowrap"
-                opacity={isSidebarOpen ? 1 : 0}
-                transition="opacity 0.2s"
+                lineHeight="1.3"
                 color="gray.800"
+                truncate
               >
-                {appName}
-              </Body>
-              {appSubtitle && (
-                // <Small
-                //   opacity={isSidebarOpen ? 1 : 0}
-                //   mt={"-5px"}
-                //   color={"primary"}
-                //   fontStyle={"italic"}
-                // >
-                //   {appSubtitle}
-                // </Small>
-
-                <Text
-                  opacity={isSidebarOpen ? 1 : 0}
-                  mt={"-5px"}
-                  color="#003818"
-                  fontStyle={"normal"}
-                  fontSize="small"
-                >
-                  {appSubtitle}
-                </Text>
-              )}
+                {displayName || "—"}
+              </Text>
+              <Text fontSize="xs" color="primary" whiteSpace="nowrap">
+                {ROLE_LABELS[role] ?? role}
+              </Text>
             </Box>
-            {/* </Show> */}
           </Flex>
 
           {isMobile && isOpen && (
@@ -491,60 +483,8 @@ export default function Sidebar({
           )}
         </Flex>
 
-        {/* User Profile Header */}
-        <Flex
-          align="center"
-          gap={2}
-          px={2}
-          py={2}
-          borderBottom="1px solid"
-          borderColor="gray.200"
-        >
-          <Box
-            p="2px"
-            borderRadius="full"
-            border="2px solid"
-            borderColor="var(--chakra-colors-primary-disabled)"
-            flexShrink={0}
-          >
-            <Avatar.Root
-              size="sm"
-              bg="var(--chakra-colors-primary-disabled)/30"
-            >
-              <Avatar.Image
-                src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
-                alt={displayName}
-              />
-              <Avatar.Fallback
-                color="var(--chakra-colors-primary)"
-                fontWeight="semibold"
-                name={displayName}
-              />
-            </Avatar.Root>
-          </Box>
-          <Box
-            overflow="hidden"
-            opacity={isSidebarOpen ? 1 : 0}
-            transition="opacity 0.2s, max-width 0.2s"
-            maxWidth={isSidebarOpen ? "220px" : "0px"}
-          >
-            <Text
-              fontWeight="semibold"
-              fontSize="sm"
-              whiteSpace="nowrap"
-              lineHeight="1.3"
-              color="gray.800"
-              truncate
-            >
-              {displayName || "—"}
-            </Text>
-            <Text fontSize="xs" color="primary" whiteSpace="nowrap">
-              {ROLE_LABELS[role] ?? role}
-            </Text>
-          </Box>
-        </Flex>
         {/* Navigation */}
-        <ScrollArea.Root maxW="lg" size={"xs"}>
+        <ScrollArea.Root maxW="lg" size={"xs"} mt={2}>
           <ScrollArea.Viewport
             css={{
               "--scroll-shadow-size": "4rem",

@@ -16,7 +16,6 @@ import {
 } from "@chakra-ui/react";
 import { Checkbox } from "@chakra-ui/react";
 import { Columns3, Search, X } from "lucide-react";
-import { H4 } from "st-peter-ui";
 import { DataTableFeatures, HeaderButton } from "../types";
 
 type DataTableToolbarProps<TData> = {
@@ -60,7 +59,8 @@ export function DataTableToolbar<TData>({
       position={hasRightContent ? "sticky" : "relative"}
       top={hasRightContent ? top : undefined}
       zIndex={hasRightContent ? 3 : undefined}
-      p={{ base: 4, md: 5 }}
+      px={3}
+      py={2}
       borderBottomWidth="1px"
       bg="white"
     >
@@ -69,24 +69,30 @@ export function DataTableToolbar<TData>({
           base: "1fr",
           lg:
             headerContent && hasRightContent
-              ? "minmax(280px, 340px) minmax(0, 1fr)"
+              ? "minmax(200px, 280px) minmax(0, 1fr)"
               : headerContent
                 ? "1fr"
-                : "minmax(220px, 1fr) minmax(0, auto)",
+                : "minmax(160px, 1fr) minmax(0, auto)",
         }}
         alignItems="center"
-        gap={4}
+        gap={2}
       >
         <Box minW={0} w="full">
           {headerContent ? (
             headerContent
           ) : (
             <>
-              {title && (typeof title === "string" ? <H4>{title}</H4> : title)}
+              {title && (
+                typeof title === "string" ? (
+                  <Text fontWeight="600" fontSize="sm" color="gray.800" lineClamp={1}>
+                    {title}
+                  </Text>
+                ) : title
+              )}
 
               {description &&
                 (typeof description === "string" ? (
-                  <Text fontSize="sm" color="gray.600" mt={0.5}>
+                  <Text fontSize="xs" color="gray.500">
                     {description}
                   </Text>
                 ) : (
@@ -98,9 +104,9 @@ export function DataTableToolbar<TData>({
 
         {hasRightContent && (
         <Flex
-          gap={2}
+          gap={1.5}
           wrap="nowrap"
-          align={{ base: "stretch", md: "center" }}
+          align="center"
           justify={{ base: "stretch", lg: "flex-end" }}
           direction={{ base: "column", md: "row" }}
           w="full"
@@ -109,34 +115,34 @@ export function DataTableToolbar<TData>({
           {features.search && (
             <Box
               position="relative"
-              flex={{ base: "none", md: "1 1 220px" }}
-              minW={{ base: "full", md: "200px" }}
-              maxW={{ base: "full", md: "340px" }}
+              flex={{ base: "none", md: "1 1 180px" }}
+              minW={{ base: "full", md: "160px" }}
+              maxW={{ base: "full", md: "280px" }}
               w="full"
             >
               <Box
                 position="absolute"
-                left="10px"
+                left="8px"
                 top="50%"
                 transform="translateY(-50%)"
                 pointerEvents="none"
-                color="gray.500"
+                color="gray.400"
                 display="flex"
                 alignItems="center"
                 zIndex={1}
               >
-                <Search size={16} />
+                <Search size={13} />
               </Box>
 
               <Input
-                placeholder="Search records..."
+                placeholder="Search..."
                 value={globalFilter}
                 onChange={(e) => setGlobalFilter(e.target.value)}
-                ps="34px"
-                pe="34px"
-                h="36px"
+                ps="28px"
+                pe="28px"
+                h="30px"
                 w="full"
-                fontSize="sm"
+                fontSize="xs"
                 bg="white"
               />
 
@@ -146,12 +152,12 @@ export function DataTableToolbar<TData>({
                   variant="ghost"
                   size="xs"
                   position="absolute"
-                  right="6px"
+                  right="4px"
                   top="50%"
                   transform="translateY(-50%)"
                   onClick={() => setGlobalFilter("")}
                 >
-                  <X size={14} />
+                  <X size={12} />
                 </IconButton>
               )}
             </Box>
@@ -162,19 +168,19 @@ export function DataTableToolbar<TData>({
               <Menu.Trigger asChild>
                 <Button
                   variant="outline"
-                  size="sm"
-                  h="36px"
+                  size="xs"
+                  h="30px"
                   flexShrink={0}
                   display={{ base: "none", md: "inline-flex" }}
                 >
-                  <Columns3 size={16} style={{ marginRight: 6 }} />
+                  <Columns3 size={13} style={{ marginRight: 4 }} />
                   Columns
                 </Button>
               </Menu.Trigger>
 
               <Portal>
                 <Menu.Positioner>
-                  <Menu.Content minW="208px" zIndex="popover">
+                  <Menu.Content minW="180px" zIndex="popover">
                     {table
                       .getAllColumns()
                       .filter((column) => column.getCanHide())
@@ -188,7 +194,7 @@ export function DataTableToolbar<TData>({
                           }
                         >
                           <HStack justify="space-between" w="full">
-                            <Text textTransform="capitalize" fontSize="sm">
+                            <Text textTransform="capitalize" fontSize="xs">
                               {column.id
                                 .replace(/([A-Z])/g, " $1")
                                 .replace(/_/g, " ")}
@@ -210,25 +216,21 @@ export function DataTableToolbar<TData>({
           {headerButton && (
             <Button
               variant="solid"
-              size="sm"
-              h="36px"
+              size="xs"
+              h="30px"
               flexShrink={0}
               w={{ base: "full", md: "auto" }}
               onClick={headerButton.onClick}
             >
               {headerButton.icon && (
-                <headerButton.icon size={16} style={{ marginRight: 6 }} />
+                <headerButton.icon size={13} style={{ marginRight: 4 }} />
               )}
               {headerButton.label}
             </Button>
           )}
 
           {headerActions && (
-            <Box
-              flexShrink={0}
-              w={{ base: "full", md: "150px" }}
-              minW={{ md: "150px" }}
-            >
+            <Box flexShrink={0} w={{ base: "full", md: "auto" }}>
               {headerActions}
             </Box>
           )}

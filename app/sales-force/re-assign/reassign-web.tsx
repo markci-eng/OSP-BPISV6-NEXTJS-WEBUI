@@ -9,7 +9,7 @@ import {
   getSubordinates,
   SalesAgent,
 } from "@/components/common/agent-lookup/agent-lookup.type";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import {
   Avatar,
@@ -130,6 +130,7 @@ const ReassignPageWeb = ({ superior, setSuperior }: ReassignPageWebProps) => {
 
   return (
     <Page.Root
+      headerButton="menu"
       title="Re-Organization"
       description="Move sales agents under a new superior in two quick steps."
     >

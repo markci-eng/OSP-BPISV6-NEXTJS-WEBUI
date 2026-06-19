@@ -425,7 +425,6 @@ export function DataTable<TData>({
             >
               <DataTableHeader
                 table={table}
-                data={data}
                 features={features}
                 size={isMobileScrollMode ? "sm" : size}
                 actionsColumnId={ACTIONS_COLUMN_ID}

@@ -9,6 +9,7 @@ import {
   Separator,
   Tabs,
   Avatar,
+  Text,
 } from "@chakra-ui/react";
 import {
   LuClipboardList,
@@ -24,6 +25,7 @@ import {
   LuZap,
   LuArrowDown,
   LuArrowUp,
+  LuMenu,
 } from "react-icons/lu";
 import { Calendar, MapPin } from "lucide-react";
 import { useState, ElementType, useEffect } from "react";
@@ -61,6 +63,8 @@ import UserWelcomeBanner from "@/claude components/layout/page/UserWelcomeBanner
 import { useDemoAuth } from "@/components/ui/demo-auth";
 import { Card } from "@/claude components/card-accordion/card";
 import { RowItem } from "@/claude components/info-card/row-item";
+import { AppHeaderActions } from "@/claude components/layout/app-header-actions";
+import { useSidebarToggle } from "@/claude components/layout/sidebar-context";
 
 // --- Types ---
 type DashboardKeys = "request" | "service" | "reservation" | "activetrips";
@@ -464,6 +468,7 @@ export default function Dashboard() {
 
   const name = "Mark Cristian";
   const { login } = useDemoAuth();
+  const toggleSidebar = useSidebarToggle();
 
   useEffect(() => {
     login();
@@ -478,6 +483,86 @@ export default function Dashboard() {
         padding: "10px 8px 108px",
       }}
     >
+      {/* ── MOBILE HOME HEADER (login-page style, scrolls with content) ── */}
+      <Box
+        display={{ base: "block", md: "none" }}
+        px={1}
+        pb={5}
+        bg="white"
+        borderBottom="1px solid"
+        borderColor="gray.100"
+        style={{
+          paddingTop: "max(env(safe-area-inset-top, 0px), 5px)",
+        }}
+      >
+        <Flex align="center" justify="space-between" gap={3}>
+          <Flex align={"center"}>
+            {toggleSidebar && (
+              <IconButton
+                aria-label="Open menu"
+                size="sm"
+                variant="ghost"
+                color="gray.700"
+                _hover={{ bg: "gray.100" }}
+                onClick={toggleSidebar}
+              >
+                <LuMenu size={20} />
+              </IconButton>
+            )}
+            <Flex align="center" gap={3}>
+              {/* Logo container (kept subtle glass but on white) */}
+              <Box
+                w="50px"
+                h="50px"
+                borderRadius="16px"
+                bg="green.50"
+                borderWidth="1px"
+                borderColor="green.100"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                boxShadow="sm"
+                flexShrink={0}
+              >
+                <img
+                  src="/images/logo/icon.png"
+                  alt="St. Peter Logo"
+                  width={32}
+                  height={32}
+                  style={{ objectFit: "contain" }}
+                />
+              </Box>
+
+              <Box>
+                <Text
+                  fontWeight="700"
+                  fontSize="lg"
+                  color="gray.800"
+                  lineHeight="1.2"
+                  letterSpacing="-0.01em"
+                >
+                  {userRole === "sales-agent" ? "eKolekta" : "One St. Peter"}
+                </Text>
+
+                <Text
+                  fontSize="9px"
+                  color="#085725"
+                  letterSpacing="0.2em"
+                  textTransform="uppercase"
+                  fontWeight="600"
+                  mt="1px"
+                >
+                  Life Plan Operations
+                </Text>
+              </Box>
+            </Flex>
+          </Flex>
+
+          <Flex align="center" flexShrink={0}>
+            <AppHeaderActions iconColor="#065f46" />
+          </Flex>
+        </Flex>
+      </Box>
       {/* <UserWelcomeBanner firstName={"Joyce"} branch={"Head Office"} /> */}
 
       {/* ── Account Overview ── */}
@@ -587,54 +672,52 @@ export default function Dashboard() {
               title="Quota & Collection"
               subtitle="Amount targets"
             >
-              <Box px={0} py={2}>
-                <RowItem
-                  label="Comm. Quota"
-                  value={
-                    "₱ " +
-                    quotaAndCollections.comQuota.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  }
-                  // isAmount
-                />
-                <RowItem
-                  label="Comm. Collection"
-                  value={
-                    "₱ " +
-                    quotaAndCollections.comCollection.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  }
-                  // isAmount
-                />
-                <Separator my={1} borderColor="gray.50" />
-                <RowItem
-                  label="Non-Comm. Quota"
-                  value={
-                    "₱ " +
-                    quotaAndCollections.nComQuota.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  }
-                  // isAmount
-                />
-                <RowItem
-                  label="Non-Comm. Collection"
-                  value={
-                    "₱ " +
-                    quotaAndCollections.nComCollection.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  }
-                  // isAmount
-                  // last
-                />
-              </Box>
+              <RowItem
+                label="Comm. Quota"
+                value={
+                  "₱ " +
+                  quotaAndCollections.comQuota.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                }
+                // isAmount
+              />
+              <RowItem
+                label="Comm. Collection"
+                value={
+                  "₱ " +
+                  quotaAndCollections.comCollection.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                }
+                // isAmount
+              />
+              <Separator my={1} borderColor="gray.50" />
+              <RowItem
+                label="Non-Comm. Quota"
+                value={
+                  "₱ " +
+                  quotaAndCollections.nComQuota.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                }
+                // isAmount
+              />
+              <RowItem
+                label="Non-Comm. Collection"
+                value={
+                  "₱ " +
+                  quotaAndCollections.nComCollection.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                }
+                // isAmount
+                // last
+              />
             </Card>
           </Box>
 
@@ -657,25 +740,23 @@ export default function Dashboard() {
               title={"Accounts Due & Collected"}
               subtitle={"Account count targets"}
             >
-              <Box px={0} py={2}>
-                <RowItem
-                  label="Comm. Accounts Due"
-                  value={quotaAndCollections.comAcctDue}
-                />
-                <RowItem
-                  label="Comm. Accounts Collected"
-                  value={quotaAndCollections.comAcctCollection}
-                />
-                <Separator my={1} borderColor="gray.50" />
-                <RowItem
-                  label="Non-Comm. Accounts Due"
-                  value={quotaAndCollections.nComAcctDue}
-                />
-                <RowItem
-                  label="Non-Comm. Accounts Collected"
-                  value={quotaAndCollections.nComAcctCollection}
-                />
-              </Box>
+              <RowItem
+                label="Comm. Accounts Due"
+                value={quotaAndCollections.comAcctDue}
+              />
+              <RowItem
+                label="Comm. Accounts Collected"
+                value={quotaAndCollections.comAcctCollection}
+              />
+              <Separator my={1} borderColor="gray.50" />
+              <RowItem
+                label="Non-Comm. Accounts Due"
+                value={quotaAndCollections.nComAcctDue}
+              />
+              <RowItem
+                label="Non-Comm. Accounts Collected"
+                value={quotaAndCollections.nComAcctCollection}
+              />
             </Card>
           </Box>
 
@@ -983,7 +1064,13 @@ const TileItem = ({
     >
       <Flex align="center" gap={3}>
         {/* Icon chip */}
-        <Box p={2.5} bg={`${color}20`} style={{ color }} borderRadius="2xl" flexShrink={0}>
+        <Box
+          p={2.5}
+          bg={`${color}20`}
+          style={{ color }}
+          borderRadius="2xl"
+          flexShrink={0}
+        >
           <Icon size={22} />
         </Box>
         {/* Content */}

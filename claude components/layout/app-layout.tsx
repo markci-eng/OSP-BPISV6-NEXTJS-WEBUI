@@ -1,12 +1,14 @@
 "use client";
 import { Box, Flex } from "@chakra-ui/react";
 import Sidebar from "./app-sidebar";
-import AppHeader from "./app-header";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { NavItem, NotificationDataProps } from "./app-layout.type";
 import { StickyNavbarContext } from "./app-navbar/sticky-navbar-context";
 import { AppBottomNavBar } from "./app-navbar/app-bottom-navbar";
 import { ChatbotFAB } from "./chatbot-fab";
+import AppHeader from "./app-header";
+import { SidebarProvider } from "./sidebar-context";
+import { NotificationsProvider } from "./notifications-context";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -89,17 +91,21 @@ export function AppLayout({
           px={2}
           style={{ overscrollBehavior: "contain" }}
         >
-          <StickyNavbarContext refParent={scrollRef}>
-            {children}
-            <ChatbotFAB />
-            <AppBottomNavBar
-              onToggleSidebar={toggleSidebar}
-              notifications={notifications}
-              profileOpen={profileOpen}
-              onProfileOpenChange={setProfileOpen}
-              navItems={navItems}
-            />
-          </StickyNavbarContext>
+          <NotificationsProvider value={notifications}>
+            <SidebarProvider value={toggleSidebar}>
+              <StickyNavbarContext refParent={scrollRef}>
+                {children}
+                <ChatbotFAB />
+                <AppBottomNavBar
+                  onToggleSidebar={toggleSidebar}
+                  notifications={notifications}
+                  profileOpen={profileOpen}
+                  onProfileOpenChange={setProfileOpen}
+                  navItems={navItems}
+                />
+              </StickyNavbarContext>
+            </SidebarProvider>
+          </NotificationsProvider>
         </Box>
       </Flex>
     </Flex>

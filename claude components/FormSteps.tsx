@@ -4,15 +4,18 @@ import {
   Box,
   ButtonGroup,
   Flex,
-  Heading,
-  IconButton,
   Separator,
   Steps,
   Text,
+  Badge,
 } from "@chakra-ui/react";
-import { NextButton, PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
-import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
+import { PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
+import { LuChevronLeft, LuChevronRight, LuCheck } from "react-icons/lu";
 import { useRef } from "react";
+
+const PRIMARY = "var(--chakra-colors-primary)";
+const PRIMARY_HOVER = "var(--chakra-colors-primary-hover)";
+const PRIMARY_DISABLED = "var(--chakra-colors-primary-disabled)";
 
 interface StepItem {
   title: string;
@@ -27,8 +30,6 @@ interface FormStepsProps {
   description: string;
   onStepsComplete: () => void;
   submitButtonText: string;
-
-  // ✅ FIXED TYPE (this is REQUIRED)
   currentStep: number;
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
 }
@@ -43,6 +44,9 @@ const FormSteps: React.FC<FormStepsProps> = ({
   submitButtonText,
 }) => {
   const formTopRef = useRef<HTMLDivElement | null>(null);
+  const isCompact = stepsData.length < 3;
+  const isLastStep = currentStep === stepsData.length - 1;
+  const nextStepTitle = stepsData[currentStep + 1]?.title;
 
   const scrollToTop = () => {
     requestAnimationFrame(() => {
@@ -60,13 +64,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
 
   const handleNext = () => {
     if (!canGoNext()) return;
-
-    // ✅ safe functional update (now correctly typed)
-    setCurrentStep((prev) => {
-      const next = Math.min(prev + 1, stepsData.length - 1);
-      return next;
-    });
-
+    setCurrentStep((prev) => Math.min(prev + 1, stepsData.length - 1));
     scrollToTop();
   };
 
@@ -82,139 +80,306 @@ const FormSteps: React.FC<FormStepsProps> = ({
       minH={{ base: "100dvh", md: "100vh" }}
       w="full"
       overflow="visible"
-      pb={{ base: "12px", md: "0px" }}
     >
       {/* Header */}
-      <Box mb={4} ref={formTopRef}>
-        <Box
-          as="h1"
-          m="0"
-          fontFamily="var(--font-dm-sans), system-ui, sans-serif"
-          fontWeight={description ? 600 : 500}
-          color="gray.900"
-          lineHeight="1"
-          letterSpacing={description ? "-0.025em" : "-0.015em"}
-          fontSize={{
-            base: description ? "22px" : "24px",
-            lg: description ? "28px" : "32px",
-          }}
-        >
-          {title}
-        </Box>
-
-        <Text fontSize="sm" color="gray.600" mt={1}>
-          {description}
-        </Text>
-      </Box>
+      {/* <Box ref={formTopRef}>
+        <Flex align="center" gap={2} mb={1}>
+          <Box
+            as="h1"
+            m="0"
+            fontFamily="var(--font-dm-sans), system-ui, sans-serif"
+            fontWeight={600}
+            color="gray.900"
+            lineHeight="1.1"
+            letterSpacing="-0.025em"
+            fontSize={{ base: "22px", lg: "28px" }}
+          >
+            {title}
+          </Box>
+          <Badge
+            variant="subtle"
+            borderRadius="full"
+            px={2.5}
+            py={0.5}
+            fontSize="xs"
+            fontWeight={600}
+            style={{
+              background: PRIMARY_DISABLED,
+              color: PRIMARY,
+            }}
+          >
+            Step {currentStep + 1} of {stepsData.length}
+          </Badge>
+        </Flex>
+        {description && (
+          <Text fontSize="sm" color="gray.500" mt={1}>
+            {description}
+          </Text>
+        )}
+      </Box> */}
 
       {/* Steps */}
-      <Box w="full" colorPalette="green" rounded="2xl" p={1}>
+      <Box w="full" rounded="2xl">
         <Steps.Root
           colorPalette="green"
           count={stepsData.length}
           step={currentStep}
           onStepChange={(e) => handleStepChange(e.step)}
         >
-          <Steps.List
-            flexDirection="row"
-            w="full"
-            py={2}
-            alignItems="flex-start"
+          {/* Sticky step header */}
+          <Box
+            position="sticky"
+            top={0}
+            zIndex={10}
+            bg="white"
+            pt={2}
+            pb={3}
+            mx={-1}
+            px={1}
+            borderBottomWidth="1px"
+            borderColor="gray.100"
+            boxShadow="0 2px 8px -2px rgba(0,0,0,0.06)"
           >
-            {stepsData.map((stepItem, index) => (
-              <Steps.Item
-                key={index}
-                index={index}
-                title={stepItem.title}
-                minW={{ base: "0px", md: "auto" }}
+            <Box w="full" style={{ display: "flex" }}>
+              <Steps.List
+                py={0}
+                flexDirection="row"
+                alignItems="flex-start"
+                style={{ width: "100%", justifyContent: "space-between" }}
               >
-                <Steps.Trigger
-                  flexDirection="column"
-                  alignItems="center"
-                  gap={1}
-                  onClick={() => handleStepChange(index)}
-                >
-                  <Steps.Indicator>
-                    <Box as={stepItem.icon} w={4} h={4} />
-                  </Steps.Indicator>
+                {stepsData.map((stepItem, index) => {
+                  const isCompleted = index < currentStep;
+                  const isActive = index === currentStep;
 
-                  <Steps.Title
-                    fontSize={{ base: "xs", md: "sm" }}
-                    textAlign="center"
-                    whiteSpace="normal"
-                    wordBreak="break-word"
-                  >
-                    {stepItem.title}
-                  </Steps.Title>
-                </Steps.Trigger>
+                  return (
+                    <Steps.Item
+                      key={index}
+                      index={index}
+                      title={stepItem.title}
+                      minW={{ base: "0px", md: "auto" }}
+                      flex={isCompact ? "0 0 auto" : "1"}
+                    >
+                      <Steps.Trigger
+                        flexDirection={isCompact ? "row" : "column"}
+                        alignItems="center"
+                        gap={isCompact ? 2 : 1}
+                        onClick={() => handleStepChange(index)}
+                        px={isCompact ? 3 : 2}
+                        py={isCompact ? 2 : 1}
+                        borderRadius="lg"
+                        transition="background 0.2s"
+                        _hover={{ bg: "gray.50" }}
+                      >
+                        <Steps.Indicator
+                          borderWidth="2px"
+                          style={{
+                            borderColor:
+                              isCompleted || isActive ? PRIMARY : undefined,
+                            background: isCompleted ? PRIMARY : undefined,
+                            color: isCompleted
+                              ? "white"
+                              : isActive
+                                ? PRIMARY
+                                : undefined,
+                            boxShadow: isActive
+                              ? `0 0 0 3px ${PRIMARY_DISABLED}`
+                              : "none",
+                          }}
+                          transition="all 0.25s"
+                        >
+                          {isCompleted ? (
+                            <LuCheck size={14} />
+                          ) : (
+                            <Box as={stepItem.icon} w={4} h={4} />
+                          )}
+                        </Steps.Indicator>
 
-                <Steps.Separator display={{ base: "none", md: "block" }} />
-              </Steps.Item>
-            ))}
-          </Steps.List>
+                        <Steps.Title
+                          fontSize={{ base: "xs", md: "sm" }}
+                          textAlign={isCompact ? "left" : "center"}
+                          whiteSpace="normal"
+                          wordBreak="break-word"
+                          fontWeight={isActive ? 600 : 400}
+                          color={
+                            isActive
+                              ? "gray.900"
+                              : isCompleted
+                                ? "gray.600"
+                                : "gray.400"
+                          }
+                          transition="color 0.2s"
+                        >
+                          {stepItem.title}
+                        </Steps.Title>
+                      </Steps.Trigger>
 
-          <Separator variant="solid" mb={3} />
+                      {!isCompact && (
+                        <Steps.Separator
+                          display={{ base: "none", md: "block" }}
+                        />
+                      )}
+                    </Steps.Item>
+                  );
+                })}
+              </Steps.List>
+            </Box>
 
+            {/* Progress bar */}
+            <Box
+              w="full"
+              h="3px"
+              bg="gray.100"
+              borderRadius="full"
+              overflow="hidden"
+              mt={1}
+            >
+              <Box
+                h="full"
+                style={{ background: PRIMARY }}
+                borderRadius="full"
+                transition="width 0.4s ease"
+                w={`${((currentStep + 1) / stepsData.length) * 100}%`}
+              />
+            </Box>
+          </Box>
+
+          {/* Step content */}
           {stepsData.map((stepItem, index) => (
             <Steps.Content key={index} index={index}>
               {stepItem.content}
             </Steps.Content>
           ))}
 
-          {/* Mobile */}
+          {/* Mobile nav */}
           <Flex
             w="full"
             justify="space-between"
             align="center"
-            mb={1}
+            mt={4}
+            gap={2}
             display={{ base: "flex", md: "none" }}
           >
             <Steps.PrevTrigger asChild>
-              <IconButton
-                aria-label="Previous step"
-                size="sm"
-                variant="outline"
+              <Box
+                as="button"
+                display="flex"
+                alignItems="center"
+                gap={1}
+                px={3}
+                py={2}
+                borderRadius="lg"
+                border="1.5px solid"
+                borderColor="gray.200"
+                bg="white"
+                color="gray.700"
+                fontSize="sm"
+                fontWeight={500}
+                cursor="pointer"
+                _hover={{ bg: "gray.50" }}
+                _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
+                transition="all 0.15s"
               >
-                <LuChevronLeft />
-              </IconButton>
+                <LuChevronLeft size={14} />
+                Back
+              </Box>
             </Steps.PrevTrigger>
 
-            {currentStep !== stepsData.length - 1 ? (
-              <IconButton
-                aria-label="Next step"
-                size="sm"
-                variant="outline"
-                onClick={handleNext}
-              >
-                <LuChevronRight />
-              </IconButton>
-            ) : (
-              <IconButton
-                aria-label="submit"
-                size="sm"
-                variant="solid"
-                onClick={onStepsComplete}
+            {!isLastStep ? (
+              <Box
+                as="button"
+                display="flex"
+                alignItems="center"
+                gap={1}
                 px={3}
+                py={2}
+                borderRadius="lg"
+                color="white"
+                fontSize="sm"
+                fontWeight={500}
+                cursor="pointer"
+                transition="all 0.15s"
+                onClick={handleNext}
+                style={{ background: PRIMARY }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = PRIMARY_HOVER)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = PRIMARY)
+                }
+              >
+                {nextStepTitle ? `Next: ${nextStepTitle}` : "Next"}
+                <LuChevronRight size={14} />
+              </Box>
+            ) : (
+              <Box
+                as="button"
+                display="flex"
+                alignItems="center"
+                gap={1}
+                px={3}
+                py={2}
+                borderRadius="lg"
+                color="white"
+                fontSize="sm"
+                fontWeight={500}
+                cursor="pointer"
+                transition="all 0.15s"
+                onClick={onStepsComplete}
+                style={{ background: PRIMARY }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.background = PRIMARY_HOVER)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = PRIMARY)
+                }
               >
                 {submitButtonText}
-                <LuChevronRight />
-              </IconButton>
+                <LuCheck size={14} />
+              </Box>
             )}
           </Flex>
 
-          {/* Desktop */}
+          {/* Desktop nav */}
           <ButtonGroup
             size="sm"
             variant="outline"
             display={{ base: "none", md: "flex" }}
           >
-            <Flex mt={4} w="full" align="center" justify="space-between">
+            <Flex mt={5} w="full" align="center" justify="space-between">
               <Steps.PrevTrigger asChild>
-                <SecondaryMdButton>Previous</SecondaryMdButton>
+                <SecondaryMdButton>
+                  <LuChevronLeft />
+                  Previous
+                </SecondaryMdButton>
               </Steps.PrevTrigger>
 
-              {currentStep !== stepsData.length - 1 ? (
-                <NextButton onClick={handleNext} />
+              {!isLastStep ? (
+                <Box
+                  as="button"
+                  display="flex"
+                  alignItems="center"
+                  gap={1.5}
+                  px={4}
+                  py={2}
+                  borderRadius="lg"
+                  color="white"
+                  fontSize="sm"
+                  fontWeight={600}
+                  cursor="pointer"
+                  transition="all 0.15s"
+                  onClick={handleNext}
+                  boxShadow="0 1px 3px 0 rgba(0,0,0,0.12)"
+                  style={{ background: PRIMARY }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = PRIMARY_HOVER)
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = PRIMARY)
+                  }
+                >
+                  {nextStepTitle ? `Next: ${nextStepTitle}` : "Next"}
+                  <LuChevronRight size={15} />
+                </Box>
               ) : (
                 <PrimaryMdButton onClick={onStepsComplete}>
                   {submitButtonText}

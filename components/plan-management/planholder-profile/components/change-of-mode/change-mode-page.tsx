@@ -6,7 +6,7 @@ import { PHPlans } from "./data";
 import { ChangeModeSummaryPage } from "./change-mode-summary";
 import { FaFileAlt } from "react-icons/fa";
 import { FaFileShield } from "react-icons/fa6";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import FormSteps from "@/claude components/FormSteps";
 
@@ -76,21 +76,20 @@ export function ChangeModePage({
 
   return (
     <Page.Root
+      headerButton="menu"
       title={"Change of Mode Application"}
       description="Switch your payment mode anytime—Quarterly, Semi-Annual, or Annual."
     >
       <Page.MainContent>
-        <Box mt={"-30px"}>
-          <FormSteps
-            stepsData={stepsData}
-            title=""
-            description=""
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            onStepsComplete={handleSubmit}
-            submitButtonText={"Submit Application"}
-          />
-        </Box>
+        <FormSteps
+          stepsData={stepsData}
+          title=""
+          description=""
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onStepsComplete={handleSubmit}
+          submitButtonText={"Submit Application"}
+        />
       </Page.MainContent>
     </Page.Root>
   );

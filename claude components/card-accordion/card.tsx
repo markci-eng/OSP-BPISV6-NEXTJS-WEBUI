@@ -58,7 +58,7 @@ export function Card({
         </Flex>
       </Flex>
 
-      <Box p={4} borderTopWidth={1} borderColor="gray.100">
+      <Box p={3} borderTopWidth={1} borderColor="gray.100">
         {children}
       </Box>
     </Box>

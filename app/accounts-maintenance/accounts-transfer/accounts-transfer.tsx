@@ -1,12 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Flex, Grid, GridItem, HStack, Tabs, Text, Textarea } from "@chakra-ui/react";
+import {
+  Flex,
+  Grid,
+  GridItem,
+  HStack,
+  Tabs,
+  Text,
+  Textarea,
+} from "@chakra-ui/react";
 import { Box, PrimaryMdButton, SelectFloatingLabel } from "st-peter-ui";
 import { LuArrowRightLeft, LuFilter, LuUsers } from "react-icons/lu";
 import { TbTransferIn, TbTransferOut } from "react-icons/tb";
 
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import LookUp from "@/components/common/reusable-lookup/dynamic-lookup";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
@@ -45,21 +53,31 @@ export default function AccountsTransferPage() {
   };
 
   return (
-    <Page.Root title="Transfer of Accounts">
+    <Page.Root title="Transfer of Accounts" headerButton="menu">
       <Page.MainContent>
         <Page.Row>
           <Tabs.Root defaultValue="withinBranch" variant="enclosed">
             <Tabs.List>
               <Tabs.Trigger value="withinBranch">
                 <HStack gap={2}>
-                  <TbTransferIn size={16} color="var(--chakra-colors-primary)" />
-                  <Text color="var(--chakra-colors-primary)">Within the Branch</Text>
+                  <TbTransferIn
+                    size={16}
+                    color="var(--chakra-colors-primary)"
+                  />
+                  <Text color="var(--chakra-colors-primary)">
+                    Within the Branch
+                  </Text>
                 </HStack>
               </Tabs.Trigger>
               <Tabs.Trigger value="otherBranch">
                 <HStack gap={2}>
-                  <TbTransferOut size={16} color="var(--chakra-colors-primary)" />
-                  <Text color="var(--chakra-colors-primary)">To Other Branch</Text>
+                  <TbTransferOut
+                    size={16}
+                    color="var(--chakra-colors-primary)"
+                  />
+                  <Text color="var(--chakra-colors-primary)">
+                    To Other Branch
+                  </Text>
                 </HStack>
               </Tabs.Trigger>
             </Tabs.List>
@@ -73,7 +91,10 @@ export default function AccountsTransferPage() {
                   subtitle="Filter accounts by agent and billing month"
                   defaultOpen
                 >
-                  <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
+                  <Grid
+                    templateColumns={{ base: "1fr", md: "1fr 1fr" }}
+                    gap={4}
+                  >
                     <GridItem>
                       <SelectFloatingLabel
                         label="Select Transaction Month"
@@ -227,7 +248,9 @@ function TransferDestination({
 
       <Flex justify={{ base: "stretch", lg: "flex-end" }}>
         <Box w={{ base: "full", lg: "auto" }}>
-          <PrimaryMdButton onClick={onConfirm}>Transfer Account(s)</PrimaryMdButton>
+          <PrimaryMdButton onClick={onConfirm}>
+            Transfer Account(s)
+          </PrimaryMdButton>
         </Box>
       </Flex>
     </Flex>

@@ -22,7 +22,7 @@ import { refBankBranch } from "@/app/Model/Types/global.types";
 import { refBankBranchData } from "@/app/Model/Data/rawData";
 import { useRouter } from "next/navigation";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
 import { RowItem } from "@/claude components/info-card/row-item";
@@ -94,6 +94,7 @@ export default function EncodeDeposit() {
     <Page.Root
       title="Encode Validated Deposit"
       description="Encode your validated deposit"
+      headerButton="menu"
     >
       <Page.MainContent>
         <Flex flexDir="column" gap={4}>

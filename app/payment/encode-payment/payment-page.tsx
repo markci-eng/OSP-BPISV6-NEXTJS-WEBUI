@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { toast } from "sonner";
 import { PaymentRecord } from "../data/payment.types";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import FormSteps from "@/claude components/FormSteps";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { useRouter } from "next/navigation";
@@ -69,19 +69,18 @@ export default function PaymentPage() {
     <Page.Root
       title="Encode Payment"
       description="Record and manage daily payment transactions."
+      headerButton="menu"
     >
       <Page.MainContent>
-        <Box mt="-30px">
-          <FormSteps
-            stepsData={steps}
-            title=""
-            description=""
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            onStepsComplete={handleConfirm}
-            submitButtonText="Save DRS"
-          />
-        </Box>
+        <FormSteps
+          stepsData={steps}
+          title=""
+          description=""
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onStepsComplete={handleConfirm}
+          submitButtonText="Save DRS"
+        />
       </Page.MainContent>
     </Page.Root>
   );

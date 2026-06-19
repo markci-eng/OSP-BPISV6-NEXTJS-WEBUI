@@ -2,7 +2,8 @@
 
 import { EMPLOYEES } from "@/data/doc-management/documenttype";
 import { Employee } from "@/data/doc-management/employeeSelector";
-import { Box, Grid, Text } from "@chakra-ui/react";
+import { Box, Grid, Text, VStack } from "@chakra-ui/react";
+import { FolderSearch } from "lucide-react";
 import React from "react";
 import {
   LookupColumn,
@@ -10,7 +11,7 @@ import {
 } from "../../components/common/reusable-lookup/LookUpField";
 import { AnimatePresence, motion } from "framer-motion";
 import DocumentTable from "./_components/DocumentTable";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import LabelText from "@/components/texts/LabelText";
 
 const employeeColumns: LookupColumn<Employee>[] = [
@@ -35,6 +36,7 @@ const DocumentManagement = () => {
     <Page.Root
       title="Document Management"
       description="Search employees and manage their policy documents."
+      headerButton="menu"
     >
       <Page.MainContent>
         {/* <Flex
@@ -117,7 +119,38 @@ const DocumentManagement = () => {
           )}
         </AnimatePresence>
 
-        {!selectedEmployee && <DocumentTable employee={selectedEmployee} />}
+        {!selectedEmployee && (
+          <VStack gap={3} py={20} alignItems="center" justifyContent="center">
+            <Box
+              p={5}
+              borderRadius="full"
+              bg="gray.100"
+              color="gray.400"
+              _dark={{ bg: "gray.800", color: "gray.500" }}
+            >
+              <FolderSearch size={36} strokeWidth={1.5} />
+            </Box>
+            <VStack gap={1} textAlign="center">
+              <Text
+                fontWeight="semibold"
+                fontSize="md"
+                color="gray.600"
+                _dark={{ color: "gray.300" }}
+              >
+                No employee selected
+              </Text>
+              <Text
+                fontSize="sm"
+                color="gray.400"
+                _dark={{ color: "gray.500" }}
+                maxW="xs"
+              >
+                Search for an employee above to view and manage their policy
+                documents.
+              </Text>
+            </VStack>
+          </VStack>
+        )}
       </Page.MainContent>
     </Page.Root>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { planholderLookup } from "@/app/plan-management/data/planholder-lookup";
 import {
   Badge,
@@ -131,7 +131,7 @@ export default function PlanholderSearchPage() {
 
   return (
     <Page.Root
-      hideBackButton={true}
+      headerButton="menu"
       title="Planholder Profile"
       description="Search and select a planholder to view their profile."
     >

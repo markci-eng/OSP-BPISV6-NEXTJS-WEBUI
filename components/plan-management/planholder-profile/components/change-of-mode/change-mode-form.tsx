@@ -88,7 +88,7 @@ export function ChangeModeForm({
             Kindly select plans you want to change mode.
           </Small>
         </Box>
-        <HStack
+        {/* <HStack
           gap={3}
           bg="var(--chakra-colors-primary-disabled)"
           border="1px solid"
@@ -120,7 +120,7 @@ export function ChangeModeForm({
               </Text>
             </HStack>
           </Box>
-        </HStack>
+        </HStack> */}
       </Flex>
 
       <DataTable

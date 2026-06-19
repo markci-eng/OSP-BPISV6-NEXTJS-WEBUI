@@ -5,7 +5,7 @@ import { Box, Flex, Text } from "@chakra-ui/react";
 import { PrimaryMdFlexButton, SelectFloatingLabel } from "st-peter-ui";
 import { LuCalendar, LuCircleCheck, LuLoader } from "react-icons/lu";
 
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { PremiumCircularProgress } from "@/components/common/progressbar/dynamic-progress-bar";
 import { useProgressController } from "@/components/common/progressbar/progress-bar-controller";
@@ -111,6 +111,7 @@ export default function NextMonthLoadingPage() {
     <Page.Root
       title="Next Month Loading"
       description="Process the next billing cycle for all active accounts"
+      headerButton="menu"
     >
       <Page.MainContent>
         {/* TRANSACTION MONTH */}

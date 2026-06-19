@@ -6,10 +6,10 @@ import { NewPlanHolderInfoForm } from "./new-ph-form";
 import { LuFileText, LuUserRound } from "react-icons/lu";
 import TFReviewApplicationPage from "./tf-review-application-page";
 import { FaFileShield } from "react-icons/fa6";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { UploadedFile } from "@/components/document-uploader/DragAndDrop";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import FormSteps from "@/components/FormSteps";
+import FormSteps from "@/claude components/FormSteps";
 import { Box } from "@chakra-ui/react";
 
 export function TransferOfRightsPage() {
@@ -57,12 +57,12 @@ export function TransferOfRightsPage() {
       },
     },
     {
-      title: "New PH Information",
+      title: "New PH Info",
       content: <NewPlanHolderInfoForm />,
       icon: LuUserRound,
     },
     {
-      title: "Review Application",
+      title: "Review & Submit",
       description: "Review your application before submission.",
       content: <TFReviewApplicationPage />,
       icon: FaFileShield,
@@ -75,15 +75,15 @@ export function TransferOfRightsPage() {
       description={"Transfer your plan to your loved ones—simple and seamless."}
     >
       <Page.MainContent>
-        <Box mt={"-30px"}>
-          <FormSteps
-            stepsData={stepsData}
-            title={""}
-            description={""}
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-          />
-        </Box>
+        <FormSteps
+          stepsData={stepsData}
+          title={""}
+          description={""}
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onStepsComplete={function (): void {}}
+          submitButtonText={""}
+        />
       </Page.MainContent>
     </Page.Root>
     // <Page.Root

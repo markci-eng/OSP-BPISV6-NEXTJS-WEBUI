@@ -37,7 +37,7 @@ const MOCK_MESSAGES: Message[] = [
   {
     id: 1,
     role: "bot",
-    text: "Hello! I'm your OSP Assistant. How can I help you today?",
+    text: "Hello! I'm your St. Peter Customer Service Team. How can I help you today?",
     time: "9:00 AM",
   },
   {
@@ -330,7 +330,7 @@ export const ChatbotMessenger = ({
                         color={TITLE_COLOR}
                         lineHeight="1.25"
                       >
-                        OSP Assistant
+                        St. Peter Customer Service Team
                       </Drawer.Title>
                       <HStack gap="5px" mt="2px">
                         <Box

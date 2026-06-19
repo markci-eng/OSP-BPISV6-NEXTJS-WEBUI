@@ -159,21 +159,20 @@ export default function CreateSalesForcePage() {
 
   return (
     <Page.Root
+      headerButton="menu"
       title="New Sales Agent"
       description="Complete all required sections to register a new sales agent."
     >
       <Page.MainContent>
-        <Box mt={"-30px"}>
-          <FormSteps
-            stepsData={stepsData}
-            title=""
-            description=""
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            onStepsComplete={() => {}}
-            submitButtonText="Create Agent"
-          />
-        </Box>
+        <FormSteps
+          stepsData={stepsData}
+          title=""
+          description=""
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onStepsComplete={() => {}}
+          submitButtonText="Create Agent"
+        />
       </Page.MainContent>
     </Page.Root>
   );

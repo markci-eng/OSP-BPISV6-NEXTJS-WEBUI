@@ -9,7 +9,7 @@ import {
 } from "st-peter-ui";
 import { LuUsers } from "react-icons/lu";
 
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import {
   LookupField,
   LookupColumn,
@@ -60,6 +60,7 @@ export default function MCPRPage() {
     <Page.Root
       title="MCPR"
       description="Monthly Collection and Performance Report"
+      headerButton="menu"
     >
       <Page.MainContent>
         {isBranch && (

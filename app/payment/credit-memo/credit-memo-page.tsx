@@ -26,7 +26,7 @@ import {
   getDepositStatus,
 } from "./components/types";
 import DocumentUploader from "@/components/document-uploader/DragAndDrop";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import Card from "@/components/cards/Card";
 import {
   LookupField,
@@ -39,11 +39,41 @@ import SectionTitle from "@/components/texts/SectionTitle";
 const PAY_CLASSES = ["Monthly", "Quarterly", "Semi-Annual", "Annual"] as const;
 
 const MOCK_PLANHOLDERS: Planholder[] = [
-  { id: "PH001", name: "John A. Doe", policyNo: "POL-2024-001", plan: "Life Plus", status: "Active" },
-  { id: "PH002", name: "Maria S. Cruz", policyNo: "POL-2024-002", plan: "Health Shield", status: "Active" },
-  { id: "PH003", name: "James T. Santos", policyNo: "POL-2024-003", plan: "Education Plan", status: "Active" },
-  { id: "PH004", name: "Ana G. Reyes", policyNo: "POL-2024-004", plan: "Retirement Fund", status: "Lapsed" },
-  { id: "PH005", name: "Robert C. Lim", policyNo: "POL-2024-005", plan: "Life Plus", status: "Active" },
+  {
+    id: "PH001",
+    name: "John A. Doe",
+    policyNo: "POL-2024-001",
+    plan: "Life Plus",
+    status: "Active",
+  },
+  {
+    id: "PH002",
+    name: "Maria S. Cruz",
+    policyNo: "POL-2024-002",
+    plan: "Health Shield",
+    status: "Active",
+  },
+  {
+    id: "PH003",
+    name: "James T. Santos",
+    policyNo: "POL-2024-003",
+    plan: "Education Plan",
+    status: "Active",
+  },
+  {
+    id: "PH004",
+    name: "Ana G. Reyes",
+    policyNo: "POL-2024-004",
+    plan: "Retirement Fund",
+    status: "Lapsed",
+  },
+  {
+    id: "PH005",
+    name: "Robert C. Lim",
+    policyNo: "POL-2024-005",
+    plan: "Life Plus",
+    status: "Active",
+  },
 ];
 
 const planholderColumns: LookupColumn<Planholder>[] = [
@@ -63,9 +93,12 @@ export default function CreditMemoPage() {
     description: "",
   });
   const [deposits, setDeposits] = React.useState<Deposit[]>([]);
-  const [selectedDepositId, setSelectedDepositId] = React.useState<string | null>(null);
+  const [selectedDepositId, setSelectedDepositId] = React.useState<
+    string | null
+  >(null);
   const [payments, setPayments] = React.useState<Payment[]>([]);
-  const [selectedPlanholder, setSelectedPlanholder] = React.useState<Planholder | null>(null);
+  const [selectedPlanholder, setSelectedPlanholder] =
+    React.useState<Planholder | null>(null);
 
   const [paymentForm, setPaymentForm] = React.useState({
     siNumber: "",
@@ -79,7 +112,10 @@ export default function CreditMemoPage() {
   const depositStatus = getDepositStatus(batch.type);
   const showDeposits = depositStatus !== "none";
   const totalDeposits = deposits.reduce((sum, d) => sum + d.amount, 0);
-  const totalPayments = payments.reduce((sum, p) => sum + p.amount + p.charges, 0);
+  const totalPayments = payments.reduce(
+    (sum, p) => sum + p.amount + p.charges,
+    0,
+  );
   const selectedDeposit = deposits.find((d) => d.id === selectedDepositId);
 
   const handleAddDeposit = (deposit: Deposit) => {
@@ -118,7 +154,14 @@ export default function CreditMemoPage() {
       charges: paymentForm.charges,
     };
     setPayments((prev) => [...prev, payment]);
-    setPaymentForm({ siNumber: "", siDate: "", installments: 1, amount: 0, payClass: "", charges: 0 });
+    setPaymentForm({
+      siNumber: "",
+      siDate: "",
+      installments: 1,
+      amount: 0,
+      payClass: "",
+      charges: 0,
+    });
     setSelectedPlanholder(null);
     toast.success("Payment added");
   };
@@ -137,7 +180,14 @@ export default function CreditMemoPage() {
     setSelectedDepositId(null);
     setPayments([]);
     setSelectedPlanholder(null);
-    setPaymentForm({ siNumber: "", siDate: "", installments: 1, amount: 0, payClass: "", charges: 0 });
+    setPaymentForm({
+      siNumber: "",
+      siDate: "",
+      installments: 1,
+      amount: 0,
+      payClass: "",
+      charges: 0,
+    });
     toast.info("Form reset");
   };
 
@@ -166,6 +216,7 @@ export default function CreditMemoPage() {
 
   return (
     <Page.Root
+      headerButton="menu"
       title="Credit Memo"
       subtitle="CMDM Module · Special Remittances"
       description="Record and process credit memo batch transactions for remittances and corrections."
@@ -206,7 +257,12 @@ export default function CreditMemoPage() {
                         onSelect={setSelectedDepositId}
                         onRemove={handleRemoveDeposit}
                       />
-                      <Box mt={4} pt={4} borderTopWidth="1px" borderColor="gray.100">
+                      <Box
+                        mt={4}
+                        pt={4}
+                        borderTopWidth="1px"
+                        borderColor="gray.100"
+                      >
                         <SectionTitle>Add Deposit</SectionTitle>
                         <Box mt={3}>
                           <DepositForm onAdd={handleAddDeposit} />
@@ -235,7 +291,11 @@ export default function CreditMemoPage() {
                   </Box>
 
                   <Grid
-                    templateColumns={{ base: "1fr", md: "repeat(2, 1fr)", xl: "repeat(3, 1fr)" }}
+                    templateColumns={{
+                      base: "1fr",
+                      md: "repeat(2, 1fr)",
+                      xl: "repeat(3, 1fr)",
+                    }}
                     gap={4}
                     mb={4}
                   >
@@ -243,7 +303,10 @@ export default function CreditMemoPage() {
                       label="SI Number"
                       value={paymentForm.siNumber}
                       onChange={(e) =>
-                        setPaymentForm((f) => ({ ...f, siNumber: e.target.value }))
+                        setPaymentForm((f) => ({
+                          ...f,
+                          siNumber: e.target.value,
+                        }))
                       }
                     />
                     <InputFloatingLabel
@@ -251,7 +314,10 @@ export default function CreditMemoPage() {
                       type="date"
                       value={paymentForm.siDate}
                       onChange={(e) =>
-                        setPaymentForm((f) => ({ ...f, siDate: e.target.value }))
+                        setPaymentForm((f) => ({
+                          ...f,
+                          siDate: e.target.value,
+                        }))
                       }
                     />
                     <InputFloatingLabel
@@ -284,12 +350,17 @@ export default function CreditMemoPage() {
                         <NativeSelect.Field
                           value={paymentForm.payClass}
                           onChange={(e) =>
-                            setPaymentForm((f) => ({ ...f, payClass: e.target.value }))
+                            setPaymentForm((f) => ({
+                              ...f,
+                              payClass: e.target.value,
+                            }))
                           }
                         >
                           <option value="">Select</option>
                           {PAY_CLASSES.map((c) => (
-                            <option key={c} value={c}>{c}</option>
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
                           ))}
                         </NativeSelect.Field>
                         <NativeSelect.Indicator />

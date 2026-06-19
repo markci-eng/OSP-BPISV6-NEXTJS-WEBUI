@@ -11,7 +11,7 @@ import FormSteps from "@/claude components/FormSteps";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { PlanholderInfoData } from "@/app/plan-management/data/planholder-info.data";
 import { PlanholderInfoType } from "@/components/plan-management/planholders/planholders.types";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 
 import ClaimInfoForm from "./claim-info-form";
 import ClaimsPayeeForm from "./claim-payee";
@@ -110,19 +110,18 @@ const ClaimsPage = () => {
     <Page.Root
       title="Claim Application"
       description="Please fill out the following details."
+      headerButton="menu"
     >
       <Page.MainContent>
-        <Box mt="-30px">
-          <FormSteps
-            stepsData={stepsData}
-            title=""
-            description=""
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            onStepsComplete={handleSubmit}
-            submitButtonText="Submit Claim"
-          />
-        </Box>
+        <FormSteps
+          stepsData={stepsData}
+          title=""
+          description=""
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onStepsComplete={handleSubmit}
+          submitButtonText="Submit Claim"
+        />
       </Page.MainContent>
     </Page.Root>
   );

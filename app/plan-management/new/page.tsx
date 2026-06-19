@@ -35,9 +35,9 @@ export default function NewSalePage() {
 
   return (
     <Page.Root
+      headerButton="menu"
       title="Add New Sale"
       description="Complete the life plan application, add beneficiaries, and declare health information."
-      hideBackButton
     >
       <Page.MainContent>
         <SharedLifePlanApplication />

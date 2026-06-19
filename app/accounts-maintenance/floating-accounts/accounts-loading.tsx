@@ -5,7 +5,7 @@ import { Grid, GridItem } from "@chakra-ui/react";
 import { Box, PrimaryMdButton, SelectFloatingLabel } from "st-peter-ui";
 import { LuFilter, LuUserCheck } from "react-icons/lu";
 
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import LookUp from "@/components/common/reusable-lookup/dynamic-lookup";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
@@ -43,7 +43,7 @@ export default function AccountsLoadingPage() {
   };
 
   return (
-    <Page.Root title="Floating Accounts">
+    <Page.Root title="Floating Accounts" headerButton="menu">
       <Page.MainContent>
         {/* FILTER */}
         <Page.Row>
@@ -53,10 +53,7 @@ export default function AccountsLoadingPage() {
             subtitle="Filter by transaction month and team leader"
             defaultOpen
           >
-            <Grid
-              templateColumns={{ base: "1fr", md: "1fr 1fr" }}
-              gap={4}
-            >
+            <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
               <GridItem>
                 <SelectFloatingLabel
                   label="Select Transaction Month"

@@ -4,9 +4,16 @@ import { AccountName } from "@/app/payment/data/paymentDetails";
 import { Card } from "@/claude components/card-accordion/card";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { Box, Flex, Grid, IconButton, SimpleGrid, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  Grid,
+  IconButton,
+  SimpleGrid,
+  Text,
+} from "@chakra-ui/react";
 import { BsPrinter } from "react-icons/bs";
 import { FaMoneyBillWave, FaWallet } from "react-icons/fa6";
 import { LuPencilLine } from "react-icons/lu";
@@ -24,6 +31,7 @@ export default function RFexpense() {
     <Page.Root
       title="Revolving Fund Expense"
       description="Manage your Revolving Fund Expense"
+      headerButton="menu"
     >
       <Page.MainContent>
         {/* SUMMARY CARDS */}
@@ -82,7 +90,10 @@ export default function RFexpense() {
               gapX={{ base: 0, md: 2 }}
             >
               <InputFloatingLabel label="PCV Number" />
-              <SelectFloatingLabel label="Account Name" collection={AccountName} />
+              <SelectFloatingLabel
+                label="Account Name"
+                collection={AccountName}
+              />
               <InputFloatingLabel type="date" label="PCV Date" />
               <InputFloatingLabel type="number" label="PCV Amount" />
               <InputFloatingLabel label="Pay To" />

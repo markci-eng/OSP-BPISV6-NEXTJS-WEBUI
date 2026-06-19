@@ -29,7 +29,7 @@ import {
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import type { RowAction } from "@/components/common/reusable-tableV2/types";
 import InfoItem from "@/components/common/info-item/info-item";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 
 import { DepositHdr } from "@/app/payment/data/payment.types";
@@ -51,7 +51,11 @@ type DisbursementItem = EligibleRecord & {
 const TYPE_OPTIONS: { value: DisbursementType; label: string; hint: string }[] =
   [
     { value: "COM", label: "Commission", hint: "Agent commission release" },
-    { value: "TE", label: "Transportation Exp.", hint: "Reimbursable TE claims" },
+    {
+      value: "TE",
+      label: "Transportation Exp.",
+      hint: "Reimbursable TE claims",
+    },
   ];
 
 const EMPLOYEE_COLUMNS: LookupColumn<EmployeeLookupType>[] = [
@@ -85,12 +89,21 @@ const DRS_COLUMNS: LookupColumn<DepositHdr>[] = [
   { key: "AccountNo", header: "Account No" },
 ];
 
-const DRS_SEARCH_KEYS: (keyof DepositHdr)[] = ["name", "AccountNo", "BankBranch"];
+const DRS_SEARCH_KEYS: (keyof DepositHdr)[] = [
+  "name",
+  "AccountNo",
+  "BankBranch",
+];
 
-const drsDisplay = (d: DepositHdr) => `${d.name} · ${peso(parsePeso(d.Amount))}`;
+const drsDisplay = (d: DepositHdr) =>
+  `${d.name} · ${peso(parsePeso(d.Amount))}`;
 
 const peso = (n: number) =>
-  "₱" + n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  "₱" +
+  n.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
 const parsePeso = (s: string) => Number(String(s).replace(/[^0-9.]/g, "")) || 0;
 
@@ -114,7 +127,9 @@ export default function Disbursement() {
   const [selectedType, setSelectedType] = useState<DisbursementType | "">("");
 
   const [addedItems, setAddedItems] = useState<DisbursementItem[]>([]);
-  const [selectedEligible, setSelectedEligible] = useState<EligibleRecord[]>([]);
+  const [selectedEligible, setSelectedEligible] = useState<EligibleRecord[]>(
+    [],
+  );
   const [eligibleKey, setEligibleKey] = useState(0);
   const [setupOpen, setSetupOpen] = useState(true);
 
@@ -252,9 +267,12 @@ export default function Disbursement() {
     <Page.Root
       title="Disbursement"
       description="Manage Commission and Transportation Expense releases"
+      headerButton="menu"
     >
-      <Page.MainContent flex="1" minH="calc(100% - var(--sticky-header-h, 0px))">
-
+      <Page.MainContent
+        flex="1"
+        minH="calc(100% - var(--sticky-header-h, 0px))"
+      >
         {/* SETUP — employee → remittance slip → disbursement type */}
         <Page.Row>
           <InfoCardAccordion
@@ -351,11 +369,20 @@ export default function Disbursement() {
                         aria-pressed={active}
                         onClick={() => !disabled && changeType(opt.value)}
                       >
-                        <Flex align="center" justify="space-between" gap={2} mb={0.5}>
+                        <Flex
+                          align="center"
+                          justify="space-between"
+                          gap={2}
+                          mb={0.5}
+                        >
                           <Text
                             fontSize="sm"
                             fontWeight="semibold"
-                            color={active ? "var(--chakra-colors-primary)" : "gray.700"}
+                            color={
+                              active
+                                ? "var(--chakra-colors-primary)"
+                                : "gray.700"
+                            }
                             lineClamp={1}
                           >
                             {opt.label}
@@ -451,7 +478,9 @@ export default function Disbursement() {
                   emptyState={
                     <EmptyStateCard
                       title={
-                        selectedType ? "No eligible records" : "Choose a disbursement type"
+                        selectedType
+                          ? "No eligible records"
+                          : "Choose a disbursement type"
                       }
                       description={
                         selectedType
@@ -542,9 +571,21 @@ export default function Disbursement() {
                     {/* Stats */}
                     <HStack gap={{ base: 4, md: 6 }} flexWrap="wrap">
                       <InfoItem label="Balance" value={peso(totals.balance)} />
-                      <Stat label="Total Com" value={peso(totals.com)} dot="green.500" />
-                      <Stat label="Total TE" value={peso(totals.te)} dot="blue.500" />
-                      <Separator orientation="vertical" height="8" hideBelow="md" />
+                      <Stat
+                        label="Total Com"
+                        value={peso(totals.com)}
+                        dot="green.500"
+                      />
+                      <Stat
+                        label="Total TE"
+                        value={peso(totals.te)}
+                        dot="blue.500"
+                      />
+                      <Separator
+                        orientation="vertical"
+                        height="8"
+                        hideBelow="md"
+                      />
                       <InfoItem
                         label="To Disburse"
                         value={peso(totals.disburse)}
@@ -578,7 +619,10 @@ export default function Disbursement() {
                         <Body fontSize="xs" color="gray.500">
                           {allocatedPct}% of balance allocated
                         </Body>
-                        <Body fontSize="xs" color={over ? "red.500" : "gray.500"}>
+                        <Body
+                          fontSize="xs"
+                          color={over ? "red.500" : "gray.500"}
+                        >
                           {over
                             ? `Over by ${peso(Math.abs(totals.remaining))}`
                             : `${peso(totals.remaining)} left`}
@@ -604,7 +648,10 @@ export default function Disbursement() {
                         </Text>
                       )}
                       <Box w={{ base: "full", lg: "auto" }} minW={{ lg: "44" }}>
-                        <PrimaryMdFlexButton onClick={handleSave} disabled={!canSave}>
+                        <PrimaryMdFlexButton
+                          onClick={handleSave}
+                          disabled={!canSave}
+                        >
                           Save &amp; Release
                         </PrimaryMdFlexButton>
                       </Box>

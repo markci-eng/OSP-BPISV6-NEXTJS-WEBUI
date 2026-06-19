@@ -18,7 +18,7 @@ import {
   Text,
   Wrap,
 } from "@chakra-ui/react";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import Card from "@/components/cards/Card";
 
 interface AgentPrintingData {
@@ -142,6 +142,7 @@ const SaleforcePrintingPage = () => {
 
   return (
     <Page.Root
+      headerButton="menu"
       title="Contract and SFID Renewal"
       description="Re-print the contract and SFID of sales force agents whose contracts are up for renewal."
     >

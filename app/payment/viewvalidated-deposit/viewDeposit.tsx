@@ -37,7 +37,7 @@ import { EMPLOYEES } from "@/data/doc-management/documenttype";
 import DrsDataTable from "../components/drsDataTable";
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import { OSPBadge } from "@/components/common/badge/badge";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
@@ -90,6 +90,7 @@ export default function ViewDeposit() {
     <Page.Root
       title="View Validated Deposit"
       description="Review your validated deposit"
+      headerButton="menu"
     >
       <Page.MainContent>
         <Grid
@@ -252,10 +253,7 @@ export default function ViewDeposit() {
                     label="Date/Time"
                     value={selectedItem?.DepositDateTime ?? ""}
                   />
-                  <RowItem
-                    label="Amount"
-                    value={selectedItem?.Amount ?? "0"}
-                  />
+                  <RowItem label="Amount" value={selectedItem?.Amount ?? "0"} />
                   <RowItem
                     label="Account No"
                     value={selectedItem?.AccountNo ?? ""}
@@ -328,10 +326,7 @@ export default function ViewDeposit() {
                 <Separator />
 
                 <Dialog.Body>
-                  <SimpleGrid
-                    columns={{ base: 1, sm: 2, md: 3 }}
-                    gapX={2}
-                  >
+                  <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} gapX={2}>
                     <InputFloatingLabel
                       type="date"
                       id="depositdate"

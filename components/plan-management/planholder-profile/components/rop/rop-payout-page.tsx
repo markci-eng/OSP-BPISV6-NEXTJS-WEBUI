@@ -33,7 +33,7 @@ import { z } from "zod";
 
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import DocumentUploader from "@/components/document-uploader/DragAndDrop";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import {
   Tab,
   type TabItem,
@@ -511,11 +511,7 @@ export function RopPayoutPage({
 
   if (submitted) {
     return (
-      <Page.Root
-        title="Return of Premium"
-        description="Application submitted."
-        hideBackButton
-      >
+      <Page.Root title="Return of Premium" description="Application submitted.">
         <Page.MainContent>
           <SuccessMessage
             title="ROP Successfully Submitted"
@@ -552,17 +548,15 @@ export function RopPayoutPage({
         description="Register your payout channel and review your application."
       >
         <Page.MainContent>
-          <Box mt="-30px">
-            <FormSteps
-              stepsData={stepsData}
-              title=""
-              description=""
-              currentStep={currentStep}
-              setCurrentStep={setCurrentStep}
-              onStepsComplete={handleSubmit}
-              submitButtonText="Submit Application"
-            />
-          </Box>
+          <FormSteps
+            stepsData={stepsData}
+            title=""
+            description=""
+            currentStep={currentStep}
+            setCurrentStep={setCurrentStep}
+            onStepsComplete={handleSubmit}
+            submitButtonText="Submit Application"
+          />
         </Page.MainContent>
       </Page.Root>
 

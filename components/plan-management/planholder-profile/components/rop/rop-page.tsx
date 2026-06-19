@@ -29,7 +29,7 @@ import { z } from "zod";
 import { OSPBadge } from "@/components/common/badge/badge";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { DataTable } from "@/components/common/reusable-tableV2/DataTable";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { Card } from "@/claude components/card-accordion/card";
 import FormSteps from "@/claude components/FormSteps";
 import InfoCard from "@/claude components/info-card/info-card";
@@ -166,10 +166,7 @@ function RopSelectPlanStep({
     {
       id: "selected",
       header: () => (
-        <Checkbox
-          checked={isAllSelected}
-          onCheckedChange={toggleSelectAll}
-        />
+        <Checkbox checked={isAllSelected} onCheckedChange={toggleSelectAll} />
       ),
       enableSorting: false,
       enableHiding: false,
@@ -458,11 +455,7 @@ function RopSelectPlanStep({
 }
 
 // ---- Step 2: Review summary ----
-function RopSummaryStep({
-  records,
-}: {
-  records: RopRecord[];
-}) {
+function RopSummaryStep({ records }: { records: RopRecord[] }) {
   return (
     <Box py={3}>
       <InfoCard>
@@ -513,10 +506,7 @@ export function RopPage({ onProceed }: { onProceed: () => void }) {
       cancelText: "Cancel",
     });
     if (confirmed) {
-      sessionStorage.setItem(
-        "selectedRows",
-        JSON.stringify(selectedRecords),
-      );
+      sessionStorage.setItem("selectedRows", JSON.stringify(selectedRecords));
       onProceed();
     }
   };
@@ -559,17 +549,15 @@ export function RopPage({ onProceed }: { onProceed: () => void }) {
       description="Apply for a refund of premiums paid upon plan maturity."
     >
       <Page.MainContent>
-        <Box mt="-30px">
-          <FormSteps
-            stepsData={stepsData}
-            title=""
-            description=""
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            onStepsComplete={handleSubmit}
-            submitButtonText="Submit Application"
-          />
-        </Box>
+        <FormSteps
+          stepsData={stepsData}
+          title=""
+          description=""
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onStepsComplete={handleSubmit}
+          submitButtonText="Submit Application"
+        />
       </Page.MainContent>
     </Page.Root>
   );

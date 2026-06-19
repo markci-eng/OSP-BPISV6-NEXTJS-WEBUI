@@ -11,8 +11,6 @@ import MCPRList from "./mcpr-list";
 export default function MCPRDataPage() {
   return (
     <Flex direction="column" gap={4}>
-      <MCPRList />
-
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
         <Card
           activeIcon={<LuFileText size={18} />}
@@ -49,6 +47,8 @@ export default function MCPRDataPage() {
           <RowItem label="Non-Commission" value="₱50,000.00" />
         </Card> */}
       </SimpleGrid>
+
+      <MCPRList />
     </Flex>
   );
 }
