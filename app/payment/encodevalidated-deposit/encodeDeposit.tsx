@@ -25,7 +25,6 @@ import { useMessageDialog } from "@/components/common/message-box/message-box-pr
 import Page from "@/claude components/layout/page/Page";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
-import { RowItem } from "@/claude components/info-card/row-item";
 import { LuBanknote, LuSearch } from "react-icons/lu";
 
 export default function EncodeDeposit() {
@@ -99,48 +98,32 @@ export default function EncodeDeposit() {
       <Page.MainContent>
         <Flex flexDir="column" gap={4}>
           {/* SECTION 1 — Find DRS */}
-          <InputCardAccordion
-            icon={<LuSearch size={16} />}
-            title="Find DRS"
-            subtitle="Search and select a Digital Remittance Slip"
-            isOpen={searchOpen}
-            onToggle={() => setSearchOpen((p) => !p)}
-            isComplete={selectedDRS != null}
-          >
-            <Box maxW={{ base: "full", md: "sm" }} mb={3}>
-              <LookupField<DepositHdr>
-                label=""
-                placeholder="Search Digital Remittance Slip"
-                modalTitle="Search Digital Remittance Slip"
-                columns={drsColumns}
-                dataSource={drsItems}
-                searchKeys={["id", "name", "DepositDateTime"]}
-                onSelect={(e) => {
-                  if (!e) {
-                    setSelectedDRS(null);
-                    setDepositOpen(false);
-                    return;
-                  }
-                  if (drsItems[0].id === e.id) {
-                    setSelectedDRS(e);
-                    setSearchOpen(false);
-                    setDepositOpen(true);
-                  } else {
-                    toast.error("Please encode the first created DRS");
-                  }
-                }}
-                renderDisplay={(x) => `${x.name} (${x.Amount})`}
-                value={selectedDRS}
-              />
-            </Box>
-
-            {selectedDRS && (
-              <>
-                <RowItem label="Reference #" value={selectedDRS.name} />
-                <RowItem label="Amount" value={selectedDRS.Amount ?? ""} />
-              </>
-            )}
-          </InputCardAccordion>
+          <Box maxW={{ base: "full", md: "sm" }}>
+            <LookupField<DepositHdr>
+              label=""
+              placeholder="Search Digital Remittance Slip"
+              modalTitle="Search Digital Remittance Slip"
+              columns={drsColumns}
+              dataSource={drsItems}
+              searchKeys={["id", "name", "DepositDateTime"]}
+              onSelect={(e) => {
+                if (!e) {
+                  setSelectedDRS(null);
+                  setDepositOpen(false);
+                  return;
+                }
+                if (drsItems[0].id === e.id) {
+                  setSelectedDRS(e);
+                  setSearchOpen(false);
+                  setDepositOpen(true);
+                } else {
+                  toast.error("Please encode the first created DRS");
+                }
+              }}
+              renderDisplay={(x) => `${x.name} (${x.Amount})`}
+              value={selectedDRS}
+            />
+          </Box>
 
           {/* SECTION 2 — Deposit Details */}
           <InputCardAccordion

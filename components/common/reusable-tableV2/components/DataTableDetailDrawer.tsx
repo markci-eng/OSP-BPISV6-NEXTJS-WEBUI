@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Separator, Text } from "@chakra-ui/react";
 import { BottomQuickActions } from "@/claude components/drawer/bottom-quick-actions";
 import type { QuickAction } from "@/claude components/drawer/bottom-quick-actions";
+import { RowItem } from "@/claude components/info-card/row-item";
 
 type DataTableDetailDrawerProps<TData> = {
   title?: React.ReactNode;
@@ -12,6 +13,15 @@ type DataTableDetailDrawerProps<TData> = {
   actions?: QuickAction[];
   onClose: () => void;
 };
+
+const formatKey = (key: string) =>
+  key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/_/g, " ")
+    .trim();
+
+const isNumericField = (value: unknown): boolean =>
+  typeof value === "number";
 
 export function DataTableDetailDrawer<TData>({
   title,
@@ -23,55 +33,52 @@ export function DataTableDetailDrawer<TData>({
   const headerSlot = selectedRow
     ? renderDetail
       ? renderDetail(selectedRow)
-      : (
-          <Box>
-            <Text
-              fontSize="xs"
-              fontWeight="medium"
-              color="fg.muted"
-              textTransform="uppercase"
-              letterSpacing="wider"
-            >
-              Record Information
-            </Text>
+      : (() => {
+          const entries = Object.entries(selectedRow as Record<string, any>);
+          const textFields = entries.filter(([, v]) => !isNumericField(v));
+          const numericFields = entries.filter(([, v]) => isNumericField(v));
 
-            <Box
-              rounded="md"
-              borderWidth="1px"
-              borderColor="border.muted"
-              bg="bg"
-              p={{ base: 3, md: 4 }}
-              boxShadow="sm"
-              mt={2}
-            >
-              <Box
-                display="grid"
-                gridTemplateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }}
-                gap={4}
-              >
-                {Object.entries(selectedRow as Record<string, any>).map(
-                  ([key, value]) => (
-                    <Box key={key}>
-                      <Text
-                        fontSize="11px"
-                        fontWeight="600"
-                        color="fg.muted"
-                        textTransform="uppercase"
-                        letterSpacing="wider"
-                        mb={1}
-                      >
-                        {key.replace(/([A-Z])/g, " $1").replace(/_/g, " ")}
-                      </Text>
-                      <Text fontSize="sm" color="fg" fontWeight="medium">
-                        {String(value ?? "-")}
-                      </Text>
-                    </Box>
-                  ),
-                )}
-              </Box>
+          return (
+            <Box>
+              {textFields.length > 0 && (
+                <Box mb={numericFields.length > 0 ? 3 : 0}>
+                  <Text
+                    fontSize="10px"
+                    fontWeight="700"
+                    color="gray.400"
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                    mb={1}
+                  >
+                    Information
+                  </Text>
+                  {textFields.map(([key, value]) => (
+                    <RowItem key={key} label={formatKey(key)} value={value} />
+                  ))}
+                </Box>
+              )}
+
+              {numericFields.length > 0 && (
+                <Box>
+                  {textFields.length > 0 && <Separator mb={3} opacity={0.25} />}
+                  <Text
+                    fontSize="10px"
+                    fontWeight="700"
+                    color="gray.400"
+                    textTransform="uppercase"
+                    letterSpacing="wider"
+                    mb={1}
+                  >
+                    Amounts
+                  </Text>
+                  {numericFields.map(([key, value]) => (
+                    <RowItem key={key} label={formatKey(key)} value={value} />
+                  ))}
+                </Box>
+              )}
             </Box>
-          </Box>
-        )
+          );
+        })()
     : undefined;
 
   return (

@@ -1,5 +1,6 @@
 import { Box, Flex, Heading, Text, Badge } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
+import { ReactNode } from "react";
 
 import { DrsRowData, PaymentRecord } from "../data/payment.types";
 import { DrsFunction } from "../utils/drsFunction";
@@ -11,6 +12,7 @@ type DrsDataTableProps = {
   showFooter?: boolean;
   isLoading?: boolean;
   emptyText?: string;
+  headerContent?: ReactNode;
 };
 
 export const columns: ColumnDef<DrsRowData>[] = [
@@ -63,6 +65,7 @@ export const columns: ColumnDef<DrsRowData>[] = [
 export default function DrsDataTable({
   payments,
   onRowClick,
+  headerContent,
 }: DrsDataTableProps) {
   const { rows } = DrsFunction(payments);
 
@@ -72,6 +75,7 @@ export default function DrsDataTable({
         columns={columns}
         data={rows}
         onRowClick={onRowClick}
+        headerContent={headerContent}
         features={{
           search: false,
           sorting: false,

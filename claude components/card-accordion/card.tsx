@@ -6,11 +6,13 @@ export function Card({
   activeIcon,
   title,
   subtitle,
+  headerAction,
   children,
 }: {
   activeIcon: ReactNode;
   title: string;
   subtitle: string;
+  headerAction?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -56,6 +58,7 @@ export function Card({
             </Flex>
           </Box>
         </Flex>
+        {headerAction && <Box onClick={(e) => e.stopPropagation()}>{headerAction}</Box>}
       </Flex>
 
       <Box p={3} borderTopWidth={1} borderColor="gray.100">

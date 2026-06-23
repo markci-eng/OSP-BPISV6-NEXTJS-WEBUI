@@ -114,8 +114,11 @@ export function DataTable<TData>({
   );
 
   const columns = React.useMemo(() => {
-    const enhancedColumns = userColumns.map((column) => ({
+    const enhancedColumns = userColumns.map((column, idx) => ({
       ...column,
+      meta: idx === 0
+        ? { isStickyLeft: true, ...(column.meta as object | undefined) }
+        : column.meta,
       filterFn: (column as any).filterFn ?? arrayFilterFn,
     }));
 

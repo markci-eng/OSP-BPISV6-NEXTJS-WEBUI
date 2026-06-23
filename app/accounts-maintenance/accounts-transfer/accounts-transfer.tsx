@@ -10,19 +10,23 @@ import {
   Text,
   Textarea,
 } from "@chakra-ui/react";
-import { Box, PrimaryMdButton, SelectFloatingLabel } from "st-peter-ui";
+import {
+  Box,
+  PrimaryMdButton,
+  PrimaryMdFlexButton,
+  SelectFloatingLabel,
+} from "st-peter-ui";
 import { LuArrowRightLeft, LuFilter, LuUsers } from "react-icons/lu";
 import { TbTransferIn, TbTransferOut } from "react-icons/tb";
 
 import Page from "@/claude components/layout/page/Page";
-import LookUp from "@/components/common/reusable-lookup/dynamic-lookup";
+import { LookupField } from "@/components/common/reusable-lookup/LookUpField";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 
 import { TransferType, TrxMonth } from "../data/transaction-month";
 import TransferAccountList from "./account-transfer-list";
 import {
-  salesForceHeaders,
   salesForceLookUp,
   SalesForceLookUpData,
 } from "./sales-force-lookup_data";
@@ -93,7 +97,7 @@ export default function AccountsTransferPage() {
                 >
                   <Grid
                     templateColumns={{ base: "1fr", md: "1fr 1fr" }}
-                    gap={4}
+                    gap={2}
                   >
                     <GridItem>
                       <SelectFloatingLabel
@@ -103,15 +107,24 @@ export default function AccountsTransferPage() {
                     </GridItem>
                     <GridItem>
                       <Box mt={2}>
-                        <LookUp<SalesForceLookUpData>
+                        <LookupField<SalesForceLookUpData>
                           placeholder="Search Sales Agent 2"
                           modalTitle="Sales Force List"
-                          data={salesForceLookUp}
-                          headers={salesForceHeaders}
+                          dataSource={salesForceLookUp}
+                          columns={[
+                            {
+                              key: "SalesForceCode",
+                              header: "Sales Force Code",
+                            },
+                            { key: "AgentName", header: "Agent Name" },
+                            { key: "PosCode", header: "Position Code" },
+                          ]}
+                          searchKeys={["AgentName", "SalesForceCode"]}
                           onSelect={setSelectedAgent}
-                          getInputValue={(item) =>
+                          renderDisplay={(item) =>
                             `${item.AgentName} (${item.SalesForceCode})`
                           }
+                          value={selectedAgent}
                         />
                       </Box>
                     </GridItem>
@@ -131,7 +144,7 @@ export default function AccountsTransferPage() {
 
             {/* TO OTHER BRANCH */}
             <Tabs.Content value="otherBranch">
-              <Flex direction="column" gap={4} pt={2}>
+              <Flex direction="column" gap={2} pt={2}>
                 <InfoCardAccordion
                   icon={<LuFilter size={18} />}
                   title="Transfer Type / Transaction Month / Sales Agent"
@@ -140,7 +153,7 @@ export default function AccountsTransferPage() {
                 >
                   <Grid
                     templateColumns={{ base: "1fr", lg: "repeat(3, 1fr)" }}
-                    gap={4}
+                    gap={2}
                   >
                     <GridItem>
                       <SelectFloatingLabel
@@ -156,15 +169,24 @@ export default function AccountsTransferPage() {
                     </GridItem>
                     <GridItem>
                       <Box mt={2}>
-                        <LookUp<SalesForceLookUpData>
+                        <LookupField<SalesForceLookUpData>
                           placeholder="Select Sales Force"
                           modalTitle="Sales Force List"
-                          data={salesForceLookUp}
-                          headers={salesForceHeaders}
+                          dataSource={salesForceLookUp}
+                          columns={[
+                            {
+                              key: "SalesForceCode",
+                              header: "Sales Force Code",
+                            },
+                            { key: "AgentName", header: "Agent Name" },
+                            { key: "PosCode", header: "Position Code" },
+                          ]}
+                          searchKeys={["AgentName", "SalesForceCode"]}
                           onSelect={setSelectedAgent}
-                          getInputValue={(item) =>
+                          renderDisplay={(item) =>
                             `${item.AgentName} (${item.SalesForceCode})`
                           }
+                          value={selectedAgent}
                         />
                       </Box>
                     </GridItem>
@@ -205,6 +227,10 @@ function TransferDestination({
   setAgent,
   onConfirm,
 }: TransferDestinationProps) {
+  const [transferTo, setTransferTo] = useState<SalesForceLookUpData | null>(
+    null,
+  );
+
   return (
     <Flex direction="column" gap={3}>
       <InfoCardAccordion
@@ -213,7 +239,7 @@ function TransferDestination({
         subtitle="Enter remarks and select the destination agent"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", lg: "repeat(3, 1fr)" }} gap={4}>
+        <Grid templateColumns={{ base: "1fr", lg: "repeat(3, 1fr)" }} gap={2}>
           <GridItem>
             <Textarea
               value={remarks}
@@ -224,22 +250,25 @@ function TransferDestination({
             />
           </GridItem>
           <GridItem>
-            <SelectFloatingLabel
-              label="Select Transaction Month"
-              collection={TrxMonth}
-            />
-          </GridItem>
-          <GridItem>
             <Box mt={2}>
-              <LookUp<SalesForceLookUpData>
+              <LookupField<SalesForceLookUpData>
                 placeholder="Search Transfer To"
                 modalTitle="Sales Force List"
-                data={salesForceLookUp}
-                headers={salesForceHeaders}
-                onSelect={setAgent}
-                getInputValue={(item) =>
+                dataSource={salesForceLookUp}
+                columns={[
+                  { key: "SalesForceCode", header: "Sales Force Code" },
+                  { key: "AgentName", header: "Agent Name" },
+                  { key: "PosCode", header: "Position Code" },
+                ]}
+                searchKeys={["AgentName", "SalesForceCode"]}
+                onSelect={(item) => {
+                  setTransferTo(item);
+                  setAgent(item);
+                }}
+                renderDisplay={(item) =>
                   `${item.AgentName} (${item.SalesForceCode})`
                 }
+                value={transferTo}
               />
             </Box>
           </GridItem>
@@ -248,9 +277,9 @@ function TransferDestination({
 
       <Flex justify={{ base: "stretch", lg: "flex-end" }}>
         <Box w={{ base: "full", lg: "auto" }}>
-          <PrimaryMdButton onClick={onConfirm}>
+          <PrimaryMdFlexButton onClick={onConfirm}>
             Transfer Account(s)
-          </PrimaryMdButton>
+          </PrimaryMdFlexButton>
         </Box>
       </Flex>
     </Flex>

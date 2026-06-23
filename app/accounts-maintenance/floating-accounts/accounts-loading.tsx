@@ -2,17 +2,21 @@
 
 import { useState } from "react";
 import { Grid, GridItem } from "@chakra-ui/react";
-import { Box, PrimaryMdButton, SelectFloatingLabel } from "st-peter-ui";
+import {
+  Box,
+  PrimaryMdButton,
+  PrimaryMdFlexButton,
+  SelectFloatingLabel,
+} from "st-peter-ui";
 import { LuFilter, LuUserCheck } from "react-icons/lu";
 
 import Page from "@/claude components/layout/page/Page";
-import LookUp from "@/components/common/reusable-lookup/dynamic-lookup";
+import { LookupField } from "@/components/common/reusable-lookup/LookUpField";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 
 import { STLList, TrxMonth } from "../data/transaction-month";
 import {
-  salesForceHeaders,
   salesForceLookUp,
   SalesForceLookUpData,
 } from "../accounts-transfer/sales-force-lookup_data";
@@ -85,27 +89,33 @@ export default function AccountsLoadingPage() {
           >
             <Grid
               templateColumns={{ base: "1fr", md: "1fr auto" }}
-              gap={4}
+              gap={2}
               alignItems="end"
             >
               <GridItem>
                 <Box mt={2}>
-                  <LookUp<SalesForceLookUpData>
+                  <LookupField<SalesForceLookUpData>
                     placeholder="Search Sales Agent 2"
                     modalTitle="Sales Force List"
-                    data={salesForceLookUp}
-                    headers={salesForceHeaders}
+                    dataSource={salesForceLookUp}
+                    columns={[
+                      { key: "SalesForceCode", header: "Sales Force Code" },
+                      { key: "AgentName", header: "Agent Name" },
+                      { key: "PosCode", header: "Position Code" },
+                    ]}
+                    searchKeys={["AgentName", "SalesForceCode"]}
                     onSelect={setSelectedAgent}
-                    getInputValue={(item) =>
+                    renderDisplay={(item) =>
                       `${item.AgentName} (${item.SalesForceCode})`
                     }
+                    value={selectedAgent}
                   />
                 </Box>
               </GridItem>
               <GridItem justifySelf={{ base: "stretch", md: "end" }}>
-                <PrimaryMdButton onClick={confirmLoad}>
+                <PrimaryMdFlexButton onClick={confirmLoad}>
                   Load Account/s
-                </PrimaryMdButton>
+                </PrimaryMdFlexButton>
               </GridItem>
             </Grid>
           </InfoCardAccordion>

@@ -208,7 +208,7 @@ export function DataTableToolbar<TData>({
                   size="xs"
                   h="30px"
                   flexShrink={0}
-                  display={{ base: "none", md: "inline-flex" }}
+                  w={{ base: "full", md: "auto" }}
                 >
                   <Columns3 size={13} style={{ marginRight: 4 }} />
                   Columns

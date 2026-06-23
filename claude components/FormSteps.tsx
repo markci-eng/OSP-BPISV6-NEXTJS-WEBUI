@@ -121,6 +121,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
       {/* Steps */}
       <Box w="full" rounded="2xl">
         <Steps.Root
+          size={"sm"}
           colorPalette="green"
           count={stepsData.length}
           step={currentStep}
@@ -156,8 +157,8 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       key={index}
                       index={index}
                       title={stepItem.title}
-                      minW={{ base: "0px", md: "auto" }}
                       flex={isCompact ? "0 0 auto" : "1"}
+                      justifyContent={"center"}
                     >
                       <Steps.Trigger
                         flexDirection={isCompact ? "row" : "column"}

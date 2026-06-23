@@ -26,6 +26,15 @@ const stickyRightHeaderStyles = {
   borderLeftColor: "gray.200",
 };
 
+const stickyLeftColumnStyles = (left: string) => ({
+  position: "sticky" as const,
+  left,
+  zIndex: 3,
+  bg: "gray.50",
+  borderRightWidth: "1px",
+  borderRightColor: "gray.200",
+});
+
 export function DataTableHeader<TData>({
   table,
   features,
@@ -34,17 +43,34 @@ export function DataTableHeader<TData>({
   actionsColumnWidth,
 }: DataTableHeaderProps<TData>) {
   const s = SIZE_STYLES[size];
+  const stickyLeftOffset = `${(features.draggable ? 32 : 0) + (features.selection ? 32 : 0)}px`;
 
   return (
     <Table.Header>
       {table.getHeaderGroups().map((headerGroup) => (
         <Table.Row key={headerGroup.id} bg="gray.50" borderBottomWidth="1px">
           {features.draggable && (
-            <Table.ColumnHeader px={s.headerPx} w="32px" minW="32px" />
+            <Table.ColumnHeader
+              px={s.headerPx}
+              w="32px"
+              minW="32px"
+              position="sticky"
+              left={0}
+              zIndex={3}
+              bg="gray.50"
+            />
           )}
 
           {features.selection && (
-            <Table.ColumnHeader px={s.headerPx} w="40px" minW="40px">
+            <Table.ColumnHeader
+              px={s.headerPx}
+              w="32px"
+              minW="32px"
+              position="sticky"
+              left={features.draggable ? "32px" : "0"}
+              zIndex={3}
+              bg="gray.50"
+            >
               <Checkbox.Root
                 checked={
                   table.getIsAllRowsSelected()
@@ -68,9 +94,10 @@ export function DataTableHeader<TData>({
           {headerGroup.headers.map((header) => {
             const isActionsColumn = header.column.id === actionsColumnId;
             const columnMeta = header.column.columnDef.meta as
-              | { numeric?: boolean; width?: string; minWidth?: string }
+              | { numeric?: boolean; width?: string; minWidth?: string; isStickyLeft?: boolean }
               | undefined;
             const isNumericColumn = !!columnMeta?.numeric;
+            const isStickyLeft = !isActionsColumn && !!columnMeta?.isStickyLeft;
 
             return (
               <Table.ColumnHeader
@@ -97,6 +124,7 @@ export function DataTableHeader<TData>({
                 }
                 maxW={isActionsColumn ? actionsColumnWidth : undefined}
                 {...(isActionsColumn ? stickyRightHeaderStyles : {})}
+                {...(isStickyLeft ? stickyLeftColumnStyles(stickyLeftOffset) : {})}
               >
                 <HStack
                   gap={1}

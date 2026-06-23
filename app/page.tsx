@@ -1122,24 +1122,40 @@ const TileItem = ({
           </Box>
 
           {/* Trend pill */}
-          <Flex
-            align="center"
-            gap={1}
-            px={2.5}
-            py={1.5}
-            borderRadius="full"
-            style={{ background: trendBg }}
-          >
-            {monthOverMonthPercentage > 0 ? (
-              <LuArrowUp size={13} style={{ color: trendColor }} />
-            ) : monthOverMonthPercentage < 0 ? (
-              <LuArrowDown size={13} style={{ color: trendColor }} />
-            ) : null}
-            <Text
-              fontWeight="700"
-              style={{ color: trendColor, fontSize: "14px" }}
+          <Flex direction="column" align="flex-end" gap={1}>
+            <Flex
+              align="center"
+              gap={1}
+              px={2.5}
+              py={1.5}
+              borderRadius="full"
+              style={{ background: trendBg }}
             >
-              {pct}%
+              {monthOverMonthPercentage > 0 ? (
+                <LuArrowUp size={13} style={{ color: trendColor }} />
+              ) : monthOverMonthPercentage < 0 ? (
+                <LuArrowDown size={13} style={{ color: trendColor }} />
+              ) : null}
+              <Text
+                fontWeight="700"
+                style={{ color: trendColor, fontSize: "14px" }}
+              >
+                {pct}%
+              </Text>
+            </Flex>
+            <Text
+              style={{
+                fontSize: "10px",
+                fontWeight: 600,
+                color: trendColor,
+                letterSpacing: "0.02em",
+              }}
+            >
+              {monthOverMonthPercentage > 0
+                ? "Increase"
+                : monthOverMonthPercentage < 0
+                  ? "Decrease"
+                  : "No change"}
             </Text>
           </Flex>
         </Flex>

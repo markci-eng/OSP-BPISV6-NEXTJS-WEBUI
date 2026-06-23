@@ -169,11 +169,29 @@ export function DataTableBody<TData>({
                 borderColor="green.100"
               >
                 {features.draggable && (
-                  <Table.Cell px={2} py={2.5} w="32px" minW="32px" />
+                  <Table.Cell
+                    px={2}
+                    py={2.5}
+                    w="32px"
+                    minW="32px"
+                    position="sticky"
+                    left={0}
+                    zIndex={2}
+                    bg="green.50"
+                  />
                 )}
 
                 {features.selection && (
-                  <Table.Cell px={2} py={2.5} w="40px" minW="40px" />
+                  <Table.Cell
+                    px={2}
+                    py={2.5}
+                    w="32px"
+                    minW="32px"
+                    position="sticky"
+                    left={features.draggable ? "32px" : "0"}
+                    zIndex={2}
+                    bg="green.50"
+                  />
                 )}
 
                 {visibleColumns.map((column) => {
@@ -184,8 +202,12 @@ export function DataTableBody<TData>({
                         width?: string;
                         minWidth?: string;
                         maxWidth?: string;
+                        isStickyLeft?: boolean;
                       }
                     | undefined;
+                  const isStickyLeft = !isActionsColumn && !!columnMeta?.isStickyLeft;
+                  const stickyLeftOffset =
+                    `${(features.draggable ? 32 : 0) + (features.selection ? 32 : 0)}px`;
                   const value = isActionsColumn
                     ? ""
                     : renderSummaryCell(summaryRow, column.id);
@@ -212,14 +234,15 @@ export function DataTableBody<TData>({
                           ? actionsColumnWidth
                           : columnMeta?.maxWidth ?? columnMeta?.width
                       }
-                      position={isActionsColumn ? "sticky" : undefined}
+                      position={isActionsColumn || isStickyLeft ? "sticky" : undefined}
                       right={isActionsColumn ? 0 : undefined}
-                      zIndex={isActionsColumn ? 2 : undefined}
-                      bg={isActionsColumn ? "green.50" : undefined}
+                      left={isStickyLeft ? stickyLeftOffset : undefined}
+                      zIndex={isActionsColumn || isStickyLeft ? 2 : undefined}
+                      bg={isActionsColumn || isStickyLeft ? "green.50" : undefined}
                       borderLeftWidth={isActionsColumn ? "1px" : undefined}
-                      borderLeftColor={
-                        isActionsColumn ? "green.100" : undefined
-                      }
+                      borderLeftColor={isActionsColumn ? "green.100" : undefined}
+                      borderRightWidth={isStickyLeft ? "1px" : undefined}
+                      borderRightColor={isStickyLeft ? "green.100" : undefined}
                     >
                       {value}
                     </Table.Cell>

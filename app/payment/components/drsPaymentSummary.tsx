@@ -38,7 +38,7 @@ export default function DrsPaymentSummary({
   const expected = totals[expectedKey] ?? 0;
   const excessShort = received - expected;
   return (
-    <Box mt={{ base: 4, md: 6 }}>
+    <Box mt={{ base: 4, md: 6 }} p={"2px"}>
       <Card.Root title={title}>
         <Card.MainContent>
           <Grid

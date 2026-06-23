@@ -79,7 +79,17 @@ export function DraggableRow<TData>({
       data-selected={rowIsSelected ? "" : undefined}
     >
       {draggable && (
-        <Table.Cell px={s.cellPx} py={2} w="32px" minW="32px" color="gray.400">
+        <Table.Cell
+          px={s.cellPx}
+          py={2}
+          w="32px"
+          minW="32px"
+          color="gray.400"
+          position="sticky"
+          left={0}
+          zIndex={2}
+          bg={stickyBg}
+        >
           <IconButton
             aria-label="Drag row"
             variant="ghost"
@@ -96,7 +106,16 @@ export function DraggableRow<TData>({
       )}
 
       {selectable && (
-        <Table.Cell px={s.cellPx} py={2} w="40px" minW="40px">
+        <Table.Cell
+          px={s.cellPx}
+          py={2}
+          w="32px"
+          minW="32px"
+          position="sticky"
+          left={draggable ? "32px" : "0"}
+          zIndex={2}
+          bg={stickyBg}
+        >
           <Checkbox.Root
             checked={rowIsSelected}
             onCheckedChange={(value: any) =>
@@ -117,9 +136,11 @@ export function DraggableRow<TData>({
           !draggable &&
           cell.column.id === actionsColumnId;
         const columnMeta = cell.column.columnDef.meta as
-          | { numeric?: boolean; width?: string; minWidth?: string; maxWidth?: string }
+          | { numeric?: boolean; width?: string; minWidth?: string; maxWidth?: string; isStickyLeft?: boolean }
           | undefined;
         const isNumericCell = columnMeta?.numeric || typeof cell.getValue() === "number";
+        const isStickyLeftCell = !isActionsCell && !!columnMeta?.isStickyLeft;
+        const stickyLeftOffset = `${(draggable ? 32 : 0) + (selectable ? 32 : 0)}px`;
 
         return (
           <Table.Cell
@@ -141,12 +162,15 @@ export function DraggableRow<TData>({
             textOverflow={isActionsCell ? "clip" : "ellipsis"}
             w={isActionsCell ? actionsColumnWidth : columnMeta?.width}
             minW={isActionsCell ? actionsColumnWidth : columnMeta?.minWidth}
-            position={isActionsCell ? "sticky" : undefined}
+            position={isActionsCell || isStickyLeftCell ? "sticky" : undefined}
             right={isActionsCell ? 0 : undefined}
-            zIndex={isActionsCell ? 2 : undefined}
-            bg={isActionsCell ? stickyBg : undefined}
+            left={isStickyLeftCell ? stickyLeftOffset : undefined}
+            zIndex={isActionsCell || isStickyLeftCell ? 2 : undefined}
+            bg={isActionsCell || isStickyLeftCell ? stickyBg : undefined}
             borderLeftWidth={isActionsCell ? "1px" : undefined}
             borderLeftColor={isActionsCell ? "gray.200" : undefined}
+            borderRightWidth={isStickyLeftCell ? "1px" : undefined}
+            borderRightColor={isStickyLeftCell ? "gray.200" : undefined}
             _after={
               isActionsCell
                 ? {

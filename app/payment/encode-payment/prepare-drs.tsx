@@ -222,8 +222,7 @@ export default function PrepareDRS({ payments }: Props) {
         activeIcon={<BsPrinter />}
         title="Digital Remittance"
         subtitle={drsNo}
-      >
-        <Flex justify="flex-end" mb={3}>
+        headerAction={
           <IconButton
             size="sm"
             variant="outline"
@@ -232,8 +231,8 @@ export default function PrepareDRS({ payments }: Props) {
           >
             <BsPrinter />
           </IconButton>
-        </Flex>
-
+        }
+      >
         <Box overflowX="auto">
           <DataTable
             columns={drsColumns}
