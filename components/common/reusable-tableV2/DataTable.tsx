@@ -72,7 +72,11 @@ export function DataTable<TData>({
   summaryRows,
   toolbarTop = "var(--sticky-header-h, 0px)",
 }: DataTableProps<TData>) {
-  const features = { ...DEFAULT_FEATURES, ...featuresProp };
+  const features = {
+    ...DEFAULT_FEATURES,
+    ...featuresProp,
+    ...(mobileConfig ? { columnToggle: false } : {}),
+  };
   const resolvedMobileConfig = {
     viewMode: "scroll" as const,
     ...mobileConfig,
