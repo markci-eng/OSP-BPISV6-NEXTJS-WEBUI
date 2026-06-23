@@ -58,7 +58,7 @@ export function DataTableToolbar<TData>({
     <Box
       position={hasRightContent ? "sticky" : "relative"}
       top={hasRightContent ? top : undefined}
-      zIndex={hasRightContent ? 3 : undefined}
+      zIndex={hasRightContent ? 10 : undefined}
       px={3}
       py={2}
       borderBottomWidth="1px"
