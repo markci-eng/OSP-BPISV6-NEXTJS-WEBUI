@@ -113,54 +113,91 @@ export function DataTableToolbar<TData>({
           minW={0}
         >
           {features.search && (
-            <Box
-              position="relative"
+            <HStack
+              gap={0}
               flex={{ base: "none", md: "1 1 180px" }}
               minW={{ base: "full", md: "160px" }}
               maxW={{ base: "full", md: "280px" }}
               w="full"
             >
               <Box
-                position="absolute"
-                left="8px"
-                top="50%"
-                transform="translateY(-50%)"
-                pointerEvents="none"
-                color="gray.400"
+                flex={1}
+                border="1.5px solid"
+                borderColor={
+                  globalFilter
+                    ? "var(--chakra-colors-primary-disabled)"
+                    : "gray.200"
+                }
+                borderRightWidth="0"
+                borderLeftRadius="lg"
+                bg="white"
+                boxShadow="xs"
+                overflow="hidden"
+                transition="border-color 0.15s, box-shadow 0.15s"
+                _hover={{
+                  borderColor: globalFilter
+                    ? "var(--chakra-colors-primary)"
+                    : "gray.300",
+                }}
+                _focusWithin={{
+                  borderColor: "var(--chakra-colors-primary)",
+                  boxShadow:
+                    "0 0 0 3px var(--chakra-colors-primary-disabled)",
+                }}
+                minH="8"
                 display="flex"
                 alignItems="center"
-                zIndex={1}
               >
-                <Search size={13} />
+                <Input
+                  placeholder="Search..."
+                  value={globalFilter}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  border="none"
+                  bg="transparent"
+                  boxShadow="none"
+                  borderRadius="0"
+                  px={3}
+                  h="30px"
+                  w="full"
+                  fontSize="xs"
+                  color={globalFilter ? "gray.800" : "gray.700"}
+                  fontWeight={globalFilter ? "medium" : "normal"}
+                  _placeholder={{ color: "gray.400" }}
+                  _focus={{ boxShadow: "none", outline: "none" }}
+                />
+
+                {globalFilter && (
+                  <Flex align="center" pr={2} flexShrink={0}>
+                    <IconButton
+                      aria-label="Clear search"
+                      variant="ghost"
+                      size="xs"
+                      borderRadius="full"
+                      color="gray.400"
+                      _hover={{ bg: "gray.100", color: "gray.600" }}
+                      onClick={() => setGlobalFilter("")}
+                    >
+                      <X size={12} />
+                    </IconButton>
+                  </Flex>
+                )}
               </Box>
 
-              <Input
-                placeholder="Search..."
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                ps="28px"
-                pe="28px"
+              <IconButton
+                aria-label="Search"
+                bg="var(--chakra-colors-primary)"
+                color="white"
+                borderLeftRadius="0"
+                borderRightRadius="lg"
                 h="30px"
-                w="full"
-                fontSize="xs"
-                bg="white"
-              />
-
-              {globalFilter && (
-                <IconButton
-                  aria-label="Clear search"
-                  variant="ghost"
-                  size="xs"
-                  position="absolute"
-                  right="4px"
-                  top="50%"
-                  transform="translateY(-50%)"
-                  onClick={() => setGlobalFilter("")}
-                >
-                  <X size={12} />
-                </IconButton>
-              )}
-            </Box>
+                minW="30px"
+                flexShrink={0}
+                _hover={{ opacity: 0.88 }}
+                _active={{ opacity: 0.75 }}
+              >
+                <Search size={13} />
+              </IconButton>
+            </HStack>
           )}
 
           {features.columnToggle && (

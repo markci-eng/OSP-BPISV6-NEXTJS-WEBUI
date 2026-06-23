@@ -5,8 +5,9 @@ import { salesAgents } from "@/data/saleforce/sales-agent-data";
 import {
   Box,
   Flex,
+  HStack,
+  IconButton,
   Input,
-  InputGroup,
   Spinner,
   Text,
   VStack,
@@ -119,32 +120,80 @@ export default function SalesAgentListPage() {
     >
       <Page.MainContent>
         <Page.Row>
-          <InputGroup
-            maxW="460px"
-            startElement={<LuSearch />}
-            endElement={
-              query ? (
-                <Box
-                  as="button"
-                  onClick={() => setQuery("")}
-                  cursor="pointer"
-                  color="gray.400"
-                  _hover={{ color: "gray.600" }}
-                  display="flex"
-                  alignItems="center"
-                >
-                  <LuX size={14} />
-                </Box>
-              ) : undefined
-            }
-          >
-            <Input
-              placeholder="Search by Agent ID, Name, Position, or Branch..."
-              value={query}
-              onChange={(e) => setQuery(e.currentTarget.value)}
-              size="sm"
-            />
-          </InputGroup>
+          <HStack gap={0} maxW="460px" w="full">
+            <Box
+              flex={1}
+              border="1.5px solid"
+              borderColor={
+                query ? "var(--chakra-colors-primary-disabled)" : "gray.200"
+              }
+              borderRightWidth="0"
+              borderLeftRadius="lg"
+              bg="white"
+              boxShadow="xs"
+              overflow="hidden"
+              transition="border-color 0.15s, box-shadow 0.15s"
+              _hover={{
+                borderColor: query
+                  ? "var(--chakra-colors-primary)"
+                  : "gray.300",
+              }}
+              _focusWithin={{
+                borderColor: "var(--chakra-colors-primary)",
+                boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
+              }}
+              minH="10"
+              display="flex"
+              alignItems="center"
+            >
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.currentTarget.value)}
+                placeholder="Search by Agent ID, Name, Position, or Branch..."
+                border="none"
+                bg="transparent"
+                boxShadow="none"
+                borderRadius="0"
+                px={3}
+                fontSize="sm"
+                color={query ? "gray.800" : "gray.700"}
+                fontWeight={query ? "medium" : "normal"}
+                _placeholder={{ color: "gray.400" }}
+                _focus={{ boxShadow: "none", outline: "none" }}
+              />
+
+              {query && (
+                <Flex align="center" pr={2} flexShrink={0}>
+                  <IconButton
+                    aria-label="Clear search"
+                    variant="ghost"
+                    size="xs"
+                    borderRadius="full"
+                    color="gray.400"
+                    _hover={{ bg: "gray.100", color: "gray.600" }}
+                    onClick={() => setQuery("")}
+                  >
+                    <LuX size={12} />
+                  </IconButton>
+                </Flex>
+              )}
+            </Box>
+
+            <IconButton
+              aria-label="Search"
+              bg="var(--chakra-colors-primary)"
+              color="white"
+              borderLeftRadius="0"
+              borderRightRadius="lg"
+              h="10"
+              minW="10"
+              flexShrink={0}
+              _hover={{ opacity: 0.88 }}
+              _active={{ opacity: 0.75 }}
+            >
+              <LuSearch size={15} />
+            </IconButton>
+          </HStack>
         </Page.Row>
 
         <Page.Row>

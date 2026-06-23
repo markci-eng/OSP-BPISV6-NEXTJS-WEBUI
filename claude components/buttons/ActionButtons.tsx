@@ -1,11 +1,14 @@
 "use client";
 
-import { Button, Flex } from "@chakra-ui/react";
+import { Button, Flex, IconButton } from "@chakra-ui/react";
 import { BiCaretDown } from "react-icons/bi";
 import React, { useState } from "react";
 import BottomQuickActions, {
   type QuickAction,
 } from "../drawer/bottom-quick-actions";
+import { LuEllipsis } from "react-icons/lu";
+import { IoGrid, IoGridOutline } from "react-icons/io5";
+import { BsFillGrid3X2GapFill } from "react-icons/bs";
 
 export type ActionButtonItem =
   | {
@@ -40,8 +43,9 @@ export default function ActionButtons({
   const [open, setOpen] = useState(false);
 
   const actions: QuickAction[] = buttons
-    .filter((btn): btn is Extract<ActionButtonItem, { type?: "action" }> =>
-      btn.type !== "separator",
+    .filter(
+      (btn): btn is Extract<ActionButtonItem, { type?: "action" }> =>
+        btn.type !== "separator",
     )
     .map((btn) => ({
       icon: btn.icon as QuickAction["icon"],
@@ -55,7 +59,7 @@ export default function ActionButtons({
 
   return (
     <Flex>
-      <Button
+      {/* <Button
         size="sm"
         variant="solid"
         borderRadius="15px"
@@ -63,7 +67,19 @@ export default function ActionButtons({
         onClick={() => setOpen(true)}
       >
         Actions <BiCaretDown />
-      </Button>
+      </Button> */}
+      <IconButton
+        onClick={() => setOpen(true)}
+        borderRadius="10px"
+        boxShadow={"sm"}
+        bg={"white"}
+        borderWidth={"1px"}
+        borderColor={"gray.200"}
+        color={"gray.600"}
+      >
+        {/* <IoGrid /> */}
+        <BsFillGrid3X2GapFill />
+      </IconButton>
 
       <BottomQuickActions
         open={open}
