@@ -212,7 +212,12 @@ export const SideBarItemsEKolekta: NavItem[] = [
     activeIcon: HiCurrencyDollar,
     label: "Payment",
     subItems: [
-      { label: "Encode Payment", href: "/payment/encode-payment" },
+      {
+        label: "Encode Payment",
+        href: "/payment/encode-payment",
+        displayName: "Payment",
+        bottomNav: true,
+      },
       { label: "View DRS", href: "/payment/view-drs" },
       {
         label: "Encode Validated Deposit Slip",
@@ -224,7 +229,6 @@ export const SideBarItemsEKolekta: NavItem[] = [
       },
       { label: "Request Credit Memo", href: "/payment/credit-memo" },
     ],
-    bottomNav: true,
   },
   {
     icon: BiCoin,
@@ -239,11 +243,15 @@ export const SideBarItemsEKolekta: NavItem[] = [
     activeIcon: HiUsers,
     subItems: [
       { label: "Add New Sale", href: "/plan-management/new" },
-      { label: "Planholder Profile", href: "/plan-management/planholder" },
+      {
+        label: "Planholder Profile",
+        href: "/plan-management/planholder",
+        displayName: "Planholder",
+        bottomNav: true,
+      },
       { label: "Pre-filled LPA", href: "/plan-management/new" },
       { label: "Change of Mode", href: "/plan-management/change-of-mode" },
     ],
-    bottomNav: true,
   },
   {
     icon: BsFileEarmarkExcel,

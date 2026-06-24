@@ -257,8 +257,8 @@ export function ListOfPlans({
           "/pay-my-plan"),
     },
     {
-      key: "sfid",
-      label: "SFID",
+      key: "phid",
+      label: "PHID",
       icon: LuIdCard,
       onClick: () => {},
     },
