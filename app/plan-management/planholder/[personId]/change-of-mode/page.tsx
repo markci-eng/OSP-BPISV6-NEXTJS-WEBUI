@@ -1,5 +1,6 @@
 "use client";
-import { ChangeModePage } from "@/components/plan-management/planholder-profile/components/change-of-mode/change-mode-page";
+
+import { ChangeModePage } from "./change-of-mode/change-mode-page";
 
 export default function Page() {
   return (
