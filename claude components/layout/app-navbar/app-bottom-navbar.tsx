@@ -451,18 +451,39 @@ export function AppBottomNavBar({
       <Show when={isMobile}>
         <StickyNavbar>
           {navItems
-            ? navItems
-                .slice(0, 4)
-                .map((item) => (
-                  <StickyNavbarBtn
-                    key={item.label}
-                    btnChildren={item.icon as IconType}
-                    activeIcon={item.activeIcon as IconType | undefined}
-                    title={item.displayName ?? item.label}
-                    isActive={navItemIsActive(item, pathname)}
-                    onClickEvent={() => router.push(navItemHref(item))}
-                  />
-                ))
+            ? navItems.flatMap((item) => {
+                const entries = [];
+                if (item.bottomNav) {
+                  entries.push(
+                    <StickyNavbarBtn
+                      key={item.label}
+                      btnChildren={item.icon as IconType}
+                      activeIcon={item.activeIcon as IconType | undefined}
+                      title={item.displayName ?? item.label}
+                      isActive={navItemIsActive(item, pathname)}
+                      onClickEvent={() => router.push(navItemHref(item))}
+                    />,
+                  );
+                }
+                item.subItems
+                  ?.filter((s) => s.bottomNav)
+                  .forEach((sub) => {
+                    entries.push(
+                      <StickyNavbarBtn
+                        key={sub.label}
+                        btnChildren={item.icon as IconType}
+                        activeIcon={item.activeIcon as IconType | undefined}
+                        title={sub.displayName ?? sub.label}
+                        isActive={
+                          pathname === sub.href ||
+                          pathname.startsWith(sub.href + "/")
+                        }
+                        onClickEvent={() => router.push(sub.href)}
+                      />,
+                    );
+                  });
+                return entries;
+              })
             : computedNavItems.map((item) => (
                 <StickyNavbarBtn
                   key={item.key}

@@ -44,12 +44,14 @@ export const SideBarItemsBranch: NavItem[] = [
     activeIcon: RiHome4Fill,
     label: "Home",
     href: "/",
+    bottomNav: true,
   },
   {
     icon: RiFileCheckLine,
     activeIcon: RiFileCheckFill,
     label: "Approvals",
     href: "/approvals",
+    bottomNav: true,
   },
   {
     icon: RiUser2Line,
@@ -103,7 +105,12 @@ export const SideBarItemsBranch: NavItem[] = [
     activeIcon: HiUsers,
     subItems: [
       { label: "Add New Sale", href: "/plan-management/new" },
-      { label: "Planholder Profile", href: "/plan-management/planholder" },
+      {
+        label: "Planholder Profile",
+        href: "/plan-management/planholder",
+        displayName: "Planholder",
+        bottomNav: true,
+      },
       { label: "Change of Mode", href: "/plan-management/change-of-mode" },
     ],
   },
@@ -124,6 +131,7 @@ export const SideBarItemsBranch: NavItem[] = [
       },
       { label: "Request Credit Memo", href: "/payment/credit-memo" },
     ],
+    bottomNav: true,
   },
 
   {
@@ -189,6 +197,7 @@ export const SideBarItemsEKolekta: NavItem[] = [
     label: "Home",
     href: "/",
     displayName: "Home",
+    bottomNav: true,
   },
   {
     icon: TbReceiptDollar,
@@ -196,6 +205,7 @@ export const SideBarItemsEKolekta: NavItem[] = [
     label: "View MCPR",
     href: "/accounts-maintenance/mcpr",
     displayName: "MCPR",
+    bottomNav: true,
   },
   {
     icon: HiOutlineCurrencyDollar,
@@ -214,6 +224,7 @@ export const SideBarItemsEKolekta: NavItem[] = [
       },
       { label: "Request Credit Memo", href: "/payment/credit-memo" },
     ],
+    bottomNav: true,
   },
   {
     icon: BiCoin,
@@ -232,6 +243,7 @@ export const SideBarItemsEKolekta: NavItem[] = [
       { label: "Pre-filled LPA", href: "/plan-management/new" },
       { label: "Change of Mode", href: "/plan-management/change-of-mode" },
     ],
+    bottomNav: true,
   },
   {
     icon: BsFileEarmarkExcel,
@@ -247,12 +259,14 @@ export const SideBarItemsBM: NavItem[] = [
     activeIcon: RiHome4Fill,
     label: "Home",
     href: "/",
+    bottomNav: true,
   },
   {
     icon: RiFileCheckLine,
     activeIcon: RiFileCheckFill,
     label: "Approvals",
     href: "/approvals",
+    bottomNav: true,
   },
 ];
 
@@ -262,11 +276,13 @@ export const SideBarItemsSTL: NavItem[] = [
     activeIcon: RiHome4Fill,
     label: "Home",
     href: "/",
+    bottomNav: true,
   },
   {
     icon: RiFileCheckLine,
     activeIcon: RiFileCheckFill,
     label: "Approvals",
     href: "/approvals",
+    bottomNav: true,
   },
 ];

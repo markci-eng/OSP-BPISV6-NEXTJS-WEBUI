@@ -16,19 +16,23 @@ import {
   Button,
   Text,
   useBreakpointValue,
+  Strong,
 } from "@chakra-ui/react";
 import { OSPBadge } from "@/components/common/badge/badge";
 import { FaRegFileAlt } from "react-icons/fa";
 import {
   LuArrowLeft,
   LuArrowRight,
+  LuBan,
   LuChevronLeft,
   LuChevronRight,
-  LuChevronsDown,
-  LuChevronsUp,
+  LuCreditCard,
+  LuFiles,
   LuPointer,
   LuSearch,
+  LuShieldCheck,
   LuTrash,
+  LuTrash2,
   LuUsersRound,
 } from "react-icons/lu";
 import { useEffect, useState } from "react";
@@ -36,15 +40,9 @@ import { OnboardingTutorial } from "../onboarding-tutorial";
 import { PlanDetailType } from "@/components/plan-management/planholder-profile/planholder-profile-page";
 import { EmptyState } from "../components/empty-state/empty-state";
 import { LPANumberButton } from "../components/buttons/lpa-button";
-import {
-  H4,
-  PrimaryMdButton,
-  PrimarySmButton,
-  Small,
-  TertiarySmButton,
-} from "st-peter-ui";
+import { H4, PrimaryMdButton, PrimarySmButton, Small } from "st-peter-ui";
 import { HiRefresh } from "react-icons/hi";
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import { InfoCardSheet } from "@/claude components/card-accordion/info-card-sheet";
 import { FiFileText } from "react-icons/fi";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
 import { MdHealthAndSafety } from "react-icons/md";
@@ -55,6 +53,9 @@ import { useMessageDialog } from "@/components/common/message-box/message-box-pr
 import { Beneficiaries } from "../pages/beneficiaries";
 import { StatementOfAccount } from "../pages/statement-of-accounts";
 import { HealthDeclaration } from "../pages/health-declaration";
+import AccountQuickActions, {
+  QuickAction,
+} from "../cards/account-quick-actions";
 
 const PLAN_DETAIL_STEPS = [
   {
@@ -83,8 +84,6 @@ export interface PhBeneficiaries {
   type: "principal" | "contingent";
 }
 
-const SECTION_COUNT = 8;
-
 function PlanTabs({
   planDetails,
   planholderAddress,
@@ -92,45 +91,20 @@ function PlanTabs({
   planDetails: PlanDetailType;
   planholderAddress?: string;
 }) {
-  const [openStates, setOpenStates] = useState<boolean[]>(() =>
-    Array(SECTION_COUNT).fill(false),
-  );
-  const toggle = (i: number) =>
-    setOpenStates((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
-
   return (
     <Flex direction="column" gap={2}>
-      <Flex justify="flex-end" gap={2} mb={1}>
-        <TertiarySmButton
-          onClick={() => setOpenStates(Array(SECTION_COUNT).fill(true))}
-        >
-          <LuChevronsDown size={14} />
-          Expand All
-        </TertiarySmButton>
-        <TertiarySmButton
-          onClick={() => setOpenStates(Array(SECTION_COUNT).fill(false))}
-        >
-          <LuChevronsUp size={14} />
-          Collapse All
-        </TertiarySmButton>
-      </Flex>
-
-      <InfoCardAccordion
+      <InfoCardSheet
         icon={<FiFileText size={16} />}
         title="Plan Details"
         subtitle="Coverage & premium info"
-        isOpen={openStates[0]}
-        onToggle={() => toggle(0)}
       >
         <PlanDetailsPage planDetails={planDetails} />
-      </InfoCardAccordion>
+      </InfoCardSheet>
 
-      <InfoCardAccordion
+      <InfoCardSheet
         icon={<LuUsersRound size={16} />}
         title="Beneficiaries"
         subtitle="Named beneficiaries"
-        isOpen={openStates[1]}
-        onToggle={() => toggle(1)}
       >
         <Beneficiaries
           beneficiaries={[
@@ -148,14 +122,12 @@ function PlanTabs({
           ]}
           planholderAddress={planholderAddress}
         />
-      </InfoCardAccordion>
+      </InfoCardSheet>
 
-      <InfoCardAccordion
+      <InfoCardSheet
         icon={<HiOutlineDocumentCurrencyDollar size={16} />}
         title="Statement of Accounts"
         subtitle="Payment history & balance"
-        isOpen={openStates[2]}
-        onToggle={() => toggle(2)}
       >
         <StatementOfAccount
           props={{
@@ -174,69 +146,59 @@ function PlanTabs({
             paymentRecords: [],
           }}
         />
-      </InfoCardAccordion>
+      </InfoCardSheet>
 
-      <InfoCardAccordion
+      <InfoCardSheet
         icon={<MdHealthAndSafety size={16} />}
         title="Health Declaration"
         subtitle="Medical disclosures"
-        isOpen={openStates[3]}
-        onToggle={() => toggle(3)}
       >
         <HealthDeclaration />
-      </InfoCardAccordion>
+      </InfoCardSheet>
 
-      <InfoCardAccordion
+      <InfoCardSheet
         icon={<LiaHandHoldingUsdSolid size={16} />}
         title="Loan"
         subtitle="Loan records"
-        isOpen={openStates[4]}
-        onToggle={() => toggle(4)}
       >
         <EmptyState
           title="No Record Found"
           description="Loan details displays here."
         />
-      </InfoCardAccordion>
+      </InfoCardSheet>
 
-      <InfoCardAccordion
+      <InfoCardSheet
         icon={<GiMartyrMemorial size={16} />}
         title="Service"
         subtitle="Service records"
-        isOpen={openStates[5]}
-        onToggle={() => toggle(5)}
       >
         <EmptyState
           title="No Record Found"
           description="Service Information displays here."
         />
-      </InfoCardAccordion>
+      </InfoCardSheet>
 
-      <InfoCardAccordion
+      <InfoCardSheet
         icon={<FiFileText size={16} />}
         title="ROP History"
         subtitle="Return of premium history"
-        isOpen={openStates[6]}
-        onToggle={() => toggle(6)}
       >
         <EmptyState
           title="No Record Found"
           description="ROP history displays here."
         />
-      </InfoCardAccordion>
+      </InfoCardSheet>
 
-      <InfoCardAccordion
+      <InfoCardSheet
         icon={<LuUsersRound size={16} />}
         title="Transfer History"
         subtitle="Plan transfer records"
-        isOpen={openStates[7]}
-        onToggle={() => toggle(7)}
       >
         <EmptyState
           title="No Record Found"
           description="Transfer history displays here."
         />
-      </InfoCardAccordion>
+      </InfoCardSheet>
     </Flex>
   );
 }
@@ -268,6 +230,57 @@ export function ListOfPlans({
       plans.filter((e) => e.lpaNumber.toLocaleLowerCase().includes(searchVal)),
     );
   }, [searchVal]);
+
+  const resolvedActions: QuickAction[] = [
+    {
+      key: "pay-plan",
+      label: "Pay",
+      icon: LuCreditCard,
+      onClick: () =>
+        (window.location.href =
+          "/plan-management/planholder/" +
+          planDetails?.lpaNumber +
+          "/pay-my-plan"),
+    },
+    {
+      key: "reinstate-plan",
+      label: planDetails?.accountStatus === "LAPSED" ? "Reinstate" : "Transfer",
+      icon: FiFileText,
+      onClick: () =>
+        (window.location.href =
+          "/plan-management/planholder/" +
+          planDetails?.lpaNumber +
+          (planDetails?.accountStatus === "LAPSED"
+            ? "/reinstatement"
+            : "/transfer-of-rights")),
+    },
+    {
+      key: "plan-termination",
+      label: "CSV",
+      icon: LuFiles,
+      onClick: () => {},
+    },
+    {
+      key: "delete",
+      label: "Delete",
+      icon: LuTrash2,
+      onClick: async () => {
+        const confirmed = await messageBox({
+          title: "Delete Plan",
+          message:
+            "Are you sure you want to delete this plan? (" +
+            planDetails?.lpaNumber +
+            ")",
+          confirmText: "Delete",
+          cancelText: "Cancel",
+          variant: "confirmation",
+        });
+        // if (confirmed) {
+        //   deletePlanFunction(planDetails?.lpaNumber ?? "");
+        // }
+      },
+    },
+  ];
 
   const actionButtons = planDetails ? (
     <Flex gap={2} w={{ base: "full", lg: "auto" }}>
@@ -569,6 +582,7 @@ export function ListOfPlans({
                     </Flex>
                   </Flex>
                 </Flex>
+                <AccountQuickActions actions={resolvedActions} />
                 {actionButtons}
               </Flex>
               <Separator my={2} />
@@ -639,7 +653,7 @@ export function ListOfPlans({
                       >
                         {planDetails?.lpaNumber}
                       </Text>
-                      <Flex gap={1.5} mt={2} flexWrap="wrap">
+                      {/* <Flex gap={1.5} mt={2} flexWrap="wrap">
                         <OSPBadge
                           type={
                             planDetails?.accountStatus === "LAPSED"
@@ -650,7 +664,7 @@ export function ListOfPlans({
                           {planDetails?.accountStatus}
                         </OSPBadge>
                         <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
-                      </Flex>
+                      </Flex> */}
                     </Box>
                   </Flex>
                   <Drawer.CloseTrigger asChild>
@@ -659,8 +673,55 @@ export function ListOfPlans({
                 </Flex>
                 <Separator mt={4} borderColor="gray.100" />
               </Drawer.Header>
-
-              {actionButtons && (
+              <Flex
+                px={4}
+                py={2}
+                direction={"column"}
+                gap={2}
+                borderBottomWidth={1}
+                borderColor="gray.100"
+              >
+                <Grid templateColumns={"repeat(2, 1fr)"} gap={2}>
+                  <Box
+                    border={"1px solid"}
+                    borderColor={"gray.200"}
+                    borderRadius={"md"}
+                    p={3}
+                  >
+                    <Flex align="center" gap={1}>
+                      <LuShieldCheck
+                        size={12}
+                        color="var(--chakra-colors-fg-muted)"
+                      />
+                      <Small color="fg.muted">Account status</Small>
+                    </Flex>
+                    <OSPBadge
+                      type={
+                        planDetails?.accountStatus === "LAPSED"
+                          ? "warning"
+                          : "success"
+                      }
+                    >
+                      {planDetails?.accountStatus}
+                    </OSPBadge>
+                  </Box>
+                  <Box
+                    border={"1px solid"}
+                    borderColor={"gray.200"}
+                    borderRadius={"md"}
+                    p={3}
+                  >
+                    <Flex align="center" gap={1}>
+                      <LuBan size={12} color="var(--chakra-colors-fg-muted)" />
+                      <Small color="fg.muted">Termination status</Small>
+                    </Flex>
+                    <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
+                  </Box>
+                </Grid>
+                <Strong>Common Actions</Strong>
+                <AccountQuickActions actions={resolvedActions} />
+              </Flex>
+              {/* {actionButtons && (
                 <Box
                   id="tour-plan-actions"
                   px={4}
@@ -670,7 +731,7 @@ export function ListOfPlans({
                 >
                   {actionButtons}
                 </Box>
-              )}
+              )} */}
 
               <Drawer.Body px={3} py={3}>
                 {planDetails && (

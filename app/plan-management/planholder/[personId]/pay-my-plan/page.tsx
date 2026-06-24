@@ -41,7 +41,7 @@ import {
   LuSearch,
   LuUser,
 } from "react-icons/lu";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import InfoCard from "@/claude components/info-card/info-card";
 
 const PAY_MY_PLAN_STORAGE_KEY = "payMyPlanSelectedItems";

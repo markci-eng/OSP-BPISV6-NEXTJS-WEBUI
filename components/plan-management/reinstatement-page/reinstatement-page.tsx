@@ -46,7 +46,7 @@ import { MdFileUpload } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import SingleFileUpload from "@/components/inputs/single-file-upload";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 
 const steps = ["Select Lapsed Plan", "Review Reinstatement", "Payment"];
 

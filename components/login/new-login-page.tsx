@@ -619,7 +619,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               </HStack>
             </motion.div>
 
-            {/* footer note */}
+            {/* footer note
             <motion.div {...fadeUp(0.58)}>
               <Text
                 textAlign="center"
@@ -632,7 +632,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 <br />
                 Unauthorized access is prohibited.
               </Text>
-            </motion.div>
+            </motion.div> */}
           </Box>
 
           <motion.div {...fadeUp(0.56)}>

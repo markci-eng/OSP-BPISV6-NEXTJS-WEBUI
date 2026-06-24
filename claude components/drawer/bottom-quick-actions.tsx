@@ -64,8 +64,10 @@ export type BottomQuickActionsProps = {
    * or pass any ReactNode.
    */
   headerSlot?: React.ReactNode;
-  /** The ordered list of actions */
-  actions: QuickAction[];
+  /** The ordered list of actions — omit when using children for arbitrary body content */
+  actions?: QuickAction[];
+  /** Arbitrary body content rendered instead of the action list */
+  children?: React.ReactNode;
 };
 
 // ─── Motion ───────────────────────────────────────────────────────────────────
@@ -244,6 +246,7 @@ export const BottomQuickActions = ({
   subtitle,
   headerSlot,
   actions,
+  children,
 }: BottomQuickActionsProps) => {
   return (
     <Drawer.Root
@@ -283,6 +286,8 @@ export const BottomQuickActions = ({
                 borderTopRightRadius: "28px",
                 maxHeight: "88vh",
                 overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
                 boxShadow:
                   "0 -28px 80px rgba(0,0,0,0.20), 0 -1px 0 rgba(255,255,255,0.65) inset",
                 borderTop: "1px solid rgba(255,255,255,0.55)",
@@ -298,7 +303,7 @@ export const BottomQuickActions = ({
               />
 
               {/* Content */}
-              <Box position="relative" zIndex={1}>
+              <Box position="relative" zIndex={1} display="flex" flexDirection="column" flex={1} minH={0}>
                 {/* Drag handle */}
                 <Box pt={3} pb={1} display="flex" justifyContent="center">
                   <Box
@@ -337,17 +342,24 @@ export const BottomQuickActions = ({
 
                 <Separator opacity={0.25} />
 
-                {/* Actions */}
-                <Drawer.Body px={3} pt={3} pb={2}>
-                  <VStack gap={2} align="stretch">
-                    {actions.map((action, i) => (
-                      <ActionItem
-                        key={i}
-                        action={action}
-                        onClose={() => onOpenChange(false)}
-                      />
-                    ))}
-                  </VStack>
+                {/* Actions or arbitrary body content */}
+                <Drawer.Body
+                  px={3} pt={3} pb={2} flex={1} minH={0} overflowY="auto"
+                  onPointerDownCapture={(e) => e.stopPropagation()}
+                >
+                  {children ? (
+                    children
+                  ) : (
+                    <VStack gap={2} align="stretch">
+                      {(actions ?? []).map((action, i) => (
+                        <ActionItem
+                          key={i}
+                          action={action}
+                          onClose={() => onOpenChange(false)}
+                        />
+                      ))}
+                    </VStack>
+                  )}
                 </Drawer.Body>
 
                 {/* Footer hint */}

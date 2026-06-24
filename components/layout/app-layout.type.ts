@@ -1,6 +1,12 @@
 import React from "react";
 
-export type NotificationType = "request" | "system" | "approval" | "payment" | "document" | "alert";
+export type NotificationType =
+  | "request"
+  | "system"
+  | "approval"
+  | "payment"
+  | "document"
+  | "alert";
 
 export interface NotificationDataProps {
   id: number;
@@ -31,11 +37,13 @@ export type NavItem = {
   icon: AppIcon;
   activeIcon?: AppIcon;
   href?: string;
+  bottomNav?: boolean;
   onClick?: () => void;
   subItems?: {
     label: string;
     displayName?: string;
     href: string;
     onClick?: () => void;
+    bottomNav?: boolean;
   }[];
 };

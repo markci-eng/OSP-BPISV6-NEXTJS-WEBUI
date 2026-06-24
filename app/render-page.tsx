@@ -20,7 +20,12 @@ export function RenderPage({
 }) {
   const pathname = usePathname();
 
-  if (pathname?.startsWith("/login")) return <>{children}</>;
+  if (pathname?.startsWith("/login"))
+    return (
+      <NotifyInstall appName={"One St. Peter: Life Plan"}>
+        {children}
+      </NotifyInstall>
+    );
 
   const navItems =
     userRole === "branch"
