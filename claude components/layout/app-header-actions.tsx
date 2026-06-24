@@ -29,8 +29,9 @@ import {
   LuFileText,
   LuTriangleAlert,
 } from "react-icons/lu";
-import { NotificationDataProps } from "./app-layout.type";
 import { useNotifications } from "./notifications-context";
+import { NotificationDataProps } from "./app-layout.type";
+
 const DEFAULT_NOTIF_ICON = {
   Icon: LuBell as React.ElementType,
   bg: "#F3F4F6",
@@ -182,10 +183,10 @@ export function AppHeaderActions({
           <IconButton
             color={iconColor}
             aria-label="Search"
-            size="md"
+            size="lg"
             variant="ghost"
           >
-            <LuSearch size={22} />
+            <LuSearch size={18} />
           </IconButton>
         </Dialog.Trigger>
         <Portal>
@@ -244,10 +245,10 @@ export function AppHeaderActions({
               <IconButton
                 color={iconColor}
                 aria-label="Notifications"
-                size="md"
+                size="lg"
                 variant="ghost"
               >
-                <LuBell size={22} />
+                <LuBell size={18} />
               </IconButton>
               {unreadCount > 0 && (
                 <Badge
@@ -256,7 +257,7 @@ export function AppHeaderActions({
                   borderRadius="full"
                   fontSize="xs"
                   position="absolute"
-                  top="2px"
+                  top="8px"
                   right="2px"
                   minW="4"
                   h="4"
@@ -363,11 +364,11 @@ export function AppHeaderActions({
               <IconButton
                 color={iconColor}
                 aria-label="Notifications"
-                size="md"
+                size="sm"
                 variant="ghost"
                 onClick={() => setNotifOpen(!notifOpen)}
               >
-                <LuBell size={22} />
+                <LuBell size={18} />
               </IconButton>
               {unreadCount > 0 && (
                 <Badge

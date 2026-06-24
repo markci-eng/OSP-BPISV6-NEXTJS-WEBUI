@@ -28,7 +28,9 @@ import {
   LuChevronRight,
   LuCreditCard,
   LuFiles,
+  LuIdCard,
   LuPointer,
+  LuPrinter,
   LuSearch,
   LuShieldCheck,
   LuTrash,
@@ -233,16 +235,6 @@ export function ListOfPlans({
 
   const resolvedActions: QuickAction[] = [
     {
-      key: "pay-plan",
-      label: "Pay",
-      icon: LuCreditCard,
-      onClick: () =>
-        (window.location.href =
-          "/plan-management/planholder/" +
-          planDetails?.lpaNumber +
-          "/pay-my-plan"),
-    },
-    {
       key: "reinstate-plan",
       label: planDetails?.accountStatus === "LAPSED" ? "Reinstate" : "Transfer",
       icon: FiFileText,
@@ -255,9 +247,19 @@ export function ListOfPlans({
             : "/transfer-of-rights")),
     },
     {
-      key: "plan-termination",
-      label: "CSV",
-      icon: LuFiles,
+      key: "print-soa",
+      label: "Print SOA",
+      icon: LuPrinter,
+      onClick: () =>
+        (window.location.href =
+          "/plan-management/planholder/" +
+          planDetails?.lpaNumber +
+          "/pay-my-plan"),
+    },
+    {
+      key: "sfid",
+      label: "SFID",
+      icon: LuIdCard,
       onClick: () => {},
     },
     {

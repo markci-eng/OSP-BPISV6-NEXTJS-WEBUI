@@ -476,27 +476,29 @@ export default function Dashboard() {
 
   return (
     <Box
+      minH="100vh"
       style={{
         display: "flex",
         flexDirection: "column",
         gap: 24,
-        padding: "10px 8px 108px",
+        padding: "0px 8px 108px",
       }}
     >
       {/* ── MOBILE HOME HEADER (login-page style, scrolls with content) ── */}
       <Box
         display={{ base: "block", md: "none" }}
-        px={1}
-        pb={5}
+        // px={4}
+        py={3}
         bg="white"
         borderBottom="1px solid"
         borderColor="gray.100"
         style={{
-          paddingTop: "max(env(safe-area-inset-top, 0px), 5px)",
+          paddingTop: "max(env(safe-area-inset-top, 0px), 12px)",
         }}
       >
-        <Flex align="center" justify="space-between" gap={3}>
-          <Flex align={"center"}>
+        <Flex align="center" justify="space-between" gap={2}>
+          {/* LEFT SIDE */}
+          <Flex align="center" gap={2}>
             {toggleSidebar && (
               <IconButton
                 aria-label="Open menu"
@@ -509,55 +511,53 @@ export default function Dashboard() {
                 <LuMenu size={20} />
               </IconButton>
             )}
-            <Flex align="center" gap={3}>
-              {/* Logo container (kept subtle glass but on white) */}
-              <Box
-                w="50px"
-                h="50px"
-                borderRadius="16px"
-                bg="green.50"
-                borderWidth="1px"
-                borderColor="green.100"
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                boxShadow="sm"
-                flexShrink={0}
+
+            <Box
+              w="40px"
+              h="40px"
+              borderRadius="12px"
+              bg="green.50"
+              borderWidth="1px"
+              borderColor="green.100"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              boxShadow="sm"
+              flexShrink={0}
+            >
+              <img
+                src="/images/logo/icon.png"
+                alt="St. Peter Logo"
+                width={26}
+                height={26}
+                style={{ objectFit: "contain" }}
+              />
+            </Box>
+
+            <Box>
+              <Text
+                fontWeight="700"
+                fontSize="md"
+                color="gray.800"
+                lineHeight="1.2"
+                letterSpacing="-0.01em"
               >
-                <img
-                  src="/images/logo/icon.png"
-                  alt="St. Peter Logo"
-                  width={32}
-                  height={32}
-                  style={{ objectFit: "contain" }}
-                />
-              </Box>
+                One St. Peter
+              </Text>
 
-              <Box>
-                <Text
-                  fontWeight="700"
-                  fontSize="lg"
-                  color="gray.800"
-                  lineHeight="1.2"
-                  letterSpacing="-0.01em"
-                >
-                  {userRole === "sales-agent" ? "eKolekta" : "One St. Peter"}
-                </Text>
-
-                <Text
-                  fontSize="9px"
-                  color="#085725"
-                  letterSpacing="0.2em"
-                  textTransform="uppercase"
-                  fontWeight="600"
-                  mt="1px"
-                >
-                  Life Plan Operations
-                </Text>
-              </Box>
-            </Flex>
+              <Text
+                fontSize="9px"
+                color="#085725"
+                letterSpacing="0.18em"
+                textTransform="uppercase"
+                fontWeight="600"
+              >
+                Life Plan Operations
+              </Text>
+            </Box>
           </Flex>
 
+          {/* RIGHT SIDE */}
           <Flex align="center" flexShrink={0}>
             <AppHeaderActions iconColor="#065f46" />
           </Flex>
