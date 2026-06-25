@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Box, Carousel, Flex, IconButton, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Carousel,
+  Flex,
+  IconButton,
+  SimpleGrid,
+  Text,
+} from "@chakra-ui/react";
 import {
   Check,
   CheckCircle,
@@ -287,106 +294,110 @@ export function ApprovalsTable({
     [summary],
   );
 
-  return (
-    <Flex direction="column" gap={4}>
-      <Carousel.Root
-        slideCount={cards.length}
-        page={carouselIdx}
-        onPageChange={(details: { page: number }) => {
-          setCarouselIdx(details.page);
-          setStatusFilter(cards[details.page].filter);
+  const renderCardContent = (card: (typeof cards)[number], i: number) => {
+    const isActive = statusFilter === card.filter;
+    return (
+      <Box
+        bg={isActive ? `${card.accent}.100` : `${card.accent}.50`}
+        border="1px solid"
+        borderColor={isActive ? `${card.accent}.400` : `${card.accent}.200`}
+        borderRadius="xl"
+        p={4}
+        boxShadow="xs"
+        cursor="pointer"
+        h="full"
+        onClick={() => {
+          setStatusFilter(card.filter);
+          setCarouselIdx(i);
+        }}
+        transition="all 0.15s ease"
+        _hover={{
+          bg: `${card.accent}.100`,
+          borderColor: `${card.accent}.400`,
         }}
       >
-        <Carousel.ItemGroup>
-          {cards.map((card, i) => {
-            const isActive = statusFilter === card.filter;
-            return (
+        <Flex justify="space-between" align="flex-start">
+          <Box>
+            <Text
+              fontSize="10px"
+              fontWeight="700"
+              letterSpacing="0.08em"
+              textTransform="uppercase"
+              color={`${card.accent}.500`}
+              mb={1}
+            >
+              {card.label}
+            </Text>
+            <Text
+              fontSize="2xl"
+              fontWeight="bold"
+              color={isActive ? `${card.accent}.700` : `${card.accent}.600`}
+              lineHeight="1"
+              mb={1}
+            >
+              {card.value}
+            </Text>
+            <Text fontSize="xs" color={`gray.600`} fontWeight="medium">
+              {card.sub}
+            </Text>
+          </Box>
+          <Box
+            p={2}
+            borderRadius="lg"
+            bg={isActive ? `${card.accent}.200` : `${card.accent}.100`}
+            color={`${card.accent}.500`}
+          >
+            <card.icon size={18} />
+          </Box>
+        </Flex>
+      </Box>
+    );
+  };
+
+  return (
+    <Flex direction="column" gap={4}>
+      {/* Desktop: 4-column grid */}
+      <SimpleGrid columns={4} gap={3} display={{ base: "none", md: "grid" }}>
+        {cards.map((card, i) => (
+          <Box key={card.label}>{renderCardContent(card, i)}</Box>
+        ))}
+      </SimpleGrid>
+
+      {/* Mobile: carousel */}
+      <Box display={{ base: "block", md: "none" }}>
+        <Carousel.Root
+          slideCount={cards.length}
+          page={carouselIdx}
+          onPageChange={(details: { page: number }) => {
+            setCarouselIdx(details.page);
+            setStatusFilter(cards[details.page].filter);
+          }}
+        >
+          <Carousel.ItemGroup>
+            {cards.map((card, i) => (
               <Carousel.Item key={card.label} index={i}>
-                <Box
-                  bg={isActive ? `${card.accent}.100` : `${card.accent}.50`}
-                  border="1px solid"
-                  borderColor={
-                    isActive ? `${card.accent}.400` : `${card.accent}.200`
-                  }
-                  borderRadius="xl"
-                  p={4}
-                  boxShadow="xs"
-                  cursor="pointer"
-                  h="full"
-                  onClick={() => {
-                    setStatusFilter(card.filter);
-                    setCarouselIdx(i);
-                  }}
-                  transition="all 0.15s ease"
-                  _hover={{
-                    bg: `${card.accent}.100`,
-                    borderColor: `${card.accent}.400`,
-                  }}
-                >
-                  <Flex justify="space-between" align="flex-start">
-                    <Box>
-                      <Text
-                        fontSize="10px"
-                        fontWeight="700"
-                        letterSpacing="0.08em"
-                        textTransform="uppercase"
-                        color={`${card.accent}.500`}
-                        mb={1}
-                      >
-                        {card.label}
-                      </Text>
-                      <Text
-                        fontSize="2xl"
-                        fontWeight="bold"
-                        color={
-                          isActive ? `${card.accent}.700` : `${card.accent}.600`
-                        }
-                        lineHeight="1"
-                        mb={1}
-                      >
-                        {card.value}
-                      </Text>
-                      <Text
-                        fontSize="xs"
-                        color={`gray.600`}
-                        fontWeight="medium"
-                      >
-                        {card.sub}
-                      </Text>
-                    </Box>
-                    <Box
-                      p={2}
-                      borderRadius="lg"
-                      bg={
-                        isActive ? `${card.accent}.200` : `${card.accent}.100`
-                      }
-                      color={`${card.accent}.500`}
-                    >
-                      <card.icon size={18} />
-                    </Box>
-                  </Flex>
-                </Box>
+                {renderCardContent(card, i)}
               </Carousel.Item>
-            );
-          })}
-        </Carousel.ItemGroup>
+            ))}
+          </Carousel.ItemGroup>
 
-        <Carousel.Control justifyContent="center" gap="4">
-          <Carousel.PrevTrigger asChild>
-            <IconButton size="xs" variant="ghost" aria-label="Previous">
-              <ChevronLeft size={16} />
-            </IconButton>
-          </Carousel.PrevTrigger>
+          <Carousel.Control justifyContent="center" gap="4">
+            <Carousel.PrevTrigger asChild>
+              <IconButton size="xs" variant="ghost" aria-label="Previous">
+                <ChevronLeft size={16} />
+              </IconButton>
+            </Carousel.PrevTrigger>
 
-          <Carousel.Indicators />
+            <Carousel.Indicators />
 
-          <Carousel.NextTrigger asChild>
-            <IconButton size="xs" variant="ghost" aria-label="Next">
-              <ChevronRight size={16} />
-            </IconButton>
-          </Carousel.NextTrigger>
-        </Carousel.Control>
-      </Carousel.Root>
+            <Carousel.NextTrigger asChild>
+              <IconButton size="xs" variant="ghost" aria-label="Next">
+                <ChevronRight size={16} />
+              </IconButton>
+            </Carousel.NextTrigger>
+          </Carousel.Control>
+        </Carousel.Root>
+      </Box>
 
       <DataTable<any>
         key={view}

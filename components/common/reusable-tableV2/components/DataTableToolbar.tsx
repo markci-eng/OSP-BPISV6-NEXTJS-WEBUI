@@ -82,13 +82,19 @@ export function DataTableToolbar<TData>({
             headerContent
           ) : (
             <>
-              {title && (
-                typeof title === "string" ? (
-                  <Text fontWeight="600" fontSize="sm" color="gray.800" lineClamp={1}>
+              {title &&
+                (typeof title === "string" ? (
+                  <Text
+                    fontWeight="600"
+                    fontSize="sm"
+                    color="gray.800"
+                    lineClamp={1}
+                  >
                     {title}
                   </Text>
-                ) : title
-              )}
+                ) : (
+                  title
+                ))}
 
               {description &&
                 (typeof description === "string" ? (
@@ -103,175 +109,175 @@ export function DataTableToolbar<TData>({
         </Box>
 
         {hasRightContent && (
-        <Flex
-          gap={1.5}
-          wrap="nowrap"
-          align="center"
-          justify={{ base: "stretch", lg: "flex-end" }}
-          direction={{ base: "column", md: "row" }}
-          w="full"
-          minW={0}
-        >
-          {features.search && (
-            <HStack
-              gap={0}
-              flex={{ base: "none", md: "1 1 180px" }}
-              minW={{ base: "full", md: "160px" }}
-              maxW={{ base: "full", md: "280px" }}
-              w="full"
-            >
-              <Box
-                flex={1}
-                border="1.5px solid"
-                borderColor={
-                  globalFilter
-                    ? "var(--chakra-colors-primary-disabled)"
-                    : "gray.200"
-                }
-                borderRightWidth="0"
-                borderLeftRadius="lg"
-                bg="white"
-                boxShadow="xs"
-                overflow="hidden"
-                transition="border-color 0.15s, box-shadow 0.15s"
-                _hover={{
-                  borderColor: globalFilter
-                    ? "var(--chakra-colors-primary)"
-                    : "gray.300",
-                }}
-                _focusWithin={{
-                  borderColor: "var(--chakra-colors-primary)",
-                  boxShadow:
-                    "0 0 0 3px var(--chakra-colors-primary-disabled)",
-                }}
-                minH="8"
-                display="flex"
-                alignItems="center"
+          <Flex
+            gap={1.5}
+            wrap="nowrap"
+            align="center"
+            justify={{ base: "stretch", lg: "flex-end" }}
+            direction={{ base: "column", md: "row" }}
+            w="full"
+            minW={0}
+          >
+            {features.search && (
+              <HStack
+                gap={0}
+                flex={{ base: "1 1 100%", lg: "1 1 180px" }}
+                minW={{ base: "full", lg: "260px" }}
+                maxW={{ base: "full", lg: "380px" }}
+                w="full"
               >
-                <Input
-                  placeholder="Search..."
-                  value={globalFilter}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                  border="none"
-                  bg="transparent"
-                  boxShadow="none"
-                  borderRadius="0"
-                  px={3}
-                  h="30px"
-                  w="full"
-                  fontSize="xs"
-                  color={globalFilter ? "gray.800" : "gray.700"}
-                  fontWeight={globalFilter ? "medium" : "normal"}
-                  _placeholder={{ color: "gray.400" }}
-                  _focus={{ boxShadow: "none", outline: "none" }}
-                />
-
-                {globalFilter && (
-                  <Flex align="center" pr={2} flexShrink={0}>
-                    <IconButton
-                      aria-label="Clear search"
-                      variant="ghost"
-                      size="xs"
-                      borderRadius="full"
-                      color="gray.400"
-                      _hover={{ bg: "gray.100", color: "gray.600" }}
-                      onClick={() => setGlobalFilter("")}
-                    >
-                      <X size={12} />
-                    </IconButton>
-                  </Flex>
-                )}
-              </Box>
-
-              <IconButton
-                aria-label="Search"
-                bg="var(--chakra-colors-primary)"
-                color="white"
-                borderLeftRadius="0"
-                borderRightRadius="lg"
-                h="30px"
-                minW="30px"
-                flexShrink={0}
-                _hover={{ opacity: 0.88 }}
-                _active={{ opacity: 0.75 }}
-              >
-                <Search size={13} />
-              </IconButton>
-            </HStack>
-          )}
-
-          {features.columnToggle && (
-            <Menu.Root>
-              <Menu.Trigger asChild>
-                <Button
-                  variant="outline"
-                  size="xs"
-                  h="30px"
-                  flexShrink={0}
-                  w={{ base: "full", md: "auto" }}
+                <Box
+                  flex={1}
+                  border="1.5px solid"
+                  borderColor={
+                    globalFilter
+                      ? "var(--chakra-colors-primary-disabled)"
+                      : "gray.200"
+                  }
+                  borderRightWidth="0"
+                  borderLeftRadius="lg"
+                  bg="white"
+                  boxShadow="xs"
+                  overflow="hidden"
+                  transition="border-color 0.15s, box-shadow 0.15s"
+                  _hover={{
+                    borderColor: globalFilter
+                      ? "var(--chakra-colors-primary)"
+                      : "gray.300",
+                  }}
+                  _focusWithin={{
+                    borderColor: "var(--chakra-colors-primary)",
+                    boxShadow:
+                      "0 0 0 3px var(--chakra-colors-primary-disabled)",
+                  }}
+                  minH="8"
+                  display="flex"
+                  alignItems="center"
                 >
-                  <Columns3 size={13} style={{ marginRight: 4 }} />
-                  Columns
-                </Button>
-              </Menu.Trigger>
+                  <Input
+                    placeholder="Search..."
+                    value={globalFilter}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                    border="none"
+                    bg="transparent"
+                    boxShadow="none"
+                    borderRadius="0"
+                    px={3}
+                    h="30px"
+                    w="full"
+                    fontSize="xs"
+                    color={globalFilter ? "gray.800" : "gray.700"}
+                    fontWeight={globalFilter ? "medium" : "normal"}
+                    _placeholder={{ color: "gray.400" }}
+                    _focus={{ boxShadow: "none", outline: "none" }}
+                  />
 
-              <Portal>
-                <Menu.Positioner>
-                  <Menu.Content minW="180px" zIndex="popover">
-                    {table
-                      .getAllColumns()
-                      .filter((column) => column.getCanHide())
-                      .map((column) => (
-                        <Menu.Item
-                          key={column.id}
-                          value={column.id}
-                          closeOnSelect={false}
-                          onClick={() =>
-                            column.toggleVisibility(!column.getIsVisible())
-                          }
-                        >
-                          <HStack justify="space-between" w="full">
-                            <Text textTransform="capitalize" fontSize="xs">
-                              {column.id
-                                .replace(/([A-Z])/g, " $1")
-                                .replace(/_/g, " ")}
-                            </Text>
+                  {globalFilter && (
+                    <Flex align="center" pr={2} flexShrink={0}>
+                      <IconButton
+                        aria-label="Clear search"
+                        variant="ghost"
+                        size="xs"
+                        borderRadius="full"
+                        color="gray.400"
+                        _hover={{ bg: "gray.100", color: "gray.600" }}
+                        onClick={() => setGlobalFilter("")}
+                      >
+                        <X size={12} />
+                      </IconButton>
+                    </Flex>
+                  )}
+                </Box>
 
-                            <Checkbox.Root checked={column.getIsVisible()}>
-                              <Checkbox.HiddenInput />
-                              <Checkbox.Control />
-                            </Checkbox.Root>
-                          </HStack>
-                        </Menu.Item>
-                      ))}
-                  </Menu.Content>
-                </Menu.Positioner>
-              </Portal>
-            </Menu.Root>
-          )}
+                <IconButton
+                  aria-label="Search"
+                  bg="var(--chakra-colors-primary)"
+                  color="white"
+                  borderLeftRadius="0"
+                  borderRightRadius="lg"
+                  h="30px"
+                  minW="30px"
+                  flexShrink={0}
+                  _hover={{ opacity: 0.88 }}
+                  _active={{ opacity: 0.75 }}
+                >
+                  <Search size={13} />
+                </IconButton>
+              </HStack>
+            )}
 
-          {headerButton && (
-            <Button
-              variant="solid"
-              size="xs"
-              h="30px"
-              flexShrink={0}
-              w={{ base: "full", md: "auto" }}
-              onClick={headerButton.onClick}
-            >
-              {headerButton.icon && (
-                <headerButton.icon size={13} style={{ marginRight: 4 }} />
-              )}
-              {headerButton.label}
-            </Button>
-          )}
+            {features.columnToggle && (
+              <Menu.Root>
+                <Menu.Trigger asChild>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    h="30px"
+                    flexShrink={0}
+                    w={{ base: "full", md: "auto" }}
+                  >
+                    <Columns3 size={13} style={{ marginRight: 4 }} />
+                    Columns
+                  </Button>
+                </Menu.Trigger>
 
-          {headerActions && (
-            <Box flexShrink={0} w={{ base: "full", md: "auto" }}>
-              {headerActions}
-            </Box>
-          )}
-        </Flex>
+                <Portal>
+                  <Menu.Positioner>
+                    <Menu.Content minW="180px" zIndex="popover">
+                      {table
+                        .getAllColumns()
+                        .filter((column) => column.getCanHide())
+                        .map((column) => (
+                          <Menu.Item
+                            key={column.id}
+                            value={column.id}
+                            closeOnSelect={false}
+                            onClick={() =>
+                              column.toggleVisibility(!column.getIsVisible())
+                            }
+                          >
+                            <HStack justify="space-between" w="full">
+                              <Text textTransform="capitalize" fontSize="xs">
+                                {column.id
+                                  .replace(/([A-Z])/g, " $1")
+                                  .replace(/_/g, " ")}
+                              </Text>
+
+                              <Checkbox.Root checked={column.getIsVisible()}>
+                                <Checkbox.HiddenInput />
+                                <Checkbox.Control />
+                              </Checkbox.Root>
+                            </HStack>
+                          </Menu.Item>
+                        ))}
+                    </Menu.Content>
+                  </Menu.Positioner>
+                </Portal>
+              </Menu.Root>
+            )}
+
+            {headerButton && (
+              <Button
+                variant="solid"
+                size="xs"
+                h="30px"
+                flexShrink={0}
+                w={{ base: "full", md: "auto" }}
+                onClick={headerButton.onClick}
+              >
+                {headerButton.icon && (
+                  <headerButton.icon size={13} style={{ marginRight: 4 }} />
+                )}
+                {headerButton.label}
+              </Button>
+            )}
+
+            {headerActions && (
+              <Box flexShrink={0} w={{ base: "full", md: "auto" }}>
+                {headerActions}
+              </Box>
+            )}
+          </Flex>
         )}
       </Grid>
     </Box>

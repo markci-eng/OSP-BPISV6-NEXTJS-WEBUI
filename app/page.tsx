@@ -478,17 +478,20 @@ export default function Dashboard() {
   return (
     <Box
       minH="100vh"
+      display="flex"
+      flexDirection="column"
+      gap={{ base: 4, md: 6 }}
+      px={2}
       style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 24,
-        padding: "0px 8px 108px",
+        paddingBottom:
+          "calc(108px + env(safe-area-inset-bottom, 0px))",
       }}
     >
       {/* ── MOBILE HOME HEADER (login-page style, scrolls with content) ── */}
       <Box
         display={{ base: "block", lg: "none" }}
-        // px={4}
+        mx={-2}
+        px={4}
         py={3}
         bg="white"
         borderBottom="1px solid"

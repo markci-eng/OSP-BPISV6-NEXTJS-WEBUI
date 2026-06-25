@@ -560,7 +560,7 @@ export function AppBottomNavBar({
       <Dialog.Root
         open={profileOpen}
         onOpenChange={(e) => handleDialogOpenChange(e.open)}
-        size={{ base: "full", md: "md" }}
+        size="md"
         motionPreset="slide-in-bottom"
         placement="bottom"
       >
@@ -570,8 +570,8 @@ export function AppBottomNavBar({
             <Dialog.Content
               display="flex"
               flexDirection="column"
-              maxH={{ base: "100vh", md: "50px" }}
-              borderRadius={{ base: 0, md: "md" }}
+              maxH="80vh"
+              borderRadius="md"
               overflow="hidden"
             >
               <Dialog.Header p={0} border={0}>

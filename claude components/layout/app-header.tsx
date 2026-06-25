@@ -15,6 +15,7 @@ import { LuMenu } from "react-icons/lu";
 import { NotificationDataProps } from "./app-layout.type";
 import { Body } from "st-peter-ui";
 import { AppHeaderActions } from "./app-header-actions";
+import Breadcrumb from "@/components/breadcrumb/Breadcrumb";
 
 import logoIcon from "@/public/images/logo/icon.png";
 
@@ -94,6 +95,8 @@ export default function AppHeader({
       justify="space-between"
       bg="bg"
       _dark={{ bg: "rgba(20, 24, 36, 0.88)" }}
+      borderBottom="1px solid"
+      borderColor="gray.200"
     >
       {/* Left side */}
       <Flex align="center" gap={2}>
@@ -108,7 +111,7 @@ export default function AppHeader({
           >
             <LuMenu />
           </IconButton>
-          {breadcrumb}
+          {breadcrumb ?? <Breadcrumb />}
         </Show>
         <Show when={isMobile}>
           <Flex align="center" gap={2}>

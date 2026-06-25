@@ -91,7 +91,7 @@ function SectionCard({
         </Text>
       </HStack>
 
-      <Box bg="bg" p={{ base: 3, md: 4 }}>
+      <Box bg="bg" p={3}>
         {children}
       </Box>
     </Box>
@@ -227,7 +227,7 @@ export function ApprovalDetailContent({
     STATUS_META[status as keyof typeof STATUS_META] ?? STATUS_META.Pending;
 
   return (
-    <VStack align="stretch" gap={{ base: 3, md: 4 }}>
+    <VStack align="stretch" gap={3}>
       {/* Header with status accent */}
       <Box
         rounded="lg"
@@ -261,8 +261,8 @@ export function ApprovalDetailContent({
       <SectionCard title="Request Details" icon={<FileText size={13} />}>
         <Box
           display="grid"
-          gridTemplateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }}
-          gap={{ base: 3, md: 4 }}
+          gridTemplateColumns="1fr"
+          gap={3}
         >
           {config.detailFields.map((field) => {
             const isStatusField =
@@ -326,10 +326,10 @@ export function ApprovalDetailContent({
 
           <HStack
             gap={3}
-            position={{ base: "sticky", md: "static" }}
-            bottom={{ base: 0, md: "auto" }}
+            position="sticky"
+            bottom={0}
             bg="bg"
-            py={{ base: 3, md: 0 }}
+            py={3}
             zIndex={1}
           >
             <Button
