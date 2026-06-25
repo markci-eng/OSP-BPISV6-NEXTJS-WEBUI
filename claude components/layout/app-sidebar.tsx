@@ -412,76 +412,151 @@ export default function Sidebar({
         overflow="hidden"
         minH="100vh"
       >
-        {/* Logo + Close button */}
-        <Flex
-          align="center"
-          justify="space-between"
-          gap={2}
-          p={2}
-          py={3}
-          h="50px"
-          minH="50px"
-          borderBottom="1px solid"
-          borderColor="gray.200"
-        >
-          {/* User Profile Header */}
-          <Flex align="center" gap={2} px={2} py={2}>
-            <Box
-              p="2px"
-              borderRadius="full"
-              border="2px solid"
-              borderColor="var(--chakra-colors-primary-disabled)"
-              flexShrink={0}
-            >
-              <Avatar.Root
-                size="sm"
-                bg="var(--chakra-colors-primary-disabled)/30"
+        {/* Logo + Close button (Mobile) */}
+        <Show when={isMobile}>
+          <Flex
+            align="center"
+            justify="space-between"
+            gap={2}
+            p={2}
+            py={3}
+            h="50px"
+            minH="50px"
+            borderBottom="1px solid"
+            borderColor="gray.200"
+          >
+            {/* User Profile Header */}
+            <Flex align="center" gap={2} px={2} py={2}>
+              <Box
+                p="2px"
+                borderRadius="full"
+                border="2px solid"
+                borderColor="var(--chakra-colors-primary-disabled)"
+                flexShrink={0}
               >
-                <Avatar.Image
-                  src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
-                  alt={displayName}
-                />
-                <Avatar.Fallback
-                  color="var(--chakra-colors-primary)"
+                <Avatar.Root
+                  size="sm"
+                  bg="var(--chakra-colors-primary-disabled)/30"
+                >
+                  <Avatar.Image
+                    src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
+                    alt={displayName}
+                  />
+                  <Avatar.Fallback
+                    color="var(--chakra-colors-primary)"
+                    fontWeight="semibold"
+                    name={displayName}
+                  />
+                </Avatar.Root>
+              </Box>
+              <Box
+                overflow="hidden"
+                opacity={isSidebarOpen ? 1 : 0}
+                transition="opacity 0.2s, max-width 0.2s"
+                maxWidth={isSidebarOpen ? "220px" : "0px"}
+              >
+                <Text
                   fontWeight="semibold"
-                  name={displayName}
-                />
-              </Avatar.Root>
-            </Box>
-            <Box
-              overflow="hidden"
-              opacity={isSidebarOpen ? 1 : 0}
-              transition="opacity 0.2s, max-width 0.2s"
-              maxWidth={isSidebarOpen ? "220px" : "0px"}
-            >
-              <Text
-                fontWeight="semibold"
-                fontSize="sm"
-                whiteSpace="nowrap"
-                lineHeight="1.3"
-                color="gray.800"
-                truncate
-              >
-                {displayName || "—"}
-              </Text>
-              <Text fontSize="xs" color="primary" whiteSpace="nowrap">
-                {ROLE_LABELS[role] ?? role}
-              </Text>
-            </Box>
-          </Flex>
+                  fontSize="sm"
+                  whiteSpace="nowrap"
+                  lineHeight="1.3"
+                  color="gray.800"
+                  truncate
+                >
+                  {displayName || "—"}
+                </Text>
+                <Text fontSize="xs" color="primary" whiteSpace="nowrap">
+                  {ROLE_LABELS[role] ?? role}
+                </Text>
+              </Box>
+            </Flex>
 
-          {isMobile && isOpen && (
-            <IconButton
-              aria-label="Close sidebar"
-              size="sm"
-              variant="ghost"
-              color={"gray.fg"}
-              onClick={onClose}
-            >
-              <RiCloseLine />
-            </IconButton>
-          )}
-        </Flex>
+            {isMobile && isOpen && (
+              <IconButton
+                aria-label="Close sidebar"
+                size="sm"
+                variant="ghost"
+                color={"gray.fg"}
+                onClick={onClose}
+              >
+                <RiCloseLine />
+              </IconButton>
+            )}
+          </Flex>
+        </Show>
+
+        {/* Logo + Close button (Web) */}
+        <Show when={!isMobile}>
+          <Flex
+            align="center"
+            justify="space-between"
+            gap={2}
+            p={0.5}
+            py={3}
+            h="50px"
+            minH="50px"
+            borderBottom="1px solid"
+            borderColor="gray.200"
+          >
+            <Flex align="center" gap={2.5}>
+              <Box
+                w="40px"
+                h="40px"
+                borderRadius="12px"
+                bg="green.50"
+                borderWidth="1px"
+                borderColor="green.100"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                boxShadow="sm"
+                flexShrink={0}
+              >
+                <img
+                  src="/images/logo/icon.png"
+                  alt="St. Peter Logo"
+                  width={26}
+                  height={26}
+                  style={{ objectFit: "contain" }}
+                />
+              </Box>
+
+              <Box>
+                <Text
+                  fontWeight="700"
+                  fontSize="md"
+                  color="gray.800"
+                  lineHeight="1.2"
+                  letterSpacing="-0.01em"
+                >
+                  {appName}
+                </Text>
+
+                <Text
+                  fontSize="9px"
+                  color="#085725"
+                  letterSpacing="0.18em"
+                  textTransform="uppercase"
+                  fontWeight="600"
+                >
+                  {appSubtitle}
+                </Text>
+              </Box>
+            </Flex>
+
+            {isMobile && isOpen && (
+              <IconButton
+                aria-label="Close sidebar"
+                size="sm"
+                variant="ghost"
+                color={"gray.fg"}
+                onClick={onClose}
+              >
+                <RiCloseLine />
+              </IconButton>
+            )}
+          </Flex>
+        </Show>
 
         {/* Navigation */}
         <ScrollArea.Root maxW="lg" size={"xs"} mt={2}>

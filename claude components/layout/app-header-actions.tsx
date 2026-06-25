@@ -19,7 +19,6 @@ import {
 } from "@chakra-ui/react";
 import {
   LuBell,
-  LuBotMessageSquare,
   LuSearch,
   LuX,
   LuClipboardList,
@@ -183,7 +182,7 @@ export function AppHeaderActions({
           <IconButton
             color={iconColor}
             aria-label="Search"
-            size="lg"
+            size="xl"
             variant="ghost"
           >
             <LuSearch size={18} />
@@ -226,17 +225,6 @@ export function AppHeaderActions({
         </Portal>
       </Dialog.Root>
 
-      {/* Chatbot */}
-      {/* <IconButton
-        aria-label="Chatbot"
-        size="sm"
-        variant="ghost"
-        color={iconColor}
-        _hover={{ bg: "green.50" }}
-      >
-        <LuBotMessageSquare size={18} />
-      </IconButton> */}
-
       {/* Notifications — Dialog on mobile, Popover on desktop */}
       {isMobile ? (
         <Dialog.Root size="full" motionPreset="slide-in-bottom">
@@ -245,7 +233,7 @@ export function AppHeaderActions({
               <IconButton
                 color={iconColor}
                 aria-label="Notifications"
-                size="lg"
+                size="xl"
                 variant="ghost"
               >
                 <LuBell size={18} />
@@ -257,8 +245,8 @@ export function AppHeaderActions({
                   borderRadius="full"
                   fontSize="xs"
                   position="absolute"
-                  top="8px"
-                  right="2px"
+                  top="6px"
+                  right="6px"
                   minW="4"
                   h="4"
                   display="flex"
@@ -320,7 +308,7 @@ export function AppHeaderActions({
                       )}
                       <Dialog.CloseTrigger asChild>
                         <IconButton
-                          size="sm"
+                          size="xl"
                           variant="ghost"
                           aria-label="Close"
                           position="static"
@@ -364,9 +352,8 @@ export function AppHeaderActions({
               <IconButton
                 color={iconColor}
                 aria-label="Notifications"
-                size="sm"
+                size="xl"
                 variant="ghost"
-                onClick={() => setNotifOpen(!notifOpen)}
               >
                 <LuBell size={18} />
               </IconButton>
@@ -377,8 +364,8 @@ export function AppHeaderActions({
                   borderRadius="full"
                   fontSize="xs"
                   position="absolute"
-                  top="2px"
-                  right="2px"
+                  top="6px"
+                  right="6px"
                   minW="4"
                   h="4"
                   display="flex"
@@ -393,7 +380,7 @@ export function AppHeaderActions({
           <Portal>
             <Popover.Positioner>
               <Popover.Content
-                w="340px"
+                w="440px"
                 p={0}
                 borderRadius="xl"
                 shadow="xl"
@@ -403,23 +390,33 @@ export function AppHeaderActions({
                 <Box borderBottomWidth="1px" borderColor="gray.200">
                   <Flex px={3} py={2.5} align="center" justify="space-between">
                     <Flex align="center" gap={2}>
-                      <Text fontSize="sm" fontWeight="bold" color="gray.fg">
-                        Notifications
-                      </Text>
-                      {unreadCount > 0 && (
-                        <Badge
-                          bg="var(--chakra-colors-primary)"
-                          color="white"
-                          borderRadius="full"
-                          fontSize="xs"
-                          px={1.5}
-                          h="18px"
-                          display="flex"
-                          alignItems="center"
-                        >
-                          {unreadCount}
-                        </Badge>
-                      )}
+                      <Flex
+                        px={4}
+                        py={2}
+                        align="center"
+                        justify="space-between"
+                        w="full"
+                      >
+                        <Flex align="center" gap={2}>
+                          <Text fontWeight="bold" fontSize="md">
+                            Notifications
+                          </Text>
+                          {unreadCount > 0 && (
+                            <Badge
+                              bg="var(--chakra-colors-primary)"
+                              color="white"
+                              borderRadius="full"
+                              fontSize="xs"
+                              px={1.5}
+                              h="18px"
+                              display="flex"
+                              alignItems="center"
+                            >
+                              {unreadCount}
+                            </Badge>
+                          )}
+                        </Flex>
+                      </Flex>
                     </Flex>
                     {unreadCount > 0 && (
                       <Button

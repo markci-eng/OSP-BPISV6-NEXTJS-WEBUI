@@ -150,12 +150,7 @@ const UserBubble = React.memo(({ msg }: { msg: Message }) => (
       >
         {msg.text}
       </Box>
-      <Text
-        fontSize="10px"
-        color={BRAND_COLORS.grey}
-        textAlign="end"
-        mt="2px"
-      >
+      <Text fontSize="10px" color={BRAND_COLORS.grey} textAlign="end" mt="2px">
         {msg.time}
       </Text>
     </Box>
@@ -300,6 +295,7 @@ export const ChatbotMessenger = ({
             boxShadow={STANDARD_SHADOWS.level4}
             overflow="hidden"
             style={{ height: "72dvh" }}
+            onClick={(e) => e.stopPropagation()}
           >
             <Flex direction="column" h="100%">
               {/* Drag handle */}

@@ -36,7 +36,7 @@ export const StickyNavbar = ({ children }: { children: ReactNode }) => {
   return (
     <Box
       position="fixed"
-      bottom={"0"}
+      bottom={"-10px"}
       pt={"5px"}
       left={0}
       right={0}
@@ -46,7 +46,7 @@ export const StickyNavbar = ({ children }: { children: ReactNode }) => {
       borderColor="gray.200"
       _dark={{ bg: "gray.900", borderColor: "gray.700" }}
       style={{
-        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
         transform: minimized ? "translateY(100%)" : "translateY(0)",

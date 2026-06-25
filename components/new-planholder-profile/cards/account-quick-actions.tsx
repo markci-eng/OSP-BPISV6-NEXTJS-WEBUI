@@ -30,10 +30,7 @@ type AccountQuickActionsProps = {
 
 const AccountQuickActions = ({ actions }: AccountQuickActionsProps) => {
   return (
-    <SimpleGrid
-      columns={4}
-      gap={{ base: STANDARD_SPACING.xs, md: STANDARD_SPACING.sm }}
-    >
+    <SimpleGrid columns={4} gap={STANDARD_SPACING.xs}>
       {actions.map((action) => (
         <Box
           key={action.key}
@@ -48,7 +45,7 @@ const AccountQuickActions = ({ actions }: AccountQuickActionsProps) => {
           cursor={action.onClick ? "pointer" : "default"}
           transition="box-shadow 150ms ease-out, border-color 150ms ease-out, transform 150ms ease-out"
           py={{ base: "8px", md: "20px" }}
-          px={STANDARD_SPACING.xs}
+          px={{ base: STANDARD_SPACING.xs, lg: STANDARD_SPACING.md }}
           _hover={
             action.onClick
               ? {

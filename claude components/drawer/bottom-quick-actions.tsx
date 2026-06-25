@@ -97,10 +97,7 @@ export const QuickActionsHeaderCard = React.memo(
         <Box
           p={2.5}
           borderRadius="full"
-          bg={
-            avatarBg ??
-            "linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)"
-          }
+          bg={avatarBg ?? "linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)"}
           color="#2e7d32"
           flexShrink={0}
           boxShadow="0 2px 8px rgba(56,142,60,0.20)"
@@ -261,7 +258,12 @@ export const BottomQuickActions = ({
         />
 
         <Drawer.Positioner>
-          <Drawer.Content asChild borderTopRadius="4xl" bg="transparent" shadow="none">
+          <Drawer.Content
+            asChild
+            borderTopRadius="4xl"
+            bg="transparent"
+            shadow="none"
+          >
             <MotionBox
               initial={{ y: 500, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -273,10 +275,10 @@ export const BottomQuickActions = ({
               dragElastic={{ top: 0, bottom: 0.35 }}
               onDragEnd={(_, info) => {
                 const shouldClose =
-                  info.velocity.y > 500 ||
-                  info.point.y > SHEET_CLOSE_THRESHOLD;
+                  info.velocity.y > 500 || info.point.y > SHEET_CLOSE_THRESHOLD;
                 if (shouldClose) onOpenChange(false);
               }}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
               style={{
                 position: "relative",
                 background: "rgba(248, 249, 251, 0.90)",
@@ -303,7 +305,14 @@ export const BottomQuickActions = ({
               />
 
               {/* Content */}
-              <Box position="relative" zIndex={1} display="flex" flexDirection="column" flex={1} minH={0}>
+              <Box
+                position="relative"
+                zIndex={1}
+                display="flex"
+                flexDirection="column"
+                flex={1}
+                minH={0}
+              >
                 {/* Drag handle */}
                 <Box pt={3} pb={1} display="flex" justifyContent="center">
                   <Box
@@ -344,7 +353,12 @@ export const BottomQuickActions = ({
 
                 {/* Actions or arbitrary body content */}
                 <Drawer.Body
-                  px={3} pt={3} pb={2} flex={1} minH={0} overflowY="auto"
+                  px={3}
+                  pt={3}
+                  pb={2}
+                  flex={1}
+                  minH={0}
+                  overflowY="auto"
                   onPointerDownCapture={(e) => e.stopPropagation()}
                 >
                   {children ? (

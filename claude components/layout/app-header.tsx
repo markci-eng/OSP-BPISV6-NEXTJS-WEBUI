@@ -89,7 +89,7 @@ export default function AppHeader({
       display={{ base: "none", lg: "flex" }}
       className="no-print"
       px={2}
-      pt={4}
+      pt={2}
       align="center"
       justify="space-between"
       bg="bg"
@@ -167,10 +167,14 @@ export default function AppHeader({
         <AppHeaderActions />
         <Show when={!isMobile}>
           <Avatar.Root
+            ml={1}
+            size={"sm"}
             cursor="pointer"
             onClick={onOpenProfile}
             title="Account & Settings"
             colorPalette={pickPalette(avatarName || "U")}
+            border={"2px solid"}
+            borderColor={"primary"}
           >
             <Avatar.Image
               src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"

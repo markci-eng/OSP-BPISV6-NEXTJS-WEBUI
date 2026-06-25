@@ -1,5 +1,5 @@
 import React from "react";
-import { Flex, SimpleGrid, Text } from "@chakra-ui/react";
+import { Box, Flex, SimpleGrid, Text } from "@chakra-ui/react";
 import { LuChartBar, LuCoins, LuFileText } from "react-icons/lu";
 
 import { Card } from "@/claude components/card-accordion/card";
@@ -29,23 +29,27 @@ export default function MCPRDataPage() {
           </Flex>
         </Card>
 
-        {/* <Card
-          activeIcon={<LuChartBar size={18} />}
-          title="Quota"
-          subtitle="Target collection amounts"
-        >
-          <RowItem label="Commission" value="₱50,000.00" />
-          <RowItem label="Non-Commission" value="₱50,000.00" />
-        </Card>
+        <Box display={{ base: "none", lg: "block" }}>
+          <Card
+            activeIcon={<LuChartBar size={18} />}
+            title="Quota"
+            subtitle="Target collection amounts"
+          >
+            <RowItem label="Commission" value="₱50,000.00" />
+            <RowItem label="Non-Commission" value="₱50,000.00" />
+          </Card>
+        </Box>
 
-        <Card
-          activeIcon={<LuCoins size={18} />}
-          title="Collection"
-          subtitle="Actual collection amounts"
-        >
-          <RowItem label="Commission" value="₱50,000.00" />
-          <RowItem label="Non-Commission" value="₱50,000.00" />
-        </Card> */}
+        <Box display={{ base: "none", lg: "block" }}>
+          <Card
+            activeIcon={<LuCoins size={18} />}
+            title="Collection"
+            subtitle="Actual collection amounts"
+          >
+            <RowItem label="Commission" value="₱50,000.00" />
+            <RowItem label="Non-Commission" value="₱50,000.00" />
+          </Card>
+        </Box>
       </SimpleGrid>
 
       <MCPRList />

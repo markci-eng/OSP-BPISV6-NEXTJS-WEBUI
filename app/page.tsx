@@ -7,6 +7,7 @@ import {
   IconButton,
   ScrollArea,
   Separator,
+  SimpleGrid,
   Tabs,
   Avatar,
   Text,
@@ -486,7 +487,7 @@ export default function Dashboard() {
     >
       {/* ── MOBILE HOME HEADER (login-page style, scrolls with content) ── */}
       <Box
-        display={{ base: "block", md: "none" }}
+        display={{ base: "block", lg: "none" }}
         // px={4}
         py={3}
         bg="white"
@@ -571,80 +572,136 @@ export default function Dashboard() {
           title="Account Overview"
           subtitle="Month-over-month account metrics"
         />
-        <Carousel.Root slideCount={4} loop>
-          <Carousel.ItemGroup>
-            <Carousel.Item index={0} px={2}>
-              <TileItem
-                Icon={RiUserShared2Line}
-                title="New Sales"
-                value={planholders.newSales.toLocaleString()}
-                prevVal={planholders.prevNewSales.toLocaleString()}
-                color="#1B9E57"
-                monthOverMonthPercentage={
-                  ((planholders.newSales - planholders.prevNewSales) /
-                    planholders.prevNewSales) *
-                  100
-                }
-              />
-            </Carousel.Item>
-            <Carousel.Item index={1} px={2}>
-              <TileItem
-                Icon={RiUserFollowLine}
-                title="Active Accounts"
-                value="12.1k"
-                prevVal={planholders.prevActiveAccounts.toLocaleString()}
-                color="#1976D2"
-                monthOverMonthPercentage={
-                  ((planholders.activeAccounts -
-                    planholders.prevActiveAccounts) /
-                    planholders.prevActiveAccounts) *
-                  100
-                }
-              />
-            </Carousel.Item>
-            <Carousel.Item index={2} px={2}>
-              <TileItem
-                Icon={RiUserForbidLine}
-                title="Lapsed Accounts"
-                value="7.3k"
-                prevVal={planholders.prevLapsedAccounts.toLocaleString()}
-                order="desc"
-                color="#F57C00"
-                monthOverMonthPercentage={
-                  ((planholders.lapsedAccounts -
-                    planholders.prevLapsedAccounts) /
-                    planholders.prevLapsedAccounts) *
-                  100
-                }
-              />
-            </Carousel.Item>
-            <Carousel.Item index={3} px={2}>
-              <TileItem
-                Icon={RiUserUnfollowLine}
-                title="Terminated Accounts"
-                value="24.7k"
-                prevVal={planholders.prevTerminatedAccounts.toLocaleString()}
-                order="desc"
-                color="#E53E3E"
-                monthOverMonthPercentage={
-                  ((planholders.terminatedAccounts -
-                    planholders.prevTerminatedAccounts) /
-                    planholders.prevTerminatedAccounts) *
-                  100
-                }
-              />
-            </Carousel.Item>
-          </Carousel.ItemGroup>
-          <Carousel.Control mt={3} justifyContent="center">
-            <Carousel.PrevTrigger>
-              <LuChevronLeft />
-            </Carousel.PrevTrigger>
-            <Carousel.Indicators />
-            <Carousel.NextTrigger>
-              <LuChevronRight />
-            </Carousel.NextTrigger>
-          </Carousel.Control>
-        </Carousel.Root>
+        {/* Mobile: carousel; Desktop (md+): 4-column grid */}
+        <Box display={{ base: "block", md: "none" }}>
+          <Carousel.Root slideCount={4} loop>
+            <Carousel.ItemGroup>
+              <Carousel.Item index={0} px={2}>
+                <TileItem
+                  Icon={RiUserShared2Line}
+                  title="New Sales"
+                  value={planholders.newSales.toLocaleString()}
+                  prevVal={planholders.prevNewSales.toLocaleString()}
+                  color="#1B9E57"
+                  monthOverMonthPercentage={
+                    ((planholders.newSales - planholders.prevNewSales) /
+                      planholders.prevNewSales) *
+                    100
+                  }
+                />
+              </Carousel.Item>
+              <Carousel.Item index={1} px={2}>
+                <TileItem
+                  Icon={RiUserFollowLine}
+                  title="Active Accounts"
+                  value="12.1k"
+                  prevVal={planholders.prevActiveAccounts.toLocaleString()}
+                  color="#1976D2"
+                  monthOverMonthPercentage={
+                    ((planholders.activeAccounts -
+                      planholders.prevActiveAccounts) /
+                      planholders.prevActiveAccounts) *
+                    100
+                  }
+                />
+              </Carousel.Item>
+              <Carousel.Item index={2} px={2}>
+                <TileItem
+                  Icon={RiUserForbidLine}
+                  title="Lapsed Accounts"
+                  value="7.3k"
+                  prevVal={planholders.prevLapsedAccounts.toLocaleString()}
+                  order="desc"
+                  color="#F57C00"
+                  monthOverMonthPercentage={
+                    ((planholders.lapsedAccounts -
+                      planholders.prevLapsedAccounts) /
+                      planholders.prevLapsedAccounts) *
+                    100
+                  }
+                />
+              </Carousel.Item>
+              <Carousel.Item index={3} px={2}>
+                <TileItem
+                  Icon={RiUserUnfollowLine}
+                  title="Terminated Accounts"
+                  value="24.7k"
+                  prevVal={planholders.prevTerminatedAccounts.toLocaleString()}
+                  order="desc"
+                  color="#E53E3E"
+                  monthOverMonthPercentage={
+                    ((planholders.terminatedAccounts -
+                      planholders.prevTerminatedAccounts) /
+                      planholders.prevTerminatedAccounts) *
+                    100
+                  }
+                />
+              </Carousel.Item>
+            </Carousel.ItemGroup>
+            <Carousel.Control mt={3} justifyContent="center">
+              <Carousel.PrevTrigger>
+                <LuChevronLeft />
+              </Carousel.PrevTrigger>
+              <Carousel.Indicators />
+              <Carousel.NextTrigger>
+                <LuChevronRight />
+              </Carousel.NextTrigger>
+            </Carousel.Control>
+          </Carousel.Root>
+        </Box>
+        <SimpleGrid display={{ base: "none", md: "grid" }} columns={4} gap={3}>
+          <TileItem
+            Icon={RiUserShared2Line}
+            title="New Sales"
+            value={planholders.newSales.toLocaleString()}
+            prevVal={planholders.prevNewSales.toLocaleString()}
+            color="#1B9E57"
+            monthOverMonthPercentage={
+              ((planholders.newSales - planholders.prevNewSales) /
+                planholders.prevNewSales) *
+              100
+            }
+          />
+          <TileItem
+            Icon={RiUserFollowLine}
+            title="Active Accounts"
+            value="12.1k"
+            prevVal={planholders.prevActiveAccounts.toLocaleString()}
+            color="#1976D2"
+            monthOverMonthPercentage={
+              ((planholders.activeAccounts - planholders.prevActiveAccounts) /
+                planholders.prevActiveAccounts) *
+              100
+            }
+          />
+          <TileItem
+            Icon={RiUserForbidLine}
+            title="Lapsed Accounts"
+            value="7.3k"
+            prevVal={planholders.prevLapsedAccounts.toLocaleString()}
+            order="desc"
+            color="#F57C00"
+            monthOverMonthPercentage={
+              ((planholders.lapsedAccounts - planholders.prevLapsedAccounts) /
+                planholders.prevLapsedAccounts) *
+              100
+            }
+          />
+          <TileItem
+            Icon={RiUserUnfollowLine}
+            title="Terminated Accounts"
+            value="24.7k"
+            prevVal={planholders.prevTerminatedAccounts.toLocaleString()}
+            order="desc"
+            color="#E53E3E"
+            monthOverMonthPercentage={
+              ((planholders.terminatedAccounts -
+                planholders.prevTerminatedAccounts) /
+                planholders.prevTerminatedAccounts) *
+              100
+            }
+          />
+        </SimpleGrid>
       </Flex>
 
       {/* ── Efficiency ── */}

@@ -53,45 +53,45 @@ export function AppLayout({
   }, []);
 
   return (
-    <Flex
-      h="100dvh"
-      fontFamily={font ? `'${font}', sans-serif` : undefined}
-      bg={"white"}
-      overflow="hidden"
-      style={{ overscrollBehavior: "none" }}
-    >
-      {/* LEFT: Sidebar (full height) */}
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onClose={closeSidebar}
-        navItems={navItems}
-        appName={appName}
-        appSubtitle={appSubtitle}
-      />
-
-      {/* RIGHT: Navbar + content */}
-      <Flex flex="1" direction="column" minW={0}>
-        {/* Top Navbar */}
-        <AppHeader
-          onToggleSidebar={toggleSidebar}
-          notifications={notifications}
-          onOpenProfile={() => setProfileOpen(true)}
+    <NotificationsProvider value={notifications}>
+      <Flex
+        h="100dvh"
+        fontFamily={font ? `'${font}', sans-serif` : undefined}
+        bg={"white"}
+        overflow="hidden"
+        style={{ overscrollBehavior: "none" }}
+      >
+        {/* LEFT: Sidebar (full height) */}
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={closeSidebar}
+          navItems={navItems}
           appName={appName}
           appSubtitle={appSubtitle}
         />
 
-        {/* Page content */}
-        <Box
-          flex="1"
-          minW={0}
-          bg="bg"
-          p={0}
-          overflow="auto"
-          ref={scrollRef}
-          px={2}
-          style={{ overscrollBehavior: "contain" }}
-        >
-          <NotificationsProvider value={notifications}>
+        {/* RIGHT: Navbar + content */}
+        <Flex flex="1" direction="column" minW={0}>
+          {/* Top Navbar */}
+          <AppHeader
+            onToggleSidebar={toggleSidebar}
+            notifications={notifications}
+            onOpenProfile={() => setProfileOpen(true)}
+            appName={appName}
+            appSubtitle={appSubtitle}
+          />
+
+          {/* Page content */}
+          <Box
+            flex="1"
+            minW={0}
+            bg="bg"
+            p={0}
+            overflow="auto"
+            ref={scrollRef}
+            px={2}
+            style={{ overscrollBehavior: "contain" }}
+          >
             <SidebarProvider value={toggleSidebar}>
               <StickyNavbarContext refParent={scrollRef}>
                 {children}
@@ -105,9 +105,9 @@ export function AppLayout({
                 />
               </StickyNavbarContext>
             </SidebarProvider>
-          </NotificationsProvider>
-        </Box>
+          </Box>
+        </Flex>
       </Flex>
-    </Flex>
+    </NotificationsProvider>
   );
 }

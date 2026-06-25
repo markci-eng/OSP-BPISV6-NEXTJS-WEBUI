@@ -284,100 +284,100 @@ export function ListOfPlans({
     },
   ];
 
-  const actionButtons = planDetails ? (
-    <Flex gap={2} w={{ base: "full", lg: "auto" }}>
-      {planDetails.accountStatus === "LAPSED" &&
-        planDetails.terminationStatus === "NOT YET TERMINATED" && (
-          <Box flex={1}>
-            <Show when={!isMobile}>
-              <PrimaryMdButton
-                w="full"
-                onClick={() =>
-                  (window.location.href =
-                    "/plan-management/planholder/" +
-                    planDetails.lpaNumber +
-                    "/reinstatement")
-                }
-              >
-                <HiRefresh /> Reinstate
-              </PrimaryMdButton>
-            </Show>
-            <Show when={isMobile}>
-              <PrimarySmButton
-                w="full"
-                onClick={() =>
-                  (window.location.href =
-                    "/plan-management/planholder/" +
-                    planDetails.lpaNumber +
-                    "/reinstatement")
-                }
-              >
-                <HiRefresh /> Reinstate
-              </PrimarySmButton>
-            </Show>
-          </Box>
-        )}
+  // const actionButtons = planDetails ? (
+  //   <Flex gap={2} w={{ base: "full", lg: "auto" }}>
+  //     {planDetails.accountStatus === "LAPSED" &&
+  //       planDetails.terminationStatus === "NOT YET TERMINATED" && (
+  //         <Box flex={1}>
+  //           <Show when={!isMobile}>
+  //             <PrimaryMdButton
+  //               w="full"
+  //               onClick={() =>
+  //                 (window.location.href =
+  //                   "/plan-management/planholder/" +
+  //                   planDetails.lpaNumber +
+  //                   "/reinstatement")
+  //               }
+  //             >
+  //               <HiRefresh /> Reinstate
+  //             </PrimaryMdButton>
+  //           </Show>
+  //           <Show when={isMobile}>
+  //             <PrimarySmButton
+  //               w="full"
+  //               onClick={() =>
+  //                 (window.location.href =
+  //                   "/plan-management/planholder/" +
+  //                   planDetails.lpaNumber +
+  //                   "/reinstatement")
+  //               }
+  //             >
+  //               <HiRefresh /> Reinstate
+  //             </PrimarySmButton>
+  //           </Show>
+  //         </Box>
+  //       )}
 
-      {planDetails.accountStatus !== "LAPSED" &&
-        planDetails.terminationStatus === "NOT YET TERMINATED" && (
-          <Box flex={1}>
-            <Show when={!isMobile}>
-              <PrimaryMdButton
-                w="full"
-                onClick={() =>
-                  (window.location.href =
-                    "/plan-management/planholder/" +
-                    planDetails.lpaNumber +
-                    "/transfer-of-rights")
-                }
-              >
-                <HiRefresh /> Transfer Plan
-              </PrimaryMdButton>
-            </Show>
-            <Show when={isMobile}>
-              <PrimarySmButton
-                w="full"
-                onClick={() =>
-                  (window.location.href =
-                    "/plan-management/planholder/" +
-                    planDetails.lpaNumber +
-                    "/transfer-of-rights")
-                }
-              >
-                <HiRefresh /> Transfer
-              </PrimarySmButton>
-            </Show>
-          </Box>
-        )}
+  //     {planDetails.accountStatus !== "LAPSED" &&
+  //       planDetails.terminationStatus === "NOT YET TERMINATED" && (
+  //         <Box flex={1}>
+  //           <Show when={!isMobile}>
+  //             <PrimaryMdButton
+  //               w="full"
+  //               onClick={() =>
+  //                 (window.location.href =
+  //                   "/plan-management/planholder/" +
+  //                   planDetails.lpaNumber +
+  //                   "/transfer-of-rights")
+  //               }
+  //             >
+  //               <HiRefresh /> Transfer Plan
+  //             </PrimaryMdButton>
+  //           </Show>
+  //           <Show when={isMobile}>
+  //             <PrimarySmButton
+  //               w="full"
+  //               onClick={() =>
+  //                 (window.location.href =
+  //                   "/plan-management/planholder/" +
+  //                   planDetails.lpaNumber +
+  //                   "/transfer-of-rights")
+  //               }
+  //             >
+  //               <HiRefresh /> Transfer
+  //             </PrimarySmButton>
+  //           </Show>
+  //         </Box>
+  //       )}
 
-      {deletePlanFunction && (
-        <Button
-          flex={1}
-          size={{ base: "sm", lg: "md" }}
-          bg={"var(--chakra-colors-danger-hover)"}
-          _hover={{ bg: "var(--chakra-colors-danger)" }}
-          color={"white"}
-          onClick={async () => {
-            const confirmed = await messageBox({
-              title: "Delete Plan",
-              message:
-                "Are you sure you want to delete this plan? (" +
-                planDetails.lpaNumber +
-                ")",
-              confirmText: "Delete",
-              cancelText: "Cancel",
-              variant: "confirmation",
-            });
-            if (confirmed) {
-              deletePlanFunction(planDetails.lpaNumber);
-            }
-          }}
-        >
-          <LuTrash /> Delete
-        </Button>
-      )}
-    </Flex>
-  ) : null;
+  //     {deletePlanFunction && (
+  //       <Button
+  //         flex={1}
+  //         size={{ base: "sm", lg: "md" }}
+  //         bg={"var(--chakra-colors-danger-hover)"}
+  //         _hover={{ bg: "var(--chakra-colors-danger)" }}
+  //         color={"white"}
+  //         onClick={async () => {
+  //           const confirmed = await messageBox({
+  //             title: "Delete Plan",
+  //             message:
+  //               "Are you sure you want to delete this plan? (" +
+  //               planDetails.lpaNumber +
+  //               ")",
+  //             confirmText: "Delete",
+  //             cancelText: "Cancel",
+  //             variant: "confirmation",
+  //           });
+  //           if (confirmed) {
+  //             deletePlanFunction(planDetails.lpaNumber);
+  //           }
+  //         }}
+  //       >
+  //         <LuTrash /> Delete
+  //       </Button>
+  //     )}
+  //   </Flex>
+  // ) : null;
 
   const glassBg = "rgba(255, 255, 255, 0.72)";
   const glassBorder = "rgba(255, 255, 255, 0.60)";
@@ -585,7 +585,7 @@ export function ListOfPlans({
                   </Flex>
                 </Flex>
                 <AccountQuickActions actions={resolvedActions} />
-                {actionButtons}
+                {/* {actionButtons} */}
               </Flex>
               <Separator my={2} />
               <PlanTabs

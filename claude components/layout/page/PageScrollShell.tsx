@@ -170,7 +170,7 @@ const PageScrollShell = ({
               )}
             </Box>
 
-            {toolContent && <Box>{toolContent}</Box>}
+            {toolContent && <Box mr={3}>{toolContent}</Box>}
           </Flex>
         </Box>
       </Box>
