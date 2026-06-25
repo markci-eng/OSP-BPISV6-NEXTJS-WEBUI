@@ -43,7 +43,7 @@ const Breadcrumb = ({ variant = "v2" }: BreadcrumbProps) => {
   const segments = pathname.split("/").filter(Boolean);
 
   const crumbs = [
-    { href: "/", label: "Dashboard" },
+    { href: "/", label: "Home" },
     ...segments.map((seg, i) => ({
       href: "/" + segments.slice(0, i + 1).join("/"),
       label: prettify(seg),
@@ -69,7 +69,12 @@ const Breadcrumb = ({ variant = "v2" }: BreadcrumbProps) => {
               </Small>
             )}
             {isLast ? (
-              <Small as="span" aria-current="page" color={here} fontWeight={500}>
+              <Small
+                as="span"
+                aria-current="page"
+                color={here}
+                fontWeight={500}
+              >
                 {c.label}
               </Small>
             ) : (
