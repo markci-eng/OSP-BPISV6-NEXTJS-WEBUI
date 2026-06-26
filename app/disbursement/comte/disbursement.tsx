@@ -395,9 +395,13 @@ export default function Disbursement() {
 
   const eligibleRecords = useMemo(() => {
     if (!ready) return [];
-    const taken = new Set(addedItems.map((i) => eligibleRowId(i)));
+    const taken = new Set(
+      addedItems
+        .filter((i) => i.type === selectedType)
+        .map((i) => eligibleRowId(i)),
+    );
     return tableItems.filter((r) => !taken.has(eligibleRowId(r)));
-  }, [ready, addedItems]);
+  }, [ready, addedItems, selectedType]);
 
   /* ---- mobile employee / DRS filter ---- */
   const filteredMobileEmployees = useMemo(() => {
@@ -474,12 +478,12 @@ export default function Disbursement() {
   const handleAddToList = (rows: EligibleRecord[]) => {
     if (!selectedType) return;
     setAddedItems((prev) => {
-      const existing = new Set(prev.map((i) => eligibleRowId(i)));
+      const existingKeys = new Set(prev.map((i) => i._key));
       const next = rows
-        .filter((r) => !existing.has(eligibleRowId(r)))
+        .filter((r) => !existingKeys.has(`${eligibleRowId(r)}-${selectedType}`))
         .map<DisbursementItem>((r) => ({
           ...r,
-          _key: eligibleRowId(r),
+          _key: `${eligibleRowId(r)}-${selectedType}`,
           type: selectedType,
           release: parsePeso(r.SIAmount),
         }));
@@ -617,10 +621,6 @@ export default function Disbursement() {
 
       <Box
         ref={empListContainerRef}
-        maxH="490px"
-        overflowY="auto"
-        pr={1}
-        style={{ scrollbarWidth: "thin" }}
       >
         <VStack gap={2.5} align="stretch" px={"2px"}>
           {visibleEmployees.map((e) => {
@@ -652,6 +652,8 @@ export default function Disbursement() {
                     setSelectedEmployee(e);
                     resetWorkflow();
                   }
+                  setMobileStep((s) => s + 1);
+                  setMobileQuery("");
                 }}
               >
                 <HStack gap={3} align="center">
@@ -792,10 +794,6 @@ export default function Disbursement() {
 
       <Box
         ref={drsListContainerRef}
-        maxH="430px"
-        overflowY="auto"
-        pr={1}
-        style={{ scrollbarWidth: "thin" }}
       >
         <VStack gap={2.5} align="stretch" px={"2px"}>
           {visibleDrs.map((d) => {
@@ -825,8 +823,9 @@ export default function Disbursement() {
                   if (!isSelected) {
                     setSelectedDrs(d);
                     resetWorkflow();
-                    setMobileQuery("");
                   }
+                  setMobileStep((s) => s + 1);
+                  setMobileQuery("");
                 }}
               >
                 <HStack justify="space-between" align="center" gap={3}>

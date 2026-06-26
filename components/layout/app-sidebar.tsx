@@ -400,14 +400,13 @@ export default function Sidebar({
         bg="bg"
         _dark={{ bg: "rgba(20, 24, 36, 0.88)" }}
         color="fg"
-        h="100vh"
+        h="100dvh"
         w={`${sidebarWidth}px`}
         minW={`${sidebarWidth}px`}
         transition="width 0.2s, left 0.3s"
         onMouseEnter={() => !isMobile && setIsExpanded(true)}
         onMouseLeave={() => !isMobile && setIsExpanded(false)}
         gap={4}
-        p={2}
         borderRight="1px solid"
         borderColor="gray.200"
         position={isMobile ? "fixed" : "relative"}
@@ -417,7 +416,13 @@ export default function Sidebar({
         shadow={isMobile ? "md" : "none"}
         borderRadius={0}
         overflow="hidden"
-        minH="100vh"
+        minH="100dvh"
+        style={{
+          paddingTop: "max(8px, env(safe-area-inset-top))",
+          paddingBottom: "max(8px, env(safe-area-inset-bottom))",
+          paddingLeft: "max(8px, env(safe-area-inset-left))",
+          paddingRight: "8px",
+        }}
       >
         {/* Logo + Close button */}
         <Flex
