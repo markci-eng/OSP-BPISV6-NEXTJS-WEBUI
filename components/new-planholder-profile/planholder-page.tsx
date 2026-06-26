@@ -371,7 +371,7 @@ export default function PlanholderProfilePage({
             {/* Left column — identity & details */}
             <GridItem>
               <Flex direction="column" gap={4}>
-                <Box id="tour-profile-header" pt={3}>
+                <Box id="tour-profile-header" pt={0}>
                   <ProfileHeaderCard
                     name={
                       props.planholderInfo
