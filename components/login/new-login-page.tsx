@@ -543,13 +543,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     hoverBg: "#f0f4ff",
                     hoverBorder: "#93c5fd",
                   },
-                  {
-                    id: "twitter",
-                    label: "X",
-                    src: "/images/osp-chakra-reusable-components/icons8-x-48.png",
-                    hoverBg: "#f5f5f5",
-                    hoverBorder: "#d1d5db",
-                  },
                 ].map((p) => (
                   <motion.button
                     key={p.id}
