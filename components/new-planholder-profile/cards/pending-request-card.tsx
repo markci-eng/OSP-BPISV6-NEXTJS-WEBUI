@@ -1,5 +1,6 @@
 import { OSPBadge } from "@/components/common/badge/badge";
 import { Box, Flex, Text } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 import React from "react";
 import {
   LuRefreshCw,
@@ -106,7 +107,13 @@ export function ProgressCard({
   date,
   onClick,
 }: ProgressCardProps) {
+  const router = useRouter();
   const style = statusStyle[status];
+
+  function handleClick() {
+    onClick?.();
+    router.push(`/transaction/${transactionId}`);
+  }
 
   return (
     <Box
@@ -123,7 +130,7 @@ export function ProgressCard({
         boxShadow: "md",
         borderColor: "var(--chakra-colors-primary-disabled)",
       }}
-      onClick={() => onClick?.()}
+      onClick={handleClick}
     >
       <Box px={4} pt={3} pb={4}>
         {/* Header row */}
@@ -195,6 +202,21 @@ export function ProgressCard({
             </Text>
             <LuChevronRight size={11} />
           </Flex>
+        </Flex>
+
+        {/* FOOTER */}
+        <Flex
+          justify="space-between"
+          align="center"
+          mt={1}
+          pt={1}
+          borderTop={"1px solid"}
+          borderColor={"gray.100"}
+        >
+          <Text fontSize="xs" color="gray.400">
+            Tap to track request
+          </Text>
+          <LuChevronRight color="#a1a1aa" />
         </Flex>
       </Box>
     </Box>
