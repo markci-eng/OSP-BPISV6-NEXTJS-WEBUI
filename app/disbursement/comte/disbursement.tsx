@@ -1640,7 +1640,7 @@ export default function Disbursement() {
         fontWeight={600}
         fontFamily="inherit"
         letterSpacing="-.01em"
-        boxShadow="0 4px 14px -2px rgba(14,163,114,.5)"
+        // boxShadow="0 4px 14px -2px rgba(14,163,114,.5)"
         transition="transform .1s"
         cursor="pointer"
         display="flex"
@@ -1651,6 +1651,32 @@ export default function Disbursement() {
         onClick={handleNewDisbursement}
       >
         New Disbursement
+      </Box>
+      <Box
+        mt={-3}
+        as="button"
+        w="full"
+        h="52px"
+        borderRadius="xl"
+        border={"1px solid"}
+        borderColor={"var(--chakra-colors-primary)"}
+        bg="white"
+        color="var(--chakra-colors-primary)"
+        fontSize="15.5px"
+        fontWeight={600}
+        fontFamily="inherit"
+        letterSpacing="-.01em"
+        // boxShadow="0 4px 14px -2px rgba(14,163,114,.5)"
+        transition="transform .1s"
+        cursor="pointer"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        gap={2}
+        _active={{ transform: "scale(.99)" }}
+        onClick={() => (window.location.href = "/")}
+      >
+        Got to Homepage
       </Box>
     </VStack>
   );

@@ -351,13 +351,6 @@ export const BottomQuickActions = ({
                   )}
                 </Box>
 
-                {/* Header slot */}
-                {headerSlot && (
-                  <Box px={4} pt={2} pb={3}>
-                    {headerSlot}
-                  </Box>
-                )}
-
                 <Separator opacity={0.25} />
 
                 {/* Actions or arbitrary body content */}
@@ -374,6 +367,11 @@ export const BottomQuickActions = ({
                     children
                   ) : (
                     <VStack gap={2} align="stretch">
+                      {headerSlot && (
+                        <Box px={1} pb={2}>
+                          {headerSlot}
+                        </Box>
+                      )}
                       {(actions ?? []).map((action, i) => (
                         <ActionItem
                           key={i}

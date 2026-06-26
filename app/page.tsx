@@ -483,8 +483,7 @@ export default function Dashboard() {
       gap={{ base: 4, md: 6 }}
       px={2}
       style={{
-        paddingBottom:
-          "calc(108px + env(safe-area-inset-bottom, 0px))",
+        paddingBottom: "calc(108px + env(safe-area-inset-bottom, 0px))",
       }}
     >
       {/* ── MOBILE HOME HEADER (login-page style, scrolls with content) ── */}
@@ -492,7 +491,7 @@ export default function Dashboard() {
         display={{ base: "block", lg: "none" }}
         mx={-2}
         px={4}
-        py={3}
+        py={1}
         bg="white"
         borderBottom="1px solid"
         borderColor="gray.100"
@@ -1117,7 +1116,7 @@ const TileItem = ({
 
   return (
     <Box
-      borderRadius="2xl"
+      borderRadius="3xl"
       position="relative"
       bg={`${color}18`}
       border="2px solid"
@@ -1137,19 +1136,19 @@ const TileItem = ({
           >
             <Icon size={17} />
           </Box>
-          <Small fontWeight="600" color="gray.500">
+          <Body fontWeight="600" color="gray.500">
             {title}
-          </Small>
+          </Body>
         </Flex>
 
         {/* Main value */}
         <BaseText
           as="div"
-          fontSize="3xl"
-          fontWeight="800"
+          fontSize="5xl"
+          fontWeight="700"
           color="gray.800"
           lineHeight="1"
-          letterSpacing="-0.02em"
+          // letterSpacing="-0.02em"
         >
           {value}
         </BaseText>
@@ -1158,7 +1157,7 @@ const TileItem = ({
         <Flex
           align="center"
           justify="space-between"
-          mt={3}
+          // mt={3}
           pt={2.5}
           borderTop="1px solid"
           borderColor="gray.100"
