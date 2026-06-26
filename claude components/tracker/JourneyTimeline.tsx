@@ -28,9 +28,14 @@ interface JourneyTimelineProps {
 }
 
 const DEFAULT_STATUS_CONFIG: Record<string, StatusConfigItem> = {
-  Done:    { colorPalette: "green", icon: Check,     label: "Done"        },
-  Current: { colorPalette: "blue",  icon: "spinner", label: "In Progress", pulse: true },
-  Pending: { colorPalette: "gray",  icon: Circle,    label: "Pending"     },
+  Done: { colorPalette: "green", icon: Check, label: "Done" },
+  Current: {
+    colorPalette: "blue",
+    icon: "spinner",
+    label: "In Progress",
+    pulse: true,
+  },
+  Pending: { colorPalette: "gray", icon: Circle, label: "Pending" },
 };
 
 const MotionFlex = motion(Flex);
@@ -45,12 +50,16 @@ export default function JourneyTimeline({
   const getStatus = (status: string): StatusConfigItem =>
     config[status] ?? { colorPalette: "gray", icon: Circle, label: status };
 
-  const renderIndicatorIcon = (step: JourneyStep, isDone: boolean, isCurrent: boolean) => {
+  const renderIndicatorIcon = (
+    step: JourneyStep,
+    isDone: boolean,
+    isCurrent: boolean,
+  ) => {
     if (step.icon) {
       const StepIcon = step.icon;
       return <StepIcon size={13} />;
     }
-    if (isDone)    return <Check size={13} strokeWidth={3} />;
+    if (isDone) return <Check size={13} strokeWidth={3} />;
     if (isCurrent) return <Spinner size="xs" />;
     return (
       <Text fontSize="10px" fontWeight="bold" color="gray.400" lineHeight="1">
@@ -62,22 +71,22 @@ export default function JourneyTimeline({
   return (
     <Box w="full" h={fullHeight ? "full" : "auto"}>
       {journey.map((step, index) => {
-        const status    = getStatus(step.status);
-        const isDone    = step.status === "Done";
+        const status = getStatus(step.status);
+        const isDone = step.status === "Done";
         const isCurrent = step.status === "Current";
         const isPending = step.status === "Pending";
-        const isLast    = index === journey.length - 1;
+        const isLast = index === journey.length - 1;
 
         return (
           <MotionFlex
             key={step.step}
             initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1,  x: 0   }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.06, duration: 0.3 } as any}
             w="full"
             gap={3}
-            align="stretch">
-
+            align="stretch"
+          >
             {/* ── Indicator + connector ── */}
             <Flex direction="column" align="center" flexShrink={0} pt="9px">
               {/* Circle */}
@@ -91,9 +100,7 @@ export default function JourneyTimeline({
                 justifyContent="center"
                 position="relative"
                 bg={
-                  isDone    ? "green.500" :
-                  isCurrent ? "blue.500"  :
-                               "transparent"
+                  isDone ? "green.500" : isCurrent ? "blue.500" : "transparent"
                 }
                 border={isPending ? "2px dashed" : "none"}
                 borderColor={isPending ? "gray.200" : "transparent"}
@@ -101,7 +108,8 @@ export default function JourneyTimeline({
                 transition="all 0.3s"
                 boxShadow={
                   isCurrent ? "0 0 0 5px rgba(59,130,246,0.15)" : "none"
-                }>
+                }
+              >
                 {renderIndicatorIcon(step, isDone, isCurrent)}
               </Box>
 
@@ -123,25 +131,32 @@ export default function JourneyTimeline({
               flex={1}
               pb={isLast ? 1 : 5}
               opacity={isPending ? 0.5 : 1}
-              transition="opacity 0.2s">
+              transition="opacity 0.2s"
+            >
               <Box
                 p={isCurrent ? 3 : 2}
                 mx={-2}
                 borderRadius="xl"
                 bg={isCurrent ? "blue.50" : "transparent"}
-                transition="background 0.25s">
-
+                transition="background 0.25s"
+              >
                 {/* Title + badge row */}
-                <Flex justify="space-between" align="flex-start" gap={2} mb="3px">
+                <Flex
+                  justify="space-between"
+                  align="flex-start"
+                  gap={2}
+                  mb="3px"
+                >
                   <Text
                     fontSize="sm"
-                    fontWeight={isCurrent ? "bold" : isDone ? "medium" : "normal"}
-                    color={
-                      isCurrent ? "blue.700" :
-                      isDone    ? "gray.700" :
-                                  "gray.500"
+                    fontWeight={
+                      isCurrent ? "bold" : isDone ? "medium" : "normal"
                     }
-                    lineHeight="1.3">
+                    color={
+                      isCurrent ? "blue.700" : isDone ? "gray.700" : "gray.500"
+                    }
+                    lineHeight="1.3"
+                  >
                     {step.title}
                   </Text>
 
@@ -152,7 +167,8 @@ export default function JourneyTimeline({
                     flexShrink={0}
                     colorPalette={status.colorPalette}
                     fontSize="9px"
-                    px={2}>
+                    px={2}
+                  >
                     {status.label}
                   </Badge>
                 </Flex>
@@ -162,7 +178,8 @@ export default function JourneyTimeline({
                   <Text
                     fontSize="xs"
                     color={isCurrent ? "blue.500" : "gray.400"}
-                    lineHeight="1.4">
+                    lineHeight="1.4"
+                  >
                     {step.description}
                   </Text>
                 )}

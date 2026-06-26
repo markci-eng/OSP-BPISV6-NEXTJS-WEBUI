@@ -9,7 +9,12 @@ import {
   MdEditCalendar,
   MdRefresh,
 } from "react-icons/md";
-import { fallbackJourney, journeys } from "./journeys";
+import {
+  fallbackJourney,
+  journeyMeta,
+  JourneyMeta,
+  journeys,
+} from "./journeys";
 import JourneyTimeline, { JourneyStep } from "./JourneyTimeline";
 import { PrimarySmButton, SecondarySmButton } from "st-peter-ui";
 import { useEffect, useState } from "react";
@@ -49,11 +54,15 @@ export default function TrackRequestPage({ requestId }: TrackRequestPageProps) {
   );
   const [searched, setSearched] = useState(!!requestId);
   const [currentRef, setCurrentRef] = useState(requestId ?? "");
+  const [meta, setMeta] = useState<JourneyMeta | null>(null);
 
   const handleSearch = (referenceNo: string) => {
+    const upper = referenceNo.toUpperCase();
     const prefix = referenceNo.split("-")[0].toUpperCase();
-    const foundJourney = journeys[prefix] || fallbackJourney;
+    const foundJourney = journeys[upper] || journeys[prefix] || fallbackJourney;
+    const foundMeta = journeyMeta[upper] || journeyMeta[prefix] || null;
     setJourney(foundJourney);
+    setMeta(foundMeta);
     setSearched(true);
     setCurrentRef(referenceNo);
   };
@@ -251,10 +260,8 @@ export default function TrackRequestPage({ requestId }: TrackRequestPageProps) {
 
   return (
     <Page.Root
-      title={"Track My Request"}
-      description={
-        "Track and monitor the status of submitted requests and their progress."
-      }
+      title={"Transaction Tracker"}
+      description={"Monitor and follow up on your service requests"}
     >
       <Page.MainContent>
         {/* SEARCH / REFERENCE CARD */}
@@ -270,6 +277,7 @@ export default function TrackRequestPage({ requestId }: TrackRequestPageProps) {
           progressPercent={clampedProgress}
           completedCount={completedCount}
           isComplete={isComplete}
+          meta={meta}
         />
 
         {/* MOBILE: CURRENT STATUS (shown right after RequestCard on mobile) */}
@@ -362,6 +370,7 @@ interface RequestCardProps {
   progressPercent: number;
   completedCount: number;
   isComplete: boolean;
+  meta: JourneyMeta | null;
 }
 
 const RequestCard = ({
@@ -376,6 +385,7 @@ const RequestCard = ({
   progressPercent,
   completedCount,
   isComplete,
+  meta,
 }: RequestCardProps) => {
   const [referenceNo, setReferenceNo] = useState(initialReferenceNo ?? "");
   const [isLoading, setIsLoading] = useState(false);
@@ -400,7 +410,6 @@ const RequestCard = ({
 
   return (
     <Box
-      mt={5}
       mb={4}
       w="100%"
       p={4}
@@ -431,7 +440,7 @@ const RequestCard = ({
               fontSize="0.7rem"
               bg={isComplete ? "green.50" : "blue.50"}
               color={isComplete ? "green.700" : "blue.700"}
-              display={{ base: "none", md: "flex" }}
+              display={{ base: "none", sm: "flex" }}
               alignItems="center"
               gap={1}
             >
@@ -455,22 +464,26 @@ const RequestCard = ({
             textOverflow="ellipsis"
             whiteSpace="nowrap"
             maxW="100%"
-            pr={isSearched ? { base: 0, md: "80px" } : 0}
+            pr={isSearched ? { base: 0, sm: "80px" } : 0}
             mb="2px"
           >
-            {isSearched ? referenceNo : "Track Your Request"}
+            {isSearched ? referenceNo : "Track Your Transaction"}
           </Text>
 
           {/* Subtitle */}
           <Text fontSize="xs" color="gray.500" lineHeight="1.3">
-            {isSearched ? description : "Enter your reference number below"}
+            {isSearched
+              ? meta
+                ? `${meta.name} · ${meta.transactionType}`
+                : description
+              : "Enter your reference number to get started"}
           </Text>
         </Box>
 
-        {/* Mobile/tablet: badge + refresh icon button — beside the title */}
+        {/* Mobile: badge + refresh icon button — beside the title */}
         {isSearched && (
           <Flex
-            display={{ base: "flex", md: "none" }}
+            display={{ base: "flex", sm: "none" }}
             direction="row"
             align="center"
             gap={2}
@@ -493,10 +506,10 @@ const RequestCard = ({
                 h="1.5"
                 borderRadius="full"
                 bg={isComplete ? "green.400" : "blue.400"}
-                display="inline-block"
               />
               {isComplete ? "Completed" : "In Progress"}
             </Badge>
+
             <Box
               as="button"
               onClick={() => handleSearch()}
@@ -597,7 +610,7 @@ const RequestCard = ({
 
           <Flex gap={2} w={{ base: "full", sm: "auto" }}>
             {initialReferenceNo ? (
-              <Box display={{ base: "none", md: "block" }}>
+              <Box display={{ base: "none", sm: "block" }}>
                 <PrimarySmButton
                   style={{ borderRadius: "15px" }}
                   onClick={() => handleSearch()}
@@ -608,7 +621,7 @@ const RequestCard = ({
               </Box>
             ) : (
               <>
-                <Box display={{ base: "none", md: "block" }}>
+                <Box display={{ base: "none", sm: "block" }}>
                   <PrimarySmButton
                     style={{ borderRadius: "15px" }}
                     onClick={() => handleSearch()}
