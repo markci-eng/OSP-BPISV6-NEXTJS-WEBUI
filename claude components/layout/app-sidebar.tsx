@@ -687,6 +687,20 @@ export default function Sidebar({
           onClick={onClose}
         />
       )}
+
+      {/* Always-white cap over the status bar (safe-area-inset-top) on mobile */}
+      <Box
+        display={{ base: "block", lg: "none" }}
+        position="fixed"
+        top={0}
+        left={0}
+        right={0}
+        pointerEvents="none"
+        zIndex={1001}
+        style={{ height: "env(safe-area-inset-top)" }}
+        bg="white"
+        _dark={{ bg: "rgba(20, 24, 36, 1)" }}
+      />
     </>
   );
 }
