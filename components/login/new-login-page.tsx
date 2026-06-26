@@ -304,14 +304,14 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <Heading as="h1" fontSize="2xl" fontWeight="bold" color="white">
               One St. Peter
             </Heading>
-            <Text
+            {/* <Text
               fontSize="xs"
               color="#6ee7b7"
               letterSpacing="0.18em"
               textTransform="uppercase"
             >
               Life Plan Operations
-            </Text>
+            </Text> */}
           </VStack>
         </motion.div>
 
