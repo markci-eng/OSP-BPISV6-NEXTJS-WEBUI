@@ -290,11 +290,7 @@ const PayMyPlan = () => {
 
   return (
     <>
-      <Page.Root
-        title="Pay My Plan"
-        description="Review and settle dues."
-        hideBackButton={true}
-      >
+      <Page.Root title="Pay My Plan" description="Review and settle dues.">
         <Page.MainContent mb={{ base: "auto", md: 0 }}>
           {/* ── INFO CARD ──────────────────────────────────────────────────── */}
           <Page.Row>
