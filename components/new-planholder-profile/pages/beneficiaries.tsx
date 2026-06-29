@@ -61,6 +61,7 @@ export function Beneficiaries({
         bg="white"
         boxShadow="sm"
         p={4}
+        w={columns === 1 ? "full" : undefined}
       >
         <BeneficiarySection
           title="Principal Beneficiaries"
@@ -81,6 +82,7 @@ export function Beneficiaries({
         bg="white"
         boxShadow="sm"
         p={4}
+        w={columns === 1 ? "full" : undefined}
       >
         <BeneficiarySection
           title="Contingent Beneficiaries"
@@ -135,6 +137,10 @@ function BeneficiarySection({
     setBeneficiaries((prev) =>
       prev.map((b) => (b.personId === updated.personId ? updated : b)),
     );
+  };
+
+  const handleDelete = (personId: string) => {
+    setBeneficiaries((prev) => prev.filter((b) => b.personId !== personId));
   };
 
   return (
@@ -255,6 +261,7 @@ function BeneficiarySection({
                     aria-label="Delete beneficiary"
                     color="red.400"
                     _hover={{ bg: "red.50", color: "red.600" }}
+                    onClick={() => handleDelete(beneficiary.personId)}
                   >
                     <FaTrash />
                   </IconButton>

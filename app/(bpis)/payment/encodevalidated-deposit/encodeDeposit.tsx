@@ -98,7 +98,8 @@ export default function EncodeDeposit() {
       <Page.MainContent>
         <Flex flexDir="column" gap={4}>
           {/* SECTION 1 — Find DRS */}
-          <Box maxW={{ base: "full", md: "sm" }}>
+          <Flex justify="flex-end">
+          <Box maxW={{ base: "full", md: "sm" }} w={{ base: "full", md: "sm" }}>
             <LookupField<DepositHdr>
               label=""
               placeholder="Search Digital Remittance Slip"
@@ -124,6 +125,7 @@ export default function EncodeDeposit() {
               value={selectedDRS}
             />
           </Box>
+          </Flex>
 
           {/* SECTION 2 — Deposit Details */}
           <InputCardAccordion

@@ -1,11 +1,5 @@
 import { PlanDetailType } from "@/components/plan-management/planholder-profile/planholder-profile-page";
-import {
-  Grid,
-  Separator,
-  Strong,
-  Textarea,
-  useBreakpointValue,
-} from "@chakra-ui/react";
+import { Grid, Separator, Strong, Textarea } from "@chakra-ui/react";
 import React from "react";
 import { RowItem } from "@/components/info-card/row-item";
 
@@ -16,11 +10,7 @@ export function PlanDetailsPage({
 }) {
   return (
     <React.Fragment>
-      <Grid
-        py={3}
-        templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }}
-        gap={2}
-      >
+      <Grid py={3} templateColumns={"1fr"} gap={2}>
         <RowItem label="LPA Number" value={planDetails.lpaNumber} />
         <RowItem
           label="Account Status"
@@ -80,7 +70,7 @@ export function PlanDetailsPage({
       </Grid>
       <Strong my={2}>Remarks</Strong>
       <Textarea
-        minH={{ base: "200px", md: "auto" }}
+        minH={"200px"}
         placeholder="Planholder Remarks"
         readOnly
         value={
