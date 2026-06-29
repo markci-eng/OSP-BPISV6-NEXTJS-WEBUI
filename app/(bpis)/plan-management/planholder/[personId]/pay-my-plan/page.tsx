@@ -43,6 +43,7 @@ import {
 import Page from "@/claude components/layout/page/Page";
 import InfoCard from "@/claude components/info-card/info-card";
 import { ActivePlan, activePlans } from "./activeplan";
+import { TbCurrencyPeso } from "react-icons/tb";
 
 const PAY_MY_PLAN_STORAGE_KEY = "payMyPlanSelectedItems";
 
@@ -785,7 +786,7 @@ const PayMyPlan = () => {
                           color="#2563EB"
                           minW={0}
                         >
-                          <LuCircleDollarSign size={13} />
+                          <TbCurrencyPeso size={13} />
                           <Text fontSize="12px" fontWeight="700" lineClamp={1}>
                             P {formatCurrency(getSelectedPlanTotal(plan))}
                           </Text>
