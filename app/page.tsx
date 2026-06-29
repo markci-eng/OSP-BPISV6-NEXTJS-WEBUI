@@ -730,6 +730,7 @@ export default function Dashboard() {
               activeIcon={<LuTrendingUp size={14} />}
               title="Quota & Collection"
               subtitle="Amount targets"
+              h={{ lg: "full" }}
             >
               <RowItem
                 label="Comm. Quota"
@@ -798,6 +799,7 @@ export default function Dashboard() {
               activeIcon={<LuUsers />}
               title={"Accounts Due & Collected"}
               subtitle={"Account count targets"}
+              h={{ lg: "full" }}
             >
               <RowItem
                 label="Comm. Accounts Due"
@@ -825,6 +827,7 @@ export default function Dashboard() {
               activeIcon={<LuZap />}
               title={"Efficiency Rates"}
               subtitle={"Collection efficiency"}
+              h={{ lg: "full" }}
             >
               <Grid templateColumns="repeat(2, 1fr)" px={2} pb={2}>
                 <EfficiencyDonutChart
@@ -881,6 +884,7 @@ export default function Dashboard() {
               activeIcon={<LuTrophy />}
               title={"Sales Agent Leaderboard"}
               subtitle={"Ranked by new sales this month"}
+              h={{ xl: "full" }}
             >
               <ScrollArea.Root height="360px">
                 <ScrollArea.Viewport
@@ -923,6 +927,7 @@ export default function Dashboard() {
             activeIcon={<LuChartBar size={14} />}
             title="Monthly New Sales"
             subtitle="New plans enrolled per month"
+            h={{ xl: "full" }}
           >
             <Flex justify="flex-end" mb={3}>
               <Tabs.Root

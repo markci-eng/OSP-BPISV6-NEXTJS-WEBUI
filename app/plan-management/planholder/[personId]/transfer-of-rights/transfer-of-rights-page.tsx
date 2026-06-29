@@ -81,8 +81,21 @@ export function TransferOfRightsPage() {
           description={""}
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
-          onStepsComplete={function (): void {}}
-          submitButtonText={""}
+          onStepsComplete={async () => {
+            const confirmed = await messageBox({
+              title: "Confirm Submission",
+              message: "Are you sure you want to submit this application?",
+              variant: "warning",
+              confirmText: "Yes",
+              showCancel: true,
+              cancelText: "No",
+            });
+
+            if (confirmed) {
+              window.location.href = window.location.href + "/success";
+            }
+          }}
+          submitButtonText={"Submit Application"}
         />
       </Page.MainContent>
     </Page.Root>

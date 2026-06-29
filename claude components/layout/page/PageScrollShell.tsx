@@ -186,7 +186,7 @@ const PageScrollShell = ({
             pb="24px"
           >
             <Box minW={0} flex="1">
-              {headerButton === "back" && <BackButton />}
+              {/* {headerButton === "back" && <BackButton />} */}
 
               {subtitle && (
                 <Box

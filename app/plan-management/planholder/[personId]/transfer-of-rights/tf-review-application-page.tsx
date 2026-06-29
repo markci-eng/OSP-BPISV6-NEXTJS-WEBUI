@@ -1,6 +1,5 @@
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import { RowItem } from "@/claude components/info-card/row-item";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import SummaryForm from "@/components/common/text/SummaryForm";
 import InfoItem from "@/components/new-planholder-profile/components/info-item/info-item";
 import { Flex, Separator } from "@chakra-ui/react";
@@ -12,10 +11,8 @@ import {
   LuUser,
   LuUsersRound,
 } from "react-icons/lu";
-import { PrimaryMdButton, PrimaryMdFlexButton } from "st-peter-ui";
 
 export default function TFReviewApplicationPage() {
-  const { messageBox } = useMessageDialog();
 
   const summaryItems = () => [
     { label: "LPA Number", value: "L25031417H" },
@@ -115,25 +112,6 @@ export default function TFReviewApplicationPage() {
           value="B2 L8 CAMERON ST PRICETOWN SUBDIVISION CONGRESSIONAL ROAD EXTENSION BAGUMBONG BARANGAY 171"
         />
       </InfoCardAccordion>
-      <Separator my={2} />
-      <PrimaryMdFlexButton
-        onClick={async () => {
-          const confirmed = await messageBox({
-            title: "Confirm Submission",
-            message: "Are you sure you want to submit this application?",
-            variant: "warning",
-            confirmText: "Yes",
-            showCancel: true,
-            cancelText: "No",
-          });
-
-          if (confirmed) {
-            window.location.href = window.location.href + "/success";
-          }
-        }}
-      >
-        Submit Application
-      </PrimaryMdFlexButton>
     </Flex>
   );
 }

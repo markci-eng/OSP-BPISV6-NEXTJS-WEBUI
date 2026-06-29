@@ -1,17 +1,15 @@
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import { RowItem } from "@/claude components/info-card/row-item";
 import InfoCard from "@/claude components/info-card/info-card";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { UploadedFile } from "@/components/document-uploader/DragAndDrop";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
-import { Box, Flex, Separator, Text } from "@chakra-ui/react";
+import { Box, Flex, Text } from "@chakra-ui/react";
 import {
   LuFileText,
   LuMapPin,
   LuPhone,
   LuUserPen,
 } from "react-icons/lu";
-import { PrimaryMdFlexButton } from "st-peter-ui";
 
 interface EditPlanholderReviewProps {
   planholder: SalesAgent;
@@ -22,13 +20,6 @@ export default function EditPlanholderReview({
   planholder,
   selectedDocuments,
 }: EditPlanholderReviewProps) {
-  const { messageBox } = useMessageDialog();
-
-  const fullAddress = (addr: SalesAgent["address"]) =>
-    [addr?.unit, addr?.street, addr?.barangay, addr?.district, addr?.city, addr?.province]
-      .filter(Boolean)
-      .join(", ");
-
   return (
     <Flex direction="column" gap={5}>
       <InfoCard>
@@ -100,27 +91,6 @@ export default function EditPlanholderReview({
         )}
       </InfoCardAccordion>
 
-      <Separator my={2} />
-
-      <PrimaryMdFlexButton
-        onClick={async () => {
-          const confirmed = await messageBox({
-            title: "Confirm Submission",
-            message:
-              "Are you sure you want to submit the changes to the planholder information?",
-            variant: "warning",
-            confirmText: "Yes, Submit",
-            showCancel: true,
-            cancelText: "Cancel",
-          });
-
-          if (confirmed) {
-            window.location.href = window.location.href + "/success";
-          }
-        }}
-      >
-        Submit Changes
-      </PrimaryMdFlexButton>
     </Flex>
   );
 }

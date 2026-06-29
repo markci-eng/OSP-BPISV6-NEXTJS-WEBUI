@@ -10,6 +10,7 @@ import {
   Image,
   Input,
   NativeSelect,
+  SimpleGrid,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -22,8 +23,6 @@ import {
 } from "@/lib/theme/standard-design-tokens";
 import { BaseButton, PrimaryMdButton } from "st-peter-ui";
 import { useEffect, useMemo, useState } from "react";
-// import { PayMongoService } from "@/services/API/PayMongoService";
-// import { InfoCard } from "@/components/ui/info-card";
 import { useDemoAuth } from "@/components/ui/demo-auth";
 import { FaEllipsisH } from "react-icons/fa";
 import {
@@ -41,40 +40,11 @@ import {
   LuSearch,
   LuUser,
 } from "react-icons/lu";
-import Page from "@/claude components/layout/page/Page";
+import Page from "@/components/layout/page/Page";
 import InfoCard from "@/claude components/info-card/info-card";
+import { ActivePlan, activePlans } from "./activeplan";
 
 const PAY_MY_PLAN_STORAGE_KEY = "payMyPlanSelectedItems";
-
-const activePlans = [
-  {
-    contractNo: "LOS001111C",
-    plan: "ST. ANNE",
-    mode: "Monthly",
-    amountDue: "3,000.00",
-    effectiveDate: "02/09/2026",
-    dueDate: "04/09/2026",
-    balance: "174,000.00",
-  },
-  {
-    contractNo: "LOS001112C",
-    plan: "ST. GREGORY",
-    mode: "Annual",
-    amountDue: "11,400.00",
-    effectiveDate: "02/20/2026",
-    dueDate: "02/20/2027",
-    balance: "45,600.00",
-  },
-  {
-    contractNo: "LOS001113C",
-    plan: "ST. CLAIRE",
-    mode: "Annual",
-    amountDue: "19,700.00",
-    effectiveDate: "03/09/2026",
-    dueDate: "03/09/2027",
-    balance: "78,800.00",
-  },
-];
 
 const desktopTableHeaders = [
   { label: "CONTRACT NO.", minW: "130px" },
@@ -88,8 +58,6 @@ const desktopTableHeaders = [
   { label: "STATUS", minW: "86px" },
   { label: "ACTIONS", minW: "100px", textAlign: "right" },
 ];
-
-type ActivePlan = (typeof activePlans)[number];
 
 type SelectedPlan = ActivePlan & {
   installmentNumber: number;
@@ -167,8 +135,6 @@ const PayMyPlan = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [planModeFilter, setPlanModeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("Due");
-  const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
-  const [sideDrawerPlan, setSideDrawerPlan] = useState<ActivePlan | null>(null);
 
   useEffect(() => {
     sessionStorage.setItem(
@@ -217,6 +183,10 @@ const PayMyPlan = () => {
 
   const desktopResultStart = filteredActivePlans.length > 0 ? 1 : 0;
   const desktopResultEnd = filteredActivePlans.length;
+  const totalDueAmount = activePlans.reduce(
+    (total, plan) => total + parseAmount(plan.amountDue),
+    0,
+  );
 
   const toggleContract = (planToToggle: ActivePlan) => {
     setSelectedPlans((prev) => {
@@ -293,44 +263,757 @@ const PayMyPlan = () => {
 
     setIsCheckingOut(true);
 
-    try {
-      const payload = selectedPlans.map((plan) => ({
-        planDesc: plan.plan,
-        productCode: plan.contractNo,
-        contractPrice: parseAmount(plan.balance),
-        ipInstAmt: parseAmount(plan.amountDue) * plan.installmentNumber,
-        planTerm: 5,
-        quantity: plan.installmentNumber,
-      }));
+    // try {
+    //   const payload = selectedPlans.map((plan) => ({
+    //     planDesc: plan.plan,
+    //     productCode: plan.contractNo,
+    //     contractPrice: parseAmount(plan.balance),
+    //     ipInstAmt: parseAmount(plan.amountDue) * plan.installmentNumber,
+    //     planTerm: 5,
+    //     quantity: plan.installmentNumber,
+    //   }));
 
-      // const { checkoutUrl } = await PayMongoService.createCheckout(payload);
+    //   const { checkoutUrl } = await PayMongoService.createCheckout(payload);
 
-      // if (!checkoutUrl) {
-      //   throw new Error("Checkout URL not found");
-      // }
+    //   if (!checkoutUrl) {
+    //     throw new Error("Checkout URL not found");
+    //   }
 
-      // window.location.href = checkoutUrl;
-    } catch (error) {
-      console.error(error);
-      alert("Failed to proceed to payment");
-    } finally {
-      setIsCheckingOut(false);
-    }
+    //   window.location.href = checkoutUrl;
+    // } catch (error) {
+    //   console.error(error);
+    //   alert("Failed to proceed to payment");
+    // } finally {
+    //   setIsCheckingOut(false);
+    // }
   };
 
   return (
     <>
-      <Page.Root
-        title="Pay My Plan"
-        description="Listed below are your active St. Peter Life Plan, please select the plan/s you wish to pay."
-      >
-        <Page.MainContent mb={{ base: 60, md: 0 }}>
+      <Page.Root title="" description="" hideBackButton={true}>
+        <Page.MainContent mb={{ base: "auto", md: 0 }}>
           {/* ── INFO CARD ──────────────────────────────────────────────────── */}
           <Page.Row>
-            <InfoCard>
-              Tap Add / Checkbox to include a plan. You can remove it anytime
-              before checkout.
-            </InfoCard>
+            <VStack
+              align="stretch"
+              gap={STANDARD_SPACING.sm}
+              mb={STANDARD_SPACING.sm}
+            >
+              <InfoCard>
+                Use Add or the checkbox to include a plan. You can remove it
+                anytime before checkout.
+              </InfoCard>
+            </VStack>
+            <VStack display="none" align="stretch">
+              {filteredActivePlans.map((plan) => {
+                const isSelected = isPlanSelected(plan.contractNo);
+
+                return (
+                  <Box
+                    key={plan.contractNo}
+                    bg={BRAND_COLORS.white}
+                    borderWidth="1px"
+                    borderColor={
+                      isSelected
+                        ? BRAND_COLORS.primaryGreen
+                        : BRAND_COLORS.neutralBorder
+                    }
+                    borderRadius={STANDARD_RADIUS.md}
+                    boxShadow={STANDARD_SHADOWS.level1}
+                    p={{ base: STANDARD_SPACING.sm, md: "20px" }}
+                    transition="border-color 150ms ease-out, box-shadow 150ms ease-out"
+                  >
+                    <Flex
+                      align={{ base: "flex-start", sm: "center" }}
+                      gap={{ base: "10px", sm: STANDARD_SPACING.sm }}
+                    >
+                      <Checkbox.Root
+                        checked={isSelected}
+                        onCheckedChange={() => toggleContract(plan)}
+                        mt={{ base: "20px", sm: 0 }}
+                        flexShrink={0}
+                      >
+                        <Checkbox.HiddenInput />
+                        <Checkbox.Control />
+                      </Checkbox.Root>
+
+                      <Image
+                        src={`/images/plan-images/${plan.plan}.jpg`}
+                        alt={plan.plan}
+                        w={{ base: "64px", sm: "78px" }}
+                        h={{ base: "64px", sm: "78px" }}
+                        borderRadius={STANDARD_RADIUS.md}
+                        objectFit="cover"
+                        flexShrink={0}
+                      />
+
+                      <Flex
+                        flex="1"
+                        minW={0}
+                        direction={{ base: "column", sm: "row" }}
+                        align={{ base: "stretch", sm: "flex-end" }}
+                        justify="space-between"
+                        gap={{
+                          base: STANDARD_SPACING.sm,
+                          sm: STANDARD_SPACING.md,
+                        }}
+                      >
+                        <VStack align="start" gap="2px" minW={0}>
+                          <Text
+                            fontSize={{ base: "15px", sm: "17px" }}
+                            fontWeight="700"
+                            color={BRAND_COLORS.neutralText}
+                            lineHeight="1.2"
+                            lineClamp={1}
+                          >
+                            {plan.plan}
+                          </Text>
+                          <Text
+                            fontSize={{ base: "12px", sm: "13px" }}
+                            fontWeight="600"
+                            color={BRAND_COLORS.neutralText}
+                            lineClamp={1}
+                          >
+                            {plan.contractNo}
+                          </Text>
+                          <Text fontSize="12px" color={BRAND_COLORS.grey}>
+                            Mode: {plan.mode}
+                          </Text>
+                          <Text fontSize="12px" color={BRAND_COLORS.grey}>
+                            Effective Date: {plan.effectiveDate}
+                          </Text>
+                          <Text
+                            mt={{ base: "6px", sm: "12px" }}
+                            fontSize="13px"
+                            color={BRAND_COLORS.neutralText}
+                          >
+                            Amount Due:{" "}
+                            <Text as="span" fontWeight="700">
+                              P {formatCurrency(getSelectedPlanTotal(plan))}
+                            </Text>
+                          </Text>
+                        </VStack>
+
+                        <HStack
+                          alignSelf={{ base: "flex-start", sm: "flex-end" }}
+                          gap={0}
+                          borderWidth="1px"
+                          borderColor={BRAND_COLORS.neutralBorder}
+                          borderRadius={STANDARD_RADIUS.sm}
+                          overflow="hidden"
+                          bg={BRAND_COLORS.white}
+                          flexShrink={0}
+                        >
+                          <Button
+                            aria-label="Decrease installment"
+                            variant="ghost"
+                            w="28px"
+                            minW="28px"
+                            h="28px"
+                            borderRadius="0"
+                            color={BRAND_COLORS.grey}
+                            _hover={{ bg: BRAND_COLORS.subtleBg }}
+                            onClick={() =>
+                              updateInstallmentNumber(plan.contractNo, -1)
+                            }
+                            disabled={
+                              getInstallmentNumber(plan.contractNo) <= 1
+                            }
+                          >
+                            <LuMinus size={12} />
+                          </Button>
+                          <Box
+                            w="34px"
+                            h="28px"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            borderLeftWidth="1px"
+                            borderRightWidth="1px"
+                            borderColor={BRAND_COLORS.neutralBorder}
+                          >
+                            <Text
+                              fontSize="14px"
+                              fontWeight="700"
+                              color={BRAND_COLORS.neutralText}
+                            >
+                              {getInstallmentNumber(plan.contractNo)}
+                            </Text>
+                          </Box>
+                          <Button
+                            aria-label="Increase installment"
+                            variant="ghost"
+                            w="28px"
+                            minW="28px"
+                            h="28px"
+                            borderRadius="0"
+                            color={BRAND_COLORS.grey}
+                            _hover={{ bg: BRAND_COLORS.subtleBg }}
+                            onClick={() =>
+                              updateInstallmentNumber(plan.contractNo, 1)
+                            }
+                          >
+                            <LuPlus size={12} />
+                          </Button>
+                        </HStack>
+                      </Flex>
+                    </Flex>
+                  </Box>
+                );
+              })}
+              {/* <SideDrawer
+                open={sideDrawerOpen}
+                onOpenChange={(open) => {
+                  setSideDrawerOpen(open);
+                  if (!open) setSideDrawerPlan(null);
+                }}
+                title={
+                  sideDrawerPlan ? `${sideDrawerPlan.plan}` : "Plan Details"
+                }
+                tabs={
+                  sideDrawerPlan
+                    ? [
+                        {
+                          label: "Information",
+                          value: "info",
+                          sections: [{ title: "Plan Information", rows: [] }],
+                        },
+                        {
+                          label: "Documents",
+                          value: "documents",
+                          sections: [],
+                        },
+                      ]
+                    : []
+                }
+                badges={
+                  sideDrawerPlan ? [{ label: "Due", tone: "error" }] : undefined
+                }
+                headerChildren={
+                  sideDrawerPlan ? (
+                    <HStack gap={STANDARD_SPACING.xs} wrap="wrap">
+                      <Button>Transfer Plan</Button>
+                      <Button variant="outline">Test Button</Button>
+                    </HStack>
+                  ) : null
+                }
+                sections={
+                  sideDrawerPlan
+                    ? [
+                        {
+                          title: "Plan Information",
+                          rows: [
+                            {
+                              label: "Contract No.",
+                              value: sideDrawerPlan.contractNo,
+                            },
+                            { label: "Mode", value: sideDrawerPlan.mode },
+                            {
+                              label: "Amount Due",
+                              value: `P ${sideDrawerPlan.amountDue}`,
+                            },
+                            {
+                              label: "Effective Date",
+                              value: sideDrawerPlan.effectiveDate,
+                            },
+                            {
+                              label: "Due Date",
+                              value: sideDrawerPlan.dueDate,
+                            },
+                            {
+                              label: "Balance",
+                              value: `P ${sideDrawerPlan.balance}`,
+                            },
+                          ],
+                        },
+                      ]
+                    : []
+                }
+              /> */}
+            </VStack>
+            <VStack
+              display={{ base: "flex", lg: "none" }}
+              align="stretch"
+              gap={STANDARD_SPACING.sm}
+            >
+              <Box
+                bg={BRAND_COLORS.white}
+                borderWidth="1px"
+                borderColor={BRAND_COLORS.neutralBorder}
+                borderRadius={STANDARD_RADIUS.xl}
+                boxShadow={STANDARD_SHADOWS.level1}
+                p={STANDARD_SPACING.sm}
+              >
+                <VStack align="stretch" gap={STANDARD_SPACING.xs}>
+                  <Box position="relative">
+                    <Box
+                      as={LuSearch}
+                      position="absolute"
+                      left={STANDARD_SPACING.xs}
+                      top="50%"
+                      transform="translateY(-50%)"
+                      color={BRAND_COLORS.grey}
+                      boxSize="16px"
+                    />
+                    <Input
+                      value={searchQuery}
+                      onChange={(event) =>
+                        setSearchQuery(event.currentTarget.value)
+                      }
+                      placeholder="Search by plan or contract no."
+                      h="42px"
+                      pl="36px"
+                      borderWidth="1px"
+                      borderColor={BRAND_COLORS.neutralBorder}
+                      borderRadius={STANDARD_RADIUS.md}
+                      bg={BRAND_COLORS.white}
+                      fontSize="14px"
+                      _focus={{
+                        borderColor: BRAND_COLORS.primaryGreen,
+                        boxShadow: "0 0 0 1px #109448",
+                      }}
+                    />
+                  </Box>
+
+                  <SimpleGrid columns={2} gap={STANDARD_SPACING.xs}>
+                    <NativeSelect.Root w="full">
+                      <NativeSelect.Field
+                        value={planModeFilter}
+                        onChange={(event) =>
+                          setPlanModeFilter(event.currentTarget.value)
+                        }
+                        h="42px"
+                        borderWidth="1px"
+                        borderColor={BRAND_COLORS.neutralBorder}
+                        borderRadius={STANDARD_RADIUS.md}
+                        fontSize="13px"
+                        bg={BRAND_COLORS.white}
+                      >
+                        <option value="All">All plans</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Annual">Annual</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+
+                    <NativeSelect.Root w="full">
+                      <NativeSelect.Field
+                        value={statusFilter}
+                        onChange={(event) =>
+                          setStatusFilter(event.currentTarget.value)
+                        }
+                        h="42px"
+                        borderWidth="1px"
+                        borderColor={BRAND_COLORS.neutralBorder}
+                        borderRadius={STANDARD_RADIUS.md}
+                        fontSize="13px"
+                        bg={BRAND_COLORS.white}
+                      >
+                        <option value="Due">Due</option>
+                        <option value="All">All</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                  </SimpleGrid>
+                </VStack>
+              </Box>
+
+              {filteredActivePlans.length === 0 ? (
+                <Box
+                  bg={BRAND_COLORS.white}
+                  borderWidth="1px"
+                  borderColor={BRAND_COLORS.neutralBorder}
+                  borderRadius={STANDARD_RADIUS.xl}
+                  boxShadow={STANDARD_SHADOWS.level1}
+                  p={STANDARD_SPACING.md}
+                  textAlign="center"
+                >
+                  <Text fontWeight="700" color={BRAND_COLORS.neutralText}>
+                    No plans found
+                  </Text>
+                  <Text fontSize="13px" color={BRAND_COLORS.grey} mt={1}>
+                    Try changing your search or filter.
+                  </Text>
+                </Box>
+              ) : null}
+
+              {filteredActivePlans.map((plan) => {
+                const isSelected = isPlanSelected(plan.contractNo);
+                const isExpanded = expandedPlans.has(plan.contractNo);
+
+                return (
+                  <Box
+                    key={plan.contractNo}
+                    bg={BRAND_COLORS.white}
+                    borderWidth="1px"
+                    borderColor={
+                      isSelected
+                        ? BRAND_COLORS.primaryGreen
+                        : BRAND_COLORS.neutralBorder
+                    }
+                    borderRadius={STANDARD_RADIUS.xl}
+                    overflow="hidden"
+                    boxShadow={STANDARD_SHADOWS.level2}
+                    transition="border-color 150ms ease-out, box-shadow 150ms ease-out"
+                  >
+                    <VStack
+                      align="stretch"
+                      gap={STANDARD_SPACING.xs}
+                      p={STANDARD_SPACING.sm}
+                    >
+                      <Flex align="flex-start" justify="space-between" gap={3}>
+                        <HStack align="flex-start" gap="10px" minW={0}>
+                          <Box
+                            w="34px"
+                            h="34px"
+                            borderRadius={STANDARD_RADIUS.full}
+                            bg={BRAND_COLORS.subtleBg}
+                            color={BRAND_COLORS.neutralText}
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            flexShrink={0}
+                          >
+                            <LuUser size={16} />
+                          </Box>
+                          <VStack align="start" gap="2px" minW={0}>
+                            <Text
+                              fontWeight="800"
+                              fontSize="15px"
+                              color={BRAND_COLORS.neutralText}
+                              lineClamp={1}
+                            >
+                              {plan.plan}
+                            </Text>
+                            <Text
+                              fontSize="11px"
+                              color={BRAND_COLORS.grey}
+                              lineClamp={1}
+                            >
+                              ID {plan.contractNo}
+                            </Text>
+                          </VStack>
+                        </HStack>
+
+                        <HStack gap="8px" flexShrink={0}>
+                          <Box
+                            w="7px"
+                            h="7px"
+                            borderRadius={STANDARD_RADIUS.full}
+                            bg={
+                              isSelected
+                                ? BRAND_COLORS.primaryGreen
+                                : BRAND_COLORS.grey
+                            }
+                          />
+                          <Badge
+                            bg={
+                              isSelected
+                                ? BRAND_COLORS.successBg
+                                : BRAND_COLORS.mutedBg
+                            }
+                            color={
+                              isSelected
+                                ? BRAND_COLORS.primaryGreen
+                                : BRAND_COLORS.neutralText
+                            }
+                            borderRadius={STANDARD_RADIUS.sm}
+                            px="8px"
+                            py="4px"
+                            fontSize="11px"
+                            fontWeight="700"
+                          >
+                            {isSelected ? "Selected" : "Due"}
+                          </Badge>
+                        </HStack>
+                      </Flex>
+
+                      <HStack gap="8px" flexWrap="wrap">
+                        <HStack
+                          gap="5px"
+                          px="9px"
+                          py="5px"
+                          borderWidth="1px"
+                          borderColor={BRAND_COLORS.neutralBorder}
+                          borderRadius={STANDARD_RADIUS.full}
+                          color={BRAND_COLORS.neutralText}
+                        >
+                          <LuCalendar size={12} />
+                          <Text fontSize="11px" fontWeight="600">
+                            {plan.dueDate}
+                          </Text>
+                        </HStack>
+
+                        <HStack
+                          gap="5px"
+                          px="9px"
+                          py="5px"
+                          borderWidth="1px"
+                          borderColor={BRAND_COLORS.neutralBorder}
+                          borderRadius={STANDARD_RADIUS.full}
+                          color={BRAND_COLORS.neutralText}
+                        >
+                          <LuMapPin size={12} />
+                          <Text fontSize="11px" fontWeight="600">
+                            {plan.mode}
+                          </Text>
+                        </HStack>
+                      </HStack>
+
+                      <HStack align="center" gap="7px" minW={0}>
+                        <LuUser size={13} color={BRAND_COLORS.grey} />
+                        <Text
+                          fontSize="13px"
+                          color={BRAND_COLORS.neutralText}
+                          lineClamp={1}
+                        >
+                          Effective: {plan.effectiveDate}
+                        </Text>
+                      </HStack>
+
+                      <HStack
+                        align="center"
+                        justify="space-between"
+                        gap={STANDARD_SPACING.xs}
+                      >
+                        <HStack
+                          gap="6px"
+                          px="10px"
+                          py="6px"
+                          borderRadius={STANDARD_RADIUS.full}
+                          bg="#EFF6FF"
+                          color="#2563EB"
+                          minW={0}
+                        >
+                          <LuCircleDollarSign size={13} />
+                          <Text fontSize="12px" fontWeight="700" lineClamp={1}>
+                            P {formatCurrency(getSelectedPlanTotal(plan))}
+                          </Text>
+                        </HStack>
+
+                        <Checkbox.Root
+                          checked={isSelected}
+                          onCheckedChange={() => toggleContract(plan)}
+                          flexShrink={0}
+                        >
+                          <Checkbox.HiddenInput />
+                          <Checkbox.Control />
+                          <Checkbox.Label
+                            color={BRAND_COLORS.neutralText}
+                            fontSize="12px"
+                            fontWeight="700"
+                          >
+                            {isSelected ? "Remove" : "Add"}
+                          </Checkbox.Label>
+                        </Checkbox.Root>
+                      </HStack>
+
+                      {isExpanded ? (
+                        <Box
+                          borderTopWidth="1px"
+                          borderColor={BRAND_COLORS.neutralBorder}
+                          pt={STANDARD_SPACING.xs}
+                        >
+                          <Flex align="center" justify="space-between" gap={3}>
+                            <VStack align="start" gap="1px">
+                              <Text fontSize="11px" color={BRAND_COLORS.grey}>
+                                Balance
+                              </Text>
+                              <Text
+                                fontSize="13px"
+                                fontWeight="800"
+                                color={BRAND_COLORS.neutralText}
+                              >
+                                P {plan.balance}
+                              </Text>
+                            </VStack>
+
+                            <HStack
+                              gap={0}
+                              borderWidth="1px"
+                              borderColor={BRAND_COLORS.neutralBorder}
+                              borderRadius={STANDARD_RADIUS.md}
+                              overflow="hidden"
+                              bg={BRAND_COLORS.white}
+                            >
+                              <Button
+                                aria-label="Decrease installment"
+                                variant="ghost"
+                                w="34px"
+                                minW="34px"
+                                h="34px"
+                                borderRadius="0"
+                                color={BRAND_COLORS.primaryGreen}
+                                _hover={{ bg: BRAND_COLORS.subtleBg }}
+                                onClick={() =>
+                                  updateInstallmentNumber(plan.contractNo, -1)
+                                }
+                                disabled={
+                                  getInstallmentNumber(plan.contractNo) <= 1
+                                }
+                              >
+                                <LuMinus size={14} />
+                              </Button>
+
+                              <Box
+                                w="34px"
+                                h="34px"
+                                display="flex"
+                                alignItems="center"
+                                justifyContent="center"
+                                borderLeftWidth="1px"
+                                borderRightWidth="1px"
+                                borderColor={BRAND_COLORS.neutralBorder}
+                              >
+                                <Text
+                                  fontSize="13px"
+                                  fontWeight="800"
+                                  color={BRAND_COLORS.neutralText}
+                                >
+                                  {getInstallmentNumber(plan.contractNo)}
+                                </Text>
+                              </Box>
+
+                              <Button
+                                aria-label="Increase installment"
+                                variant="ghost"
+                                w="34px"
+                                minW="34px"
+                                h="34px"
+                                borderRadius="0"
+                                color={BRAND_COLORS.primaryGreen}
+                                _hover={{ bg: BRAND_COLORS.subtleBg }}
+                                onClick={() =>
+                                  updateInstallmentNumber(plan.contractNo, 1)
+                                }
+                              >
+                                <LuPlus size={14} />
+                              </Button>
+                            </HStack>
+                          </Flex>
+                        </Box>
+                      ) : null}
+
+                      <Flex align="center" justify="space-between" pt="2px">
+                        <Button
+                          variant="plain"
+                          h="24px"
+                          minW="auto"
+                          px={0}
+                          color={BRAND_COLORS.grey}
+                          fontSize="12px"
+                          fontWeight="600"
+                          onClick={() => togglePlanExpanded(plan.contractNo)}
+                        >
+                          {isExpanded ? "Hide details" : "Tap for details"}
+                        </Button>
+                        <HStack gap="4px" color={BRAND_COLORS.neutralText}>
+                          <Text fontSize="12px" fontWeight="800">
+                            {plan.contractNo}
+                          </Text>
+                          <LuChevronRight size={14} />
+                        </HStack>
+                      </Flex>
+                    </VStack>
+
+                    <Box
+                      display="none"
+                      h="1px"
+                      bg={BRAND_COLORS.neutralBorder}
+                    />
+
+                    {/* Bottom row: amount due + stepper */}
+                    <HStack
+                      display="none"
+                      justify="space-between"
+                      align="center"
+                      px={STANDARD_SPACING.sm}
+                      py="10px"
+                    >
+                      <VStack align="start" gap="1px">
+                        <Text
+                          fontSize="11px"
+                          color={BRAND_COLORS.grey}
+                          fontWeight="600"
+                          textTransform="uppercase"
+                          letterSpacing="0.04em"
+                        >
+                          Amount Due
+                        </Text>
+                        <Text
+                          fontWeight="700"
+                          fontSize="15px"
+                          color={BRAND_COLORS.darkGreen}
+                        >
+                          ₱ {formatCurrency(getSelectedPlanTotal(plan))}
+                        </Text>
+                      </VStack>
+
+                      <HStack
+                        gap={0}
+                        borderWidth="1px"
+                        borderColor={BRAND_COLORS.neutralBorder}
+                        borderRadius={STANDARD_RADIUS.md}
+                        overflow="hidden"
+                        bg={BRAND_COLORS.white}
+                      >
+                        <Button
+                          aria-label="Decrease installment"
+                          variant="ghost"
+                          w="38px"
+                          minW="38px"
+                          h="38px"
+                          borderRadius="0"
+                          color={BRAND_COLORS.primaryGreen}
+                          _hover={{ bg: BRAND_COLORS.subtleBg }}
+                          onClick={() =>
+                            updateInstallmentNumber(plan.contractNo, -1)
+                          }
+                          disabled={getInstallmentNumber(plan.contractNo) <= 1}
+                        >
+                          −
+                        </Button>
+
+                        <Box
+                          w="38px"
+                          h="38px"
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="center"
+                          borderLeftWidth="1px"
+                          borderRightWidth="1px"
+                          borderColor={BRAND_COLORS.neutralBorder}
+                        >
+                          <Text
+                            fontSize="14px"
+                            fontWeight="700"
+                            color={BRAND_COLORS.neutralText}
+                          >
+                            {getInstallmentNumber(plan.contractNo)}
+                          </Text>
+                        </Box>
+
+                        <Button
+                          aria-label="Increase installment"
+                          variant="ghost"
+                          w="38px"
+                          minW="38px"
+                          h="38px"
+                          borderRadius="0"
+                          color={BRAND_COLORS.primaryGreen}
+                          _hover={{ bg: BRAND_COLORS.subtleBg }}
+                          onClick={() =>
+                            updateInstallmentNumber(plan.contractNo, 1)
+                          }
+                        >
+                          +
+                        </Button>
+                      </HStack>
+                    </HStack>
+                  </Box>
+                );
+              })}
+            </VStack>
           </Page.Row>
 
           {/* ── DESKTOP TABLE ──────────────────────────────────────────────── */}
@@ -339,7 +1022,7 @@ const PayMyPlan = () => {
               display={{ base: "none", lg: "block" }}
               borderWidth="1px"
               borderColor={BRAND_COLORS.neutralBorder}
-              borderRadius={STANDARD_RADIUS.md}
+              borderRadius={STANDARD_RADIUS.xl}
               overflow="hidden"
               bg={BRAND_COLORS.white}
               boxShadow={STANDARD_SHADOWS.level1}
@@ -348,48 +1031,63 @@ const PayMyPlan = () => {
               <Flex
                 align="flex-end"
                 justify="space-between"
-                gap={STANDARD_SPACING.md}
+                // gap={STANDARD_SPACING.md}
                 p={STANDARD_SPACING.sm}
                 borderBottomWidth="1px"
                 borderColor={BRAND_COLORS.neutralBorder}
-                bg={BRAND_COLORS.subtleBg}
+                bg={BRAND_COLORS.white}
               >
-                <VStack align="stretch" gap="4px" w="260px">
+                <VStack align="start" gap="2px">
                   <Text
-                    color={BRAND_COLORS.grey}
-                    fontSize="11px"
-                    fontWeight="600"
+                    color={BRAND_COLORS.neutralText}
+                    fontSize="16px"
+                    fontWeight="800"
                     lineHeight="1.2"
                   >
-                    Plan Type
+                    Plans due for payment
                   </Text>
-                  <NativeSelect.Root w="full">
-                    <NativeSelect.Field
-                      value={planModeFilter}
-                      onChange={(event) =>
-                        setPlanModeFilter(event.currentTarget.value)
-                      }
-                      w="full"
-                      h="40px"
-                      px={STANDARD_SPACING.xs}
-                      pr={STANDARD_SPACING.md}
-                      borderWidth="1px"
-                      borderColor={BRAND_COLORS.neutralBorder}
-                      borderRadius={STANDARD_RADIUS.sm}
-                      color={BRAND_COLORS.neutralText}
-                      fontSize="13px"
-                      bg={BRAND_COLORS.white}
-                      boxShadow="0px 1px 2px rgba(0,0,0,0.03)"
-                    >
-                      <option value="All">All Active Plans</option>
-                      <option value="Monthly">Monthly</option>
-                      <option value="Annual">Annual</option>
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                  </NativeSelect.Root>
+                  <Text color={BRAND_COLORS.grey} fontSize="12px">
+                    Showing {desktopResultEnd} matching plan
+                    {desktopResultEnd === 1 ? "" : "s"}
+                  </Text>
                 </VStack>
 
                 <HStack gap={STANDARD_SPACING.xs} align="flex-end">
+                  <VStack align="stretch" gap="4px" w="180px">
+                    <Text
+                      color={BRAND_COLORS.grey}
+                      fontSize="11px"
+                      fontWeight="600"
+                      lineHeight="1.2"
+                    >
+                      Plan Type
+                    </Text>
+                    <NativeSelect.Root w="full">
+                      <NativeSelect.Field
+                        value={planModeFilter}
+                        onChange={(event) =>
+                          setPlanModeFilter(event.currentTarget.value)
+                        }
+                        w="full"
+                        h="40px"
+                        px={STANDARD_SPACING.xs}
+                        pr={STANDARD_SPACING.md}
+                        borderWidth="1px"
+                        borderColor={BRAND_COLORS.neutralBorder}
+                        borderRadius={STANDARD_RADIUS.sm}
+                        color={BRAND_COLORS.neutralText}
+                        fontSize="13px"
+                        bg={BRAND_COLORS.white}
+                        boxShadow="0px 1px 2px rgba(0,0,0,0.03)"
+                      >
+                        <option value="All">All Active Plans</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Annual">Annual</option>
+                      </NativeSelect.Field>
+                      <NativeSelect.Indicator />
+                    </NativeSelect.Root>
+                  </VStack>
+
                   <Box position="relative" w="300px">
                     <Box
                       as={LuSearch}
@@ -872,625 +1570,6 @@ const PayMyPlan = () => {
           </Page.Row>
 
           {/* ── MOBILE COMPACT LIST ──────────────────────────────────────────── */}
-          <Page.Row>
-            <VStack
-              display={{ base: "flex", lg: "none" }}
-              align="stretch"
-              gap={STANDARD_SPACING.sm}
-            >
-              {filteredActivePlans.map((plan) => {
-                const isSelected = isPlanSelected(plan.contractNo);
-
-                return (
-                  <Box
-                    key={plan.contractNo}
-                    bg={BRAND_COLORS.white}
-                    borderWidth="1px"
-                    borderColor={
-                      isSelected
-                        ? BRAND_COLORS.primaryGreen
-                        : BRAND_COLORS.neutralBorder
-                    }
-                    borderRadius={STANDARD_RADIUS.md}
-                    boxShadow={STANDARD_SHADOWS.level1}
-                    p={{ base: STANDARD_SPACING.sm, md: "20px" }}
-                    transition="border-color 150ms ease-out, box-shadow 150ms ease-out"
-                    onClick={() => {
-                      // Open the side drawer for this plan
-                      setSideDrawerPlan(plan);
-                      setSideDrawerOpen(true);
-                    }}
-                  >
-                    <Flex
-                      align={{ base: "flex-start", sm: "center" }}
-                      gap={{ base: "10px", sm: STANDARD_SPACING.sm }}
-                    >
-                      <Checkbox.Root
-                        checked={isSelected}
-                        onCheckedChange={() => toggleContract(plan)}
-                        mt={{ base: "20px", sm: 0 }}
-                        flexShrink={0}
-                      >
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                      </Checkbox.Root>
-
-                      <Image
-                        src={`/images/plan-images/${plan.plan}.jpg`}
-                        alt={plan.plan}
-                        w={{ base: "64px", sm: "78px" }}
-                        h={{ base: "64px", sm: "78px" }}
-                        borderRadius={STANDARD_RADIUS.md}
-                        objectFit="cover"
-                        flexShrink={0}
-                      />
-
-                      <Flex
-                        flex="1"
-                        minW={0}
-                        direction={{ base: "column", sm: "row" }}
-                        align={{ base: "stretch", sm: "flex-end" }}
-                        justify="space-between"
-                        gap={{
-                          base: STANDARD_SPACING.sm,
-                          sm: STANDARD_SPACING.md,
-                        }}
-                      >
-                        <VStack align="start" gap="2px" minW={0}>
-                          <Text
-                            fontSize={{ base: "15px", sm: "17px" }}
-                            fontWeight="700"
-                            color={BRAND_COLORS.neutralText}
-                            lineHeight="1.2"
-                            lineClamp={1}
-                          >
-                            {plan.plan}
-                          </Text>
-                          <Text
-                            fontSize={{ base: "12px", sm: "13px" }}
-                            fontWeight="600"
-                            color={BRAND_COLORS.neutralText}
-                            lineClamp={1}
-                          >
-                            {plan.contractNo}
-                          </Text>
-                          <Text fontSize="12px" color={BRAND_COLORS.grey}>
-                            Mode: {plan.mode}
-                          </Text>
-                          <Text fontSize="12px" color={BRAND_COLORS.grey}>
-                            Effective Date: {plan.effectiveDate}
-                          </Text>
-                          <Text
-                            mt={{ base: "6px", sm: "12px" }}
-                            fontSize="13px"
-                            color={BRAND_COLORS.neutralText}
-                          >
-                            Amount Due:{" "}
-                            <Text as="span" fontWeight="700">
-                              P {formatCurrency(getSelectedPlanTotal(plan))}
-                            </Text>
-                          </Text>
-                        </VStack>
-
-                        <HStack
-                          alignSelf={{ base: "flex-start", sm: "flex-end" }}
-                          gap={0}
-                          borderWidth="1px"
-                          borderColor={BRAND_COLORS.neutralBorder}
-                          borderRadius={STANDARD_RADIUS.sm}
-                          overflow="hidden"
-                          bg={BRAND_COLORS.white}
-                          flexShrink={0}
-                        >
-                          <Button
-                            aria-label="Decrease installment"
-                            variant="ghost"
-                            w="28px"
-                            minW="28px"
-                            h="28px"
-                            borderRadius="0"
-                            color={BRAND_COLORS.grey}
-                            _hover={{ bg: BRAND_COLORS.subtleBg }}
-                            onClick={() =>
-                              updateInstallmentNumber(plan.contractNo, -1)
-                            }
-                            disabled={
-                              getInstallmentNumber(plan.contractNo) <= 1
-                            }
-                          >
-                            <LuMinus size={12} />
-                          </Button>
-                          <Box
-                            w="34px"
-                            h="28px"
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="center"
-                            borderLeftWidth="1px"
-                            borderRightWidth="1px"
-                            borderColor={BRAND_COLORS.neutralBorder}
-                          >
-                            <Text
-                              fontSize="14px"
-                              fontWeight="700"
-                              color={BRAND_COLORS.neutralText}
-                            >
-                              {getInstallmentNumber(plan.contractNo)}
-                            </Text>
-                          </Box>
-                          <Button
-                            aria-label="Increase installment"
-                            variant="ghost"
-                            w="28px"
-                            minW="28px"
-                            h="28px"
-                            borderRadius="0"
-                            color={BRAND_COLORS.grey}
-                            _hover={{ bg: BRAND_COLORS.subtleBg }}
-                            onClick={() =>
-                              updateInstallmentNumber(plan.contractNo, 1)
-                            }
-                          >
-                            <LuPlus size={12} />
-                          </Button>
-                        </HStack>
-                      </Flex>
-                    </Flex>
-                  </Box>
-                );
-              })}
-              {/* <SideDrawer
-                open={sideDrawerOpen}
-                onOpenChange={(open) => {
-                  setSideDrawerOpen(open);
-                  if (!open) setSideDrawerPlan(null);
-                }}
-                title={
-                  sideDrawerPlan ? `${sideDrawerPlan.plan}` : "Plan Details"
-                }
-                tabs={
-                  sideDrawerPlan
-                    ? [
-                        {
-                          label: "Information",
-                          value: "info",
-                          sections: [{ title: "Plan Information", rows: [] }],
-                        },
-                        {
-                          label: "Documents",
-                          value: "documents",
-                          sections: [],
-                        },
-                      ]
-                    : []
-                }
-                badges={
-                  sideDrawerPlan ? [{ label: "Due", tone: "error" }] : undefined
-                }
-                headerChildren={
-                  sideDrawerPlan ? (
-                    <HStack gap={STANDARD_SPACING.xs} wrap="wrap">
-                      <Button>Transfer Plan</Button>
-                      <Button variant="outline">Test Button</Button>
-                    </HStack>
-                  ) : null
-                }
-                sections={
-                  sideDrawerPlan
-                    ? [
-                        {
-                          title: "Plan Information",
-                          rows: [
-                            {
-                              label: "Contract No.",
-                              value: sideDrawerPlan.contractNo,
-                            },
-                            { label: "Mode", value: sideDrawerPlan.mode },
-                            {
-                              label: "Amount Due",
-                              value: `P ${sideDrawerPlan.amountDue}`,
-                            },
-                            {
-                              label: "Effective Date",
-                              value: sideDrawerPlan.effectiveDate,
-                            },
-                            {
-                              label: "Due Date",
-                              value: sideDrawerPlan.dueDate,
-                            },
-                            {
-                              label: "Balance",
-                              value: `P ${sideDrawerPlan.balance}`,
-                            },
-                          ],
-                        },
-                      ]
-                    : []
-                }
-              /> */}
-            </VStack>
-          </Page.Row>
-
-          <Page.Row>
-            <VStack display="none" align="stretch" gap={STANDARD_SPACING.sm}>
-              {filteredActivePlans.map((plan) => {
-                const isSelected = isPlanSelected(plan.contractNo);
-                const isExpanded = expandedPlans.has(plan.contractNo);
-
-                return (
-                  <Box
-                    key={plan.contractNo}
-                    bg={BRAND_COLORS.white}
-                    borderWidth="1px"
-                    borderColor={
-                      isSelected
-                        ? BRAND_COLORS.primaryGreen
-                        : BRAND_COLORS.neutralBorder
-                    }
-                    borderRadius={STANDARD_RADIUS.xl}
-                    overflow="hidden"
-                    boxShadow={STANDARD_SHADOWS.level2}
-                    transition="border-color 150ms ease-out, box-shadow 150ms ease-out"
-                  >
-                    <VStack
-                      align="stretch"
-                      gap={STANDARD_SPACING.xs}
-                      p={STANDARD_SPACING.sm}
-                    >
-                      <Flex align="flex-start" justify="space-between" gap={3}>
-                        <HStack align="flex-start" gap="10px" minW={0}>
-                          <Box
-                            w="34px"
-                            h="34px"
-                            borderRadius={STANDARD_RADIUS.full}
-                            bg={BRAND_COLORS.subtleBg}
-                            color={BRAND_COLORS.neutralText}
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="center"
-                            flexShrink={0}
-                          >
-                            <LuUser size={16} />
-                          </Box>
-                          <VStack align="start" gap="2px" minW={0}>
-                            <Text
-                              fontWeight="800"
-                              fontSize="15px"
-                              color={BRAND_COLORS.neutralText}
-                              lineClamp={1}
-                            >
-                              {plan.plan}
-                            </Text>
-                            <Text
-                              fontSize="11px"
-                              color={BRAND_COLORS.grey}
-                              lineClamp={1}
-                            >
-                              ID {plan.contractNo}
-                            </Text>
-                          </VStack>
-                        </HStack>
-
-                        <HStack gap="8px" flexShrink={0}>
-                          <Box
-                            w="7px"
-                            h="7px"
-                            borderRadius={STANDARD_RADIUS.full}
-                            bg={
-                              isSelected
-                                ? BRAND_COLORS.primaryGreen
-                                : BRAND_COLORS.grey
-                            }
-                          />
-                          <Badge
-                            bg={
-                              isSelected
-                                ? BRAND_COLORS.successBg
-                                : BRAND_COLORS.mutedBg
-                            }
-                            color={
-                              isSelected
-                                ? BRAND_COLORS.primaryGreen
-                                : BRAND_COLORS.neutralText
-                            }
-                            borderRadius={STANDARD_RADIUS.sm}
-                            px="8px"
-                            py="4px"
-                            fontSize="11px"
-                            fontWeight="700"
-                          >
-                            {isSelected ? "Selected" : "Due"}
-                          </Badge>
-                        </HStack>
-                      </Flex>
-
-                      <HStack gap="8px" flexWrap="wrap">
-                        <HStack
-                          gap="5px"
-                          px="9px"
-                          py="5px"
-                          borderWidth="1px"
-                          borderColor={BRAND_COLORS.neutralBorder}
-                          borderRadius={STANDARD_RADIUS.full}
-                          color={BRAND_COLORS.neutralText}
-                        >
-                          <LuCalendar size={12} />
-                          <Text fontSize="11px" fontWeight="600">
-                            {plan.dueDate}
-                          </Text>
-                        </HStack>
-
-                        <HStack
-                          gap="5px"
-                          px="9px"
-                          py="5px"
-                          borderWidth="1px"
-                          borderColor={BRAND_COLORS.neutralBorder}
-                          borderRadius={STANDARD_RADIUS.full}
-                          color={BRAND_COLORS.neutralText}
-                        >
-                          <LuMapPin size={12} />
-                          <Text fontSize="11px" fontWeight="600">
-                            {plan.mode}
-                          </Text>
-                        </HStack>
-                      </HStack>
-
-                      <HStack align="center" gap="7px" minW={0}>
-                        <LuUser size={13} color={BRAND_COLORS.grey} />
-                        <Text
-                          fontSize="13px"
-                          color={BRAND_COLORS.neutralText}
-                          lineClamp={1}
-                        >
-                          Effective: {plan.effectiveDate}
-                        </Text>
-                      </HStack>
-
-                      <HStack
-                        align="center"
-                        justify="space-between"
-                        gap={STANDARD_SPACING.xs}
-                      >
-                        <HStack
-                          gap="6px"
-                          px="10px"
-                          py="6px"
-                          borderRadius={STANDARD_RADIUS.full}
-                          bg="#EFF6FF"
-                          color="#2563EB"
-                          minW={0}
-                        >
-                          <LuCircleDollarSign size={13} />
-                          <Text fontSize="12px" fontWeight="700" lineClamp={1}>
-                            P {formatCurrency(getSelectedPlanTotal(plan))}
-                          </Text>
-                        </HStack>
-
-                        <Checkbox.Root
-                          checked={isSelected}
-                          onCheckedChange={() => toggleContract(plan)}
-                          flexShrink={0}
-                        >
-                          <Checkbox.HiddenInput />
-                          <Checkbox.Control />
-                          <Checkbox.Label
-                            color={BRAND_COLORS.neutralText}
-                            fontSize="12px"
-                            fontWeight="700"
-                          >
-                            {isSelected ? "Remove" : "Add"}
-                          </Checkbox.Label>
-                        </Checkbox.Root>
-                      </HStack>
-
-                      {isExpanded ? (
-                        <Box
-                          borderTopWidth="1px"
-                          borderColor={BRAND_COLORS.neutralBorder}
-                          pt={STANDARD_SPACING.xs}
-                        >
-                          <Flex align="center" justify="space-between" gap={3}>
-                            <VStack align="start" gap="1px">
-                              <Text fontSize="11px" color={BRAND_COLORS.grey}>
-                                Balance
-                              </Text>
-                              <Text
-                                fontSize="13px"
-                                fontWeight="800"
-                                color={BRAND_COLORS.neutralText}
-                              >
-                                P {plan.balance}
-                              </Text>
-                            </VStack>
-
-                            <HStack
-                              gap={0}
-                              borderWidth="1px"
-                              borderColor={BRAND_COLORS.neutralBorder}
-                              borderRadius={STANDARD_RADIUS.md}
-                              overflow="hidden"
-                              bg={BRAND_COLORS.white}
-                            >
-                              <Button
-                                aria-label="Decrease installment"
-                                variant="ghost"
-                                w="34px"
-                                minW="34px"
-                                h="34px"
-                                borderRadius="0"
-                                color={BRAND_COLORS.primaryGreen}
-                                _hover={{ bg: BRAND_COLORS.subtleBg }}
-                                onClick={() =>
-                                  updateInstallmentNumber(plan.contractNo, -1)
-                                }
-                                disabled={
-                                  getInstallmentNumber(plan.contractNo) <= 1
-                                }
-                              >
-                                <LuMinus size={14} />
-                              </Button>
-
-                              <Box
-                                w="34px"
-                                h="34px"
-                                display="flex"
-                                alignItems="center"
-                                justifyContent="center"
-                                borderLeftWidth="1px"
-                                borderRightWidth="1px"
-                                borderColor={BRAND_COLORS.neutralBorder}
-                              >
-                                <Text
-                                  fontSize="13px"
-                                  fontWeight="800"
-                                  color={BRAND_COLORS.neutralText}
-                                >
-                                  {getInstallmentNumber(plan.contractNo)}
-                                </Text>
-                              </Box>
-
-                              <Button
-                                aria-label="Increase installment"
-                                variant="ghost"
-                                w="34px"
-                                minW="34px"
-                                h="34px"
-                                borderRadius="0"
-                                color={BRAND_COLORS.primaryGreen}
-                                _hover={{ bg: BRAND_COLORS.subtleBg }}
-                                onClick={() =>
-                                  updateInstallmentNumber(plan.contractNo, 1)
-                                }
-                              >
-                                <LuPlus size={14} />
-                              </Button>
-                            </HStack>
-                          </Flex>
-                        </Box>
-                      ) : null}
-
-                      <Flex align="center" justify="space-between" pt="2px">
-                        <Button
-                          variant="plain"
-                          h="24px"
-                          minW="auto"
-                          px={0}
-                          color={BRAND_COLORS.grey}
-                          fontSize="12px"
-                          fontWeight="600"
-                          onClick={() => togglePlanExpanded(plan.contractNo)}
-                        >
-                          {isExpanded ? "Hide details" : "Tap for details"}
-                        </Button>
-                        <HStack gap="4px" color={BRAND_COLORS.neutralText}>
-                          <Text fontSize="12px" fontWeight="800">
-                            {plan.contractNo}
-                          </Text>
-                          <LuChevronRight size={14} />
-                        </HStack>
-                      </Flex>
-                    </VStack>
-
-                    <Box
-                      display="none"
-                      h="1px"
-                      bg={BRAND_COLORS.neutralBorder}
-                    />
-
-                    {/* Bottom row: amount due + stepper */}
-                    <HStack
-                      display="none"
-                      justify="space-between"
-                      align="center"
-                      px={STANDARD_SPACING.sm}
-                      py="10px"
-                    >
-                      <VStack align="start" gap="1px">
-                        <Text
-                          fontSize="11px"
-                          color={BRAND_COLORS.grey}
-                          fontWeight="600"
-                          textTransform="uppercase"
-                          letterSpacing="0.04em"
-                        >
-                          Amount Due
-                        </Text>
-                        <Text
-                          fontWeight="700"
-                          fontSize="15px"
-                          color={BRAND_COLORS.darkGreen}
-                        >
-                          ₱ {formatCurrency(getSelectedPlanTotal(plan))}
-                        </Text>
-                      </VStack>
-
-                      <HStack
-                        gap={0}
-                        borderWidth="1px"
-                        borderColor={BRAND_COLORS.neutralBorder}
-                        borderRadius={STANDARD_RADIUS.md}
-                        overflow="hidden"
-                        bg={BRAND_COLORS.white}
-                      >
-                        <Button
-                          aria-label="Decrease installment"
-                          variant="ghost"
-                          w="38px"
-                          minW="38px"
-                          h="38px"
-                          borderRadius="0"
-                          color={BRAND_COLORS.primaryGreen}
-                          _hover={{ bg: BRAND_COLORS.subtleBg }}
-                          onClick={() =>
-                            updateInstallmentNumber(plan.contractNo, -1)
-                          }
-                          disabled={getInstallmentNumber(plan.contractNo) <= 1}
-                        >
-                          −
-                        </Button>
-
-                        <Box
-                          w="38px"
-                          h="38px"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                          borderLeftWidth="1px"
-                          borderRightWidth="1px"
-                          borderColor={BRAND_COLORS.neutralBorder}
-                        >
-                          <Text
-                            fontSize="14px"
-                            fontWeight="700"
-                            color={BRAND_COLORS.neutralText}
-                          >
-                            {getInstallmentNumber(plan.contractNo)}
-                          </Text>
-                        </Box>
-
-                        <Button
-                          aria-label="Increase installment"
-                          variant="ghost"
-                          w="38px"
-                          minW="38px"
-                          h="38px"
-                          borderRadius="0"
-                          color={BRAND_COLORS.primaryGreen}
-                          _hover={{ bg: BRAND_COLORS.subtleBg }}
-                          onClick={() =>
-                            updateInstallmentNumber(plan.contractNo, 1)
-                          }
-                        >
-                          +
-                        </Button>
-                      </HStack>
-                    </HStack>
-                  </Box>
-                );
-              })}
-            </VStack>
-          </Page.Row>
         </Page.MainContent>
       </Page.Root>
 
@@ -1501,7 +1580,7 @@ const PayMyPlan = () => {
           bottom={{
             // Clear the floating bottom-nav pill (sits at 1.25rem, ~75px tall)
             // so the summary never overlaps it on mobile.
-            base: "calc(7rem + env(safe-area-inset-bottom))",
+            base: "calc(6rem + env(safe-area-inset-bottom))",
             md: STANDARD_SPACING.sm,
           }}
           left="50%"

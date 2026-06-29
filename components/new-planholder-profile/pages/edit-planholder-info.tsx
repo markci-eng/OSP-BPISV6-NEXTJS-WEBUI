@@ -2,7 +2,7 @@
 import Page from "@/claude components/layout/page/Page";
 import FormSteps from "@/components/FormSteps";
 import { LuFileText, LuUser } from "react-icons/lu";
-import { TransferDocumentsPage } from "@/app/plan-management/planholder/[personId]/transfer-of-rights/tf-documents-page";
+import { EditDocumentsPage } from "./edit-documents-page";
 import { useState } from "react";
 import { UploadedFile } from "@/components/document-uploader/DragAndDrop";
 import { FaFileShield } from "react-icons/fa6";
@@ -70,9 +70,7 @@ export function EditPlanholderInfoPage() {
     {
       title: "Documents",
       content: (
-        <TransferDocumentsPage
-          onFilesChange={(files) => setSelectedDocuments(files)}
-        />
+        <EditDocumentsPage onFilesChange={(files) => setSelectedDocuments(files)} />
       ),
       icon: LuFileText,
       validateBeforeNext: () => {
@@ -113,6 +111,22 @@ export function EditPlanholderInfoPage() {
             description=""
             currentStep={currentStep}
             setCurrentStep={setCurrentStep}
+            onStepsComplete={async () => {
+              const confirmed = await messageBox({
+                title: "Confirm Submission",
+                message:
+                  "Are you sure you want to submit the changes to the planholder information?",
+                variant: "warning",
+                confirmText: "Yes, Submit",
+                showCancel: true,
+                cancelText: "Cancel",
+              });
+
+              if (confirmed) {
+                window.location.href = window.location.href + "/success";
+              }
+            }}
+            submitButtonText="Submit Changes"
           />
         </Box>
       </Page.MainContent>

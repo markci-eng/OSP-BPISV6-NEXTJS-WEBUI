@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Box, Flex, Grid } from "@chakra-ui/react";
 import {
   LuUser,
@@ -156,6 +157,7 @@ const stepsData = [
 
 export default function CreateSalesForcePage() {
   const [currentStep, setCurrentStep] = useState(0);
+  const router = useRouter();
 
   return (
     <Page.Root
@@ -170,7 +172,7 @@ export default function CreateSalesForcePage() {
           description=""
           currentStep={currentStep}
           setCurrentStep={setCurrentStep}
-          onStepsComplete={() => {}}
+          onStepsComplete={() => router.push("/sales-force/new/success")}
           submitButtonText="Create Agent"
         />
       </Page.MainContent>

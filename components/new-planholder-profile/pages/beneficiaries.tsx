@@ -33,9 +33,11 @@ export interface BeneficiaryProps {
 export function Beneficiaries({
   beneficiaries,
   planholderAddress,
+  columns = 1,
 }: {
   beneficiaries: BeneficiaryProps[];
   planholderAddress?: string;
+  columns?: 1 | 2;
 }) {
   const principalBeneficiaries = beneficiaries?.filter(
     (b) => b.beneficiaryClass === "PRINCIPAL",
@@ -45,7 +47,13 @@ export function Beneficiaries({
   );
 
   return (
-    <Flex direction="column" gap={4}>
+    <Box
+      display={{ base: "flex", md: columns === 2 ? "grid" : "flex" }}
+      flexDirection="column"
+      gridTemplateColumns={{ md: columns === 2 ? "1fr 1fr" : undefined }}
+      gap={4}
+      alignItems="start"
+    >
       <Box
         borderRadius="xl"
         borderWidth={1}
@@ -85,7 +93,7 @@ export function Beneficiaries({
           planholderAddress={planholderAddress}
         />
       </Box>
-    </Flex>
+    </Box>
   );
 }
 

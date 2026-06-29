@@ -52,6 +52,10 @@ import { PlanholderAddressCard } from "@/components/new-planholder-profile/secti
 import ReferralPage from "./referral-page";
 import AgentContactInfoCard from "../cards/AgentContactInfoCard";
 import { TertiarySmButton } from "st-peter-ui";
+import ProfileHeaderCard from "@/components/cards/ProfileHeaderCard";
+import ActionButtons, {
+  ActionButtonItem,
+} from "@/claude components/buttons/ActionButtons";
 
 const MOCK_AGENT_REQUESTS: RequestProps[] = [
   {
@@ -86,10 +90,13 @@ export function AgentDetails(params: {
   const [teamDrawerOpen, setTeamDrawerOpen] = useState(false);
   const [selectedTeamMember, setSelectedTeamMember] =
     useState<SalesAgent | null>(null);
-  const [personalOpen, setPersonalOpen] = useState(false);
-  const [addressOpen, setAddressOpen] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
-  const [employmentOpen, setEmploymentOpen] = useState(false);
+  const isWebOnMount = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(min-width: 1024px)").matches;
+  const [personalOpen, setPersonalOpen] = useState(isWebOnMount);
+  const [addressOpen, setAddressOpen] = useState(isWebOnMount);
+  const [contactOpen, setContactOpen] = useState(isWebOnMount);
+  const [employmentOpen, setEmploymentOpen] = useState(isWebOnMount);
 
   const { selectedAgent } = params;
   const router = useRouter();
@@ -217,6 +224,36 @@ export function AgentDetails(params: {
       ]
     : undefined;
 
+  const profileBase = `/sales-force/profile/${selectedAgent.id}`;
+
+  const actionButtonDefs: ActionButtonItem[] = [
+    {
+      label: "Edit",
+      icon: LuUserPen,
+      onClick: () => router.push(`${profileBase}/edit`),
+    },
+    {
+      label: "Re-Organize",
+      icon: LuReplace,
+      onClick: () => router.push(`${profileBase}/re-organize`),
+    },
+    {
+      label: "Movement",
+      icon: LuTrendingUpDown,
+      onClick: () => router.push(`${profileBase}/movement`),
+    },
+    {
+      label: "Referral",
+      icon: LuShare2,
+      onClick: () => router.push(`${profileBase}/referral`),
+    },
+    {
+      label: "Reprint SFID",
+      icon: LuPrinter,
+      onClick: () => router.push(`${profileBase}/printing`),
+    },
+  ];
+
   return (
     <Page.Root
       title="Sales Agent Profile"
@@ -224,43 +261,7 @@ export function AgentDetails(params: {
     >
       {page === "default" && (
         <Page.ToolContent>
-          <MenuButton>
-            <MenuItemButton
-              icon={<LuUserPen />}
-              label="Edit"
-              itemKey="edit"
-              value="edit"
-              onClick={() => setPage("edit")}
-            />
-            <MenuItemButton
-              icon={<LuReplace />}
-              label="Re-Organized"
-              itemKey="reassign"
-              value="reassign"
-              onClick={() => setPage("reassign")}
-            />
-            <MenuItemButton
-              icon={<LuTrendingUpDown />}
-              label="Movement"
-              itemKey="movement"
-              value="movement"
-              onClick={() => setPage("movement")}
-            />
-            <MenuItemButton
-              icon={<LuShare2 />}
-              label="Referral"
-              itemKey="referral"
-              value="referral"
-              onClick={() => setPage("referral")}
-            />
-            <MenuItemButton
-              icon={<LuPrinter />}
-              label="Reprint SFID"
-              itemKey="printing"
-              value="printing"
-              onClick={() => router.push("/printing")}
-            />
-          </MenuButton>
+          <ActionButtons buttons={actionButtonDefs} />
         </Page.ToolContent>
       )}
 
@@ -288,8 +289,23 @@ export function AgentDetails(params: {
               {/* Left column — identity & details */}
               <GridItem>
                 <Flex direction="column" gap={4}>
-                  <AgentProfileHeaderCard agent={selectedAgent} />
-                  {contactActions}
+                  <ProfileHeaderCard
+                    name={selectedAgent.name}
+                    personId={selectedAgent.id}
+                    homeAddress={[
+                      selectedAgent.address?.unit,
+                      selectedAgent.address?.street,
+                      selectedAgent.address?.barangay,
+                      selectedAgent.address?.city,
+                      selectedAgent.address?.province,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                    contactNo={selectedAgent.mobile || selectedAgent.landline}
+                    email={selectedAgent.email}
+                    landlineNo={selectedAgent.landline}
+                  />
+                  {/* {contactActions} */}
                   <Show when={isMobile}>{pendingRequestsCard}</Show>
                   <AgentPersonalInfoCard
                     agent={selectedAgent}
@@ -318,31 +334,33 @@ export function AgentDetails(params: {
                     isOpen={employmentOpen}
                     onToggle={() => setEmploymentOpen((p) => !p)}
                   />
-                  <Card.Root title="Team Members">
-                    <Card.MainContent>
-                      <DataTable
-                        columns={columns}
-                        data={getSubordinates(selectedAgent.id)}
-                        onRowClick={(row) => {
-                          setSelectedTeamMember(row);
-                          setTeamDrawerOpen(true);
-                        }}
-                        features={{
-                          search: false,
-                          filtering: false,
-                          sorting: false,
-                          pagination: true,
-                          selection: false,
-                          draggable: false,
-                          columnToggle: false,
-                          detailSidebar: false,
-                        }}
-                      />
-                    </Card.MainContent>
-                  </Card.Root>
                 </Flex>
               </GridItem>
             </Grid>
+
+            {/* Team Members — full width */}
+            <Card.Root title="Team Members">
+              <Card.MainContent>
+                <DataTable
+                  columns={columns}
+                  data={getSubordinates(selectedAgent.id)}
+                  onRowClick={(row) => {
+                    setSelectedTeamMember(row);
+                    setTeamDrawerOpen(true);
+                  }}
+                  features={{
+                    search: false,
+                    filtering: false,
+                    sorting: false,
+                    pagination: true,
+                    selection: false,
+                    draggable: false,
+                    columnToggle: false,
+                    detailSidebar: false,
+                  }}
+                />
+              </Card.MainContent>
+            </Card.Root>
 
             {/* MCPR — full width */}
             <Card.Root title="Monthly Collection Performance Report">

@@ -96,7 +96,7 @@ export function NewPlanHolderInfoForm() {
       </Card.Root>
       <Separator mb={5} />
 
-      <Beneficiaries beneficiaries={[]} />
+      <Beneficiaries beneficiaries={[]} columns={2} />
     </Box>
   );
 }

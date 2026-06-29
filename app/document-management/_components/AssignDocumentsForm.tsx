@@ -6,10 +6,8 @@ import {
   Box,
   Button,
   createListCollection,
-  Field,
   Flex,
   Grid,
-  Input,
 } from "@chakra-ui/react";
 import { DocumentType } from "@/data/doc-management/documenttype";
 import { Employee } from "@/data/doc-management/employeeSelector";
@@ -96,40 +94,34 @@ export default function AssignDocumentsForm({ employee, onAssigned }: Props) {
           lg: "repeat(3, minmax(0, 1fr))",
         }}
         gap={4}
-        alignItems="end"
+        alignItems="center"
       >
-        <Field.Root>
-          <SelectFloatingLabel
-            label="Document Type"
-            collection={documentTypeCollection}
-            value={[docType]}
-            onValueChange={(details: any) => {
-              const value = Array.isArray(details.value)
-                ? details.value[0]
-                : details.value;
+        <SelectFloatingLabel
+          label="Document Type"
+          collection={documentTypeCollection}
+          value={[docType]}
+          onValueChange={(details: any) => {
+            const value = Array.isArray(details.value)
+              ? details.value[0]
+              : details.value;
 
-              handleDocTypeChange(value ?? "");
-            }}
-          />
-        </Field.Root>
+            handleDocTypeChange(value ?? "");
+          }}
+        />
 
-        <Field.Root>
-          <InputFloatingLabel
-            type="number"
-            min="1"
-            label="Quantity"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-          />
-        </Field.Root>
+        <InputFloatingLabel
+          type="number"
+          min="1"
+          label="Quantity"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+        />
 
-        <Field.Root>
-          <InputFloatingLabel
-            label="Document Series"
-            value={documentSeries}
-            onChange={(e) => setDocumentSeries(e.target.value)}
-          />
-        </Field.Root>
+        <InputFloatingLabel
+          label="Document Series"
+          value={documentSeries}
+          onChange={(e) => setDocumentSeries(e.target.value)}
+        />
       </Grid>
 
       <Flex justify="flex-end" mt={4}>

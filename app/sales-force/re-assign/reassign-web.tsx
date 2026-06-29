@@ -15,6 +15,7 @@ import {
   Avatar,
   Badge,
   Box,
+  Button,
   Flex,
   HStack,
   IconButton,
@@ -22,14 +23,12 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
 import React from "react";
 import {
   LuArrowLeft,
   LuBriefcase,
   LuCheck,
-  LuChevronLeft,
-  LuChevronRight,
-  LuChevronsUpDown,
   LuSearch,
   LuUser,
   LuUserRound,
@@ -38,7 +37,6 @@ import {
   LuX,
 } from "react-icons/lu";
 import { Body, H4, PrimaryMdButton, Small } from "st-peter-ui";
-import Summary from "@/components/forms/Summary";
 import { RowItem } from "@/claude components/info-card/row-item";
 import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
 import InfoCard from "@/claude components/info-card/info-card";
@@ -154,61 +152,48 @@ const ReassignPageWeb = ({ superior, setSuperior }: ReassignPageWebProps) => {
               )}
 
               {/* Search bar */}
-              <HStack
-                w="full"
-                gap={0}
-                border="1.5px solid"
-                borderColor={
-                  superior !== null
-                    ? "var(--chakra-colors-primary-disabled)"
-                    : "gray.200"
-                }
-                borderRadius="lg"
-                bg="white"
-                boxShadow="xs"
-                overflow="hidden"
-                transition="border-color 0.15s, box-shadow 0.15s"
-                _hover={{
-                  borderColor:
+              <HStack gap={0} w="full">
+                <Box
+                  flex={1}
+                  border="1.5px solid"
+                  borderColor={
                     superior !== null
-                      ? "var(--chakra-colors-primary)"
-                      : "gray.300",
-                  boxShadow: "sm",
-                }}
-                _focusWithin={{
-                  borderColor: "var(--chakra-colors-primary)",
-                  boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
-                }}
-                minH="10"
-              >
-                <Flex
-                  align="center"
-                  pl={3}
-                  color={
-                    superior !== null
-                      ? "var(--chakra-colors-primary)"
-                      : "gray.400"
+                      ? "var(--chakra-colors-primary-disabled)"
+                      : "gray.200"
                   }
-                  flexShrink={0}
-                  pointerEvents="none"
+                  borderRightWidth="0"
+                  borderLeftRadius="lg"
+                  bg="white"
+                  boxShadow="xs"
+                  overflow="hidden"
+                  transition="border-color 0.15s, box-shadow 0.15s"
+                  _hover={{
+                    borderColor:
+                      superior !== null
+                        ? "var(--chakra-colors-primary)"
+                        : "gray.300",
+                  }}
+                  _focusWithin={{
+                    borderColor: "var(--chakra-colors-primary)",
+                    boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
+                  }}
+                  minH="10"
+                  display="flex"
+                  alignItems="center"
                 >
-                  <LuSearch size={14} />
-                </Flex>
-
-                <Box flex={1}>
                   <Input
                     border="none"
                     bg="transparent"
                     boxShadow="none"
                     borderRadius="0"
-                    px={2}
+                    px={3}
                     fontSize="sm"
                     color={superior !== null ? "gray.800" : "gray.700"}
                     fontWeight={superior !== null ? "medium" : "normal"}
                     placeholder="Search Agent ID, Name, or Position"
                     value={searchVal}
                     readOnly={superior !== null}
-                    cursor={superior !== null ? "default" : "text"}
+                    cursor={superior !== null ? "pointer" : "text"}
                     _placeholder={{ color: "gray.400" }}
                     _focus={{ boxShadow: "none", outline: "none" }}
                     onChange={(e) => setSearchVal(e.currentTarget.value)}
@@ -216,30 +201,42 @@ const ReassignPageWeb = ({ superior, setSuperior }: ReassignPageWebProps) => {
                       if (e.code === "Enter") runSearch();
                     }}
                   />
+
+                  {(superior !== null || searchVal) && (
+                    <Flex align="center" pr={2} flexShrink={0}>
+                      <IconButton
+                        aria-label="Clear"
+                        variant="ghost"
+                        size="xs"
+                        borderRadius="full"
+                        color="gray.400"
+                        _hover={{ bg: "gray.100", color: "gray.600" }}
+                        onClick={() => {
+                          if (superior !== null) clearSuperior();
+                          else setSearchVal("");
+                        }}
+                      >
+                        <LuX size={12} />
+                      </IconButton>
+                    </Flex>
+                  )}
                 </Box>
 
-                <Flex align="center" pr={2} flexShrink={0}>
-                  <IconButton
-                    aria-label={
-                      superior !== null ? "Clear selected superior" : "Search"
-                    }
-                    variant="ghost"
-                    size="xs"
-                    borderRadius="full"
-                    color="gray.400"
-                    _hover={{ bg: "gray.100", color: "gray.600" }}
-                    onClick={() => {
-                      if (superior !== null) clearSuperior();
-                      else runSearch();
-                    }}
-                  >
-                    {superior !== null ? (
-                      <LuX size={12} />
-                    ) : (
-                      <LuChevronsUpDown size={12} />
-                    )}
-                  </IconButton>
-                </Flex>
+                <IconButton
+                  aria-label="Search"
+                  onClick={runSearch}
+                  bg="var(--chakra-colors-primary)"
+                  color="white"
+                  borderLeftRadius="0"
+                  borderRightRadius="lg"
+                  h="10"
+                  minW="10"
+                  flexShrink={0}
+                  _hover={{ opacity: 0.88 }}
+                  _active={{ opacity: 0.75 }}
+                >
+                  <LuSearch size={15} />
+                </IconButton>
               </HStack>
 
               {/* Results: table or selected superior card */}
@@ -490,8 +487,11 @@ const ReassignSummary = ({
   agents,
   onBack,
 }: ReassignSummaryProps) => {
+  const router = useRouter();
+
   const handleSubmit = () => {
     // TODO: wire up to real reassignAgent() API
+    router.push("/sales-force/re-assign/success");
   };
 
   return (
@@ -500,67 +500,126 @@ const ReassignSummary = ({
       description="Confirm details before submitting."
     >
       <Page.MainContent>
-        <Summary
-          title="Re-organization Summary"
-          subtitle="Verify the information below before submitting the re-organization."
-          data={[
-            {
-              title: "New Superior",
-              data: [
-                {
-                  label: "Name",
-                  value: `${superior.firstName} ${superior.lastName}`,
-                },
-                { label: "Agent ID", value: superior.id },
-                {
-                  label: "Position",
-                  value:
-                    getPositionDesc(superior.position) ?? superior.position,
-                },
-                {
-                  label: "Current Superior",
-                  value: getAgentNameById(superior.superiorId ?? "") ?? "N/A",
-                },
-                { label: "Date Hired", value: formatDate(superior.hireDate) },
-              ],
-            },
-            {
-              title: `Agents to Re-organize (${agents.length})`,
-              data: agents.map((a) => ({
-                label: `${a.firstName} ${a.lastName} · ${a.id}`,
-                value: `${
-                  getPositionDesc(a.position) ?? a.position
-                } — from ${getAgentNameById(a.superiorId ?? "") ?? "N/A"}`,
-              })),
-            },
-          ]}
-        />
-        <Flex
-          w="full"
-          justify="space-between"
-          align="center"
-          mb={1}
-          display={{ base: "flex", md: "none" }}
-        >
-          <IconButton
-            aria-label="Previous step"
-            size="sm"
-            variant="outline"
-            onClick={onBack}
+        <Flex flexDir="column" gap={4} mt={{ base: "10px", md: 0 }}>
+          {/* New Superior */}
+          <InputCardAccordion
+            icon={<LuUser size={16} />}
+            title="New Superior"
+            subtitle={`${superior.firstName} ${superior.lastName} · ${superior.id}`}
+            defaultOpen
+            isComplete
           >
-            <LuChevronLeft />
-          </IconButton>
+            <Flex flexDir="column" gap={3}>
+              <Flex
+                gap={4}
+                align="center"
+                justify="space-between"
+                px={2}
+                py={3}
+                borderRadius="xl"
+                bg="gray.50"
+              >
+                <Flex gap={3} align="center">
+                  <Avatar.Root size="lg">
+                    <Avatar.Fallback color="var(--chakra-colors-primary)">
+                      {superior.firstName.charAt(0)}
+                      {superior.lastName.charAt(0)}
+                    </Avatar.Fallback>
+                  </Avatar.Root>
+                  <Flex flexDir="column">
+                    <H4 color="var(--chakra-colors-primary)">
+                      {superior.firstName} {superior.lastName}
+                    </H4>
+                    <Small color="gray.500">{superior.id}</Small>
+                  </Flex>
+                </Flex>
+                <Badge
+                  colorPalette="green"
+                  variant="subtle"
+                  px={3}
+                  py={1}
+                  borderRadius="full"
+                >
+                  <LuCheck />
+                  <Text ml={1}>New Superior</Text>
+                </Badge>
+              </Flex>
 
-          <IconButton
-            aria-label="submit"
-            size="sm"
-            variant="solid"
-            onClick={handleSubmit}
-            px={3}
+              <Flex flexDir="column">
+                <RowItem
+                  label="Position"
+                  value={getPositionDesc(superior.position) ?? superior.position}
+                />
+                <RowItem
+                  label="Current Superior"
+                  value={getAgentNameById(superior.superiorId ?? "") ?? "N/A"}
+                />
+                <RowItem label="Date Hired" value={formatDate(superior.hireDate)} />
+              </Flex>
+            </Flex>
+          </InputCardAccordion>
+
+          {/* Agents to Re-organize */}
+          <InputCardAccordion
+            icon={<LuUsers size={16} />}
+            title="Agents to Re-organize"
+            subtitle={`${agents.length} agent${agents.length !== 1 ? "s" : ""} will be moved`}
+            defaultOpen
+            isComplete={agents.length > 0}
           >
-            Submit Re-organization
-            <LuChevronRight />
-          </IconButton>
+            <Flex flexDir="column" gap={2}>
+              {agents.map((agent) => (
+                <Flex
+                  key={agent.id}
+                  gap={3}
+                  align="center"
+                  px={3}
+                  py={2.5}
+                  borderRadius="lg"
+                  bg="gray.50"
+                  border="1px solid"
+                  borderColor="gray.100"
+                >
+                  <Avatar.Root size="sm" flexShrink={0}>
+                    <Avatar.Fallback
+                      color="var(--chakra-colors-primary)"
+                      fontSize="xs"
+                    >
+                      {agent.firstName.charAt(0)}
+                      {agent.lastName.charAt(0)}
+                    </Avatar.Fallback>
+                  </Avatar.Root>
+
+                  <Flex flexDir="column" flex={1} minW={0}>
+                    <Body fontWeight="medium" color="gray.800">
+                      {agent.firstName} {agent.lastName}
+                    </Body>
+                    <Small color="gray.500">
+                      {agent.id} · {getPositionDesc(agent.position) ?? agent.position}
+                    </Small>
+                  </Flex>
+
+                  <Flex flexDir="column" align="flex-end" flexShrink={0}>
+                    <Small color="gray.400">from</Small>
+                    <Small color="gray.600" fontWeight="medium">
+                      {getAgentNameById(agent.superiorId ?? "") ?? "N/A"}
+                    </Small>
+                  </Flex>
+                </Flex>
+              ))}
+            </Flex>
+          </InputCardAccordion>
+
+          {/* Actions */}
+          <Flex w="full" justify="space-between" align="center" pt={1}>
+            <Button variant="outline" size="sm" onClick={onBack}>
+              <LuArrowLeft />
+              Back
+            </Button>
+            <PrimaryMdButton onClick={handleSubmit}>
+              Submit Re-organization
+            </PrimaryMdButton>
+          </Flex>
         </Flex>
       </Page.MainContent>
     </Page.Root>

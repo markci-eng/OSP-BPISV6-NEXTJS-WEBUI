@@ -17,47 +17,44 @@ import {
 
 const REQUIRED_DOCUMENTS = [
   {
-    label: "Transfer of Rights Application Form",
-    description: "Duly accomplished and signed by the current planholder (Assignor).",
-    required: true,
-  },
-  {
-    label: "Absolute Deed of Assignment",
-    description: "Notarized deed of assignment executed by both the Assignor and Assignee.",
-    required: true,
-  },
-  {
-    label: "Original Plan Contract / Policy",
-    description: "The original copy of the life insurance plan contract.",
-    required: true,
-  },
-  {
-    label: "Valid Government-Issued ID of Assignor",
+    label: "Valid Government-Issued ID",
     description:
       "Any one (1) primary ID: Passport, SSS, GSIS, Driver's License, PRC, PhilHealth, Postal ID, or Voter's ID.",
     required: true,
   },
   {
-    label: "Valid Government-Issued ID of Assignee",
+    label: "Duly Accomplished Amendment Request Form",
     description:
-      "Any one (1) primary ID: Passport, SSS, GSIS, Driver's License, PRC, PhilHealth, Postal ID, or Voter's ID.",
+      "Signed request form indicating the specific planholder information to be updated.",
     required: true,
   },
   {
-    label: "Proof of Relationship (if applicable)",
+    label: "Proof of Address",
     description:
-      "Marriage Certificate, Birth Certificate, or other supporting document showing the relationship between Assignor and Assignee.",
+      "Utility bill, bank statement, or any official document showing the new address (required for address changes).",
     required: false,
   },
   {
-    label: "Death Certificate (if Assignor is deceased)",
+    label: "PSA Birth Certificate",
     description:
-      "PSA-issued Death Certificate of the deceased planholder, if the transfer is due to death.",
+      "Philippine Statistics Authority-issued birth certificate (required for corrections to name or date of birth).",
+    required: false,
+  },
+  {
+    label: "PSA Marriage Certificate",
+    description:
+      "Required if requesting a name change due to marriage.",
+    required: false,
+  },
+  {
+    label: "Court Order / Legal Document",
+    description:
+      "Required for name corrections or changes not covered by marriage or birth records.",
     required: false,
   },
 ] as const;
 
-export function TransferDocumentsPage({
+export function EditDocumentsPage({
   onFilesChange,
 }: {
   onFilesChange: (files: UploadedFile[]) => void;
@@ -161,8 +158,8 @@ export function TransferDocumentsPage({
             <LuTriangleAlert size={16} />
           </Box>
           <Text fontSize="xs" color="orange.700" _dark={{ color: "orange.300" }}>
-            Incomplete or illegible documents may delay the processing of your Transfer of Rights
-            application. Your Branch personnel will review all uploaded files before proceeding.
+            Incomplete or illegible documents may delay the processing of your information update
+            request. Your Branch personnel will review all uploaded files before applying any changes.
           </Text>
         </HStack>
 

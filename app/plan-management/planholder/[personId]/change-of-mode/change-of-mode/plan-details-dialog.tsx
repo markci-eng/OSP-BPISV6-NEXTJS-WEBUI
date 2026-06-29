@@ -1,22 +1,63 @@
 "use client";
 import {
+  Box,
+  CloseButton,
   Drawer,
+  Flex,
+  Grid,
   Portal,
   RadioCard,
-  Flex,
-  Box,
   SimpleGrid,
-  CloseButton,
-  Grid,
   Text,
 } from "@chakra-ui/react";
 import { SaveButton, SelectButton, UnselectSolidButton } from "st-peter-ui";
 import { RowItem } from "@/components/info-card/row-item";
 import type { CheckedPlanType, PlanDetails } from "./change-mode.types";
 import { PlanTypes } from "./data";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
-const modes = ["Monthly", "Quarterly", "Semi-Annual", "Annual"];
+const MODES = ["Monthly", "Quarterly", "Semi-Annual", "Annual"] as const;
+
+function monthsPerMode(mode: string): number {
+  if (mode === "Monthly") return 1;
+  if (mode === "Quarterly") return 3;
+  if (mode === "Semi-Annual") return 6;
+  return 12;
+}
+
+function formatMoney(num: number) {
+  return (
+    "₱ " +
+    num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  );
+}
+
+function computeNewMode(plan: PlanDetails, newMode: string, plans: typeof PlanTypes) {
+  const selected = plans.findLast((t) => t.mode === newMode) ?? plans[0];
+  if (!selected) return null;
+
+  const oldInstNo = plan.total_amount_paid / plan.installment_amount;
+  const oldMonths = monthsPerMode(plan.mode);
+  const newMonths = monthsPerMode(selected.mode);
+  const totalMonthsDone = oldInstNo * oldMonths;
+  const totalRemMonths = 60 - totalMonthsDone;
+  const newRemInstNo = Math.floor(totalRemMonths / newMonths);
+  const newInstAmt = selected.installment_amount;
+  const newBalance = newInstAmt * newRemInstNo;
+  const pending = ((totalRemMonths / newMonths - newRemInstNo) * newMonths) / oldMonths;
+  const totalAmtPaid = plan.total_amount_paid + pending * plan.installment_amount;
+
+  return {
+    planCode: selected.plan_code,
+    mode: selected.mode,
+    instNo: newRemInstNo,
+    instNoDone: totalMonthsDone / newMonths,
+    instAmt: newInstAmt,
+    balance: newBalance,
+    tap: newBalance + totalAmtPaid,
+    pending,
+  };
+}
 
 export function PlanDetailsDialog({
   open,
@@ -31,122 +72,75 @@ export function PlanDetailsDialog({
   plan: PlanDetails;
   onCheckedChange?: (checked: boolean, values: CheckedPlanType) => void;
 }) {
-  const [value, setValue] = useState<string>(
-    modes[modes.indexOf(plan.mode) + 1] ?? modes[0] ?? "",
-  );
-  const [isChecked, setIsChecked] = useState(checked);
-  const [selectedMode, setSelectedMode] = useState<CheckedPlanType>();
   const plans = useMemo(
-    () => PlanTypes.filter((type) => type.description === plan.plan_type),
+    () => PlanTypes.filter((t) => t.description === plan.plan_type),
     [plan.plan_type],
   );
 
   const prevPlan = useMemo(
-    () =>
-      PlanTypes.filter((type) => type.description === plan.plan_type).findLast(
-        (type) => type.mode === plan.mode,
-      ),
-    [plan.plan_type],
+    () => plans.findLast((t) => t.mode === plan.mode),
+    [plans, plan.mode],
   );
 
-  const [newPlanCode, setNewPlanCode] = useState(plan.plan_code);
-  const [newMode, setNewMode] = useState(plan.mode);
-  const [newInstNo, setNewInstNo] = useState(plan.installment_no);
-  const [newInstNoDone, setNewInstNoDone] = useState(0);
-  const [newBalance, setNewBalance] = useState(plan.balance);
-  const [newInstAmt, setNewInstAmt] = useState(plan.installment_amount);
-  const [newTAP, setNewTAP] = useState(plan.total_amount_paid + newBalance);
-  const [pendingInstallment, setPendingInstallment] = useState(0);
+  const [selectedMode, setSelectedMode] = useState<string>(
+    MODES[MODES.indexOf(plan.mode as (typeof MODES)[number]) + 1] ?? MODES[0],
+  );
+  const [isChecked, setIsChecked] = useState(checked);
+  const [confirmedMode, setConfirmedMode] = useState<CheckedPlanType>();
 
-  useEffect(() => {
-    const selected = plans.findLast((type) => type.mode === value) ?? plans[0];
-    if (!selected) return;
-    const _oldInstNo = plan.total_amount_paid / plan.installment_amount;
-    const _oldMonthMode =
-      plan.mode === "Monthly"
-        ? 1
-        : plan.mode === "Quarterly"
-          ? 3
-          : plan.mode === "Semi-Annual"
-            ? 6
-            : plan.mode === "Annual"
-              ? 12
-              : 0;
-    const _newMonthMode =
-      selected.mode === "Monthly"
-        ? 1
-        : selected.mode === "Quarterly"
-          ? 3
-          : selected.mode === "Semi-Annual"
-            ? 6
-            : selected.mode === "Annual"
-              ? 12
-              : 0;
-    const _newInstAmt = selected.installment_amount;
-    const _totalMonthDone = _oldInstNo * _oldMonthMode;
-    const _totalRemMonth = 60 - _totalMonthDone;
-    const _newRemInstNo = Math.floor(_totalRemMonth / _newMonthMode);
-    const _newBalance = _newInstAmt * _newRemInstNo;
-    const _totalAmtPaid =
-      plan.total_amount_paid +
-      (((_totalRemMonth / _newMonthMode - _newRemInstNo) * _newMonthMode) /
-        _oldMonthMode) *
-        plan.installment_amount;
-    const _newTAP = _newBalance + _totalAmtPaid;
+  const computed = useMemo(
+    () => computeNewMode(plan, selectedMode, plans),
+    [plan, selectedMode, plans],
+  );
 
-    setPendingInstallment(
-      ((_totalRemMonth / _newMonthMode - _newRemInstNo) * _newMonthMode) /
-        _oldMonthMode,
-    );
-    setNewPlanCode(selected.plan_code);
-    setNewMode(selected.mode);
-    setNewInstNo(_newRemInstNo);
-    setNewInstNoDone(_totalMonthDone / _newMonthMode);
-    setNewInstAmt(_newInstAmt);
-    setNewBalance(_newBalance);
-    setNewTAP(_newTAP);
-  }, [value, plans]);
+  const buildPayload = (): CheckedPlanType => ({
+    lpa_no: plan.lpa_no,
+    pending_installment: computed?.pending ?? 0,
+    pending_installment_amount: (computed?.pending ?? 0) * plan.installment_amount,
+    new_plan_code: computed?.planCode ?? "",
+    new_mode: computed?.mode ?? "",
+    new_installment_amount: computed?.instAmt ?? 0,
+    new_installment_number_done: computed?.instNoDone ?? 0,
+    new_balance: computed?.balance ?? 0,
+    new_tap: computed?.tap ?? 0,
+  });
 
   const handleModeChange = (newValue: string) => {
-    if (!newValue || newValue === value) return;
-    const selected =
-      plans.findLast((type) => type.mode === newValue) ?? plans[0];
-    if (!selected) return;
+    if (!newValue || newValue === selectedMode) return;
+    const result = computeNewMode(plan, newValue, plans);
+    if (!result) return;
 
-    const _oldInstNo = plan.total_amount_paid / plan.installment_amount;
-    const _oldMonthMode =
-      plan.mode === "Monthly"
-        ? 1
-        : plan.mode === "Quarterly"
-          ? 3
-          : plan.mode === "Semi-Annual"
-            ? 6
-            : 12;
-    const _newMonthMode =
-      selected.mode === "Monthly"
-        ? 1
-        : selected.mode === "Quarterly"
-          ? 3
-          : selected.mode === "Semi-Annual"
-            ? 6
-            : 12;
-    const _totalMonthDone = _oldInstNo * _oldMonthMode;
-    const _totalRemMonth = 60 - _totalMonthDone;
-    const _newRemInstNo = Math.floor(_totalRemMonth / _newMonthMode);
-    const pending =
-      ((_totalRemMonth / _newMonthMode - _newRemInstNo) * _newMonthMode) /
-      _oldMonthMode;
-
-    if (pending > 0) {
-      if (
-        !confirm(
-          `You have to pay ${pending} installments before you can change mode from ${plan.mode} to ${selected.mode} which costs ${formatMoney(pending * plan.installment_amount)}. Do you want to proceed?`,
-        )
-      )
-        return;
+    if (result.pending > 0) {
+      const cost = formatMoney(result.pending * plan.installment_amount);
+      const confirmed = confirm(
+        `You have to pay ${result.pending} installments before you can change mode from ${plan.mode} to ${result.mode} which costs ${cost}. Do you want to proceed?`,
+      );
+      if (!confirmed) return;
     }
 
-    setValue(newValue);
+    setSelectedMode(newValue);
+  };
+
+  const handleSelect = () => {
+    const payload = buildPayload();
+    setIsChecked(true);
+    setConfirmedMode(payload);
+    onCheckedChange?.(true, payload);
+  };
+
+  const handleUnselect = () => {
+    setIsChecked(false);
+    onCheckedChange?.(false, {
+      lpa_no: plan.lpa_no,
+      pending_installment: 0,
+      pending_installment_amount: 0,
+      new_plan_code: "",
+      new_mode: "",
+      new_installment_amount: 0,
+      new_installment_number_done: 0,
+      new_balance: 0,
+      new_tap: 0,
+    });
   };
 
   return (
@@ -158,33 +152,22 @@ export function PlanDetailsDialog({
       unmountOnExit
     >
       <Portal>
-        <Drawer.Backdrop />
-        <Drawer.Positioner>
+        <Drawer.Backdrop pointerEvents="none" />
+        <Drawer.Positioner _closed={{ pointerEvents: "none" }}>
           <Drawer.Content
+            pointerEvents="auto"
             borderTopRadius="xl"
             borderBottomRadius="0"
             maxH="92dvh"
           >
-            {/* Drag handle */}
             <Flex justify="center" pt="10px" pb="2px">
               <Box w="36px" h="4px" borderRadius="full" bg="gray.200" />
             </Flex>
 
-            {/* Header */}
-            <Drawer.Header
-              borderBottomWidth="1px"
-              borderColor="gray.100"
-              pt="12px"
-              pb="12px"
-            >
+            <Drawer.Header borderBottomWidth="1px" borderColor="gray.100" pt="12px" pb="12px">
               <Flex align="flex-start" justify="space-between" gap="12px">
                 <Box>
-                  <Drawer.Title
-                    fontSize="17px"
-                    fontWeight="700"
-                    letterSpacing="-0.02em"
-                    lineHeight="1.2"
-                  >
+                  <Drawer.Title fontSize="17px" fontWeight="700" letterSpacing="-0.02em" lineHeight="1.2">
                     Change of Mode
                   </Drawer.Title>
                   <Text fontSize="12px" color="gray.500" mt="3px">
@@ -197,13 +180,7 @@ export function PlanDetailsDialog({
               </Flex>
             </Drawer.Header>
 
-            <Drawer.Body
-              overflowY="auto"
-              px={4}
-              pt={4}
-              pb={`calc(20px + env(safe-area-inset-bottom))`}
-            >
-              {/* Mode selector */}
+            <Drawer.Body overflowY="auto" px={4} pt={4} pb="calc(20px + env(safe-area-inset-bottom))">
               <Box mb={5}>
                 <Text
                   fontSize="10px"
@@ -217,17 +194,11 @@ export function PlanDetailsDialog({
                 </Text>
                 <RadioCard.Root
                   variant="subtle"
-                  value={value}
+                  value={selectedMode}
                   onValueChange={(e) => handleModeChange(e.value ?? "")}
                 >
-                  <Grid
-                    templateColumns={{
-                      base: "repeat(2,1fr)",
-                      md: "repeat(4,1fr)",
-                    }}
-                    gap={2}
-                  >
-                    {modes.map((item, index) => (
+                  <Grid templateColumns={{ base: "repeat(2,1fr)", md: "repeat(4,1fr)" }} gap={2}>
+                    {MODES.map((item, index) => (
                       <RadioCard.Item
                         key={item}
                         value={item}
@@ -236,8 +207,7 @@ export function PlanDetailsDialog({
                         <RadioCard.ItemHiddenInput />
                         <RadioCard.ItemControl
                           _checked={{
-                            backgroundColor:
-                              "var(--chakra-colors-primary-disabled)/50",
+                            backgroundColor: "var(--chakra-colors-primary-disabled)/50",
                             borderColor: "var(--chakra-colors-primary)",
                             borderWidth: "1px",
                             color: "var(--chakra-colors-primary-hover)",
@@ -247,8 +217,7 @@ export function PlanDetailsDialog({
                             backgroundColor: "dangerDisabled",
                             color: "danger",
                             _checked: {
-                              backgroundColor:
-                                "var(--chakra-colors-primary-disabled)/50",
+                              backgroundColor: "var(--chakra-colors-primary-disabled)/50",
                               borderColor: "var(--chakra-colors-primary)",
                               borderWidth: "1px",
                               color: "var(--chakra-colors-primary-hover)",
@@ -269,55 +238,22 @@ export function PlanDetailsDialog({
                 </RadioCard.Root>
               </Box>
 
-              {/* Comparison cards */}
               <SimpleGrid columns={{ base: 1, md: 2 }} gap={3} mb={4}>
-                {/* Current mode */}
-                <Box
-                  p={4}
-                  bg="gray.50"
-                  borderRadius="xl"
-                  borderWidth="1px"
-                  borderColor="gray.200"
-                >
+                <Box p={4} bg="gray.50" borderRadius="xl" borderWidth="1px" borderColor="gray.200">
                   <Flex align="center" gap="6px" mb={3}>
-                    <Box
-                      w="7px"
-                      h="7px"
-                      borderRadius="full"
-                      bg="gray.400"
-                      flexShrink={0}
-                    />
-                    <Text
-                      fontSize="10px"
-                      fontWeight="700"
-                      color="gray.500"
-                      letterSpacing="0.1em"
-                      textTransform="uppercase"
-                    >
+                    <Box w="7px" h="7px" borderRadius="full" bg="gray.400" flexShrink={0} />
+                    <Text fontSize="10px" fontWeight="700" color="gray.500" letterSpacing="0.1em" textTransform="uppercase">
                       Current Mode
                     </Text>
                   </Flex>
                   <RowItem label="Mode" value={plan.mode} />
-                  <RowItem
-                    label="Total Payable"
-                    value={formatMoney(plan.total_amount_payable)}
-                  />
-                  <RowItem
-                    label="Amount Paid"
-                    value={formatMoney(plan.total_amount_paid)}
-                  />
-                  <RowItem
-                    label="Remaining Inst."
-                    value={String(plan.installment_no)}
-                  />
+                  <RowItem label="Total Payable" value={formatMoney(plan.total_amount_payable)} />
+                  <RowItem label="Amount Paid" value={formatMoney(plan.total_amount_paid)} />
+                  <RowItem label="Remaining Inst." value={String(plan.installment_no)} />
                   <RowItem label="Balance" value={formatMoney(plan.balance)} />
-                  <RowItem
-                    label="Inst. Amount"
-                    value={formatMoney(plan.installment_amount)}
-                  />
+                  <RowItem label="Inst. Amount" value={formatMoney(plan.installment_amount)} />
                 </Box>
 
-                {/* After change */}
                 <Box
                   p={4}
                   bg="var(--chakra-colors-primary-disabled)/20"
@@ -326,105 +262,29 @@ export function PlanDetailsDialog({
                   borderColor="var(--chakra-colors-primary)/30"
                 >
                   <Flex align="center" gap="6px" mb={3}>
-                    <Box
-                      w="7px"
-                      h="7px"
-                      borderRadius="full"
-                      bg="var(--chakra-colors-primary)"
-                      flexShrink={0}
-                    />
-                    <Text
-                      fontSize="10px"
-                      fontWeight="700"
-                      color="var(--chakra-colors-primary-hover)"
-                      letterSpacing="0.1em"
-                      textTransform="uppercase"
-                    >
+                    <Box w="7px" h="7px" borderRadius="full" bg="var(--chakra-colors-primary)" flexShrink={0} />
+                    <Text fontSize="10px" fontWeight="700" color="var(--chakra-colors-primary-hover)" letterSpacing="0.1em" textTransform="uppercase">
                       After Change
                     </Text>
                   </Flex>
-                  <RowItem label="New Mode" value={newMode} />
-                  <RowItem label="New TAP" value={formatMoney(newTAP)} />
-                  <RowItem
-                    label="Amount Paid"
-                    value={formatMoney(plan.total_amount_paid)}
-                  />
-                  <RowItem label="Remaining Inst." value={String(newInstNo)} />
-                  <RowItem
-                    label="New Balance"
-                    value={formatMoney(newBalance)}
-                  />
-                  <RowItem
-                    label="New Inst. Amount"
-                    value={formatMoney(newInstAmt)}
-                  />
+                  <RowItem label="New Mode" value={computed?.mode ?? ""} />
+                  <RowItem label="New TAP" value={formatMoney(computed?.tap ?? 0)} />
+                  <RowItem label="Amount Paid" value={formatMoney(plan.total_amount_paid)} />
+                  <RowItem label="Remaining Inst." value={String(computed?.instNo ?? 0)} />
+                  <RowItem label="New Balance" value={formatMoney(computed?.balance ?? 0)} />
+                  <RowItem label="New Inst. Amount" value={formatMoney(computed?.instAmt ?? 0)} />
                 </Box>
               </SimpleGrid>
 
-              {/* Action */}
-              <Box mt={2} justifySelf={"center"}>
+              <Box mt={2} justifySelf="center">
                 {isChecked ? (
-                  selectedMode?.new_mode === value ? (
-                    <UnselectSolidButton
-                      width="full"
-                      onClick={() => {
-                        setIsChecked(false);
-                        onCheckedChange?.(false, {
-                          lpa_no: plan.lpa_no,
-                          pending_installment: 0,
-                          pending_installment_amount: 0,
-                          new_plan_code: "",
-                          new_mode: "",
-                          new_installment_amount: 0,
-                          new_installment_number_done: 0,
-                          new_balance: 0,
-                          new_tap: 0,
-                        });
-                      }}
-                    />
+                  confirmedMode?.new_mode === selectedMode ? (
+                    <UnselectSolidButton width="full" onClick={handleUnselect} />
                   ) : (
-                    <SaveButton
-                      width="full"
-                      onClick={() => {
-                        setIsChecked(true);
-                        const payload: CheckedPlanType = {
-                          lpa_no: plan.lpa_no,
-                          pending_installment: pendingInstallment,
-                          pending_installment_amount:
-                            pendingInstallment * plan.installment_amount,
-                          new_plan_code: newPlanCode,
-                          new_mode: newMode,
-                          new_installment_amount: newInstAmt,
-                          new_installment_number_done: newInstNoDone,
-                          new_balance: newBalance,
-                          new_tap: newTAP,
-                        };
-                        setSelectedMode(payload);
-                        onCheckedChange?.(true, payload);
-                      }}
-                    />
+                    <SaveButton width="full" onClick={handleSelect} />
                   )
                 ) : (
-                  <SelectButton
-                    width="full"
-                    onClick={() => {
-                      setIsChecked(true);
-                      const payload: CheckedPlanType = {
-                        lpa_no: plan.lpa_no,
-                        pending_installment: pendingInstallment,
-                        pending_installment_amount:
-                          pendingInstallment * plan.installment_amount,
-                        new_plan_code: newPlanCode,
-                        new_mode: newMode,
-                        new_installment_amount: newInstAmt,
-                        new_installment_number_done: newInstNoDone,
-                        new_balance: newBalance,
-                        new_tap: newTAP,
-                      };
-                      setSelectedMode(payload);
-                      onCheckedChange?.(true, payload);
-                    }}
-                  />
+                  <SelectButton width="full" onClick={handleSelect} />
                 )}
               </Box>
             </Drawer.Body>
@@ -432,15 +292,5 @@ export function PlanDetailsDialog({
         </Drawer.Positioner>
       </Portal>
     </Drawer.Root>
-  );
-}
-
-function formatMoney(num: number) {
-  return (
-    "₱ " +
-    num.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
   );
 }

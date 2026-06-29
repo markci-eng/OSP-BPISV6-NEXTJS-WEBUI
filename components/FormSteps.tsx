@@ -9,8 +9,8 @@ import {
   Steps,
   Text,
 } from "@chakra-ui/react";
-import { NextButton, SecondaryMdButton } from "st-peter-ui";
-import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
+import { NextButton, PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
+import { LuCheck, LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { useRef } from "react";
 
 export interface StepItem {
@@ -26,6 +26,8 @@ interface FormStepsProps {
   description: string;
   currentStep: number;
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+  onStepsComplete?: () => void;
+  submitButtonText?: string;
 }
 
 const FormSteps: React.FC<FormStepsProps> = ({
@@ -34,6 +36,8 @@ const FormSteps: React.FC<FormStepsProps> = ({
   description,
   currentStep,
   setCurrentStep,
+  onStepsComplete,
+  submitButtonText = "Submit",
 }) => {
   const formTopRef = useRef<HTMLDivElement | null>(null);
 
@@ -172,7 +176,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
               </IconButton>
             </Steps.PrevTrigger>
 
-            {currentStep !== stepsData.length - 1 && (
+            {currentStep !== stepsData.length - 1 ? (
               <IconButton
                 aria-label="Next step"
                 size="sm"
@@ -181,7 +185,16 @@ const FormSteps: React.FC<FormStepsProps> = ({
               >
                 <LuChevronRight />
               </IconButton>
-            )}
+            ) : onStepsComplete ? (
+              <IconButton
+                aria-label="Submit"
+                size="sm"
+                variant="outline"
+                onClick={onStepsComplete}
+              >
+                <LuCheck />
+              </IconButton>
+            ) : null}
           </Flex>
 
           {/* Desktop */}
@@ -195,9 +208,13 @@ const FormSteps: React.FC<FormStepsProps> = ({
                 <SecondaryMdButton>Previous</SecondaryMdButton>
               </Steps.PrevTrigger>
 
-              {currentStep !== stepsData.length - 1 && (
+              {currentStep !== stepsData.length - 1 ? (
                 <NextButton onClick={handleNext} />
-              )}
+              ) : onStepsComplete ? (
+                <PrimaryMdButton onClick={onStepsComplete}>
+                  {submitButtonText}
+                </PrimaryMdButton>
+              ) : null}
             </Flex>
           </ButtonGroup>
         </Steps.Root>

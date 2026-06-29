@@ -136,10 +136,13 @@ export default function PlanholderProfilePage({
   const router = useRouter();
   const { messageBox } = useMessageDialog();
   const [isProfileOpen, setIsProfileOpen] = useState(true);
-  const [personalOpen, setPersonalOpen] = useState(false);
-  const [addressOpen, setAddressOpen] = useState(false);
-  const [contactOpen, setContactOpen] = useState(false);
-  const [employmentOpen, setEmploymentOpen] = useState(false);
+  const isWebOnMount = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(min-width: 1024px)").matches;
+  const [personalOpen, setPersonalOpen] = useState(isWebOnMount);
+  const [addressOpen, setAddressOpen] = useState(isWebOnMount);
+  const [contactOpen, setContactOpen] = useState(isWebOnMount);
+  const [employmentOpen, setEmploymentOpen] = useState(isWebOnMount);
 
   const expandAll = () => {
     setPersonalOpen(true);

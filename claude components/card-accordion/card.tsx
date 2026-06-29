@@ -8,16 +8,19 @@ export function Card({
   subtitle,
   headerAction,
   children,
+  h,
 }: {
   activeIcon: ReactNode;
   title: string;
   subtitle: string;
   headerAction?: ReactNode;
   children: ReactNode;
+  h?: string | Record<string, string>;
 }) {
   return (
     <Box
       w="full"
+      h={h}
       position="relative"
       p={1}
       borderRadius="2xl"
