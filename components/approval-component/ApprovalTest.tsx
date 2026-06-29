@@ -25,12 +25,12 @@ import {
   depositHdrList,
   depositDtlList,
   paymentList,
-} from "@/app/approvals/data/data";
+} from "@/app/(bpis)/approvals/data/data";
 import {
   DRSWithDepositAndPayments,
   mapDRSToDepositAndPayments,
-} from "@/app/approvals/data/types";
-import { DRSPrintLayout } from "@/app/approvals/components/DRSPrintLayout";
+} from "@/app/(bpis)/approvals/data/types";
+import { DRSPrintLayout } from "@/app/(bpis)/approvals/components/DRSPrintLayout";
 import Page from "@/components/layout/page/Page";
 
 type ApprovalView =

@@ -1,7 +1,7 @@
 import React from "react";
 import { LookupColumn, LookupField } from "../reusable-lookup/LookUpField";
 import { PlanholderLookup as PlanholderLookupType } from "./planholder-lookup.type";
-import { planholderLookup } from "@/app/plan-management/data/planholder-lookup";
+import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
 import { Box } from "@chakra-ui/react";
 
 const salesAgentColumns: LookupColumn<PlanholderLookupType>[] = [

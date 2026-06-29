@@ -72,7 +72,7 @@ import type { IconType } from "react-icons";
 import type { NavItem } from "../app-layout.type";
 import { useColorMode } from "@/components/ui/color-mode";
 import { useDemoAuth } from "@/components/ui/demo-auth";
-import ProfilePage from "@/app/account/profile/page";
+import ProfilePage from "@/app/(account)/account/profile/page";
 
 const toast = {
   error: (_message: string) => undefined,

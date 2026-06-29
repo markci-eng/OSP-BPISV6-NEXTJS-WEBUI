@@ -8,7 +8,7 @@ import React from "react";
 import {
   LookupColumn,
   LookupField,
-} from "../../components/common/reusable-lookup/LookUpField";
+} from "@/components/common/reusable-lookup/LookUpField";
 import { AnimatePresence, motion } from "framer-motion";
 import DocumentTable from "./_components/DocumentTable";
 import Page from "@/claude components/layout/page/Page";

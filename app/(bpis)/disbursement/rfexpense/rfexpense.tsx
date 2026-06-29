@@ -1,6 +1,6 @@
 "use client";
 
-import { AccountName } from "@/app/payment/data/paymentDetails";
+import { AccountName } from "@/app/(bpis)/payment/data/paymentDetails";
 import { Card } from "@/claude components/card-accordion/card";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";

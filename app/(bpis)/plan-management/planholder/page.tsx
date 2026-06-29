@@ -1,7 +1,7 @@
 "use client";
 
 import Page from "@/claude components/layout/page/Page";
-import { planholderLookup } from "@/app/plan-management/data/planholder-lookup";
+import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
 import type { PlanholderLookup } from "@/components/plan-management/planholders/tables/planholder-list-table";
 import {
   Badge,
@@ -29,7 +29,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { PlanholderContactData } from "@/app/plan-management/data/planholder-contact.data";
+import { PlanholderContactData } from "@/app/(bpis)/plan-management/data/planholder-contact.data";
 import { ContactNumber } from "@/claude components/contact-number/contact-number";
 import {
   createColumnHelper,

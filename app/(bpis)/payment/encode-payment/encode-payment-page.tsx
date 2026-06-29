@@ -45,14 +45,14 @@ import {
 import { PaymentRecord } from "../data/payment.types";
 import { Employee } from "@/data/doc-management/employeeSelector";
 import { EMPLOYEES } from "@/data/doc-management/documenttype";
-import { PlanholderLookupItem } from "@/app/Model/Types/global.types";
-import { planholderLookup } from "@/app/Model/function/lookupFunction";
+import { PlanholderLookupItem } from "@/app/(bpis)/Model/Types/global.types";
+import { planholderLookup } from "@/app/(bpis)/Model/function/lookupFunction";
 import { computePayments } from "../utils/paymentComputation";
 
 import SectionTitle from "@/components/texts/SectionTitle";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import { TblLoanHdrData } from "@/app/Model/Data/rawData";
+import { TblLoanHdrData } from "@/app/(bpis)/Model/Data/rawData";
 import { RowAction } from "@/components/common/reusable-tableV2/types";
 import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
 import { LuUser, LuHash, LuMapPin, LuCalendar } from "react-icons/lu";

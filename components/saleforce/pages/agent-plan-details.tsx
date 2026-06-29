@@ -31,7 +31,6 @@ import {
   getSubordinates,
   SalesAgent,
 } from "../../common/agent-lookup/agent-lookup.type";
-import MCPRList from "@/app/accounts-maintenance/mcpr/mcpr-list";
 import MenuButton, {
   MenuItemButton,
 } from "@/claude components/buttons/MenuButton";
@@ -56,6 +55,7 @@ import ProfileHeaderCard from "@/components/cards/ProfileHeaderCard";
 import ActionButtons, {
   ActionButtonItem,
 } from "@/claude components/buttons/ActionButtons";
+import MCPRList from "@/app/(bpis)/accounts-maintenance/mcpr/mcpr-list";
 
 const MOCK_AGENT_REQUESTS: RequestProps[] = [
   {

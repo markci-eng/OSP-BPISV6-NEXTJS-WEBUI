@@ -23,7 +23,7 @@ import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { BsPrinter } from "react-icons/bs";
 import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import { ColumnDef } from "@tanstack/react-table";
-import { TblLoanHdrData } from "@/app/Model/Data/rawData";
+import { TblLoanHdrData } from "@/app/(bpis)/Model/Data/rawData";
 import { Card } from "@/claude components/card-accordion/card";
 import { RowItem } from "@/claude components/info-card/row-item";
 

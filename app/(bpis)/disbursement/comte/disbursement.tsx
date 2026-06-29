@@ -51,8 +51,8 @@ import InfoItem from "@/components/common/info-item/info-item";
 import Page from "@/claude components/layout/page/Page";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 
-import { DepositHdr } from "@/app/payment/data/payment.types";
-import { drsItems, tableItems } from "@/app/payment/data/paymentDetails";
+import { DepositHdr } from "@/app/(bpis)/payment/data/payment.types";
+import { drsItems, tableItems } from "@/app/(bpis)/payment/data/paymentDetails";
 
 /* ------------------------------------------------------------------ */
 /* Local view-model                                                     */
@@ -619,9 +619,7 @@ export default function Disbursement() {
         Employees · {filteredMobileEmployees.length}
       </Text>
 
-      <Box
-        ref={empListContainerRef}
-      >
+      <Box ref={empListContainerRef}>
         <VStack gap={2.5} align="stretch" px={"2px"}>
           {visibleEmployees.map((e) => {
             const isSelected =
@@ -792,9 +790,7 @@ export default function Disbursement() {
         Select a Remittance Slip
       </Text>
 
-      <Box
-        ref={drsListContainerRef}
-      >
+      <Box ref={drsListContainerRef}>
         <VStack gap={2.5} align="stretch" px={"2px"}>
           {visibleDrs.map((d) => {
             const isSelected = selectedDrs?.name === d.name;

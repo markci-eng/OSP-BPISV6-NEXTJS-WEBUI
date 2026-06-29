@@ -1,4 +1,4 @@
-import type { DepositHdr } from "@/app/payment/data/payment.types";
+import type { DepositHdr } from "@/app/(bpis)/payment/data/payment.types";
 
 export type ApprovalStatus = "Pending" | "Approved" | "Denied";
 

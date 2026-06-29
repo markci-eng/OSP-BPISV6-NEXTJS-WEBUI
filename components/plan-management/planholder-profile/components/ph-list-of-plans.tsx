@@ -31,17 +31,9 @@ import { IoMdPersonAdd } from "react-icons/io";
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";
 import { LuSearch, LuUsersRound } from "react-icons/lu";
 import { RiArrowDownSLine, RiHistoryFill } from "react-icons/ri";
-import {
-  Body,
-  Checkbox,
-  H4,
-  InputFloatingLabel,
-  PrimaryMdButton,
-  Small,
-} from "st-peter-ui";
+import { Body, H4, PrimaryMdButton, Small } from "st-peter-ui";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
 import { MdHealthAndSafety } from "react-icons/md";
-import { PlanDetailsData } from "@/app/plan-management/data/plan-details.data";
 import { PlanDetailType } from "../planholder-profile-page";
 import { StatementOfAccount } from "./ph-statement-of-account";
 

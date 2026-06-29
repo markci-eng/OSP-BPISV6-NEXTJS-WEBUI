@@ -33,7 +33,7 @@ import { StatementOfAccount } from "../ph-statement-of-account";
 import { PlanDetailType, PlanholdersProps } from "../planholders.types";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
 import { MdHealthAndSafety } from "react-icons/md";
-import { PlanDetailsData } from "@/app/plan-management/data/plan-details.data";
+import { PlanDetailsData } from "@/app/(bpis)/plan-management/data/plan-details.data";
 
 export interface PhBeneficiaries {
   lpaNumber: string;

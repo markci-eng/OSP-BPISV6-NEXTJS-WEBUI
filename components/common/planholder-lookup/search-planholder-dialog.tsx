@@ -1,26 +1,53 @@
-import { ButtonGroup, CloseButton, Dialog, Flex, IconButton, Input, InputGroup, Kbd, Pagination, Portal, Separator, Table } from "@chakra-ui/react";
+import {
+  ButtonGroup,
+  CloseButton,
+  Dialog,
+  Flex,
+  IconButton,
+  Input,
+  InputGroup,
+  Kbd,
+  Pagination,
+  Portal,
+  Separator,
+  Table,
+} from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight, LuSearch, LuX } from "react-icons/lu";
 import { Small } from "st-peter-ui";
-import { planholderLookup } from "../../../app/plan-management/data/planholder-lookup";
+import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
 import { useEffect, useState } from "react";
 import { PlanholderLookup } from "./planholder-lookup.type";
 
-export function SearchPlanholderDialog({selectedLpa = null, onSelectChange} : {selectedLpa?: string | null, onSelectChange?: (lpaNo: string | null) => void}) {
-  const [selectedLPANumber, setSelectedLPANumber] = useState<string | null>(selectedLpa);
-  const [selectedPlanholder, setSelectedPlanholder] = useState<PlanholderLookup | null>(null);
-  const [filteredPlanholders, setFilteredPlanholders] = useState(planholderLookup);
+export function SearchPlanholderDialog({
+  selectedLpa = null,
+  onSelectChange,
+}: {
+  selectedLpa?: string | null;
+  onSelectChange?: (lpaNo: string | null) => void;
+}) {
+  const [selectedLPANumber, setSelectedLPANumber] = useState<string | null>(
+    selectedLpa,
+  );
+  const [selectedPlanholder, setSelectedPlanholder] =
+    useState<PlanholderLookup | null>(null);
+  const [filteredPlanholders, setFilteredPlanholders] =
+    useState(planholderLookup);
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    if(!open) {
+    if (!open) {
       onSelectChange?.(selectedLPANumber);
     }
   }, [open]);
 
   useEffect(() => {
-    setSelectedPlanholder(filteredPlanholders.find(item => item.lpaNumber === selectedLPANumber) ?? null);
+    setSelectedPlanholder(
+      filteredPlanholders.find(
+        (item) => item.lpaNumber === selectedLPANumber,
+      ) ?? null,
+    );
   }, [selectedLPANumber]);
 
   return (
@@ -57,7 +84,12 @@ export function SearchPlanholderDialog({selectedLpa = null, onSelectChange} : {s
             cursor={"pointer"}
             maxW={"460px"}
           >
-            <Small color={"gray.500"} whiteSpace={"nowrap"} overflow={"hidden"} textOverflow={"ellipsis"}>
+            <Small
+              color={"gray.500"}
+              whiteSpace={"nowrap"}
+              overflow={"hidden"}
+              textOverflow={"ellipsis"}
+            >
               {"Search LPA Number or Planholder Name . . ."}
             </Small>
             {<LuSearch color="#747474" />}

@@ -9,7 +9,7 @@ import { LuUsers } from "react-icons/lu";
 
 import FormSteps from "@/claude components/FormSteps";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { PlanholderInfoData } from "@/app/plan-management/data/planholder-info.data";
+import { PlanholderInfoData } from "@/app/(bpis)/plan-management/data/planholder-info.data";
 import { PlanholderInfoType } from "@/components/plan-management/planholders/planholders.types";
 import Page from "@/claude components/layout/page/Page";
 

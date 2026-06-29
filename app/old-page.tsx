@@ -40,16 +40,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useEffect, useState } from "react";
+import Page from "@/components/layout/page/Page";
+import React from "react";
+import { OSPBadge } from "@/components/common/badge/badge";
 import {
   agentLeaderboards,
   monthlyNewSales,
   planholders,
   quotaAndCollections,
-} from "./dashboard-data";
-import { useEffect, useState } from "react";
-import Page from "@/components/layout/page/Page";
-import React from "react";
-import { OSPBadge } from "@/components/common/badge/badge";
+} from "./(bpis)/dashboard-data";
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
