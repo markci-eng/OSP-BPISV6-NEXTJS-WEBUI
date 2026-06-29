@@ -40,7 +40,7 @@ import {
   LuSearch,
   LuUser,
 } from "react-icons/lu";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import InfoCard from "@/claude components/info-card/info-card";
 import { ActivePlan, activePlans } from "./activeplan";
 
@@ -290,7 +290,11 @@ const PayMyPlan = () => {
 
   return (
     <>
-      <Page.Root title="" description="" hideBackButton={true}>
+      <Page.Root
+        title="Pay My Plan"
+        description="Review and settle dues."
+        hideBackButton={true}
+      >
         <Page.MainContent mb={{ base: "auto", md: 0 }}>
           {/* ── INFO CARD ──────────────────────────────────────────────────── */}
           <Page.Row>
