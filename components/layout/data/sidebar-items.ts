@@ -1,17 +1,8 @@
 import { NavItem } from "../app-layout.type";
-import {
-  HiCurrencyDollar,
-  HiOutlineCurrencyDollar,
-  HiOutlineUsers,
-  HiUsers,
-} from "react-icons/hi2";
-import { HiOutlineDocumentReport } from "react-icons/hi";
-import {
-  MdManageAccounts,
-  MdOutlineManageAccounts,
-  MdOutlinePayment,
-  MdOutlinePayments,
-} from "react-icons/md";
+import { HiOutlineUsers, HiUsers } from "react-icons/hi2";
+import { PesoOutlineIcon, PesoSolidIcon } from "../../icons/peso-icons";
+import { McprOutlineIcon, McprSolidIcon } from "../../icons/mcpr-icons";
+
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";
 import {
   BsFileEarmarkExcel,
@@ -115,8 +106,8 @@ export const SideBarItemsBranch: NavItem[] = [
     ],
   },
   {
-    icon: HiOutlineCurrencyDollar,
-    activeIcon: HiCurrencyDollar,
+    icon: PesoOutlineIcon,
+    activeIcon: PesoSolidIcon,
     label: "Payment",
     subItems: [
       { label: "Encode Payment", href: "/payment/encode-payment" },
@@ -152,8 +143,8 @@ export const SideBarItemsBranch: NavItem[] = [
   },
 
   {
-    icon: MdOutlineManageAccounts,
-    activeIcon: MdManageAccounts,
+    icon: McprOutlineIcon,
+    activeIcon: McprSolidIcon,
     label: "Accounts Maintenance",
     subItems: [
       { label: "MCPR", href: "/accounts-maintenance/mcpr" },
@@ -200,16 +191,16 @@ export const SideBarItemsEKolekta: NavItem[] = [
     bottomNav: true,
   },
   {
-    icon: TbReceiptDollar,
-    activeIcon: TbReceiptDollarFilled,
+    icon: McprOutlineIcon,
+    activeIcon: McprSolidIcon,
     label: "View MCPR",
     href: "/accounts-maintenance/mcpr",
     displayName: "MCPR",
     bottomNav: true,
   },
   {
-    icon: HiOutlineCurrencyDollar,
-    activeIcon: HiCurrencyDollar,
+    icon: PesoOutlineIcon,
+    activeIcon: PesoSolidIcon,
     label: "Payment",
     subItems: [
       {
