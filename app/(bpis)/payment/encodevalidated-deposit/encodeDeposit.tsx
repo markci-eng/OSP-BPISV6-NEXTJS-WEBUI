@@ -99,32 +99,35 @@ export default function EncodeDeposit() {
         <Flex flexDir="column" gap={4}>
           {/* SECTION 1 — Find DRS */}
           <Flex justify="flex-end">
-          <Box maxW={{ base: "full", md: "sm" }} w={{ base: "full", md: "sm" }}>
-            <LookupField<DepositHdr>
-              label=""
-              placeholder="Search Digital Remittance Slip"
-              modalTitle="Search Digital Remittance Slip"
-              columns={drsColumns}
-              dataSource={drsItems}
-              searchKeys={["id", "name", "DepositDateTime"]}
-              onSelect={(e) => {
-                if (!e) {
-                  setSelectedDRS(null);
-                  setDepositOpen(false);
-                  return;
-                }
-                if (drsItems[0].id === e.id) {
-                  setSelectedDRS(e);
-                  setSearchOpen(false);
-                  setDepositOpen(true);
-                } else {
-                  toast.error("Please encode the first created DRS");
-                }
-              }}
-              renderDisplay={(x) => `${x.name} (${x.Amount})`}
-              value={selectedDRS}
-            />
-          </Box>
+            <Box
+              maxW={{ base: "full", md: "sm" }}
+              w={{ base: "full", md: "sm" }}
+            >
+              <LookupField<DepositHdr>
+                label=""
+                placeholder="Search Digital Remittance Slip"
+                modalTitle="Search Digital Remittance Slip"
+                columns={drsColumns}
+                dataSource={drsItems}
+                searchKeys={["id", "name", "DepositDateTime"]}
+                onSelect={(e) => {
+                  if (!e) {
+                    setSelectedDRS(null);
+                    setDepositOpen(false);
+                    return;
+                  }
+                  if (drsItems[0].id === e.id) {
+                    setSelectedDRS(e);
+                    setSearchOpen(false);
+                    setDepositOpen(true);
+                  } else {
+                    toast.error("Please encode the first created DRS");
+                  }
+                }}
+                renderDisplay={(x) => `${x.name} (${x.Amount})`}
+                value={selectedDRS}
+              />
+            </Box>
           </Flex>
 
           {/* SECTION 2 — Deposit Details */}
@@ -160,6 +163,7 @@ export default function EncodeDeposit() {
                   />
                   <Flex alignItems="center">
                     <LookupField<refBankBranch>
+                      variant="dropdown"
                       label=""
                       placeholder="Bank Branch"
                       modalTitle="Search Bank Branch"
@@ -178,6 +182,7 @@ export default function EncodeDeposit() {
                   />
                   <Flex alignItems="center">
                     <LookupField<Employee>
+                      variant="dropdown"
                       label=""
                       placeholder="Search by name or ID..."
                       modalTitle="Search Employee"

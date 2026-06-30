@@ -77,6 +77,7 @@ export default function MCPRPage() {
                   md: "1fr 1fr",
                 }}
                 gap={4}
+                alignItems="center"
               >
                 <GridItem>
                   <SelectFloatingLabel

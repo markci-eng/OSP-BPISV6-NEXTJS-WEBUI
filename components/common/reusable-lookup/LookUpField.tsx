@@ -66,6 +66,7 @@ interface LookupFieldProps<T> {
   renderDisplay: (item: T) => string;
   value: T | null;
   mobileFullscreen?: boolean;
+  variant?: "search" | "dropdown";
 }
 
 // ---------------------------------------------------------------------------
@@ -335,6 +336,7 @@ export function LookupField<T extends object>({
   renderDisplay,
   value,
   mobileFullscreen = false,
+  variant = "search",
 }: LookupFieldProps<T>) {
   const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
   const isFullscreen = isMobile;
@@ -368,7 +370,8 @@ export function LookupField<T extends object>({
   }, [searchText, dataSource, searchKeys, value]);
 
   const suggestions = allSuggestions.slice(0, 8);
-  const showSuggestions = isTriggerFocused && !value && suggestions.length > 0;
+  const showSuggestions =
+    variant === "search" && isTriggerFocused && !value && suggestions.length > 0;
 
   const uniqueColumnValues = React.useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -463,6 +466,23 @@ export function LookupField<T extends object>({
       const timer = setTimeout(() => inputRef.current?.focus(), 50);
       return () => clearTimeout(timer);
     }
+  }, [open]);
+
+  // Safety net: zag-js (Chakra v3) can leak the body pointer-events lock on
+  // close, freezing the page. After close, clear it if no other modal is open.
+  React.useEffect(() => {
+    if (open) return;
+    const t = window.setTimeout(() => {
+      if (
+        !document.querySelector(
+          '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+        )
+      ) {
+        document.body.style.pointerEvents = "";
+        document.body.removeAttribute("data-inert");
+      }
+    }, 50);
+    return () => window.clearTimeout(t);
   }, [open]);
 
   // Auto-scroll highlighted row into view
@@ -603,129 +623,194 @@ export function LookupField<T extends object>({
       )}
 
       {/* ── Trigger ── */}
-      <HStack gap={0} w="full">
-        <Box
-          flex={1}
+      {variant === "dropdown" ? (
+        <HStack
+          gap={0}
+          w="full"
           border="1.5px solid"
           borderColor={
             value ? "var(--chakra-colors-primary-disabled)" : "gray.200"
           }
-          borderRightWidth="0"
-          borderLeftRadius="lg"
+          borderRadius="lg"
           bg="white"
           boxShadow="xs"
-          overflow="hidden"
+          minH="10"
+          px={3}
+          cursor="pointer"
+          role="button"
+          tabIndex={0}
           transition="border-color 0.15s, box-shadow 0.15s"
           _hover={{
             borderColor: value ? "var(--chakra-colors-primary)" : "gray.300",
           }}
-          _focusWithin={{
+          _focusVisible={{
+            outline: "none",
             borderColor: "var(--chakra-colors-primary)",
             boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
           }}
-          minH="10"
-          display="flex"
-          alignItems="center"
+          onClick={openModal}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openModal();
+            }
+          }}
         >
-          <Input
-            value={triggerValue}
-            onChange={(e) => {
-              if (value) onSelect(null);
-              setSearchText(e.target.value);
+          <Text
+            flex={1}
+            fontSize="sm"
+            color={value ? "gray.800" : "gray.400"}
+            fontWeight={value ? "medium" : "normal"}
+            lineClamp={1}
+            userSelect="none"
+          >
+            {value ? renderDisplay(value) : placeholder}
+          </Text>
+
+          {value && (
+            <IconButton
+              aria-label="Clear selection"
+              variant="ghost"
+              size="xs"
+              borderRadius="full"
+              color="gray.400"
+              flexShrink={0}
+              _hover={{ bg: "gray.100", color: "gray.600" }}
+              onClick={handleClearSelection}
+            >
+              <X size={12} />
+            </IconButton>
+          )}
+
+          <Box color="gray.400" flexShrink={0} ml={1}>
+            <ChevronDown size={15} />
+          </Box>
+        </HStack>
+      ) : (
+        <HStack gap={0} w="full">
+          <Box
+            flex={1}
+            border="1.5px solid"
+            borderColor={
+              value ? "var(--chakra-colors-primary-disabled)" : "gray.200"
+            }
+            borderRightWidth="0"
+            borderLeftRadius="lg"
+            bg="white"
+            boxShadow="xs"
+            overflow="hidden"
+            transition="border-color 0.15s, box-shadow 0.15s"
+            _hover={{
+              borderColor: value ? "var(--chakra-colors-primary)" : "gray.300",
             }}
-            onFocus={() => setIsTriggerFocused(true)}
-            onBlur={() => {
-              setTimeout(() => {
-                setIsTriggerFocused(false);
-                setSuggestionIndex(-1);
-              }, 150);
+            _focusWithin={{
+              borderColor: "var(--chakra-colors-primary)",
+              boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
             }}
-            onKeyDown={(e) => {
-              if (showSuggestions) {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setSuggestionIndex((p) =>
-                    Math.min(p + 1, suggestions.length - 1),
-                  );
-                  return;
-                }
-                if (e.key === "ArrowUp") {
-                  e.preventDefault();
-                  setSuggestionIndex((p) => Math.max(p - 1, -1));
-                  return;
+            minH="10"
+            display="flex"
+            alignItems="center"
+          >
+            <Input
+              value={triggerValue}
+              onChange={(e) => {
+                if (value) onSelect(null);
+                setSearchText(e.target.value);
+              }}
+              onFocus={() => setIsTriggerFocused(true)}
+              onBlur={() => {
+                setTimeout(() => {
+                  setIsTriggerFocused(false);
+                  setSuggestionIndex(-1);
+                }, 150);
+              }}
+              onKeyDown={(e) => {
+                if (showSuggestions) {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setSuggestionIndex((p) =>
+                      Math.min(p + 1, suggestions.length - 1),
+                    );
+                    return;
+                  }
+                  if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setSuggestionIndex((p) => Math.max(p - 1, -1));
+                    return;
+                  }
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+                      handleSelectSuggestion(suggestions[suggestionIndex]);
+                    } else {
+                      openModal();
+                    }
+                    return;
+                  }
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    setIsTriggerFocused(false);
+                    setSuggestionIndex(-1);
+                    return;
+                  }
                 }
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
-                    handleSelectSuggestion(suggestions[suggestionIndex]);
-                  } else {
-                    openModal();
-                  }
-                  return;
+                  openModal();
                 }
-                if (e.key === "Escape") {
-                  e.preventDefault();
-                  setIsTriggerFocused(false);
-                  setSuggestionIndex(-1);
-                  return;
-                }
-              }
-              if (e.key === "Enter") {
-                e.preventDefault();
-                openModal();
-              }
-            }}
-            onClick={() => {
-              if (value) openModal();
-            }}
-            placeholder={placeholder}
-            readOnly={!!value}
-            cursor={value ? "pointer" : "text"}
-            border="none"
-            bg="transparent"
-            boxShadow="none"
-            borderRadius="0"
-            px={3}
-            fontSize="sm"
-            color={value ? "gray.800" : "gray.700"}
-            fontWeight={value ? "medium" : "normal"}
-            _placeholder={{ color: "gray.400" }}
-            _focus={{ boxShadow: "none", outline: "none" }}
-          />
+              }}
+              onClick={() => {
+                if (value) openModal();
+              }}
+              placeholder={placeholder}
+              readOnly={!!value}
+              cursor={value ? "pointer" : "text"}
+              border="none"
+              bg="transparent"
+              boxShadow="none"
+              borderRadius="0"
+              px={3}
+              fontSize="sm"
+              color={value ? "gray.800" : "gray.700"}
+              fontWeight={value ? "medium" : "normal"}
+              _placeholder={{ color: "gray.400" }}
+              _focus={{ boxShadow: "none", outline: "none" }}
+            />
 
-          {(value || searchText) && (
-            <Flex align="center" pr={2} flexShrink={0}>
-              <IconButton
-                aria-label="Clear selection"
-                variant="ghost"
-                size="xs"
-                borderRadius="full"
-                color="gray.400"
-                _hover={{ bg: "gray.100", color: "gray.600" }}
-                onClick={handleClearSelection}
-              >
-                <X size={12} />
-              </IconButton>
-            </Flex>
-          )}
-        </Box>
+            {(value || searchText) && (
+              <Flex align="center" pr={2} flexShrink={0}>
+                <IconButton
+                  aria-label="Clear selection"
+                  variant="ghost"
+                  size="xs"
+                  borderRadius="full"
+                  color="gray.400"
+                  _hover={{ bg: "gray.100", color: "gray.600" }}
+                  onClick={handleClearSelection}
+                >
+                  <X size={12} />
+                </IconButton>
+              </Flex>
+            )}
+          </Box>
 
-        <IconButton
-          aria-label="Open search"
-          onClick={openModal}
-          bg="var(--chakra-colors-primary)"
-          color="white"
-          borderLeftRadius="0"
-          borderRightRadius="lg"
-          h="10"
-          minW="10"
-          flexShrink={0}
-          _hover={{ opacity: 0.88 }}
-          _active={{ opacity: 0.75 }}
-        >
-          <Search size={15} />
-        </IconButton>
-      </HStack>
+          <IconButton
+            aria-label="Open search"
+            onClick={openModal}
+            bg="var(--chakra-colors-primary)"
+            color="white"
+            borderLeftRadius="0"
+            borderRightRadius="lg"
+            h="10"
+            minW="10"
+            flexShrink={0}
+            _hover={{ opacity: 0.88 }}
+            _active={{ opacity: 0.75 }}
+          >
+            <Search size={15} />
+          </IconButton>
+        </HStack>
+      )}
 
       {/* ── Suggestions dropdown ── */}
       <AnimatePresence>

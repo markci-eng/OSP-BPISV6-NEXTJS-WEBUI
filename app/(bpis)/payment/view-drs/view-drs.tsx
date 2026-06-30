@@ -12,7 +12,13 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 
-import { Body, PrimaryMdFlexButton, SecondaryMdFlexButton } from "st-peter-ui";
+import {
+  Body,
+  PrimaryMdButton,
+  PrimaryMdFlexButton,
+  SecondaryMdButton,
+  SecondaryMdFlexButton,
+} from "st-peter-ui";
 
 import { drsItems, samplePayments } from "../data/paymentDetails";
 import { DepositHdr } from "../data/payment.types";
@@ -24,6 +30,7 @@ import {
   LuCalendar,
   LuBanknote,
   LuUsers,
+  LuPlus,
 } from "react-icons/lu";
 
 import { toast } from "sonner";
@@ -43,11 +50,27 @@ import { OSPBadge } from "@/components/common/badge/badge";
 
 const STATUS_STYLES: Record<
   string,
-  { colorPalette: "warning" | "success" | "info"; dotColor: string }
+  {
+    colorPalette: "warning" | "success" | "info";
+    dotColor: string;
+    stripeColor: string;
+  }
 > = {
-  Pending: { colorPalette: "warning", dotColor: "yellow.500" },
-  Validated: { colorPalette: "success", dotColor: "green.500" },
-  "For Deposit": { colorPalette: "info", dotColor: "blue.500" },
+  Pending: {
+    colorPalette: "warning",
+    dotColor: "yellow.500",
+    stripeColor: "yellow.400",
+  },
+  Validated: {
+    colorPalette: "success",
+    dotColor: "green.500",
+    stripeColor: "green.500",
+  },
+  "For Deposit": {
+    colorPalette: "info",
+    dotColor: "blue.500",
+    stripeColor: "blue.500",
+  },
 };
 
 const formatSlipDate = (value?: string) => {
@@ -158,37 +181,60 @@ export default function ViewDrs() {
         const isSelected = selectedId === item.id;
         const status = item.Status ?? "Pending";
         const styles = STATUS_STYLES[status] ?? STATUS_STYLES.Pending;
-        const isLatest = sortedDrsItems[0]?.id === item.id;
 
         return (
           <Box
             key={item.id}
             w="100%"
             position="relative"
-            p={4}
-            borderRadius="2xl"
-            // bg={isSelected ? "green.50" : "white"}
-            shadow="sm"
-            transition="all 0.25s ease"
-            _hover={{ transform: "translateY(-3px)", shadow: "lg" }}
+            pl={5}
+            pr={4}
+            pt={4}
+            pb={3}
+            borderRadius="xl"
+            bg={isSelected ? "blue.50" : "white"}
+            shadow={isSelected ? "md" : "sm"}
+            transition="all 0.2s ease"
+            _hover={{ transform: "translateY(-2px)", shadow: "md" }}
             overflow="hidden"
             cursor="pointer"
             onClick={() => handleSelectItem(item.id)}
-            borderWidth="2px"
-            // borderColor={isSelected ? "green.400" : "transparent"}
+            borderWidth="1.5px"
+            borderColor={isSelected ? "blue.300" : "gray.100"}
           >
+            {/* Status stripe */}
+            <Box
+              position="absolute"
+              left={0}
+              top={0}
+              bottom={0}
+              w="4px"
+              bg={styles.stripeColor}
+              borderLeftRadius="xl"
+            />
+
             {/* HEADER */}
-            <Flex justify="space-between" align="start" mb={3}>
+            <Flex justify="space-between" align="start" mb={2}>
               <Flex align="center" gap={2}>
-                <Box p={2} borderRadius="full" bg="gray.100">
-                  <LuFileText size={18} />
+                <Box
+                  p={1.5}
+                  borderRadius="lg"
+                  bg={isSelected ? "blue.100" : "gray.100"}
+                >
+                  <LuFileText size={15} />
                 </Box>
                 <Box>
-                  <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
+                  <Text fontWeight="bold" fontSize="sm" lineHeight="1.2">
                     {item.name}
                   </Text>
-                  <Flex align="center" gap={1} fontSize="xs" color="gray.500">
-                    <LuCalendar size={12} />
+                  <Flex
+                    align="center"
+                    gap={1}
+                    fontSize="xs"
+                    color="gray.500"
+                    mt={0.5}
+                  >
+                    <LuCalendar size={11} />
                     <Text>{formatSlipDate(item.SlipDate)}</Text>
                   </Flex>
                 </Box>
@@ -197,43 +243,45 @@ export default function ViewDrs() {
             </Flex>
 
             {/* QUICK INFO CHIPS */}
-            <Flex gap={2} wrap="wrap" mb={3}>
-              <Box
+            <Flex gap={2} wrap="wrap" mb={2}>
+              <Flex
                 px={2}
-                py={1}
+                py={0.5}
                 fontSize="xs"
                 borderRadius="full"
-                bg="gray.50"
-                display="flex"
-                alignItems="center"
+                bg={isSelected ? "blue.100" : "gray.50"}
+                align="center"
                 gap={1}
+                fontWeight="medium"
               >
-                <LuBanknote size={12} />
+                <LuBanknote size={11} />
                 {item.Amount}
-              </Box>
+              </Flex>
               {item.Planholders != null && (
-                <Box
+                <Flex
                   px={2}
-                  py={1}
+                  py={0.5}
                   fontSize="xs"
                   borderRadius="full"
-                  bg="gray.50"
-                  display="flex"
-                  alignItems="center"
+                  bg={isSelected ? "blue.100" : "gray.50"}
+                  align="center"
                   gap={1}
                 >
-                  <LuUsers size={12} />
+                  <LuUsers size={11} />
                   {item.Planholders} planholders
-                </Box>
+                </Flex>
               )}
             </Flex>
 
             {/* FOOTER */}
-            <Flex justify="space-between" align="center" mt={2}>
+            <Flex justify="space-between" align="center">
               <Text fontSize="xs" color="gray.400">
-                {isMobile ? "Tap to view details" : "Click to view details"}
+                {isMobile ? "Tap to view" : "Click to view"}
               </Text>
-              <LuChevronRight color="#a1a1aa" />
+              <LuChevronRight
+                size={14}
+                color={isSelected ? "#3b82f6" : "#a1a1aa"}
+              />
             </Flex>
           </Box>
         );
@@ -410,22 +458,36 @@ export default function ViewDrs() {
     <Box>
       <Flex align="center" justify="space-between" mb={3}>
         <Flex align="center" gap={2}>
-          <LuFileText size={16} />
-          <Text fontWeight="semibold" fontSize="sm">
-            Remittance Slips
-          </Text>
-          <Text fontSize="xs" color="gray.500">
-            {sortedDrsItems.length} slip(s)
-          </Text>
+          <Box p={1.5} borderRadius="lg" bg="gray.100">
+            <LuFileText size={14} />
+          </Box>
+          <Box>
+            <Text fontWeight="semibold" fontSize="sm" lineHeight="1.1">
+              Remittance Slips
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              {sortedDrsItems.length} slip(s)
+            </Text>
+          </Box>
         </Flex>
-        <IconButton
-          aria-label="Collapse panel"
-          size="xs"
-          variant="ghost"
-          onClick={() => setCollapsed(true)}
-        >
-          <LuChevronLeft />
-        </IconButton>
+        <Flex align="center" gap={1}>
+          <IconButton
+            aria-label="New DRS"
+            size="xs"
+            variant="ghost"
+            onClick={() => router.push("/payment/encode-payment")}
+          >
+            <LuPlus />
+          </IconButton>
+          <IconButton
+            aria-label="Collapse panel"
+            size="xs"
+            variant="ghost"
+            onClick={() => setCollapsed(true)}
+          >
+            <LuChevronLeft />
+          </IconButton>
+        </Flex>
       </Flex>
       <Box mb={3}>
         <LookupField<DepositHdr>
@@ -439,7 +501,7 @@ export default function ViewDrs() {
           renderDisplay={(item) => item.name}
         />
       </Box>
-      <Box maxH={{ md: "450px", xl: "520px" }} overflowY="auto" pr={1}>
+      <Box maxH={{ md: "450px", xl: "560px" }} overflowY="auto" pr={1}>
         {slipList}
       </Box>
     </Box>
@@ -451,41 +513,94 @@ export default function ViewDrs() {
       {!selectedId ? (
         <EmptyStateCard
           title="No DRS Selected"
-          description="Select a DRS from the left to view details"
+          description="Select a remittance slip from the left panel to view its payment details"
         />
       ) : (
         <>
+          {/* DRS info bar */}
+          {selectedItem && (
+            <Box
+              mb={4}
+              px={5}
+              py={4}
+              bg="white"
+              borderRadius="xl"
+              shadow="sm"
+              borderWidth="1px"
+              borderColor="gray.100"
+            >
+              <Flex justify="space-between" align="center" wrap="wrap" gap={3}>
+                <Box>
+                  <Flex align="center" gap={3} mb={1.5}>
+                    <Text fontWeight="bold" fontSize="lg" letterSpacing="tight">
+                      {selectedItem.name}
+                    </Text>
+                    <OSPBadge
+                      type={
+                        (
+                          STATUS_STYLES[selectedItem.Status ?? "Pending"] ??
+                          STATUS_STYLES.Pending
+                        ).colorPalette
+                      }
+                    >
+                      {selectedItem.Status ?? "Pending"}
+                    </OSPBadge>
+                  </Flex>
+                  <Flex gap={5} fontSize="sm" color="gray.500" align="center">
+                    <Flex align="center" gap={1.5}>
+                      <LuCalendar size={13} />
+                      <Text>{formatSlipDate(selectedItem.SlipDate)}</Text>
+                    </Flex>
+                    <Flex align="center" gap={1.5}>
+                      <LuBanknote size={13} />
+                      <Text fontWeight="semibold" color="gray.700">
+                        {selectedItem.Amount}
+                      </Text>
+                    </Flex>
+                    {selectedItem.Planholders != null && (
+                      <Flex align="center" gap={1.5}>
+                        <LuUsers size={13} />
+                        <Text>{selectedItem.Planholders} planholders</Text>
+                      </Flex>
+                    )}
+                  </Flex>
+                </Box>
+                <Flex gap={2} align="center" flexShrink={0}>
+                  {sortedDrsItems[0]?.id === selectedId && (
+                    <IconButton
+                      aria-label="Delete DRS"
+                      size="md"
+                      variant="outline"
+                      color="red.500"
+                      borderColor="red.200"
+                      _hover={{ bg: "red.50", borderColor: "red.400" }}
+                      onClick={() =>
+                        handleDelete(items.find((x) => x.id === selectedId))
+                      }
+                    >
+                      <LuTrash size={16} />
+                    </IconButton>
+                  )}
+                  <SecondaryMdButton
+                    width="auto"
+                    onClick={handleAddDisbursement}
+                  >
+                    Add Disbursement
+                  </SecondaryMdButton>
+                  <PrimaryMdButton width="auto" onClick={handleEncodeDeposit}>
+                    Encode Deposit
+                  </PrimaryMdButton>
+                </Flex>
+              </Flex>
+            </Box>
+          )}
+
           <DrsDataTable
             payments={samplePayments}
             onRowClick={(row) => console.log("Clicked row:", row)}
-            headerContent={
-              selectedItem && (
-                <Flex align="center" gap={2}>
-                  <Text fontWeight="bold" fontSize="sm">
-                    {selectedItem.name}
-                  </Text>
-                  <OSPBadge
-                    type={
-                      (
-                        STATUS_STYLES[selectedItem.Status ?? "Pending"] ??
-                        STATUS_STYLES.Pending
-                      ).colorPalette
-                    }
-                  >
-                    {selectedItem.Status ?? "Pending"}
-                  </OSPBadge>
-                </Flex>
-              )
-            }
           />
-          <Flex justify="flex-end" mt={4} gap={4}>
-            <SecondaryMdFlexButton onClick={handleAddDisbursement}>
-              Add Disbursement
-            </SecondaryMdFlexButton>
-            <PrimaryMdFlexButton onClick={handleEncodeDeposit}>
-              Encode Deposit
-            </PrimaryMdFlexButton>
-          </Flex>
+
+          <DrsPaymentSummary totals={totals} displayProp={false} />
         </>
       )}
     </Box>
