@@ -14,7 +14,7 @@ import { SaveButton, SelectButton, UnselectSolidButton } from "st-peter-ui";
 import { RowItem } from "@/components/info-card/row-item";
 import type { CheckedPlanType, PlanDetails } from "./change-mode.types";
 import { PlanTypes } from "./data";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const MODES = ["Monthly", "Quarterly", "Semi-Annual", "Annual"] as const;
 
@@ -92,6 +92,25 @@ export function PlanDetailsDialog({
     () => computeNewMode(plan, selectedMode, plans),
     [plan, selectedMode, plans],
   );
+
+  // Safety net: Chakra v3 (zag-js) can leave `pointer-events: none` + the
+  // `data-inert` attribute stuck on <body> after a modal closes, which freezes
+  // the whole page. When this drawer is closed and no other modal is open,
+  // restore interactivity. The open-modal check keeps it safe if this drawer
+  // is ever nested inside another dialog/drawer.
+  useEffect(() => {
+    if (open) return;
+    const t = window.setTimeout(() => {
+      const anyModalOpen = document.querySelector(
+        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+      );
+      if (!anyModalOpen) {
+        document.body.style.pointerEvents = "";
+        document.body.removeAttribute("data-inert");
+      }
+    }, 50);
+    return () => window.clearTimeout(t);
+  }, [open]);
 
   const buildPayload = (): CheckedPlanType => ({
     lpa_no: plan.lpa_no,

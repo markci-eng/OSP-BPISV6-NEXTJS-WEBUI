@@ -58,6 +58,8 @@ import { InputCardAccordion } from "@/claude components/card-accordion/input-car
 import { LuUser, LuHash, LuMapPin, LuCalendar } from "react-icons/lu";
 import { RowItem } from "@/claude components/info-card/row-item";
 import { BottomQuickActions } from "@/claude components/drawer/bottom-quick-actions";
+import { QuickBottomSheet } from "@/claude components/drawer/quick-bottom-sheet";
+import { ShieldCheck, Banknote } from "lucide-react";
 
 type Props = {
   payments: PaymentRecord[];
@@ -68,6 +70,7 @@ const ACCOUNT_FILTER_LIFE_PLAN = "LP";
 const ACCOUNT_FILTER_LENDING = "LN";
 
 export function EncodePaymentPage({ payments, setPayments }: Props) {
+  const [showSheet, setShowSheet] = useState(true);
   const [paymentType, setPaymentType] = useState("CH");
   const [paymentClass, setPaymentClass] = useState("DC");
   const [accountFilter, setAccountFilter] = useState(ACCOUNT_FILTER_LIFE_PLAN);
@@ -314,247 +317,218 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     );
   };
 
+  const sheetOptions = [
+    {
+      value: ACCOUNT_FILTER_LIFE_PLAN,
+      label: "Life Plan",
+      description: "Manage Life Plan premium payments",
+      icon: ShieldCheck,
+    },
+    {
+      value: ACCOUNT_FILTER_LENDING,
+      label: "Lending",
+      description: "Manage loan repayments",
+      icon: Banknote,
+    },
+  ];
+
   return (
     <Box mx="auto" maxW="full">
+      <QuickBottomSheet
+        open={showSheet}
+        onOpenChange={setShowSheet}
+        title="What are you collecting for?"
+        subtitle="Choose the business unit for this remittance batch."
+        options={sheetOptions}
+        onConfirm={(value) => handleAccountFilterChange(value)}
+      />
+
       <Flex flexDir="column" gap={4}>
-        <Flex
-          justify={{ base: "start", md: "space-between" }}
-          gap={2}
-          align="center"
-          wrap={{ base: "wrap", md: "nowrap" }}
-        >
-          <HStack gap={3} w={{ base: "full", md: "sm" }}>
-            {[
-              {
-                label: "Life Plan",
-                value: ACCOUNT_FILTER_LIFE_PLAN,
-                // hint: "Plan holder accounts",
-              },
-              {
-                label: "Lending",
-                value: ACCOUNT_FILTER_LENDING,
-                // hint: "Loan accounts",
-              },
-            ].map((opt) => {
-              const active = accountFilter === opt.value;
-              return (
-                <Flex
-                  as="button"
-                  key={opt.value}
-                  flex="1"
-                  minW={0}
-                  textAlign="left"
-                  direction="column"
-                  p={3}
-                  borderWidth="1.5px"
-                  borderRadius="lg"
-                  bg={active ? "green.50" : "white"}
-                  borderColor={
-                    active ? "var(--chakra-colors-primary)" : "gray.200"
-                  }
-                  boxShadow={
-                    active
-                      ? "0 0 0 3px var(--chakra-colors-primary-disabled)"
-                      : "xs"
-                  }
-                  cursor="pointer"
-                  transition="all 0.14s"
-                  _hover={
-                    active
-                      ? undefined
-                      : { borderColor: "green.300", bg: "green.50" }
-                  }
-                  aria-pressed={active}
-                  onClick={() => handleAccountFilterChange(opt.value)}
-                >
-                  <Text
-                    fontSize="sm"
-                    fontWeight="semibold"
-                    color={active ? "var(--chakra-colors-primary)" : "gray.700"}
-                  >
-                    {opt.label}
-                  </Text>
-                </Flex>
-              );
-            })}
-          </HStack>
-          <Box width={{ base: "full", md: "sm" }}>
-            <LookupField<any>
-              label=""
-              placeholder="Search by Name / LPA#/ LAF#"
-              modalTitle="Search Planholder"
-              columns={SearchHeader}
-              dataSource={filteredLookup}
-              searchKeys={[
-                "LPANo",
-                "LAFNo",
-                "FirstName",
-                "LastName",
-                "MiddleName",
-              ]}
-              onSelect={handleSelectPlanholder}
-              renderDisplay={(a) => {
-                const fullName = [
-                  a.LastName,
-                  [a.FirstName, a.MiddleName].filter(Boolean).join(" "),
-                ]
-                  .filter(Boolean)
-                  .join(", ");
-                return a.EntryType === "LOAN"
-                  ? `LOAN: ${a.LAFNo} - ${fullName}`
-                  : `PLAN: ${a.LPANo} - ${fullName}`;
-              }}
-              value={selectPlanholder}
-            />
-          </Box>
+        <Flex justify="flex-end">
+        <Box width={{ base: "full", md: "sm" }}>
+          <LookupField<any>
+            label=""
+            placeholder="Search by Name / LPA#/ LAF#"
+            modalTitle="Search Planholder"
+            columns={SearchHeader}
+            dataSource={filteredLookup}
+            searchKeys={[
+              "LPANo",
+              "LAFNo",
+              "FirstName",
+              "LastName",
+              "MiddleName",
+            ]}
+            onSelect={handleSelectPlanholder}
+            renderDisplay={(a) => {
+              const fullName = [
+                a.LastName,
+                [a.FirstName, a.MiddleName].filter(Boolean).join(" "),
+              ]
+                .filter(Boolean)
+                .join(", ");
+              return a.EntryType === "LOAN"
+                ? `LOAN: ${a.LAFNo} - ${fullName}`
+                : `PLAN: ${a.LPANo} - ${fullName}`;
+            }}
+            value={selectPlanholder}
+          />
+        </Box>
         </Flex>
 
         {selectPlanholder && (
-          <Box mt={4} borderRadius={"2xl"} shadow="sm" p={4}>
-            {/* HEADER */}
-            <Flex justify="space-between" align="start" mb={3}>
-              <Flex align="center" gap={2}>
-                <Box p={2} borderRadius="full" bg="gray.100">
-                  <LuUser size={18} />
-                </Box>
-                <Box>
-                  <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
-                    {`${selectPlanholder.LastName} ${selectPlanholder.FirstName} ${selectPlanholder.MiddleName}`}
-                  </Text>
-                  <Flex align="center" gap={1} fontSize="xs" color="gray.500">
-                    <LuHash size={12} />
-                    <Text>
-                      {selectPlanholder.EntryType == "PH"
-                        ? selectPlanholder.LPANo
-                        : (selectPlanholder?.LAFNo ?? "")}
+          <>
+            {/* MOBILE: original stacked card */}
+            <Box mt={4} borderRadius={"2xl"} shadow="sm" p={4} display={{ base: "block", md: "none" }}>
+              <Flex justify="space-between" align="start" mb={3}>
+                <Flex align="center" gap={2}>
+                  <Box p={2} borderRadius="full" bg="gray.100">
+                    <LuUser size={18} />
+                  </Box>
+                  <Box>
+                    <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
+                      {`${selectPlanholder.LastName} ${selectPlanholder.FirstName} ${selectPlanholder.MiddleName}`}
                     </Text>
-                  </Flex>
-                </Box>
+                    <Flex align="center" gap={1} fontSize="xs" color="gray.500">
+                      <LuHash size={12} />
+                      <Text>
+                        {selectPlanholder.EntryType == "PH"
+                          ? selectPlanholder.LPANo
+                          : (selectPlanholder?.LAFNo ?? "")}
+                      </Text>
+                    </Flex>
+                  </Box>
+                </Flex>
+                <Flex align="center" gap={2}>
+                  <Box
+                    w="2"
+                    h="2"
+                    borderRadius="full"
+                    bg={selectPlanholder.EntryType == "PH" ? "green.400" : "blue.400"}
+                    shadow="sm"
+                  />
+                  <Badge
+                    colorPalette={selectPlanholder.EntryType == "PH" ? "green" : "blue"}
+                    variant="subtle"
+                    px={2}
+                    py={1}
+                    fontSize="0.75rem"
+                  >
+                    {selectPlanholder.EntryType == "PH" ? "Plan Holder" : "Loan"}
+                  </Badge>
+                </Flex>
               </Flex>
+              <Grid templateColumns="repeat(2, 1fr)" gap={2} fontSize="sm" color="gray.600" px={2} mb={3}>
+                <Flex align="center" gap={2} gridColumn="span 2">
+                  <LuHash size={14} />
+                  <Text>
+                    <Text as="span" fontWeight="semibold">Plan:</Text>{" "}
+                    {selectPlanholder.PlanData?.PlanCatalog?.CatalogDescription}
+                  </Text>
+                </Flex>
+                {selectPlanholder.EntryType == "PH" && (
+                  <>
+                    <Flex align="center" gap={2}>
+                      <LuCalendar size={14} />
+                      <Text>
+                        <Text as="span" fontWeight="semibold">Effectivity:</Text>{" "}
+                        {new Date(String(selectPlanholder.Planholders[0].EffectivityDate)).toLocaleDateString()}
+                      </Text>
+                    </Flex>
+                    <Flex align="center" gap={2}>
+                      <LuCalendar size={14} />
+                      <Text>
+                        <Text as="span" fontWeight="semibold">Due:</Text>{" "}
+                        {new Date(String(selectPlanholder.Planholders[0].DueDate)).toLocaleDateString()}
+                      </Text>
+                    </Flex>
+                    <Flex align="center" gap={2}>
+                      <LuUser size={14} />
+                      <Text>
+                        <Text as="span" fontWeight="semibold">Agent:</Text>{" "}
+                        {selectPlanholder.FirstName || ""}
+                      </Text>
+                    </Flex>
+                    <Flex align="center" gap={2}>
+                      <LuUser size={14} />
+                      <Text>
+                        <Text as="span" fontWeight="semibold">Agent 2:</Text>{" "}
+                        {selectPlanholder.LastName || ""}
+                      </Text>
+                    </Flex>
+                  </>
+                )}
+              </Grid>
+            </Box>
 
-              <Flex align="center" gap={2}>
-                <Box
-                  w="2"
-                  h="2"
-                  borderRadius="full"
-                  bg={
-                    selectPlanholder.EntryType == "PH"
-                      ? "green.400"
-                      : "blue.400"
-                  }
-                  shadow="sm"
-                />
+            {/* WEB: compact single-row layout */}
+            <Box mt={2} borderRadius="xl" shadow="xs" px={3} py={2} borderWidth="1px" borderColor="gray.100" display={{ base: "none", md: "block" }}>
+              <Flex align="center" gap={3}>
+                {/* Name + ID */}
+                <Flex align="center" gap={2} flex="1" minW="0">
+                  <Box p={1.5} borderRadius="full" bg="gray.100" flexShrink={0}>
+                    <LuUser size={14} />
+                  </Box>
+                  <Box minW="0">
+                    <Text fontWeight="semibold" fontSize="sm" lineHeight="1.2" truncate>
+                      {`${selectPlanholder.LastName}, ${selectPlanholder.FirstName} ${selectPlanholder.MiddleName}`}
+                    </Text>
+                    <Flex align="center" gap={1} fontSize="xs" color="gray.400">
+                      <LuHash size={10} />
+                      <Text>
+                        {selectPlanholder.EntryType == "PH"
+                          ? selectPlanholder.LPANo
+                          : (selectPlanholder?.LAFNo ?? "")}
+                      </Text>
+                    </Flex>
+                  </Box>
+                </Flex>
+
+                <Box w="1px" h="32px" bg="gray.200" flexShrink={0} />
+
+                {/* Plan */}
+                <Flex align="center" gap={1.5} fontSize="xs" color="gray.600" flexShrink={0}>
+                  <LuHash size={12} color="var(--chakra-colors-gray-400)" />
+                  <Text fontWeight="medium" color="gray.400" whiteSpace="nowrap">Plan:</Text>
+                  <Text truncate maxW="160px">
+                    {selectPlanholder.PlanData?.PlanCatalog?.CatalogDescription}
+                  </Text>
+                </Flex>
+
+                {selectPlanholder.EntryType == "PH" && (
+                  <>
+                    <Box w="1px" h="32px" bg="gray.200" flexShrink={0} />
+                    <Flex align="center" gap={1.5} fontSize="xs" color="gray.600" flexShrink={0}>
+                      <LuCalendar size={12} color="var(--chakra-colors-gray-400)" />
+                      <Text fontWeight="medium" color="gray.400" whiteSpace="nowrap">Eff:</Text>
+                      <Text whiteSpace="nowrap">
+                        {new Date(String(selectPlanholder.Planholders[0].EffectivityDate)).toLocaleDateString()}
+                      </Text>
+                    </Flex>
+                    <Flex align="center" gap={1.5} fontSize="xs" color="gray.600" flexShrink={0}>
+                      <LuCalendar size={12} color="var(--chakra-colors-gray-400)" />
+                      <Text fontWeight="medium" color="gray.400" whiteSpace="nowrap">Due:</Text>
+                      <Text whiteSpace="nowrap">
+                        {new Date(String(selectPlanholder.Planholders[0].DueDate)).toLocaleDateString()}
+                      </Text>
+                    </Flex>
+                  </>
+                )}
+
                 <Badge
-                  colorPalette={
-                    selectPlanholder.EntryType == "PH" ? "green" : "blue"
-                  }
+                  colorPalette={selectPlanholder.EntryType == "PH" ? "green" : "blue"}
                   variant="subtle"
+                  fontSize="xs"
                   px={2}
-                  py={1}
-                  fontSize="0.75rem"
+                  py={0.5}
+                  ml="auto"
+                  flexShrink={0}
                 >
                   {selectPlanholder.EntryType == "PH" ? "Plan Holder" : "Loan"}
                 </Badge>
               </Flex>
-            </Flex>
-
-            {/* QUICK INFO CHIPS */}
-            {/* <Flex gap={2} wrap="wrap" mb={3}>
-              <Box
-                px={2}
-                py={1}
-                fontSize="xs"
-                borderRadius="full"
-                bg="gray.50"
-                display="flex"
-                alignItems="center"
-                gap={1}
-              >
-                <LuCalendar size={12} />
-                {selectPlanholder.EntryType == "PH"
-                  ? selectPlanholder.LPANo
-                  : (selectPlanholder?.LAFNo ?? "")}
-              </Box>
-              <Box
-                px={2}
-                py={1}
-                fontSize="xs"
-                borderRadius="full"
-                bg="gray.50"
-                display="flex"
-                alignItems="center"
-                gap={1}
-              >
-                <LuMapPin size={12} />
-                {selectPlanholder.OrgUnit?.OrgUnitDescription}
-              </Box>
-            </Flex> */}
-
-            {/* PLAN DETAIL */}
-            <Grid
-              templateColumns="repeat(2, 1fr)"
-              gap={2}
-              fontSize="sm"
-              color="gray.600"
-              px={2}
-              mb={3}
-            >
-              <Flex align="center" gap={2} gridColumn="span 2">
-                <LuHash size={14} />
-                <Text>
-                  <Text as="span" fontWeight="semibold">
-                    Plan:
-                  </Text>{" "}
-                  {selectPlanholder.PlanData?.PlanCatalog?.CatalogDescription}
-                </Text>
-              </Flex>
-
-              {selectPlanholder.EntryType == "PH" && (
-                <>
-                  <Flex align="center" gap={2}>
-                    <LuCalendar size={14} />
-                    <Text>
-                      <Text as="span" fontWeight="semibold">
-                        Effectivity:
-                      </Text>{" "}
-                      {new Date(
-                        String(selectPlanholder.Planholders[0].EffectivityDate),
-                      ).toLocaleDateString()}
-                    </Text>
-                  </Flex>
-                  <Flex align="center" gap={2}>
-                    <LuCalendar size={14} />
-                    <Text>
-                      <Text as="span" fontWeight="semibold">
-                        Due:
-                      </Text>{" "}
-                      {new Date(
-                        String(selectPlanholder.Planholders[0].DueDate),
-                      ).toLocaleDateString()}
-                    </Text>
-                  </Flex>
-                  <Flex align="center" gap={2}>
-                    <LuUser size={14} />
-                    <Text>
-                      <Text as="span" fontWeight="semibold">
-                        Agent:
-                      </Text>{" "}
-                      {selectPlanholder.FirstName || ""}
-                    </Text>
-                  </Flex>
-                  <Flex align="center" gap={2}>
-                    <LuUser size={14} />
-                    <Text>
-                      <Text as="span" fontWeight="semibold">
-                        Agent 2:
-                      </Text>{" "}
-                      {selectPlanholder.LastName || ""}
-                    </Text>
-                  </Flex>
-                </>
-              )}
-            </Grid>
-          </Box>
+            </Box>
+          </>
         )}
 
         {/* PAYMENT DETAILS */}
