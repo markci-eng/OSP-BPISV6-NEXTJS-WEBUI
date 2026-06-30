@@ -38,17 +38,18 @@ const DocumentManagement = () => {
       description="Manage employee policy documents."
       headerButton="menu"
     >
-      <Page.MainContent>
-        {/* <Flex
-        direction={{ base: "column", md: "row" }}
-        align={{ base: "stretch", md: "flex-start" }}
-        justify="space-between"
-        gap={{ base: 3, md: 4 }}
-      ></Flex> */}
+      <Page.MainContent
+        justifyContent={
+          selectedEmployee ? undefined : { base: undefined, lg: "center" }
+        }
+        minH={selectedEmployee ? undefined : { base: undefined, lg: "60vh" }}
+      >
         <Box
           w={{ base: "full", md: "320px", lg: "360px" }}
           ml={{ base: 0, md: "auto" }}
+          mr={{ base: 0, md: selectedEmployee ? 0 : "auto" }}
           flexShrink={0}
+          order={selectedEmployee ? 0 : { base: 0, lg: 2 }}
         >
           <LookupField<Employee>
             label=""
@@ -89,27 +90,6 @@ const DocumentManagement = () => {
                       { label: "Name", value: selectedEmployee.name },
                       { label: "Branch", value: selectedEmployee.branch },
                     ].map((detail) => (
-                      // <Box key={detail.label} minW={0}>
-                      //   <Text
-                      //     fontSize="xs"
-                      //     fontWeight="medium"
-                      //     color="gray.500"
-                      //     textTransform="uppercase"
-                      //     letterSpacing="wide"
-                      //   >
-                      //     {detail.label}
-                      //   </Text>
-
-                      //   <Text
-                      //     mt={1}
-                      //     fontSize="sm"
-                      //     color="gray.800"
-                      //     fontWeight="medium"
-                      //     wordBreak="break-word"
-                      //   >
-                      //     {detail.value}
-                      //   </Text>
-                      // </Box>
                       <LabelText
                         key={detail.label}
                         label={detail.label}
@@ -124,7 +104,14 @@ const DocumentManagement = () => {
         </AnimatePresence>
 
         {!selectedEmployee && (
-          <VStack gap={3} py={20} alignItems="center" justifyContent="center">
+          <VStack
+            gap={3}
+            pt={{ base: 20, lg: 4 }}
+            pb={4}
+            alignItems="center"
+            justifyContent="center"
+            order={1}
+          >
             <Box
               p={5}
               borderRadius="full"
@@ -149,7 +136,7 @@ const DocumentManagement = () => {
                 _dark={{ color: "gray.500" }}
                 maxW="xs"
               >
-                Search for an employee above to view and manage their policy
+                Search for an employee to view and manage their policy
                 documents.
               </Text>
             </VStack>
