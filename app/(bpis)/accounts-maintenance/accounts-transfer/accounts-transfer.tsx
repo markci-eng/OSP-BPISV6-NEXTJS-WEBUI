@@ -98,6 +98,7 @@ export default function AccountsTransferPage() {
                   <Grid
                     templateColumns={{ base: "1fr", md: "1fr 1fr" }}
                     gap={2}
+                    alignItems="center"
                   >
                     <GridItem>
                       <SelectFloatingLabel
@@ -106,27 +107,25 @@ export default function AccountsTransferPage() {
                       />
                     </GridItem>
                     <GridItem>
-                      <Box mt={2}>
-                        <LookupField<SalesForceLookUpData>
-                          placeholder="Search Sales Agent 2"
-                          modalTitle="Sales Force List"
-                          dataSource={salesForceLookUp}
-                          columns={[
-                            {
-                              key: "SalesForceCode",
-                              header: "Sales Force Code",
-                            },
-                            { key: "AgentName", header: "Agent Name" },
-                            { key: "PosCode", header: "Position Code" },
-                          ]}
-                          searchKeys={["AgentName", "SalesForceCode"]}
-                          onSelect={setSelectedAgent}
-                          renderDisplay={(item) =>
-                            `${item.AgentName} (${item.SalesForceCode})`
-                          }
-                          value={selectedAgent}
-                        />
-                      </Box>
+                      <LookupField<SalesForceLookUpData>
+                        placeholder="Search Sales Agent 2"
+                        modalTitle="Sales Force List"
+                        dataSource={salesForceLookUp}
+                        columns={[
+                          {
+                            key: "SalesForceCode",
+                            header: "Sales Force Code",
+                          },
+                          { key: "AgentName", header: "Agent Name" },
+                          { key: "PosCode", header: "Position Code" },
+                        ]}
+                        searchKeys={["AgentName", "SalesForceCode"]}
+                        onSelect={setSelectedAgent}
+                        renderDisplay={(item) =>
+                          `${item.AgentName} (${item.SalesForceCode})`
+                        }
+                        value={selectedAgent}
+                      />
                     </GridItem>
                   </Grid>
                 </InfoCardAccordion>
@@ -154,6 +153,7 @@ export default function AccountsTransferPage() {
                   <Grid
                     templateColumns={{ base: "1fr", lg: "repeat(3, 1fr)" }}
                     gap={2}
+                    alignItems="center"
                   >
                     <GridItem>
                       <SelectFloatingLabel
@@ -168,27 +168,25 @@ export default function AccountsTransferPage() {
                       />
                     </GridItem>
                     <GridItem>
-                      <Box mt={2}>
-                        <LookupField<SalesForceLookUpData>
-                          placeholder="Select Sales Force"
-                          modalTitle="Sales Force List"
-                          dataSource={salesForceLookUp}
-                          columns={[
-                            {
-                              key: "SalesForceCode",
-                              header: "Sales Force Code",
-                            },
-                            { key: "AgentName", header: "Agent Name" },
-                            { key: "PosCode", header: "Position Code" },
-                          ]}
-                          searchKeys={["AgentName", "SalesForceCode"]}
-                          onSelect={setSelectedAgent}
-                          renderDisplay={(item) =>
-                            `${item.AgentName} (${item.SalesForceCode})`
-                          }
-                          value={selectedAgent}
-                        />
-                      </Box>
+                      <LookupField<SalesForceLookUpData>
+                        placeholder="Select Sales Force"
+                        modalTitle="Sales Force List"
+                        dataSource={salesForceLookUp}
+                        columns={[
+                          {
+                            key: "SalesForceCode",
+                            header: "Sales Force Code",
+                          },
+                          { key: "AgentName", header: "Agent Name" },
+                          { key: "PosCode", header: "Position Code" },
+                        ]}
+                        searchKeys={["AgentName", "SalesForceCode"]}
+                        onSelect={setSelectedAgent}
+                        renderDisplay={(item) =>
+                          `${item.AgentName} (${item.SalesForceCode})`
+                        }
+                        value={selectedAgent}
+                      />
                     </GridItem>
                   </Grid>
                 </InfoCardAccordion>
@@ -239,38 +237,40 @@ function TransferDestination({
         subtitle="Enter remarks and select the destination agent"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", lg: "repeat(3, 1fr)" }} gap={2}>
+        <Grid
+          templateColumns={{ base: "1fr", lg: "repeat(3, 1fr)" }}
+          gap={2}
+          alignItems="center"
+          alignContent={"center"}
+        >
           <GridItem>
             <Textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               placeholder="Enter the reason here..."
-              resize="vertical"
-              height="40px"
+              h="10"
             />
           </GridItem>
           <GridItem>
-            <Box mt={2}>
-              <LookupField<SalesForceLookUpData>
-                placeholder="Search Transfer To"
-                modalTitle="Sales Force List"
-                dataSource={salesForceLookUp}
-                columns={[
-                  { key: "SalesForceCode", header: "Sales Force Code" },
-                  { key: "AgentName", header: "Agent Name" },
-                  { key: "PosCode", header: "Position Code" },
-                ]}
-                searchKeys={["AgentName", "SalesForceCode"]}
-                onSelect={(item) => {
-                  setTransferTo(item);
-                  setAgent(item);
-                }}
-                renderDisplay={(item) =>
-                  `${item.AgentName} (${item.SalesForceCode})`
-                }
-                value={transferTo}
-              />
-            </Box>
+            <LookupField<SalesForceLookUpData>
+              placeholder="Search Transfer To"
+              modalTitle="Sales Force List"
+              dataSource={salesForceLookUp}
+              columns={[
+                { key: "SalesForceCode", header: "Sales Force Code" },
+                { key: "AgentName", header: "Agent Name" },
+                { key: "PosCode", header: "Position Code" },
+              ]}
+              searchKeys={["AgentName", "SalesForceCode"]}
+              onSelect={(item) => {
+                setTransferTo(item);
+                setAgent(item);
+              }}
+              renderDisplay={(item) =>
+                `${item.AgentName} (${item.SalesForceCode})`
+              }
+              value={transferTo}
+            />
           </GridItem>
         </Grid>
       </InfoCardAccordion>

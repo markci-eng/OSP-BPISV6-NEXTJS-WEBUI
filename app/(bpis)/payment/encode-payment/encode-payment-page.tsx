@@ -318,13 +318,12 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     <Box mx="auto" maxW="full">
       <Flex flexDir="column" gap={4}>
         <Flex
-          justify="end"
+          justify={{ base: "start", md: "space-between" }}
           gap={2}
-          align="start"
-          wrap="wrap"
-          alignItems="center"
+          align="center"
+          wrap={{ base: "wrap", md: "nowrap" }}
         >
-          <HStack gap={3} w="full">
+          <HStack gap={3} w={{ base: "full", md: "sm" }}>
             {[
               {
                 label: "Life Plan",

@@ -52,7 +52,7 @@ const DocumentManagement = () => {
         >
           <LookupField<Employee>
             label=""
-            placeholder="Search by name or ID..."
+            placeholder="Search by Name or Employee ID..."
             modalTitle="Search Employee"
             columns={employeeColumns}
             dataSource={EMPLOYEES}
@@ -110,7 +110,11 @@ const DocumentManagement = () => {
                       //     {detail.value}
                       //   </Text>
                       // </Box>
-                      <LabelText label={detail.label} value={detail.value} />
+                      <LabelText
+                        key={detail.label}
+                        label={detail.label}
+                        value={detail.value}
+                      />
                     ))}
                   </Grid>
                 }

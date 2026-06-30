@@ -170,8 +170,8 @@ export default function AppHeader({
         <AppHeaderActions />
         <Show when={!isMobile}>
           <Avatar.Root
-            ml={1}
-            size={"sm"}
+            mx={2}
+            size={"xs"}
             cursor="pointer"
             onClick={onOpenProfile}
             title="Account & Settings"

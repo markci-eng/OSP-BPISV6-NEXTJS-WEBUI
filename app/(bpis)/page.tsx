@@ -569,7 +569,7 @@ export default function Dashboard() {
       {/* <UserWelcomeBanner firstName={"Joyce"} branch={"Head Office"} /> */}
 
       {/* ── Account Overview ── */}
-      <Flex direction="column" gap={3}>
+      <Flex direction="column" gap={3} mt={{ base: 0, lg: 4 }}>
         <SectionLabel
           title="Account Overview"
           subtitle="Month-over-month account metrics"

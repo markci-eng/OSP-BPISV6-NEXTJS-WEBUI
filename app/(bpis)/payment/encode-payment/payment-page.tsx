@@ -14,7 +14,6 @@ import { EncodePaymentPage } from "./encode-payment-page";
 import { IoDocumentAttachOutline } from "react-icons/io5";
 
 import PrepareDRS from "./prepare-drs";
-import { Box } from "@chakra-ui/react";
 
 export default function PaymentPage() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);

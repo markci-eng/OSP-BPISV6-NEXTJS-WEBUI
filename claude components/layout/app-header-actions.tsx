@@ -364,9 +364,8 @@ export function AppHeaderActions({
               <IconButton
                 color={iconColor}
                 aria-label="Notifications"
-                size="sm"
+                size="lg"
                 variant="ghost"
-                onClick={() => setNotifOpen(!notifOpen)}
               >
                 <LuBell size={18} />
               </IconButton>
@@ -377,7 +376,7 @@ export function AppHeaderActions({
                   borderRadius="full"
                   fontSize="xs"
                   position="absolute"
-                  top="2px"
+                  top="8px"
                   right="2px"
                   minW="4"
                   h="4"
