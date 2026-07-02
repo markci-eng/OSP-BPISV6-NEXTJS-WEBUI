@@ -53,7 +53,7 @@ const ROLE_ROUTES: Record<UserRole, string[]> = {
   bm: ["/approvals"],
   stl: ["/approvals", "/stl-approval"],
   claims: ["/claims"],
-  amd: ["/accountmanagement"],
+  amd: ["/accounts-management"],
   "sales-agent": [
     "/accounts-maintenance/mcpr",
     "/payment",
@@ -69,7 +69,7 @@ export const ROLE_HOME: Record<UserRole, string> = {
   bm: "/",
   stl: "/",
   claims: "/claims",
-  amd: "/accountmanagement",
+  amd: "/accounts-management",
   "sales-agent": "/",
 };
 
