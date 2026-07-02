@@ -453,39 +453,45 @@ export function AppBottomNavBar({
       <Show when={isMobile}>
         <StickyNavbar>
           {navItems
-            ? navItems.flatMap((item) => {
-                const entries = [];
-                if (item.bottomNav) {
-                  entries.push(
-                    <StickyNavbarBtn
-                      key={item.label}
-                      btnChildren={item.icon as IconType}
-                      activeIcon={item.activeIcon as IconType | undefined}
-                      title={item.displayName ?? item.label}
-                      isActive={navItemIsActive(item, pathname)}
-                      onClickEvent={() => router.push(navItemHref(item))}
-                    />,
-                  );
-                }
-                item.subItems
-                  ?.filter((s) => s.bottomNav)
-                  .forEach((sub) => {
+            ? navItems
+                .sort(
+                  (a, b) =>
+                    (a.bottomNavOrder ?? Infinity) -
+                    (b.bottomNavOrder ?? Infinity),
+                )
+                .flatMap((item) => {
+                  const entries = [];
+                  if (item.bottomNav) {
                     entries.push(
                       <StickyNavbarBtn
-                        key={sub.label}
+                        key={item.label}
                         btnChildren={item.icon as IconType}
                         activeIcon={item.activeIcon as IconType | undefined}
-                        title={sub.displayName ?? sub.label}
-                        isActive={
-                          pathname === sub.href ||
-                          pathname.startsWith(sub.href + "/")
-                        }
-                        onClickEvent={() => router.push(sub.href)}
+                        title={item.displayName ?? item.label}
+                        isActive={navItemIsActive(item, pathname)}
+                        onClickEvent={() => router.push(navItemHref(item))}
                       />,
                     );
-                  });
-                return entries;
-              })
+                  }
+                  item.subItems
+                    ?.filter((s) => s.bottomNav)
+                    .forEach((sub) => {
+                      entries.push(
+                        <StickyNavbarBtn
+                          key={sub.label}
+                          btnChildren={item.icon as IconType}
+                          activeIcon={item.activeIcon as IconType | undefined}
+                          title={sub.displayName ?? sub.label}
+                          isActive={
+                            pathname === sub.href ||
+                            pathname.startsWith(sub.href + "/")
+                          }
+                          onClickEvent={() => router.push(sub.href)}
+                        />,
+                      );
+                    });
+                  return entries;
+                })
             : computedNavItems.map((item) => (
                 <StickyNavbarBtn
                   key={item.key}

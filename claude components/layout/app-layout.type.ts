@@ -38,6 +38,7 @@ export type NavItem = {
   activeIcon?: AppIcon;
   href?: string;
   bottomNav?: boolean;
+  bottomNavOrder?: number;
   onClick?: () => void;
   subItems?: {
     label: string;
@@ -45,5 +46,6 @@ export type NavItem = {
     href: string;
     onClick?: () => void;
     bottomNav?: boolean;
+    bottomNavOrder?: number;
   }[];
 };

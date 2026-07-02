@@ -278,8 +278,8 @@ export const SideBarItemsClaims: NavItem[] = [
     displayName: "Planholder",
   },
   {
-    icon: FaHandHoldingUsd,
-    activeIcon: LiaHandHoldingUsdSolid,
+    icon: LiaHandHoldingUsdSolid,
+    activeIcon: FaHandHoldingUsd,
     label: "Death",
     href: "/claims/death",
     bottomNav: true,
