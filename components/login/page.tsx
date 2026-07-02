@@ -95,7 +95,12 @@ export default function Login() {
         return;
       }
 
-      router.push("/");
+      const data = await response.json();
+      const roleRoutes: Record<string, string> = {
+        claims: "/claims",
+        amd: "/accountmanagement",
+      };
+      router.push(roleRoutes[data.role] ?? "/");
       router.refresh();
     } catch {
       setLoginError("Network error. Please try again.");

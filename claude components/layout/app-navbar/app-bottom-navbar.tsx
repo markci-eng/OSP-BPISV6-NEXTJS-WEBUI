@@ -150,11 +150,13 @@ const FONT_SIZES = [
 ];
 
 const ROLE_LABELS: Record<string, string> = {
-  branch: "Branch",
-  bmstl: "BM / STL",
+  branch: "Branch Cashier/Encoder",
+  bm: "Branch Manager",
+  amd: "Account Management",
+  claims: "Claims",
+  stl: "Sales Team Leader",
   "sales-agent": "Sales Agent",
 };
-
 const PW_STRENGTH_META = [
   { label: "", color: "gray.300" },
   { label: "Very Weak", color: "red.500" },

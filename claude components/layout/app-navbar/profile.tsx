@@ -342,8 +342,11 @@ const FONT_SIZES = [
 ];
 
 const ROLE_LABELS: Record<string, string> = {
-  branch: "Branch",
-  bmstl: "BM / STL",
+  branch: "Branch Cashier/Encoder",
+  bm: "Branch Manager",
+  amd: "Account Management",
+  claims: "Claims",
+  stl: "Sales Team Leader",
   "sales-agent": "Sales Agent",
 };
 

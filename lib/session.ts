@@ -14,6 +14,8 @@ export interface SessionPayload {
 export function getRole(email: string): string {
   const lower = email.toLowerCase();
   if (lower === "branch@stpeter.com.ph") return "branch";
+  if (lower === "claims@stpeter.com.ph") return "claims";
+  if (lower === "amd@stpeter.com.ph") return "amd";
   if (lower === "bm@stpeter.com.ph") return "bm";
   if (lower === "stl@stpeter.com.ph") return "stl";
   return "sales-agent";

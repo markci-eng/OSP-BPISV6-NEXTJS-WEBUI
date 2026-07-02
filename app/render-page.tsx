@@ -6,6 +6,8 @@ import {
   SideBarItemsSTL,
   SideBarItemsBranch,
   SideBarItemsEKolekta,
+  SideBarItemsClaims,
+  SideBarItemsAMD,
 } from "@/components/layout/data/sidebar-items";
 import { Notifications } from "@/components/layout/data/notifications";
 import { AppLayout } from "@/claude components/layout/app-layout";
@@ -30,11 +32,15 @@ export function RenderPage({
   const navItems =
     userRole === "branch"
       ? SideBarItemsBranch
-      : userRole === "bm"
-        ? SideBarItemsBM
-        : userRole === "stl"
-          ? SideBarItemsSTL
-          : SideBarItemsEKolekta;
+      : userRole === "claims"
+        ? SideBarItemsClaims
+        : userRole === "amd"
+          ? SideBarItemsAMD
+          : userRole === "bm"
+            ? SideBarItemsBM
+            : userRole === "stl"
+              ? SideBarItemsSTL
+              : SideBarItemsEKolekta;
 
   return (
     <NotifyInstall appName={"One St. Peter: Life Plan"}>

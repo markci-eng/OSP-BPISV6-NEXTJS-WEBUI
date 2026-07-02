@@ -28,6 +28,7 @@ import { FaHandHoldingUsd } from "react-icons/fa";
 import { LuClipboardCheck } from "react-icons/lu";
 import { BiCoin, BiSolidCoin } from "react-icons/bi";
 import { TbReceiptDollar, TbReceiptDollarFilled } from "react-icons/tb";
+import { MdOutlineSyncLock } from "react-icons/md";
 
 export const SideBarItemsBranch: NavItem[] = [
   {
@@ -249,6 +250,113 @@ export const SideBarItemsEKolekta: NavItem[] = [
     activeIcon: BsFileEarmarkExcelFill,
     label: "Document Cancellation",
     href: "/dc",
+  },
+];
+
+export const SideBarItemsClaims: NavItem[] = [
+  {
+    icon: RiHome4Line,
+    activeIcon: RiHome4Fill,
+    label: "Home",
+    href: "/claims",
+    bottomNav: true,
+  },
+  {
+    icon: RiUser2Line,
+    activeIcon: RiUser2Fill,
+    label: "Approvals",
+    href: "/claims/approvals",
+  },
+  {
+    icon: RiUser2Line,
+    activeIcon: RiUser2Fill,
+    label: "Planholder Profile",
+    href: "/claims/planholder-profile",
+  },
+  {
+    icon: RiClipboardLine,
+    activeIcon: RiClipboardFill,
+    label: "WOI",
+    href: "/claims/woi",
+  },
+  {
+    icon: LuClipboardCheck,
+    label: "Dismemberment",
+    href: "/claims/dismemberment",
+  },
+  {
+    icon: FaHandHoldingUsd,
+    activeIcon: LiaHandHoldingUsdSolid,
+    label: "Death",
+    href: "/claims/death",
+  },
+  {
+    icon: PesoOutlineIcon,
+    activeIcon: PesoSolidIcon,
+    label: "Service Payables",
+    href: "/claims/service",
+  },
+];
+
+export const SideBarItemsAMD: NavItem[] = [
+  {
+    icon: RiHome4Line,
+    activeIcon: RiHome4Fill,
+    label: "Home",
+    href: "/accountmanagement",
+    bottomNav: true,
+  },
+  {
+    icon: RiFileCheckLine,
+    activeIcon: RiFileCheckFill,
+    label: "Approvals",
+    href: "/accountmanagement/approvals",
+    bottomNav: true,
+  },
+  {
+    icon: RiUser2Line,
+    activeIcon: RiUser2Fill,
+    label: "Planholder Profile",
+    href: "/accountmanagement/planholder-profile",
+    displayName: "Planholder",
+    bottomNav: true,
+  },
+  {
+    icon: MdOutlineSyncLock,
+    activeIcon: MdOutlineSyncLock,
+    label: "RITF",
+    href: "/accountmanagement/ritf",
+    bottomNav: true,
+  },
+  {
+    icon: TbReceiptDollar,
+    activeIcon: TbReceiptDollarFilled,
+    label: "ROP",
+    href: "/accountmanagement/rop",
+  },
+  {
+    icon: BsFileEarmarkExcel,
+    activeIcon: BsFileEarmarkExcelFill,
+    label: "Plan Termination",
+    href: "/accountmanagement/plan-termination",
+  },
+  {
+    icon: BsFileEarmarkSpreadsheet,
+    activeIcon: BsFileEarmarkSpreadsheetFill,
+    label: "CSV",
+    href: "/accountmanagement/csv",
+  },
+  {
+    icon: RiClipboardLine,
+    activeIcon: RiClipboardFill,
+    label: "COFP",
+    href: "/accountmanagement/cofp",
+  },
+  {
+    icon: McprOutlineIcon,
+    activeIcon: McprSolidIcon,
+    label: "CMDM",
+    href: "/accountmanagement/cmdm",
   },
 ];
 

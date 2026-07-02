@@ -380,7 +380,13 @@ export default function Sidebar({
           ? "Branch Manager"
           : _role == "stl"
             ? "Sales Team Leader"
-            : _role,
+            : _role == "claims"
+              ? "Claims"
+              : _role == "amd"
+                ? "Account Management"
+                : _role == "sales-agent"
+                  ? "Sales Agent"
+                  : _role,
     );
   }, []);
 
@@ -521,8 +527,7 @@ export default function Sidebar({
             justify="space-between"
             gap={2}
             p={0.5}
-            py={3}
-            h="50px"
+            py={2}
             minH="50px"
             borderBottom="1px solid"
             borderColor="gray.200"
