@@ -209,8 +209,17 @@ function calcPwStrength(pw: string): number {
 }
 
 function navItemIsActive(item: NavItem, pathname: string): boolean {
-  if (item.href)
-    return pathname === item.href || pathname.startsWith(item.href + "/");
+  if (item.href) {
+    const segments = pathname.split("/").filter(Boolean);
+
+    const targetSegment =
+      segments[0] === "account-maintenance" || segments[0] === "claims"
+        ? `/${segments.slice(0, 2).join("/")}`
+        : `/${segments[0] ?? ""}`;
+
+    return targetSegment === item.href;
+  }
+  // return pathname === item.href || pathname.startsWith(item.href + "/");
   return (
     item.subItems?.some(
       (s) => pathname === s.href || pathname.startsWith(s.href + "/"),
