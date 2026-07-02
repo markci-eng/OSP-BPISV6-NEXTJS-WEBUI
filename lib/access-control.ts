@@ -25,7 +25,6 @@ export const SHARED_ROUTES: string[] = [
   "/profile",
   "/success",
   "/printing",
-  "/claim-application",
   "/transaction",
 ];
 

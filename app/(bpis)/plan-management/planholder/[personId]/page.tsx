@@ -28,7 +28,7 @@ export default async function Page({
     hyperlinks: {
       payMyPlan: `/plan-management/planholder/${personId}/pay-my-plan`,
       returnedOfPremium: `/plan-management/planholder/${personId}/rop`,
-      claimApplication: "/claims",
+      claimApplication: `/plan-management/planholder/${personId}/claim-application`,
       changeOfMode: `/plan-management/planholder/${personId}/change-of-mode`,
       cashSurrenderedValue: "/",
       transferOfRights: `/plan-management/planholder/${personId}/transfer-of-rights`,
