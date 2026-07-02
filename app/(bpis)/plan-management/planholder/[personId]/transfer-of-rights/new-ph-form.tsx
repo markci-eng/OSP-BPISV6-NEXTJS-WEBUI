@@ -2,17 +2,8 @@
 
 import Card from "@/components/cards/Card";
 import { Beneficiaries } from "@/components/new-planholder-profile/pages/beneficiaries";
-import {
-  Box,
-  createListCollection,
-  Grid,
-  Separator,
-} from "@chakra-ui/react";
-import {
-  Checkbox,
-  InputFloatingLabel,
-  SelectFloatingLabel,
-} from "st-peter-ui";
+import { Box, createListCollection, Grid, Separator } from "@chakra-ui/react";
+import { Checkbox, InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
 
 const GenderCollection = createListCollection({
   items: [
@@ -66,7 +57,7 @@ export function NewPlanHolderInfoForm() {
           </Grid>
         </Card.MainContent>
       </Card.Root>
-      <Separator mb={5} />
+      <Box mb={5} />
       <Card.Root title={"Address Information"}>
         <Card.MainContent>
           <Grid
@@ -94,7 +85,7 @@ export function NewPlanHolderInfoForm() {
           </Grid>
         </Card.MainContent>
       </Card.Root>
-      <Separator mb={5} />
+      <Box mb={5} />
 
       <Beneficiaries beneficiaries={[]} columns={2} />
     </Box>

@@ -10,7 +10,6 @@ import {
   IconButton,
   Input,
   Spinner,
-  Table,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -28,14 +27,23 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import DataTable from "@/components/common/reusable-tableV2/DataTable";
 
 const PAGE_SIZE = 20;
+
+function filterAgents(query: string) {
+  const q = query.trim().toLowerCase();
+  if (!q) return salesAgents;
+  return salesAgents.filter(
+    (a) =>
+      a.id.toLowerCase().includes(q) ||
+      a.firstName.toLowerCase().includes(q) ||
+      a.lastName.toLowerCase().includes(q) ||
+      a.position.toLowerCase().includes(q) ||
+      a.branch.toLowerCase().includes(q),
+  );
+}
 
 async function fetchAgentPage({
   pageParam,
@@ -45,17 +53,7 @@ async function fetchAgentPage({
   query: string;
 }) {
   await new Promise((r) => setTimeout(r, 300));
-  const q = query.trim().toLowerCase();
-  const all = q
-    ? salesAgents.filter(
-        (a) =>
-          a.id.toLowerCase().includes(q) ||
-          a.firstName.toLowerCase().includes(q) ||
-          a.lastName.toLowerCase().includes(q) ||
-          a.position.toLowerCase().includes(q) ||
-          a.branch.toLowerCase().includes(q),
-      )
-    : salesAgents;
+  const all = filterAgents(query);
   const start = (pageParam - 1) * PAGE_SIZE;
   return {
     items: all.slice(start, start + PAGE_SIZE),
@@ -90,7 +88,74 @@ function formatDate(dateStr: string) {
   });
 }
 
-const columnHelper = createColumnHelper<SalesAgent>();
+const agentColumns: ColumnDef<SalesAgent>[] = [
+  {
+    id: "agent",
+    header: "Agent",
+    accessorFn: (row) => `${row.lastName}, ${row.firstName}`,
+    cell: ({ row }) => {
+      const agent = row.original;
+      return (
+        <Flex align="center" gap={3}>
+          <Box
+            p={2}
+            borderRadius="full"
+            bg="gray.100"
+            flexShrink={0}
+            color="gray.600"
+          >
+            <LuUser size={16} />
+          </Box>
+          <Box>
+            <Text fontWeight="semibold" fontSize="sm" lineHeight="1.3">
+              {toTitleCase(agent.firstName)} {toTitleCase(agent.lastName)}
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              {agent.id}
+            </Text>
+          </Box>
+        </Flex>
+      );
+    },
+  },
+  {
+    accessorKey: "branch",
+    header: "Branch",
+    cell: (info) => (
+      <Text fontSize="sm" color="gray.700">
+        {String(info.getValue())}
+      </Text>
+    ),
+  },
+  {
+    accessorKey: "position",
+    header: "Position",
+    cell: (info) => (
+      <Text fontSize="sm" color="gray.700">
+        {String(info.getValue())}
+      </Text>
+    ),
+  },
+  {
+    accessorKey: "employeeStatus",
+    header: "Status",
+    cell: (info) => (
+      <OSPBadge type={statusBadgeType(String(info.getValue()))}>
+        {toTitleCase(String(info.getValue()))}
+      </OSPBadge>
+    ),
+  },
+  {
+    accessorKey: "hireDate",
+    header: "Hire Date",
+    cell: (info) => (
+      <Text fontSize="sm" color="gray.600">
+        {formatDate(String(info.getValue()))}
+      </Text>
+    ),
+  },
+];
+
 export default function SalesAgentListPage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -134,65 +199,12 @@ export default function SalesAgentListPage() {
     [data],
   );
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor((row) => row, {
-        id: "agent",
-        header: "Agent",
-        cell: (info) => {
-          const agent = info.getValue();
-          return (
-            <Flex align="center" gap={3}>
-              <Box p={2} borderRadius="full" bg="gray.100" flexShrink={0} color="gray.600">
-                <LuUser size={16} />
-              </Box>
-              <Box>
-                <Text fontWeight="semibold" fontSize="sm" lineHeight="1.3">
-                  {toTitleCase(agent.firstName)} {toTitleCase(agent.lastName)}
-                </Text>
-                <Text fontSize="xs" color="gray.500">
-                  {agent.id}
-                </Text>
-              </Box>
-            </Flex>
-          );
-        },
-      }),
-      columnHelper.accessor("branch", {
-        header: "Branch",
-        cell: (info) => (
-          <Text fontSize="sm" color="gray.700">{info.getValue()}</Text>
-        ),
-      }),
-      columnHelper.accessor("position", {
-        header: "Position",
-        cell: (info) => (
-          <Text fontSize="sm" color="gray.700">{info.getValue()}</Text>
-        ),
-      }),
-      columnHelper.accessor("employeeStatus", {
-        header: "Status",
-        cell: (info) => (
-          <OSPBadge type={statusBadgeType(info.getValue())}>
-            {toTitleCase(info.getValue())}
-          </OSPBadge>
-        ),
-      }),
-      columnHelper.accessor("hireDate", {
-        header: "Hire Date",
-        cell: (info) => (
-          <Text fontSize="sm" color="gray.600">{formatDate(info.getValue())}</Text>
-        ),
-      }),
-    ],
-    [],
+  // Desktop table works over the full filtered dataset so its own
+  // pagination/sorting can page through all matches (mobile keeps infinite scroll).
+  const desktopAgents = useMemo(
+    () => filterAgents(debouncedQuery),
+    [debouncedQuery],
   );
-
-  const table = useReactTable({
-    data: agents,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
 
   return (
     <Page.Root
@@ -388,106 +400,40 @@ export default function SalesAgentListPage() {
                     </Text>
                   )}
                 </VStack>
+
+                {/* Infinite scroll sentinel (mobile only) */}
+                <div ref={sentinelRef} />
+
+                {isFetchingNextPage && (
+                  <Flex justify="center" py={4}>
+                    <Spinner size="sm" />
+                  </Flex>
+                )}
               </Box>
 
               {/* ── Desktop data table ── */}
-              <Box
-                display={{ base: "none", md: "flex" }}
-                flexDirection="column"
-                bg="white"
-                borderRadius="xl"
-                shadow="sm"
-                overflow="hidden"
-                border="1px solid"
-                borderColor="gray.100"
-                h="calc(100dvh - 340px)"
-              >
-                <Box overflowY="auto" flex={1} minH={0}>
-                <Table.Root variant="line" size="md" stickyHeader>
-                  <Table.Header>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <Table.Row key={headerGroup.id} bg="gray.50">
-                        {headerGroup.headers.map((header) => (
-                          <Table.ColumnHeader
-                            key={header.id}
-                            fontSize="xs"
-                            fontWeight="medium"
-                            color="gray.500"
-                            textTransform="none"
-                            letterSpacing="normal"
-                            py={3}
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                          </Table.ColumnHeader>
-                        ))}
-                        <Table.ColumnHeader />
-                      </Table.Row>
-                    ))}
-                  </Table.Header>
-
-                  <Table.Body>
-                    {table.getRowModel().rows.length === 0 ? (
-                      <Table.Row>
-                        <Table.Cell
-                          colSpan={columns.length + 1}
-                          textAlign="center"
-                          py={10}
-                          color="gray.400"
-                          fontSize="sm"
-                        >
-                          No agents found.
-                        </Table.Cell>
-                      </Table.Row>
-                    ) : (
-                      table.getRowModel().rows.map((row) => (
-                        <Table.Row
-                          key={row.id}
-                          cursor="pointer"
-                          transition="background 0.15s"
-                          _hover={{ bg: "gray.50" }}
-                          onClick={() =>
-                            router.push(
-                              `/sales-force/profile/${row.original.id}`,
-                            )
-                          }
-                        >
-                          {row.getVisibleCells().map((cell) => (
-                            <Table.Cell key={cell.id} py={3.5}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext(),
-                              )}
-                            </Table.Cell>
-                          ))}
-                          <Table.Cell py={3.5} textAlign="right">
-                            <Text
-                              fontSize="sm"
-                              color="blue.500"
-                              fontWeight="medium"
-                              _hover={{ textDecoration: "underline" }}
-                            >
-                              View profile →
-                            </Text>
-                          </Table.Cell>
-                        </Table.Row>
-                      ))
-                    )}
-                  </Table.Body>
-                </Table.Root>
-                </Box>
+              <Box display={{ base: "none", md: "block" }}>
+                <DataTable<SalesAgent>
+                  columns={agentColumns}
+                  data={desktopAgents}
+                  getRowId={(row) => row.id}
+                  onRowClick={(row) =>
+                    router.push(`/sales-force/profile/${row.id}`)
+                  }
+                  size="md"
+                  emptyState="No agents found."
+                  features={{
+                    search: false,
+                    filtering: false,
+                    sorting: true,
+                    pagination: true,
+                    columnToggle: true,
+                    selection: false,
+                    draggable: false,
+                    detailSidebar: false,
+                  }}
+                />
               </Box>
-
-              {/* Infinite scroll sentinel */}
-              <div ref={sentinelRef} />
-
-              {isFetchingNextPage && (
-                <Flex justify="center" py={4}>
-                  <Spinner size="sm" />
-                </Flex>
-              )}
             </>
           )}
         </Page.Row>

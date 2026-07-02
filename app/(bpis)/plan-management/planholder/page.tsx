@@ -11,7 +11,6 @@ import {
   IconButton,
   Input,
   Spinner,
-  Table,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -31,14 +30,23 @@ import { useRouter } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { PlanholderContactData } from "@/app/(bpis)/plan-management/data/planholder-contact.data";
 import { ContactNumber } from "@/claude components/contact-number/contact-number";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import DataTable from "@/components/common/reusable-tableV2/DataTable";
 
 const PAGE_SIZE = 20;
+
+function filterPlanholders(query: string) {
+  const q = query.trim().toUpperCase();
+  if (!q) return planholderLookup;
+  return planholderLookup.filter(
+    (ph) =>
+      ph.lpaNumber.includes(q) ||
+      ph.firstName.includes(q) ||
+      ph.lastName.includes(q) ||
+      ph.middleName.includes(q) ||
+      ph.personId.includes(q),
+  );
+}
 
 async function fetchPlanholderPage({
   pageParam,
@@ -48,17 +56,7 @@ async function fetchPlanholderPage({
   query: string;
 }) {
   await new Promise((r) => setTimeout(r, 300));
-  const q = query.trim().toUpperCase();
-  const all = q
-    ? planholderLookup.filter(
-        (ph) =>
-          ph.lpaNumber.includes(q) ||
-          ph.firstName.includes(q) ||
-          ph.lastName.includes(q) ||
-          ph.middleName.includes(q) ||
-          ph.personId.includes(q),
-      )
-    : planholderLookup;
+  const all = filterPlanholders(query);
   const start = (pageParam - 1) * PAGE_SIZE;
   return {
     items: all.slice(start, start + PAGE_SIZE),
@@ -105,7 +103,82 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const columnHelper = createColumnHelper<PlanholderLookup>();
+const planholderColumns: ColumnDef<PlanholderLookup>[] = [
+  {
+    id: "planholder",
+    header: "Planholder",
+    accessorFn: (row) => `${row.lastName}, ${row.firstName}`,
+    cell: ({ row }) => {
+      const ph = row.original;
+      return (
+        <Flex align="center" gap={3}>
+          <Box
+            p={2}
+            borderRadius="full"
+            bg="gray.100"
+            flexShrink={0}
+            color="gray.600"
+          >
+            <LuUser size={16} />
+          </Box>
+          <Box>
+            <Text fontWeight="semibold" fontSize="sm" lineHeight="1.3">
+              {toTitleCase(ph.firstName)} {toTitleCase(ph.lastName)}
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              {ph.personId}
+            </Text>
+          </Box>
+        </Flex>
+      );
+    },
+  },
+  {
+    accessorKey: "lpaNumber",
+    header: "LPA Number",
+    cell: (info) => (
+      <Text fontSize="sm" color="gray.700" fontFamily="mono">
+        {String(info.getValue())}
+      </Text>
+    ),
+  },
+  {
+    accessorKey: "planDescription",
+    header: "Plan",
+    cell: (info) => (
+      <Text fontSize="sm" color="gray.700">
+        {String(info.getValue())}
+      </Text>
+    ),
+  },
+  {
+    accessorKey: "branch",
+    header: "Branch",
+    cell: (info) => (
+      <Text fontSize="sm" color="gray.700">
+        {String(info.getValue())}
+      </Text>
+    ),
+  },
+  {
+    accessorKey: "accountStatus",
+    header: "Status",
+    cell: (info) => (
+      <OSPBadge type={statusBadgeType(String(info.getValue()))}>
+        {toTitleCase(String(info.getValue()))}
+      </OSPBadge>
+    ),
+  },
+  {
+    accessorKey: "effectivityDate",
+    header: "Effectivity",
+    cell: (info) => (
+      <Text fontSize="sm" color="gray.600">
+        {formatDate(info.getValue() as Date)}
+      </Text>
+    ),
+  },
+];
 
 export default function PlanholderSearchPage() {
   const router = useRouter();
@@ -150,85 +223,12 @@ export default function PlanholderSearchPage() {
     [data],
   );
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor((row) => row, {
-        id: "planholder",
-        header: "Planholder",
-        cell: (info) => {
-          const ph = info.getValue();
-          return (
-            <Flex align="center" gap={3}>
-              <Box
-                p={2}
-                borderRadius="full"
-                bg="gray.100"
-                flexShrink={0}
-                color="gray.600"
-              >
-                <LuUser size={16} />
-              </Box>
-              <Box>
-                <Text fontWeight="semibold" fontSize="sm" lineHeight="1.3">
-                  {toTitleCase(ph.firstName)} {toTitleCase(ph.lastName)}
-                </Text>
-                <Text fontSize="xs" color="gray.500">
-                  {ph.personId}
-                </Text>
-              </Box>
-            </Flex>
-          );
-        },
-      }),
-      columnHelper.accessor("lpaNumber", {
-        header: "LPA Number",
-        cell: (info) => (
-          <Text fontSize="sm" color="gray.700" fontFamily="mono">
-            {info.getValue()}
-          </Text>
-        ),
-      }),
-      columnHelper.accessor("planDescription", {
-        header: "Plan",
-        cell: (info) => (
-          <Text fontSize="sm" color="gray.700">
-            {info.getValue()}
-          </Text>
-        ),
-      }),
-      columnHelper.accessor("branch", {
-        header: "Branch",
-        cell: (info) => (
-          <Text fontSize="sm" color="gray.700">
-            {info.getValue()}
-          </Text>
-        ),
-      }),
-      columnHelper.accessor("accountStatus", {
-        header: "Status",
-        cell: (info) => (
-          <OSPBadge type={statusBadgeType(info.getValue())}>
-            {toTitleCase(info.getValue())}
-          </OSPBadge>
-        ),
-      }),
-      columnHelper.accessor("effectivityDate", {
-        header: "Effectivity",
-        cell: (info) => (
-          <Text fontSize="sm" color="gray.600">
-            {formatDate(info.getValue())}
-          </Text>
-        ),
-      }),
-    ],
-    [],
+  // Desktop table works over the full filtered dataset so its own
+  // pagination/sorting can page through all matches (mobile keeps infinite scroll).
+  const desktopPlanholders = useMemo(
+    () => filterPlanholders(debouncedQuery),
+    [debouncedQuery],
   );
-
-  const table = useReactTable({
-    data: planholders,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
 
   return (
     <Page.Root
@@ -483,106 +483,40 @@ export default function PlanholderSearchPage() {
                     </Text>
                   )}
                 </VStack>
+
+                {/* Infinite scroll sentinel (mobile only) */}
+                <div ref={sentinelRef} />
+
+                {isFetchingNextPage && (
+                  <Flex justify="center" py={4}>
+                    <Spinner size="sm" />
+                  </Flex>
+                )}
               </Box>
 
               {/* ── Desktop data table ── */}
-              <Box
-                display={{ base: "none", md: "flex" }}
-                flexDirection="column"
-                bg="white"
-                borderRadius="xl"
-                shadow="sm"
-                overflow="hidden"
-                border="1px solid"
-                borderColor="gray.100"
-                h="calc(100dvh - 340px)"
-              >
-                <Box overflowY="auto" flex={1} minH={0}>
-                  <Table.Root variant="line" size="md" stickyHeader>
-                    <Table.Header>
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <Table.Row key={headerGroup.id} bg="gray.50">
-                          {headerGroup.headers.map((header) => (
-                            <Table.ColumnHeader
-                              key={header.id}
-                              fontSize="xs"
-                              fontWeight="medium"
-                              color="gray.500"
-                              textTransform="none"
-                              letterSpacing="normal"
-                              py={3}
-                            >
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
-                            </Table.ColumnHeader>
-                          ))}
-                          <Table.ColumnHeader />
-                        </Table.Row>
-                      ))}
-                    </Table.Header>
-
-                    <Table.Body>
-                      {table.getRowModel().rows.length === 0 ? (
-                        <Table.Row>
-                          <Table.Cell
-                            colSpan={columns.length + 1}
-                            textAlign="center"
-                            py={10}
-                            color="gray.400"
-                            fontSize="sm"
-                          >
-                            No planholders found.
-                          </Table.Cell>
-                        </Table.Row>
-                      ) : (
-                        table.getRowModel().rows.map((row) => (
-                          <Table.Row
-                            key={row.id}
-                            cursor="pointer"
-                            transition="background 0.15s"
-                            _hover={{ bg: "gray.50" }}
-                            onClick={() =>
-                              router.push(
-                                `/plan-management/planholder/${row.original.personId}`,
-                              )
-                            }
-                          >
-                            {row.getVisibleCells().map((cell) => (
-                              <Table.Cell key={cell.id} py={3.5}>
-                                {flexRender(
-                                  cell.column.columnDef.cell,
-                                  cell.getContext(),
-                                )}
-                              </Table.Cell>
-                            ))}
-                            <Table.Cell py={3.5} textAlign="right">
-                              <Text
-                                fontSize="sm"
-                                color="blue.500"
-                                fontWeight="medium"
-                                _hover={{ textDecoration: "underline" }}
-                              >
-                                View profile →
-                              </Text>
-                            </Table.Cell>
-                          </Table.Row>
-                        ))
-                      )}
-                    </Table.Body>
-                  </Table.Root>
-                </Box>
+              <Box display={{ base: "none", md: "block" }}>
+                <DataTable<PlanholderLookup>
+                  columns={planholderColumns}
+                  data={desktopPlanholders}
+                  getRowId={(row) => row.lpaNumber}
+                  onRowClick={(row) =>
+                    router.push(`/plan-management/planholder/${row.personId}`)
+                  }
+                  size="md"
+                  emptyState="No planholders found."
+                  features={{
+                    search: false,
+                    filtering: false,
+                    sorting: true,
+                    pagination: true,
+                    columnToggle: true,
+                    selection: false,
+                    draggable: false,
+                    detailSidebar: false,
+                  }}
+                />
               </Box>
-
-              {/* Infinite scroll sentinel */}
-              <div ref={sentinelRef} />
-
-              {isFetchingNextPage && (
-                <Flex justify="center" py={4}>
-                  <Spinner size="sm" />
-                </Flex>
-              )}
             </>
           )}
         </Page.Row>

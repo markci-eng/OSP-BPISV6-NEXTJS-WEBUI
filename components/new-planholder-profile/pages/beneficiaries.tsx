@@ -61,7 +61,7 @@ export function Beneficiaries({
         bg="white"
         boxShadow="sm"
         p={4}
-        w={columns === 1 ? "full" : undefined}
+        w={{ base: "full", md: columns === 1 ? "full" : undefined }}
       >
         <BeneficiarySection
           title="Principal Beneficiaries"
@@ -82,7 +82,7 @@ export function Beneficiaries({
         bg="white"
         boxShadow="sm"
         p={4}
-        w={columns === 1 ? "full" : undefined}
+        w={{ base: "full", md: columns === 1 ? "full" : undefined }}
       >
         <BeneficiarySection
           title="Contingent Beneficiaries"
