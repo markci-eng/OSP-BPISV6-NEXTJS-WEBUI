@@ -358,19 +358,6 @@ export function TanstackDataTable<T>({
                     onRowClick || onRowClickMeta ? { bg: "gray.50" } : undefined
                   }
                   onClick={() => {
-                    console.group("TanStack Row Click");
-
-                    console.log("Row Index:", row.index); // index in current view
-                    console.log("Row ID:", row.id); // TanStack internal id
-                    console.log("Row Original Data:", row.original); // your full object
-
-                    console.log("Row State:", {
-                      isSelected: row.getIsSelected(),
-                      isExpanded: row.getIsExpanded?.(),
-                    });
-
-                    console.groupEnd();
-
                     onRowClick?.(row.original);
                   }}
                 >

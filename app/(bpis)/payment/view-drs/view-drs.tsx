@@ -343,7 +343,7 @@ export default function ViewDrs() {
         <>
           <DrsDataTable
             payments={samplePayments}
-            onRowClick={(row) => console.log("Clicked row:", row)}
+            onRowClick={(row) => {}}
             headerContent={
               <Flex align="center" gap={2}>
                 <IconButton
@@ -597,7 +597,7 @@ export default function ViewDrs() {
 
           <DrsDataTable
             payments={samplePayments}
-            onRowClick={(row) => console.log("Clicked row:", row)}
+            onRowClick={(row) => {}}
           />
 
           <DrsPaymentSummary totals={totals} displayProp={false} />

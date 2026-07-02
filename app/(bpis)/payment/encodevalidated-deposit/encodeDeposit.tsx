@@ -199,7 +199,7 @@ export default function EncodeDeposit() {
                 <Box mt={4}>
                   <DrsDataTable
                     payments={samplePayments}
-                    onRowClick={(row) => console.log("Clicked row:", row)}
+                    onRowClick={(row) => {}}
                   />
                   <Box display={{ base: "block", md: "none" }}>
                     <DrsPaymentSummary totals={totals} displayProp={true} />

@@ -97,7 +97,6 @@ export function SearchEmployeeDialog({
                   placeholder="Search Sales Force ID or Employee Name . . ."
                   onKeyDown={(e) => {
                     const query = e.currentTarget.value.toUpperCase();
-                    console.log("Search query:", query);
 
                     if (query.length === 1) {
                       setFilteredEmployees(employeeLookup);

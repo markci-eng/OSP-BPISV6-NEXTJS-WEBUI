@@ -153,7 +153,6 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
       beneficiaryClass: "principal",
     });
     setAddDialogOpen(false);
-    console.log("Beneficiary added:", addFormBeneficiary);
 
     syncBeneficiaries(newPrincipal, newContingent);
   };

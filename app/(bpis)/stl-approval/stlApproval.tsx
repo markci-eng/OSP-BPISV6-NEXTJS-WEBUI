@@ -49,7 +49,6 @@ export default function StlApproval() {
           // 👇 If your table supports row click
           onRowClick={(row: any) => {
             setSelectedRemittance(row);
-            console.log(selectedRemittance);
           }}
           features={{
             selection: false,

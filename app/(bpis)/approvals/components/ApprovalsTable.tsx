@@ -412,13 +412,11 @@ export function ApprovalsTable({
           <ApprovalDetailContent
             row={row}
             config={config}
-            onApprove={(selectedRow, remarks) => {
+            onApprove={(selectedRow) => {
               handleApprove(selectedRow);
-              console.log("Approve remarks:", remarks);
             }}
-            onDeny={(selectedRow, remarks) => {
+            onDeny={(selectedRow) => {
               handleReject(selectedRow);
-              console.log("Deny remarks:", remarks);
             }}
           />
         )}
