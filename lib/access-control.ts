@@ -26,6 +26,7 @@ export const SHARED_ROUTES: string[] = [
   "/success",
   "/printing",
   "/claim-application",
+  "/transaction",
 ];
 
 /**
@@ -49,7 +50,6 @@ const ROLE_ROUTES: Record<UserRole, string[]> = {
     "/loan",
     "/accounts-maintenance",
     "/stl-approval",
-    "/transaction",
   ],
   bm: ["/approvals"],
   stl: ["/approvals", "/stl-approval"],
@@ -61,7 +61,6 @@ const ROLE_ROUTES: Record<UserRole, string[]> = {
     "/disbursement/comte",
     "/plan-management",
     "/dc",
-    "/transaction",
   ],
 };
 
