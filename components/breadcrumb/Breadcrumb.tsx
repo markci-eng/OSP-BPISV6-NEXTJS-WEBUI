@@ -44,10 +44,15 @@ const Breadcrumb = ({ variant = "v2" }: BreadcrumbProps) => {
 
   const crumbs = [
     { href: "/", label: "Home" },
-    ...segments.map((seg, i) => ({
-      href: "/" + segments.slice(0, i + 1).join("/"),
-      label: prettify(seg),
-    })),
+    ...segments
+      .map((seg, i) => ({
+        href: "/" + segments.slice(0, i + 1).join("/"),
+        label: prettify(seg),
+        seg,
+      }))
+      .filter(
+        (c) => !["accounts-management", "claims"].includes(c.seg.toLowerCase()),
+      ),
   ];
 
   return (

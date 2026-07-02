@@ -453,6 +453,12 @@ export function AppBottomNavBar({
         <StickyNavbar>
           {navItems
             ? navItems
+                .slice()
+                .sort(
+                  (a, b) =>
+                    (a.bottomNavOrder ?? Infinity) -
+                    (b.bottomNavOrder ?? Infinity),
+                )
                 .slice(0, 4)
                 .map((item) => (
                   <StickyNavbarBtn

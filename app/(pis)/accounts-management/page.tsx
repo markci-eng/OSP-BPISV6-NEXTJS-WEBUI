@@ -719,11 +719,18 @@ export default function Dashboard() {
           alignItems="stretch"
         >
           {/* Leaderboard */}
-          <Box>
+          <Box
+          // borderRadius="xl"
+          // border="1px solid"
+          // borderColor="gray.100"
+          // boxShadow="sm"
+          // bg="white"
+          // overflow="hidden"
+          >
             <Card
               activeIcon={<LuTrophy />}
               title={"Staff Leaderboard"}
-              subtitle={"Ranked by claims processed this month"}
+              subtitle={"Ranked by processes this month"}
               h={{ xl: "full" }}
             >
               <ScrollArea.Root height="360px">
@@ -762,11 +769,11 @@ export default function Dashboard() {
             </Card>
           </Box>
 
-          {/* Monthly claims processed chart */}
+          {/* Monthly processes chart */}
           <Card
             activeIcon={<LuChartBar size={14} />}
-            title="Monthly Claims Processed"
-            subtitle="Claims processed per month"
+            title="Monthly Processes"
+            subtitle="Requests processed per month"
             h={{ xl: "full" }}
           >
             <Flex justify="flex-end" mb={3}>
@@ -993,6 +1000,7 @@ const TileItem = ({
           fontWeight="700"
           color="gray.800"
           lineHeight="1"
+          // letterSpacing="-0.02em"
         >
           {value}
         </BaseText>
@@ -1001,6 +1009,7 @@ const TileItem = ({
         <Flex
           align="center"
           justify="space-between"
+          // mt={3}
           pt={2.5}
           borderTop="1px solid"
           borderColor="gray.100"

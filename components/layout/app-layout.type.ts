@@ -38,6 +38,8 @@ export type NavItem = {
   activeIcon?: AppIcon;
   href?: string;
   bottomNav?: boolean;
+  /** Sort order in the mobile bottom navbar (ascending). Items without a value keep their original order and are placed after ordered items. */
+  bottomNavOrder?: number;
   onClick?: () => void;
   subItems?: {
     label: string;
@@ -45,5 +47,7 @@ export type NavItem = {
     href: string;
     onClick?: () => void;
     bottomNav?: boolean;
+    /** Sort order in the mobile bottom navbar (ascending). Items without a value keep their original order and are placed after ordered items. */
+    bottomNavOrder?: number;
   }[];
 };

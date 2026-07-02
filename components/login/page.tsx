@@ -98,7 +98,7 @@ export default function Login() {
       const data = await response.json();
       const roleRoutes: Record<string, string> = {
         claims: "/claims",
-        amd: "/accountmanagement",
+        amd: "/accounts-management",
       };
       router.push(roleRoutes[data.role] ?? "/");
       router.refresh();
