@@ -778,6 +778,18 @@ export default function Dashboard() {
                 // isAmount
                 // last
               />
+              <Separator my={2} />
+              <CardTotal
+                label="Total collected of quota"
+                collected={
+                  quotaAndCollections.comCollection +
+                  quotaAndCollections.nComCollection
+                }
+                total={
+                  quotaAndCollections.comQuota + quotaAndCollections.nComQuota
+                }
+                isAmount
+              />
             </Card>
           </Box>
 
@@ -817,6 +829,18 @@ export default function Dashboard() {
               <RowItem
                 label="Non-Comm. Accounts Collected"
                 value={quotaAndCollections.nComAcctCollection}
+              />
+              <Separator my={2} />
+              <CardTotal
+                label="Total collected of due"
+                collected={
+                  quotaAndCollections.comAcctCollection +
+                  quotaAndCollections.nComAcctCollection
+                }
+                total={
+                  quotaAndCollections.comAcctDue +
+                  quotaAndCollections.nComAcctDue
+                }
               />
             </Card>
           </Box>
@@ -1089,6 +1113,68 @@ const MetricRow = ({
     </Body>
   </Flex>
 );
+
+/* ─── Card total footer ─── */
+const CardTotal = ({
+  label,
+  collected,
+  total,
+  isAmount = false,
+}: {
+  label: string;
+  collected: number;
+  total: number;
+  isAmount?: boolean;
+}) => {
+  const pct = total > 0 ? Math.round((collected / total) * 100) : 0;
+  const fmt = (n: number) =>
+    isAmount
+      ? "₱ " +
+        n.toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
+      : n.toLocaleString();
+
+  return (
+    <Flex
+      align="center"
+      justify="space-between"
+      gap={3}
+      mt={2}
+      px={3}
+      py={4}
+      borderRadius="lg"
+      bg="gray.50"
+    >
+      <Box minW={0}>
+        <Text fontSize="xs" color="gray.500" lineHeight="1.2">
+          {label}
+        </Text>
+        <Text
+          fontSize="sm"
+          fontWeight="semibold"
+          color="gray.700"
+          lineHeight="1.3"
+          mt={0.5}
+        >
+          {fmt(collected)}{" "}
+          <Text as="span" color="gray.400" fontWeight="medium">
+            / {fmt(total)}
+          </Text>
+        </Text>
+      </Box>
+      <Text
+        fontSize="lg"
+        fontWeight="bold"
+        color="var(--chakra-colors-primary)"
+        flexShrink={0}
+      >
+        {pct}%
+      </Text>
+    </Flex>
+  );
+};
 
 /* ─── KPI tile ─── */
 type TileItemProps = {

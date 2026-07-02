@@ -46,17 +46,17 @@ import {
 } from "recharts";
 import { setYear } from "date-fns";
 import {
-  RiUserShared2Line,
-  RiUserFollowLine,
-  RiUserForbidLine,
-  RiUserUnfollowLine,
+  RiInboxArchiveLine,
+  RiLoader4Line,
+  RiCheckboxCircleLine,
+  RiTimeLine,
 } from "react-icons/ri";
 import { BaseText, Body, SectionTitle, Small } from "st-peter-ui";
 import {
-  planholders,
   quotaAndCollections,
-  agentLeaderboards,
-  monthlyNewSales,
+  staffLeaderboard,
+  monthlyProcesses,
+  processOverview,
 } from "./dashboard-data";
 import { OSPBadge } from "@/components/common/badge/badge";
 import { IconType } from "react-icons";
@@ -451,7 +451,7 @@ export default function Dashboard() {
   const [year, setYear] = useState("2026");
   const [userRole, setUserRole] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>("");
-  const chartData = monthlyNewSales.find((y) => y.year === year)?.data ?? [];
+  const chartData = monthlyProcesses.find((y) => y.year === year)?.data ?? [];
 
   useEffect(() => {
     setUserRole(readCookie("osp_user"));
@@ -572,7 +572,7 @@ export default function Dashboard() {
       <Flex direction="column" gap={3} mt={{ base: 0, lg: 4 }}>
         <SectionLabel
           title="Account Overview"
-          subtitle="Month-over-month account metrics"
+          subtitle="Staff processing volume this month"
         />
         {/* Mobile: carousel; Desktop (md+): 4-column grid */}
         <Box display={{ base: "block", md: "none" }}>
@@ -580,61 +580,62 @@ export default function Dashboard() {
             <Carousel.ItemGroup>
               <Carousel.Item index={0} px={2}>
                 <TileItem
-                  Icon={RiUserShared2Line}
-                  title="New Sales"
-                  value={planholders.newSales.toLocaleString()}
-                  prevVal={planholders.prevNewSales.toLocaleString()}
+                  Icon={RiInboxArchiveLine}
+                  title="New Requests"
+                  value={processOverview.newRequests.toLocaleString()}
+                  prevVal={processOverview.prevNewRequests.toLocaleString()}
                   color="#1B9E57"
                   monthOverMonthPercentage={
-                    ((planholders.newSales - planholders.prevNewSales) /
-                      planholders.prevNewSales) *
+                    ((processOverview.newRequests -
+                      processOverview.prevNewRequests) /
+                      processOverview.prevNewRequests) *
                     100
                   }
                 />
               </Carousel.Item>
               <Carousel.Item index={1} px={2}>
                 <TileItem
-                  Icon={RiUserFollowLine}
-                  title="Active Accounts"
-                  value="12.1k"
-                  prevVal={planholders.prevActiveAccounts.toLocaleString()}
+                  Icon={RiLoader4Line}
+                  title="Currently Processing"
+                  value={processOverview.inProcess.toLocaleString()}
+                  prevVal={processOverview.prevInProcess.toLocaleString()}
+                  order="desc"
                   color="#1976D2"
                   monthOverMonthPercentage={
-                    ((planholders.activeAccounts -
-                      planholders.prevActiveAccounts) /
-                      planholders.prevActiveAccounts) *
+                    ((processOverview.inProcess -
+                      processOverview.prevInProcess) /
+                      processOverview.prevInProcess) *
                     100
                   }
                 />
               </Carousel.Item>
               <Carousel.Item index={2} px={2}>
                 <TileItem
-                  Icon={RiUserForbidLine}
-                  title="Lapsed Accounts"
-                  value="7.3k"
-                  prevVal={planholders.prevLapsedAccounts.toLocaleString()}
+                  Icon={RiTimeLine}
+                  title="Pending Approval"
+                  value={processOverview.pendingApproval.toLocaleString()}
+                  prevVal={processOverview.prevPendingApproval.toLocaleString()}
                   order="desc"
                   color="#F57C00"
                   monthOverMonthPercentage={
-                    ((planholders.lapsedAccounts -
-                      planholders.prevLapsedAccounts) /
-                      planholders.prevLapsedAccounts) *
+                    ((processOverview.pendingApproval -
+                      processOverview.prevPendingApproval) /
+                      processOverview.prevPendingApproval) *
                     100
                   }
                 />
               </Carousel.Item>
               <Carousel.Item index={3} px={2}>
                 <TileItem
-                  Icon={RiUserUnfollowLine}
-                  title="Terminated Accounts"
-                  value="24.7k"
-                  prevVal={planholders.prevTerminatedAccounts.toLocaleString()}
-                  order="desc"
-                  color="#E53E3E"
+                  Icon={RiCheckboxCircleLine}
+                  title="Completed"
+                  value={processOverview.completed.toLocaleString()}
+                  prevVal={processOverview.prevCompleted.toLocaleString()}
+                  color="#1B9E57"
                   monthOverMonthPercentage={
-                    ((planholders.terminatedAccounts -
-                      planholders.prevTerminatedAccounts) /
-                      planholders.prevTerminatedAccounts) *
+                    ((processOverview.completed -
+                      processOverview.prevCompleted) /
+                      processOverview.prevCompleted) *
                     100
                   }
                 />
@@ -653,218 +654,65 @@ export default function Dashboard() {
         </Box>
         <SimpleGrid display={{ base: "none", md: "grid" }} columns={4} gap={3}>
           <TileItem
-            Icon={RiUserShared2Line}
-            title="New Sales"
-            value={planholders.newSales.toLocaleString()}
-            prevVal={planholders.prevNewSales.toLocaleString()}
+            Icon={RiInboxArchiveLine}
+            title="New Requests"
+            value={processOverview.newRequests.toLocaleString()}
+            prevVal={processOverview.prevNewRequests.toLocaleString()}
             color="#1B9E57"
             monthOverMonthPercentage={
-              ((planholders.newSales - planholders.prevNewSales) /
-                planholders.prevNewSales) *
+              ((processOverview.newRequests -
+                processOverview.prevNewRequests) /
+                processOverview.prevNewRequests) *
               100
             }
           />
           <TileItem
-            Icon={RiUserFollowLine}
-            title="Active Accounts"
-            value="12.1k"
-            prevVal={planholders.prevActiveAccounts.toLocaleString()}
+            Icon={RiLoader4Line}
+            title="Currently Processing"
+            value={processOverview.inProcess.toLocaleString()}
+            prevVal={processOverview.prevInProcess.toLocaleString()}
+            order="desc"
             color="#1976D2"
             monthOverMonthPercentage={
-              ((planholders.activeAccounts - planholders.prevActiveAccounts) /
-                planholders.prevActiveAccounts) *
+              ((processOverview.inProcess - processOverview.prevInProcess) /
+                processOverview.prevInProcess) *
               100
             }
           />
           <TileItem
-            Icon={RiUserForbidLine}
-            title="Lapsed Accounts"
-            value="7.3k"
-            prevVal={planholders.prevLapsedAccounts.toLocaleString()}
+            Icon={RiTimeLine}
+            title="Pending Approval"
+            value={processOverview.pendingApproval.toLocaleString()}
+            prevVal={processOverview.prevPendingApproval.toLocaleString()}
             order="desc"
             color="#F57C00"
             monthOverMonthPercentage={
-              ((planholders.lapsedAccounts - planholders.prevLapsedAccounts) /
-                planholders.prevLapsedAccounts) *
+              ((processOverview.pendingApproval -
+                processOverview.prevPendingApproval) /
+                processOverview.prevPendingApproval) *
               100
             }
           />
           <TileItem
-            Icon={RiUserUnfollowLine}
-            title="Terminated Accounts"
-            value="24.7k"
-            prevVal={planholders.prevTerminatedAccounts.toLocaleString()}
-            order="desc"
-            color="#E53E3E"
+            Icon={RiCheckboxCircleLine}
+            title="Completed"
+            value={processOverview.completed.toLocaleString()}
+            prevVal={processOverview.prevCompleted.toLocaleString()}
+            color="#1B9E57"
             monthOverMonthPercentage={
-              ((planholders.terminatedAccounts -
-                planholders.prevTerminatedAccounts) /
-                planholders.prevTerminatedAccounts) *
+              ((processOverview.completed - processOverview.prevCompleted) /
+                processOverview.prevCompleted) *
               100
             }
           />
         </SimpleGrid>
       </Flex>
 
-      {/* ── Efficiency ── */}
-      <Flex direction="column" gap={3}>
-        <SectionLabel
-          title="Efficiency"
-          subtitle="Quota vs. collection performance"
-        />
-        <Grid
-          templateColumns={{ base: "1fr", lg: "repeat(3, 1fr)" }}
-          gap={4}
-          alignItems="stretch"
-        >
-          {/* Quota & Collection amounts */}
-          <Box
-          // borderRadius="xl"
-          // border="1px solid"
-          // borderColor="gray.100"
-          // boxShadow="sm"
-          // bg="white"
-          // overflow="hidden"
-          >
-            <Card
-              activeIcon={<LuTrendingUp size={14} />}
-              title="Quota & Collection"
-              subtitle="Amount targets"
-              h={{ lg: "full" }}
-            >
-              <RowItem
-                label="Comm. Quota"
-                value={
-                  "₱ " +
-                  quotaAndCollections.comQuota.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                }
-                // isAmount
-              />
-              <RowItem
-                label="Comm. Collection"
-                value={
-                  "₱ " +
-                  quotaAndCollections.comCollection.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                }
-                // isAmount
-              />
-              <Separator my={1} borderColor="gray.50" />
-              <RowItem
-                label="Non-Comm. Quota"
-                value={
-                  "₱ " +
-                  quotaAndCollections.nComQuota.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                }
-                // isAmount
-              />
-              <RowItem
-                label="Non-Comm. Collection"
-                value={
-                  "₱ " +
-                  quotaAndCollections.nComCollection.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                }
-                // isAmount
-                // last
-              />
-            </Card>
-          </Box>
-
-          {/* Accounts due & collected */}
-          <Box
-          // borderRadius="xl"
-          // border="1px solid"
-          // borderColor="gray.100"
-          // boxShadow="sm"
-          // bg="white"
-          // overflow="hidden"
-          >
-            {/* <CardHeader
-              icon={<LuUsers size={14} color="var(--chakra-colors-primary)" />}
-              title="Accounts Due & Collected"
-              subtitle="Account count targets"
-            /> */}
-            <Card
-              activeIcon={<LuUsers />}
-              title={"Accounts Due & Collected"}
-              subtitle={"Account count targets"}
-              h={{ lg: "full" }}
-            >
-              <RowItem
-                label="Comm. Accounts Due"
-                value={quotaAndCollections.comAcctDue}
-              />
-              <RowItem
-                label="Comm. Accounts Collected"
-                value={quotaAndCollections.comAcctCollection}
-              />
-              <Separator my={1} borderColor="gray.50" />
-              <RowItem
-                label="Non-Comm. Accounts Due"
-                value={quotaAndCollections.nComAcctDue}
-              />
-              <RowItem
-                label="Non-Comm. Accounts Collected"
-                value={quotaAndCollections.nComAcctCollection}
-              />
-            </Card>
-          </Box>
-
-          {/* Efficiency donuts */}
-          <Box>
-            <Card
-              activeIcon={<LuZap />}
-              title={"Efficiency Rates"}
-              subtitle={"Collection efficiency"}
-              h={{ lg: "full" }}
-            >
-              <Grid templateColumns="repeat(2, 1fr)" px={2} pb={2}>
-                <EfficiencyDonutChart
-                  title="ADE Com"
-                  quota={quotaAndCollections.comAcctDue}
-                  collection={quotaAndCollections.comAcctCollection}
-                  passingRate={50}
-                />
-                <EfficiencyDonutChart
-                  title="ADE NCom"
-                  quota={quotaAndCollections.nComAcctDue}
-                  collection={quotaAndCollections.nComAcctCollection}
-                  passingRate={50}
-                />
-                <EfficiencyDonutChart
-                  title="CVE Com"
-                  quota={quotaAndCollections.comQuota}
-                  collection={quotaAndCollections.comCollection}
-                  passingRate={50}
-                />
-                <EfficiencyDonutChart
-                  title="CVE NCom"
-                  quota={quotaAndCollections.nComQuota}
-                  collection={quotaAndCollections.nComCollection}
-                  passingRate={50}
-                />
-              </Grid>
-            </Card>
-          </Box>
-        </Grid>
-      </Flex>
-
       {/* ── Performance ── */}
       <Flex direction="column" gap={3}>
         <SectionLabel
           title="Performance"
-          subtitle="Sales rankings and monthly trends"
+          subtitle="Staff rankings and monthly performance"
         />
         <Grid
           templateColumns={{ base: "1fr", xl: "2fr 3fr" }}
@@ -882,8 +730,8 @@ export default function Dashboard() {
           >
             <Card
               activeIcon={<LuTrophy />}
-              title={"Sales Agent Leaderboard"}
-              subtitle={"Ranked by new sales this month"}
+              title={"Staff Leaderboard"}
+              subtitle={"Ranked by processes this month"}
               h={{ xl: "full" }}
             >
               <ScrollArea.Root height="360px">
@@ -902,13 +750,13 @@ export default function Dashboard() {
                 >
                   <ScrollArea.Content px={4} py={2}>
                     <Flex direction="column">
-                      {agentLeaderboards.map((agent, i) => (
+                      {staffLeaderboard.map((agent, i) => (
                         <LeaderboardItem
                           key={agent.name}
                           rank={i + 1}
                           name={agent.name}
                           ns={agent.ns}
-                          max={agentLeaderboards[0].ns}
+                          max={staffLeaderboard[0].ns}
                         />
                       ))}
                     </Flex>
@@ -922,11 +770,11 @@ export default function Dashboard() {
             </Card>
           </Box>
 
-          {/* Monthly new sales chart */}
+          {/* Monthly processes chart */}
           <Card
             activeIcon={<LuChartBar size={14} />}
-            title="Monthly New Sales"
-            subtitle="New plans enrolled per month"
+            title="Monthly Processes"
+            subtitle="Requests processed per month"
             h={{ xl: "full" }}
           >
             <Flex justify="flex-end" mb={3}>
@@ -1373,7 +1221,7 @@ const LeaderboardItem = ({
         >
           {name}
         </Body>
-        <Small color="gray.400">{ns.toLocaleString()} sales</Small>
+        <Small color="gray.400">{ns.toLocaleString()} processed</Small>
       </Box>
 
       <Box w="72px" flexShrink={0}>

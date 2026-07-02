@@ -274,6 +274,12 @@ export const SideBarItemsClaims: NavItem[] = [
     href: "/claims/planholder-profile",
   },
   {
+    icon: FaHandHoldingUsd,
+    activeIcon: LiaHandHoldingUsdSolid,
+    label: "Death",
+    href: "/claims/death",
+  },
+  {
     icon: RiClipboardLine,
     activeIcon: RiClipboardFill,
     label: "WOI",
@@ -283,12 +289,6 @@ export const SideBarItemsClaims: NavItem[] = [
     icon: LuClipboardCheck,
     label: "Dismemberment",
     href: "/claims/dismemberment",
-  },
-  {
-    icon: FaHandHoldingUsd,
-    activeIcon: LiaHandHoldingUsdSolid,
-    label: "Death",
-    href: "/claims/death",
   },
   {
     icon: PesoOutlineIcon,

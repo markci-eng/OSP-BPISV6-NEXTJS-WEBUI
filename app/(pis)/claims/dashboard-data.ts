@@ -1,35 +1,55 @@
-export const planholders = {
-    newSales: 67,
-    activeAccounts: 12136,
-    lapsedAccounts: 7305,
-    terminatedAccounts: 24739,
-    prevNewSales: 83,
-    prevActiveAccounts: 12125,
-    prevLapsedAccounts: 7310,
-    prevTerminatedAccounts: 24739,
+export const processOverview = {
+    newRequests: 28,
+    inProcess: 14,
+    completed: 97,
+    pendingApproval: 8,
+    prevNewRequests: 33,
+    prevInProcess: 17,
+    prevCompleted: 89,
+    prevPendingApproval: 12,
 };
 
+export const processByType = [
+    { type: "Death", pending: 3, processing: 5, completed: 32 },
+    { type: "WOI", pending: 2, processing: 3, completed: 21 },
+    { type: "Dismemberment", pending: 1, processing: 2, completed: 14 },
+    { type: "Service Payables", pending: 2, processing: 4, completed: 30 },
+];
+
 export const quotaAndCollections = {
-    comQuota: 81525,
-    comCollection: 35000,
-    comAcctDue: 60,
-    comAcctCollection: 18,
-    nComQuota: 311415,
-    nComCollection: 267485,
-    nComAcctDue: 126,
-    nComAcctCollection: 77
+    comQuota: 54200,
+    comCollection: 31800,
+    comAcctDue: 40,
+    comAcctCollection: 26,
+    nComQuota: 198750,
+    nComCollection: 152300,
+    nComAcctDue: 84,
+    nComAcctCollection: 58
 }
 
-export const monthlyNewSales = [
+export const staffLeaderboard = [
+    { name: "GIL ANTHONY REYES", ns: 27 },
+    { name: "MARJORIE CASTILLO", ns: 24 },
+    { name: "EDUARDO NAVARRO", ns: 22 },
+    { name: "IMELDA SORIANO", ns: 20 },
+    { name: "ALVIN TORRES", ns: 17 },
+    { name: "ROSEMARIE DAVID", ns: 15 },
+    { name: "NESTOR AQUINO", ns: 12 },
+    { name: "CHONA LIM", ns: 10 },
+    { name: "BENEDICT FLORES", ns: 7 },
+    { name: "ANALYN PADILLA", ns: 5 },
+];
+
+export const monthlyProcesses = [
     {
         year: "2026",
         data: [
-            { month: "Jan", value: 83 },
-            { month: "Feb", value: 67 },
-            { month: "Mar", value: 0 },
-            { month: "Apr", value: 0 },
-            { month: "May", value: 0 },
-            { month: "Jun", value: 0 },
+            { month: "Jan", value: 91 },
+            { month: "Feb", value: 84 },
+            { month: "Mar", value: 78 },
+            { month: "Apr", value: 96 },
+            { month: "May", value: 88 },
+            { month: "Jun", value: 97 },
             { month: "Jul", value: 0 },
             { month: "Aug", value: 0 },
             { month: "Sep", value: 0 },
@@ -41,48 +61,35 @@ export const monthlyNewSales = [
     {
         year: "2025",
         data: [
-            { month: "Jan", value: 85 },
-            { month: "Feb", value: 35 },
-            { month: "Mar", value: 97 },
-            { month: "Apr", value: 35 },
-            { month: "May", value: 89 },
-            { month: "Jun", value: 90 },
-            { month: "Jul", value: 45 },
-            { month: "Aug", value: 98 },
-            { month: "Sep", value: 54 },
-            { month: "Oct", value: 45 },
-            { month: "Nov", value: 78 },
-            { month: "Dec", value: 34 },
+            { month: "Jan", value: 72 },
+            { month: "Feb", value: 65 },
+            { month: "Mar", value: 81 },
+            { month: "Apr", value: 69 },
+            { month: "May", value: 77 },
+            { month: "Jun", value: 85 },
+            { month: "Jul", value: 74 },
+            { month: "Aug", value: 90 },
+            { month: "Sep", value: 79 },
+            { month: "Oct", value: 71 },
+            { month: "Nov", value: 93 },
+            { month: "Dec", value: 66 },
         ]
     },
     {
         year: "2024",
         data: [
-            { month: "Jan", value: 67 },
-            { month: "Feb", value: 32 },
-            { month: "Mar", value: 34 },
-            { month: "Apr", value: 45 },
-            { month: "May", value: 65 },
-            { month: "Jun", value: 76 },
-            { month: "Jul", value: 77 },
-            { month: "Aug", value: 78 },
-            { month: "Sep", value: 65 },
-            { month: "Oct", value: 66 },
-            { month: "Nov", value: 87 },
-            { month: "Dec", value: 89 },
+            { month: "Jan", value: 54 },
+            { month: "Feb", value: 48 },
+            { month: "Mar", value: 61 },
+            { month: "Apr", value: 57 },
+            { month: "May", value: 63 },
+            { month: "Jun", value: 59 },
+            { month: "Jul", value: 68 },
+            { month: "Aug", value: 64 },
+            { month: "Sep", value: 58 },
+            { month: "Oct", value: 55 },
+            { month: "Nov", value: 71 },
+            { month: "Dec", value: 76 },
         ]
     },
-];
-
-export const agentLeaderboards = [
-    { name: "MARC NOEL SENIER", ns: 45 },
-    { name: "ELLA PALMERO", ns: 43 },
-    { name: "VICENTE LACATANGO", ns: 38 },
-    { name: "EREBERTO LACUESTA", ns: 37 },
-    { name: "CAROLINA VILLANUEVA", ns: 34 },
-    { name: "LUZVIMINDA ANGUE", ns: 26 },
-    { name: "SHEMINE COSARE", ns: 25 },
-    { name: "NORMA URO", ns: 22 },
-    { name: "MERCEDES JANOBAS", ns: 18 },
-    { name: "YOLANDA MACAPAGAL", ns: 14 },
 ];

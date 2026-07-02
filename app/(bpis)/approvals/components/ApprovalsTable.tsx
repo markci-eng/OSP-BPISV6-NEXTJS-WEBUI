@@ -229,13 +229,13 @@ export function ApprovalsTable({
     () => [
       {
         id: "bulk-approve",
-        label: "Approve All",
+        label: "Approve Selected",
         icon: Check,
         onClick: handleBulkApprove,
       },
       {
         id: "bulk-reject",
-        label: "Deny All",
+        label: "Deny Selected",
         icon: X,
         variant: "destructive",
         onClick: handleBulkDeny,
