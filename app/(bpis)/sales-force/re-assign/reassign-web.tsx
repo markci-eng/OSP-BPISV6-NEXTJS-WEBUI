@@ -1,652 +1,177 @@
 "use client";
 
+/**
+ * Re-organization Module — a stepped wizard for moving agents under a new
+ * receiving superior.
+ *
+ *   1. Select Receiving Superior
+ *   2. Select Agents
+ *   3. Review & Confirm  → Submit
+ *
+ * Both mobile and desktop are driven by the shared FormSteps component
+ * (stepper header + sticky action bar). Submitting shows a loading state,
+ * then an inline success screen.
+ */
+
 import {
-  getAgentById,
-  getAgentNameById,
   getAllAgents,
   getPosibleSubordinates,
-  getPositionDesc,
-  getSubordinates,
   SalesAgent,
 } from "@/components/common/agent-lookup/agent-lookup.type";
 import Page from "@/claude components/layout/page/Page";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import {
-  Avatar,
-  Badge,
-  Box,
-  Button,
-  Flex,
-  HStack,
-  IconButton,
-  Input,
-  Text,
-} from "@chakra-ui/react";
-import { ColumnDef } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
+import FormSteps from "@/claude components/FormSteps";
+import { Flex } from "@chakra-ui/react";
+import { redirect } from "next/navigation";
 import React from "react";
 import {
-  LuArrowLeft,
-  LuBriefcase,
-  LuCheck,
-  LuSearch,
-  LuUser,
+  LuLayoutDashboard,
   LuUserRound,
+  LuUserRoundCheck,
   LuUsers,
-  LuUsersRound,
-  LuX,
 } from "react-icons/lu";
-import { Body, H4, PrimaryMdButton, Small } from "st-peter-ui";
-import { RowItem } from "@/claude components/info-card/row-item";
-import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
-import InfoCard from "@/claude components/info-card/info-card";
+import { toast } from "sonner";
 
-interface ReassignPageWebProps {
-  superior: SalesAgent | null;
-  setSuperior: (agent: SalesAgent | null) => void;
-}
+import type { Phase } from "./types";
+import { AgentPanel } from "./components/AgentPanel";
+import { DestinationBanner } from "./components/DestinationBanner";
+import { ReviewPanel } from "./components/ReviewPanel";
+import { EmptyState } from "./components/shared";
+import { SubmittingScreen } from "./components/SubmittingScreen";
+import { SuperiorPanel } from "./components/SuperiorPanel";
 
-type ViewMode = "form" | "summary";
+/* ─── Main wizard ────────────────────────────────────────────────────────── */
 
-const matchesQuery = (agent: SalesAgent, query: string) => {
-  const q = query.trim().replace(/\s+/g, "").toLowerCase();
-  if (!q) return true;
-  const normalize = (v: string) => v.trim().replace(/\s+/g, "").toLowerCase();
-  return (
-    normalize(agent.id).includes(q) ||
-    normalize(agent.firstName).includes(q) ||
-    normalize(agent.lastName).includes(q) ||
-    normalize(agent.position).includes(q) ||
-    normalize(agent.firstName + agent.lastName).includes(q) ||
-    normalize(agent.lastName + agent.firstName).includes(q)
-  );
-};
+const ReorganizationWizard = () => {
+  const [currentStep, setCurrentStep] = React.useState(0);
+  const [phase, setPhase] = React.useState<Phase>("editing");
+  const [superior, setSuperior] = React.useState<SalesAgent | null>(null);
+  const [selectedAgents, setSelectedAgents] = React.useState<SalesAgent[]>([]);
 
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  // Any agent can be a receiving superior (previous-version logic).
+  const superiorPool = React.useMemo(() => getAllAgents(), []);
 
-const ReassignPageWeb = ({ superior, setSuperior }: ReassignPageWebProps) => {
-  const [searchVal, setSearchVal] = React.useState("");
-  const [data, setData] = React.useState<SalesAgent[]>([]);
-  const [selectedSubs, setSelectedSubs] = React.useState<SalesAgent[]>([]);
-  const [view, setView] = React.useState<ViewMode>("form");
-  const [step1Open, setStep1Open] = React.useState(true);
-  const [step2Open, setStep2Open] = React.useState(false);
-
-  const runSearch = () => {
-    setData(getAllAgents().filter((a) => matchesQuery(a, searchVal)));
-    if (superior !== null) setSuperior(null);
-  };
-
-  const clearSuperior = () => {
-    setSuperior(null);
-    setSearchVal("");
-    setSelectedSubs([]);
-    setStep1Open(true);
-    setStep2Open(false);
-  };
-
-  const handleSuperiorSelect = (agent: SalesAgent) => {
-    setSuperior(getAgentById(agent.id)!);
-    setSearchVal(agent.firstName + " " + agent.lastName);
-    setStep1Open(false);
-    setStep2Open(true);
-  };
-
-  const possibleSubs = React.useMemo(
+  // Movable agents come straight from getPosibleSubordinates (previous-version
+  // logic): the strict next rank down, excluding those already reporting in.
+  const eligibleAgents = React.useMemo(
     () => getPosibleSubordinates(superior),
     [superior],
   );
 
-  const handleConfirm = () => {
-    if (!superior || selectedSubs.length === 0) return;
-    setView("summary");
+  const selectedCount = selectedAgents.length;
+
+  const handleSelectSuperior = (a: SalesAgent) => {
+    setSuperior(a);
+    setSelectedAgents([]);
   };
 
-  if (view === "summary" && superior) {
+  const handleChangeSuperior = () => {
+    setSuperior(null);
+    setSelectedAgents([]);
+  };
+
+  const handleSubmit = () => {
+    setPhase("submitting");
+    window.setTimeout(() => setPhase("done"), 1400);
+  };
+
+  // The same steps feed the FormSteps wizard on both mobile and desktop.
+  const stepsData = [
+    {
+      title: "Receiving Superior",
+      icon: LuUserRoundCheck,
+      content: (
+        <SuperiorPanel
+          pool={superiorPool}
+          superior={superior}
+          onSelect={handleSelectSuperior}
+          onChange={handleChangeSuperior}
+        />
+      ),
+      validateBeforeNext: () => {
+        if (!superior) {
+          toast.error("Select a receiving superior to continue.");
+          return false;
+        }
+        return true;
+      },
+    },
+    {
+      title: "Select Agents",
+      icon: LuUsers,
+      content: (
+        <Flex direction="column" gap={4}>
+          <DestinationBanner superior={superior} count={selectedCount} />
+          <AgentPanel
+            superior={superior}
+            eligible={eligibleAgents}
+            selectedCount={selectedCount}
+            onSelectionChange={setSelectedAgents}
+          />
+        </Flex>
+      ),
+      validateBeforeNext: () => {
+        if (selectedCount === 0) {
+          toast.error("Select at least one agent to continue.");
+          return false;
+        }
+        return true;
+      },
+    },
+    {
+      title: "Review & Confirm",
+      icon: LuLayoutDashboard,
+      content: (
+        <Flex direction="column" gap={4}>
+          <DestinationBanner superior={superior} count={selectedCount} />
+          {superior ? (
+            <ReviewPanel superior={superior} agents={selectedAgents} />
+          ) : (
+            <EmptyState icon={<LuUserRound size={30} />}>
+              Go back and select a receiving superior first.
+            </EmptyState>
+          )}
+        </Flex>
+      ),
+    },
+  ];
+
+  /* Submitting / success take over the whole surface. */
+  if (phase !== "editing") {
+    if (phase !== "submitting") {
+      redirect(`${window.location.href}/success`);
+    }
     return (
-      <ReassignSummary
-        superior={superior}
-        agents={selectedSubs}
-        onBack={() => setView("form")}
-      />
+      <Page.Root
+        headerButton="menu"
+        title="Re-organization"
+        description="Move agents to a new receiving superior."
+      >
+        <Page.MainContent>
+          <SubmittingScreen />
+        </Page.MainContent>
+      </Page.Root>
     );
   }
-
-  const step1Subtitle = superior
-    ? `${superior.firstName} ${superior.lastName} · ${superior.id}`
-    : "Search and select the receiving superior";
-
-  const step2Subtitle =
-    selectedSubs.length > 0
-      ? `${selectedSubs.length} agent${selectedSubs.length > 1 ? "s" : ""} selected`
-      : "Tick agents to move under this superior";
 
   return (
     <Page.Root
       headerButton="menu"
-      title="Re-Organization"
-      description="Move agents to a new superior."
+      title="Re-organization"
+      description="Move agents to a new receiving superior."
     >
       <Page.MainContent>
-        <Flex flexDir="column" gap={4} mt={{ base: "10px", md: 0 }}>
-          {/* STEP 1 — Choose the new superior */}
-          <InputCardAccordion
-            icon={<LuUser size={16} />}
-            title="Choose the New Superior"
-            subtitle={step1Subtitle}
-            isOpen={step1Open}
-            onToggle={() => setStep1Open((p) => !p)}
-            isComplete={superior !== null}
-          >
-            <Flex flexDir="column" gap={4}>
-              {!superior && (
-                <InfoCard>
-                  Search by Agent ID, full name, or position. The person you
-                  pick here will receive the agents you select in Step 2.
-                </InfoCard>
-              )}
-
-              {/* Search bar */}
-              <HStack gap={0} w="full">
-                <Box
-                  flex={1}
-                  border="1.5px solid"
-                  borderColor={
-                    superior !== null
-                      ? "var(--chakra-colors-primary-disabled)"
-                      : "gray.200"
-                  }
-                  borderRightWidth="0"
-                  borderLeftRadius="lg"
-                  bg="white"
-                  boxShadow="xs"
-                  overflow="hidden"
-                  transition="border-color 0.15s, box-shadow 0.15s"
-                  _hover={{
-                    borderColor:
-                      superior !== null
-                        ? "var(--chakra-colors-primary)"
-                        : "gray.300",
-                  }}
-                  _focusWithin={{
-                    borderColor: "var(--chakra-colors-primary)",
-                    boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
-                  }}
-                  minH="10"
-                  display="flex"
-                  alignItems="center"
-                >
-                  <Input
-                    border="none"
-                    bg="transparent"
-                    boxShadow="none"
-                    borderRadius="0"
-                    px={3}
-                    fontSize="sm"
-                    color={superior !== null ? "gray.800" : "gray.700"}
-                    fontWeight={superior !== null ? "medium" : "normal"}
-                    placeholder="Search Agent ID, Name, or Position"
-                    value={searchVal}
-                    readOnly={superior !== null}
-                    cursor={superior !== null ? "pointer" : "text"}
-                    _placeholder={{ color: "gray.400" }}
-                    _focus={{ boxShadow: "none", outline: "none" }}
-                    onChange={(e) => setSearchVal(e.currentTarget.value)}
-                    onKeyDown={(e) => {
-                      if (e.code === "Enter") runSearch();
-                    }}
-                  />
-
-                  {(superior !== null || searchVal) && (
-                    <Flex align="center" pr={2} flexShrink={0}>
-                      <IconButton
-                        aria-label="Clear"
-                        variant="ghost"
-                        size="xs"
-                        borderRadius="full"
-                        color="gray.400"
-                        _hover={{ bg: "gray.100", color: "gray.600" }}
-                        onClick={() => {
-                          if (superior !== null) clearSuperior();
-                          else setSearchVal("");
-                        }}
-                      >
-                        <LuX size={12} />
-                      </IconButton>
-                    </Flex>
-                  )}
-                </Box>
-
-                <IconButton
-                  aria-label="Search"
-                  onClick={runSearch}
-                  bg="var(--chakra-colors-primary)"
-                  color="white"
-                  borderLeftRadius="0"
-                  borderRightRadius="lg"
-                  h="10"
-                  minW="10"
-                  flexShrink={0}
-                  _hover={{ opacity: 0.88 }}
-                  _active={{ opacity: 0.75 }}
-                >
-                  <LuSearch size={15} />
-                </IconButton>
-              </HStack>
-
-              {/* Results: table or selected superior card */}
-              {superior === null ? (
-                <Box boxShadow="md" borderRadius="md">
-                  <DataTable<SalesAgent>
-                    columns={columns}
-                    data={data}
-                    getRowId={(row) => row.id}
-                    onRowClick={(row) => handleSuperiorSelect(row)}
-                    emptyState={
-                      <Flex
-                        flexDir="column"
-                        align="center"
-                        gap={2}
-                        py={10}
-                        color="gray.500"
-                      >
-                        <LuUserRound size={32} />
-                        <Body>
-                          Search above to find the agent you want to promote to
-                          superior.
-                        </Body>
-                      </Flex>
-                    }
-                    features={{
-                      search: true,
-                      filtering: true,
-                      sorting: true,
-                      pagination: true,
-                      columnToggle: true,
-                      selection: false,
-                      draggable: false,
-                      detailSidebar: false,
-                    }}
-                    mobileConfig={{
-                      viewMode: "card",
-                      primaryField: "name",
-                      secondaryField: "position",
-                    }}
-                  />
-                </Box>
-              ) : (
-                <SuperiorCard superior={superior} onClear={clearSuperior} />
-              )}
-            </Flex>
-          </InputCardAccordion>
-
-          {/* STEP 2 — only after superior is picked */}
-          {superior !== null && (
-            <InputCardAccordion
-              icon={<LuUsers size={16} />}
-              title={`Assign Agents to ${superior.firstName} ${superior.lastName}`}
-              subtitle={step2Subtitle}
-              isOpen={step2Open}
-              onToggle={() => setStep2Open((p) => !p)}
-              isComplete={selectedSubs.length > 0}
-            >
-              <Flex flexDir="column" gap={4}>
-                {selectedSubs.length > 0 && (
-                  <Flex align="center">
-                    <Badge
-                      colorPalette="green"
-                      variant="subtle"
-                      px={3}
-                      py={1}
-                      borderRadius="full"
-                    >
-                      <LuUsersRound />
-                      <Body ml={1}>
-                        {selectedSubs.length} agent
-                        {selectedSubs.length > 1 ? "s" : ""} selected
-                      </Body>
-                    </Badge>
-                  </Flex>
-                )}
-
-                <DataTable<SalesAgent>
-                  columns={columns}
-                  data={possibleSubs}
-                  getRowId={(row) => row.id}
-                  onSelectionChange={(rows) => setSelectedSubs(rows)}
-                  emptyState={
-                    <Flex
-                      flexDir="column"
-                      align="center"
-                      gap={2}
-                      py={10}
-                      color="gray.500"
-                    >
-                      <LuUsersRound size={32} />
-                      <Body>
-                        No agents are eligible to report to this superior.
-                      </Body>
-                    </Flex>
-                  }
-                  features={{
-                    search: true,
-                    filtering: true,
-                    sorting: true,
-                    pagination: true,
-                    columnToggle: true,
-                    selection: true,
-                    draggable: false,
-                    detailSidebar: false,
-                  }}
-                  mobileConfig={{
-                    viewMode: "card",
-                    primaryField: "name",
-                    secondaryField: "position",
-                  }}
-                />
-
-                <Flex w="100%" justifyContent="flex-end" align="center" gap={3}>
-                  <Body color="gray.500">
-                    {selectedSubs.length === 0
-                      ? "Select at least one agent to continue."
-                      : "Review your changes on the next step."}
-                  </Body>
-                  <PrimaryMdButton
-                    onClick={handleConfirm}
-                    disabled={selectedSubs.length === 0}
-                  >
-                    Submit
-                  </PrimaryMdButton>
-                </Flex>
-              </Flex>
-            </InputCardAccordion>
-          )}
-        </Flex>
+        <FormSteps
+          stepsData={stepsData}
+          title=""
+          description=""
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onStepsComplete={handleSubmit}
+          submitButtonText="Submit Reorganization"
+        />
       </Page.MainContent>
     </Page.Root>
   );
 };
 
-/* ─── Superior Card ──────────────────────────────────────────────────────── */
-
-interface SuperiorCardProps {
-  superior: SalesAgent;
-  onClear: () => void;
-}
-
-const SuperiorCard = ({ superior, onClear }: SuperiorCardProps) => {
-  const subordinates = getSubordinates(superior.id);
-
-  return (
-    <Flex flexDir="column" gap={3}>
-      {/* Profile row */}
-      <Flex
-        gap={4}
-        align="center"
-        justify="space-between"
-        px={2}
-        py={3}
-        borderRadius="xl"
-        bg="gray.50"
-      >
-        <Flex gap={3} align="center">
-          <Avatar.Root size="lg">
-            <Avatar.Fallback color="var(--chakra-colors-primary)">
-              {superior.firstName.charAt(0)}
-              {superior.lastName.charAt(0)}
-            </Avatar.Fallback>
-          </Avatar.Root>
-          <Flex flexDir="column">
-            <H4 color="var(--chakra-colors-primary)">
-              {superior.firstName} {superior.lastName}
-            </H4>
-            <Small color="gray.500">{superior.id}</Small>
-          </Flex>
-        </Flex>
-
-        <Badge
-          colorPalette="green"
-          variant="subtle"
-          px={3}
-          py={1}
-          borderRadius="full"
-          cursor="pointer"
-          onClick={onClear}
-        >
-          <LuCheck />
-          <Text ml={1}>Selected — change</Text>
-        </Badge>
-      </Flex>
-
-      {/* Agent details */}
-      <InputCardAccordion
-        icon={<LuBriefcase size={16} />}
-        title="Agent Details"
-        subtitle="Position and employment info"
-        defaultOpen
-      >
-        <Flex flexDir="column">
-          <RowItem
-            label="Position"
-            value={getPositionDesc(superior.position) ?? superior.position}
-          />
-          <RowItem
-            label="Current Superior"
-            value={getAgentNameById(superior.superiorId ?? "") ?? "N/A"}
-          />
-          <RowItem label="Date Hired" value={formatDate(superior.hireDate)} />
-        </Flex>
-      </InputCardAccordion>
-
-      {/* Current team */}
-      <InputCardAccordion
-        icon={<LuUsers size={16} />}
-        title="Current Team"
-        subtitle={
-          subordinates.length > 0
-            ? `${subordinates.length} subordinate${subordinates.length > 1 ? "s" : ""}`
-            : "No existing team"
-        }
-        defaultOpen
-      >
-        {subordinates.length > 0 ? (
-          <Flex flexDir="column">
-            {subordinates.map((sub) => (
-              <RowItem
-                key={sub.id}
-                label={`${sub.firstName} ${sub.lastName}`}
-                value={getPositionDesc(sub.position) ?? sub.position}
-              />
-            ))}
-          </Flex>
-        ) : (
-          <Small color="gray.500">
-            No subordinates yet — this will be a new team.
-          </Small>
-        )}
-      </InputCardAccordion>
-    </Flex>
-  );
-};
-
-/* ─── Summary Page ───────────────────────────────────────────────────────── */
-
-interface ReassignSummaryProps {
-  superior: SalesAgent;
-  agents: SalesAgent[];
-  onBack: () => void;
-}
-
-const ReassignSummary = ({
-  superior,
-  agents,
-  onBack,
-}: ReassignSummaryProps) => {
-  const router = useRouter();
-
-  const handleSubmit = () => {
-    // TODO: wire up to real reassignAgent() API
-    router.push("/sales-force/re-assign/success");
-  };
-
-  return (
-    <Page.Root
-      title="Review Re-organization"
-      description="Confirm details before submitting."
-    >
-      <Page.MainContent>
-        <Flex flexDir="column" gap={4} mt={{ base: "10px", md: 0 }}>
-          {/* New Superior */}
-          <InputCardAccordion
-            icon={<LuUser size={16} />}
-            title="New Superior"
-            subtitle={`${superior.firstName} ${superior.lastName} · ${superior.id}`}
-            defaultOpen
-            isComplete
-          >
-            <Flex flexDir="column" gap={3}>
-              <Flex
-                gap={4}
-                align="center"
-                justify="space-between"
-                px={2}
-                py={3}
-                borderRadius="xl"
-                bg="gray.50"
-              >
-                <Flex gap={3} align="center">
-                  <Avatar.Root size="lg">
-                    <Avatar.Fallback color="var(--chakra-colors-primary)">
-                      {superior.firstName.charAt(0)}
-                      {superior.lastName.charAt(0)}
-                    </Avatar.Fallback>
-                  </Avatar.Root>
-                  <Flex flexDir="column">
-                    <H4 color="var(--chakra-colors-primary)">
-                      {superior.firstName} {superior.lastName}
-                    </H4>
-                    <Small color="gray.500">{superior.id}</Small>
-                  </Flex>
-                </Flex>
-                <Badge
-                  colorPalette="green"
-                  variant="subtle"
-                  px={3}
-                  py={1}
-                  borderRadius="full"
-                >
-                  <LuCheck />
-                  <Text ml={1}>New Superior</Text>
-                </Badge>
-              </Flex>
-
-              <Flex flexDir="column">
-                <RowItem
-                  label="Position"
-                  value={getPositionDesc(superior.position) ?? superior.position}
-                />
-                <RowItem
-                  label="Current Superior"
-                  value={getAgentNameById(superior.superiorId ?? "") ?? "N/A"}
-                />
-                <RowItem label="Date Hired" value={formatDate(superior.hireDate)} />
-              </Flex>
-            </Flex>
-          </InputCardAccordion>
-
-          {/* Agents to Re-organize */}
-          <InputCardAccordion
-            icon={<LuUsers size={16} />}
-            title="Agents to Re-organize"
-            subtitle={`${agents.length} agent${agents.length !== 1 ? "s" : ""} will be moved`}
-            defaultOpen
-            isComplete={agents.length > 0}
-          >
-            <Flex flexDir="column" gap={2}>
-              {agents.map((agent) => (
-                <Flex
-                  key={agent.id}
-                  gap={3}
-                  align="center"
-                  px={3}
-                  py={2.5}
-                  borderRadius="lg"
-                  bg="gray.50"
-                  border="1px solid"
-                  borderColor="gray.100"
-                >
-                  <Avatar.Root size="sm" flexShrink={0}>
-                    <Avatar.Fallback
-                      color="var(--chakra-colors-primary)"
-                      fontSize="xs"
-                    >
-                      {agent.firstName.charAt(0)}
-                      {agent.lastName.charAt(0)}
-                    </Avatar.Fallback>
-                  </Avatar.Root>
-
-                  <Flex flexDir="column" flex={1} minW={0}>
-                    <Body fontWeight="medium" color="gray.800">
-                      {agent.firstName} {agent.lastName}
-                    </Body>
-                    <Small color="gray.500">
-                      {agent.id} · {getPositionDesc(agent.position) ?? agent.position}
-                    </Small>
-                  </Flex>
-
-                  <Flex flexDir="column" align="flex-end" flexShrink={0}>
-                    <Small color="gray.400">from</Small>
-                    <Small color="gray.600" fontWeight="medium">
-                      {getAgentNameById(agent.superiorId ?? "") ?? "N/A"}
-                    </Small>
-                  </Flex>
-                </Flex>
-              ))}
-            </Flex>
-          </InputCardAccordion>
-
-          {/* Actions */}
-          <Flex w="full" justify="space-between" align="center" pt={1}>
-            <Button variant="outline" size="sm" onClick={onBack}>
-              <LuArrowLeft />
-              Back
-            </Button>
-            <PrimaryMdButton onClick={handleSubmit}>
-              Submit Re-organization
-            </PrimaryMdButton>
-          </Flex>
-        </Flex>
-      </Page.MainContent>
-    </Page.Root>
-  );
-};
-
-/* ─── Column Definitions ─────────────────────────────────────────────────── */
-
-const columns: ColumnDef<SalesAgent>[] = [
-  {
-    accessorKey: "id",
-    header: "Agent ID",
-    enableColumnFilter: false,
-    cell: (info) => <Small>{String(info.getValue())}</Small>,
-  },
-  {
-    accessorKey: "name",
-    header: "Full Name",
-    enableColumnFilter: true,
-    cell: (info) => <Small>{String(info.getValue())}</Small>,
-  },
-  {
-    accessorKey: "position",
-    header: "Position",
-    enableColumnFilter: true,
-    cell: (info) => <Small>{getPositionDesc(String(info.getValue()))}</Small>,
-  },
-];
-
-export default ReassignPageWeb;
+export default ReorganizationWizard;
