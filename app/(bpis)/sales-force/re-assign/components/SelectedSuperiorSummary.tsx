@@ -85,13 +85,17 @@ export const SelectedSuperiorSummary = ({
         py={2}
         borderRadius="8px"
         borderWidth="1px"
-        borderColor="gray.300"
-        bg="white"
-        color="gray.700"
+        borderColor="yellow.500"
+        bg="yellow.100"
+        color="yellow.700"
         fontSize="13px"
         fontWeight="600"
         cursor="pointer"
-        _hover={{ bg: "gray.50" }}
+        _hover={{
+          bg: "yellow.200",
+          borderColor: "yellow.600",
+          color: "yellow.800",
+        }}
         transition="background 0.15s ease"
       >
         <LuRotateCcw size={14} />

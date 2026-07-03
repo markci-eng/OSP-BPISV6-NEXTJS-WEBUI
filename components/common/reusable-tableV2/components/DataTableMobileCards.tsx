@@ -127,7 +127,7 @@ export function DataTableMobileCards<TData>({
   }
 
   return (
-    <Box display="grid" gap={3} px={3} py={3} bg="gray.50">
+    <Box display="grid" gap={3} py={3} bg="white">
       {rows.map((row) => {
         const original = row.original;
 

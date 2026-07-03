@@ -1,4 +1,3 @@
-import { NavItem } from "../app-layout.type";
 import { HiOutlineUsers, HiUsers } from "react-icons/hi2";
 import { PesoOutlineIcon, PesoSolidIcon } from "../../icons/peso-icons";
 import { McprOutlineIcon, McprSolidIcon } from "../../icons/mcpr-icons";
@@ -29,6 +28,7 @@ import { LuClipboardCheck } from "react-icons/lu";
 import { BiCoin, BiSolidCoin } from "react-icons/bi";
 import { TbReceiptDollar, TbReceiptDollarFilled } from "react-icons/tb";
 import { MdOutlineSyncLock } from "react-icons/md";
+import { NavItem } from "@/claude components/layout/app-layout.type";
 
 export const SideBarItemsBranch: NavItem[] = [
   {
@@ -136,12 +136,12 @@ export const SideBarItemsBranch: NavItem[] = [
     ],
   },
 
-  {
-    icon: LiaHandHoldingUsdSolid,
-    activeIcon: FaHandHoldingUsd,
-    label: "Loan",
-    href: "/loan",
-  },
+  // {
+  //   icon: LiaHandHoldingUsdSolid,
+  //   activeIcon: FaHandHoldingUsd,
+  //   label: "Loan",
+  //   href: "/loan",
+  // },
 
   {
     icon: McprOutlineIcon,

@@ -31,7 +31,7 @@ import {
   mapDRSToDepositAndPayments,
 } from "@/app/(bpis)/approvals/data/types";
 import { DRSPrintLayout } from "@/app/(bpis)/approvals/components/DRSPrintLayout";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 
 type ApprovalView =
   | "reassignment-doc"

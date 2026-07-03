@@ -137,7 +137,7 @@ export function DataTableMobileAccordion<TData>({
   }
 
   return (
-    <Box display="grid" gap={2.5} px={3} py={3} bg="gray.50">
+    <Box display="grid" gap={2.5} py={3} bg="white">
       {rows.map((row) => {
         const original = row.original;
 

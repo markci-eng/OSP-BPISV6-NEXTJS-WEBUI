@@ -46,7 +46,7 @@ import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
 import Card from "@/components/cards/Card";
 import AgentPersonalInfoCard from "../cards/AgentPersonalInfoCard";
 import AgentEmploymentInfoCard from "../cards/AgentEmploymentInfoCard";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { PlanholderAddressCard } from "@/components/new-planholder-profile/sections/address-info";
 import ReferralPage from "./referral-page";
 import AgentContactInfoCard from "../cards/AgentContactInfoCard";
@@ -204,7 +204,7 @@ export function AgentDetails(params: {
   );
 
   const pendingRequestsCard = (
-    <PendingRequests requests={MOCK_AGENT_REQUESTS} />
+    <PendingRequests requests={MOCK_AGENT_REQUESTS} h="full" />
   );
 
   const agentPhAddress = addr
@@ -269,7 +269,7 @@ export function AgentDetails(params: {
         {page === "default" ? (
           <>
             {/* Expand / Collapse strip */}
-            <Flex justify="flex-end" gap={2} mb={1}>
+            {/* <Flex justify="flex-end" gap={2} mb={1}>
               <TertiarySmButton onClick={expandAll}>
                 <LuChevronsDown size={14} />
                 Expand All
@@ -278,17 +278,17 @@ export function AgentDetails(params: {
                 <LuChevronsUp size={14} />
                 Collapse All
               </TertiarySmButton>
-            </Flex>
+            </Flex> */}
 
-            {/* Single unified 2-column grid */}
-            <Grid
-              templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
-              gap={5}
-              alignItems="start"
-            >
-              {/* Left column — identity & details */}
-              <GridItem>
-                <Flex direction="column" gap={4}>
+            <Flex direction="column" gap={4}>
+              {/* Top row — profile header + pending requests share an equal
+                  height on desktop (both stretch to the taller of the two) */}
+              <Grid
+                templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
+                gap={5}
+                alignItems="stretch"
+              >
+                <GridItem>
                   <ProfileHeaderCard
                     name={selectedAgent.name}
                     personId={selectedAgent.id}
@@ -305,69 +305,74 @@ export function AgentDetails(params: {
                     email={selectedAgent.email}
                     landlineNo={selectedAgent.landline}
                   />
-                  {/* {contactActions} */}
-                  <Show when={isMobile}>{pendingRequestsCard}</Show>
+                </GridItem>
+                <GridItem>
+                  <Show when={!isMobile}>{pendingRequestsCard}</Show>
+                </GridItem>
+              </Grid>
+
+              {/* Pending requests sits under the header on mobile */}
+              <Show when={isMobile}>{pendingRequestsCard}</Show>
+
+              {/* Lower row — detail cards share an equal height on desktop */}
+              <Grid
+                templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
+                gap={5}
+                alignItems="stretch"
+              >
+                <GridItem>
                   <AgentPersonalInfoCard
                     agent={selectedAgent}
                     isOpen={personalOpen}
                     onToggle={() => setPersonalOpen((p) => !p)}
+                    h="full"
                   />
-                  <PlanholderAddressCard
-                    phAddress={agentPhAddress}
-                    isOpen={addressOpen}
-                    onToggle={() => setAddressOpen((p) => !p)}
-                  />
-                </Flex>
-              </GridItem>
-
-              {/* Right column — activity & admin */}
-              <GridItem>
-                <Flex direction="column" gap={4}>
-                  <Show when={!isMobile}>{pendingRequestsCard}</Show>
-                  <AgentContactInfoCard
-                    agent={selectedAgent}
-                    isOpen={contactOpen}
-                    onToggle={() => setContactOpen((p) => !p)}
-                  />
+                </GridItem>
+                <GridItem>
                   <AgentEmploymentInfoCard
                     agent={selectedAgent}
                     isOpen={employmentOpen}
                     onToggle={() => setEmploymentOpen((p) => !p)}
+                    h="full"
                   />
-                </Flex>
-              </GridItem>
-            </Grid>
+                </GridItem>
+              </Grid>
+            </Flex>
 
-            {/* Team Members — full width */}
-            <Card.Root title="Team Members">
-              <Card.MainContent>
-                <DataTable
-                  columns={columns}
-                  data={getSubordinates(selectedAgent.id)}
-                  onRowClick={(row) => {
-                    setSelectedTeamMember(row);
-                    setTeamDrawerOpen(true);
-                  }}
-                  features={{
-                    search: false,
-                    filtering: false,
-                    sorting: false,
-                    pagination: true,
-                    selection: false,
-                    draggable: false,
-                    columnToggle: false,
-                    detailSidebar: false,
-                  }}
-                />
-              </Card.MainContent>
-            </Card.Root>
+            {/* Team Members — full width, hidden for SA1 positions */}
+            {selectedAgent.position !== "SA1" && (
+              <Card.Root title="Team Members">
+                <Card.MainContent>
+                  <DataTable
+                    columns={columns}
+                    data={getSubordinates(selectedAgent.id)}
+                    onRowClick={(row) => {
+                      setSelectedTeamMember(row);
+                      setTeamDrawerOpen(true);
+                    }}
+                    features={{
+                      search: false,
+                      filtering: false,
+                      sorting: false,
+                      pagination: true,
+                      selection: false,
+                      draggable: false,
+                      columnToggle: false,
+                      detailSidebar: false,
+                    }}
+                  />
+                </Card.MainContent>
+              </Card.Root>
+            )}
 
-            {/* MCPR — full width */}
-            <Card.Root title="Monthly Collection Performance Report">
-              <Card.MainContent>
-                <MCPRList />
-              </Card.MainContent>
-            </Card.Root>
+            {/* MCPR — full width, SA2 positions only */}
+            {selectedAgent.position === "SA2" && (
+              <Card.Root title="Monthly Collection Performance Report">
+                <Card.MainContent>
+                  <MCPRList />
+                </Card.MainContent>
+              </Card.Root>
+            )}
           </>
         ) : page === "reassign" ? (
           <AgentReassignForm

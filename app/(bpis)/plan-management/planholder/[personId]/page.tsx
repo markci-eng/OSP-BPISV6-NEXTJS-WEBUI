@@ -33,6 +33,7 @@ export default async function Page({
       cashSurrenderedValue: "/",
       transferOfRights: `/plan-management/planholder/${personId}/transfer-of-rights`,
       reinstement: `/plan-management/planholder/${personId}/reinstate-plan`,
+      loanApplication: `/plan-management/planholder/${personId}/loan`,
     },
     planholderInfo: {
       personId,

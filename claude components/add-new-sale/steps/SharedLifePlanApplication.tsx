@@ -2,7 +2,7 @@
 
 import { Box } from "@chakra-ui/react";
 import { useState } from "react";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import { CartItem } from "../cartItem";
 import HorizontalStepper from "../horizontal-stepper";
 import { createLifePlanSteps } from "../lifePlanSteps";

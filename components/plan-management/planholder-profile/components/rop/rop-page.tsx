@@ -274,7 +274,7 @@ function RopSelectPlanStep({
           features={{
             sorting: false,
             filtering: false,
-            search: false,
+            search: true,
             pagination: false,
             columnToggle: false,
             selection: false,

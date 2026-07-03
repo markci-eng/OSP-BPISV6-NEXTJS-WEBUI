@@ -9,13 +9,18 @@ import {
   useBreakpointValue,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { LuArrowLeft, LuArrowRight, LuHistory } from "react-icons/lu";
+import {
+  LuArrowLeft,
+  LuArrowRight,
+  LuClock,
+  LuHistory,
+} from "react-icons/lu";
 import { ProgressCard } from "../cards/pending-request-card";
 import RequestHistoryDrawer, {
   RequestHistoryItem,
 } from "../drawers/request-history-drawer";
 import { Small } from "st-peter-ui";
-import Card from "@/components/cards/Card";
+import { Card } from "@/claude components/card-accordion/card";
 
 export interface RequestProps {
   type:
@@ -35,8 +40,10 @@ export interface RequestProps {
 
 export function PendingRequests({
   requests,
+  h,
 }: {
   requests?: RequestProps[] | undefined;
+  h?: string | Record<string, string>;
 }) {
   const isMobile = useBreakpointValue({ base: true, lg: false }) ?? false;
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -120,9 +127,19 @@ export function PendingRequests({
       </Carousel.Root>
     </Flex>
   );
+  const pendingCount = pendingRequests?.length ?? 0;
+
   return (
-    <Card.Root title={"Pending Request(s)"}>
-      <Card.ButtonSection>
+    <Card
+      h={h}
+      activeIcon={<LuClock size={16} />}
+      title="Pending Request(s)"
+      subtitle={
+        pendingCount > 0
+          ? `${pendingCount} request${pendingCount > 1 ? "s" : ""} awaiting action`
+          : "No pending requests"
+      }
+      headerAction={
         <IconButton
           aria-label="View request history"
           size="xs"
@@ -132,15 +149,14 @@ export function PendingRequests({
         >
           <LuHistory /> History
         </IconButton>
-      </Card.ButtonSection>
-      <Card.MainContent>
-        <RequestHistoryDrawer
-          open={historyOpen}
-          onOpenChange={setHistoryOpen}
-          items={historyItems}
-        />
-        {content}
-      </Card.MainContent>
-    </Card.Root>
+      }
+    >
+      <RequestHistoryDrawer
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        items={historyItems}
+      />
+      {content}
+    </Card>
   );
 }

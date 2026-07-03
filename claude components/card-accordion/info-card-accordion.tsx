@@ -13,6 +13,7 @@ interface InfoCardAccordionProps {
   defaultOpen?: boolean;
   isOpen?: boolean;
   onToggle?: () => void;
+  h?: string | Record<string, string>;
 }
 
 export function InfoCardAccordion({
@@ -24,6 +25,7 @@ export function InfoCardAccordion({
   defaultOpen,
   isOpen: controlledOpen,
   onToggle,
+  h,
 }: InfoCardAccordionProps) {
   const [internalOpen, setInternalOpen] = useState(() => {
     if (defaultOpen !== undefined) return defaultOpen;
@@ -53,6 +55,7 @@ export function InfoCardAccordion({
   return (
     <Box
       w="full"
+      h={h}
       position="relative"
       p={1}
       borderRadius="2xl"
@@ -93,7 +96,7 @@ export function InfoCardAccordion({
               {title}
             </Text>
             <Flex align="center" gap={1} fontSize="xs" color="gray.500">
-              <LuHash size={12} />
+              {/* <LuHash size={12} /> */}
               <Text>{subtitle}</Text>
             </Flex>
           </Box>

@@ -95,7 +95,7 @@ export function InputCardAccordion({
               {title}
             </Text>
             <Flex align="center" gap={1} fontSize="xs" color="gray.500">
-              <LuHash size={12} />
+              {/* <LuHash size={12} /> */}
               <Text>{subtitle}</Text>
             </Flex>
           </Box>

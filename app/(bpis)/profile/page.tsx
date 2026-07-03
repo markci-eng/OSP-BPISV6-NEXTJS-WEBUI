@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Page from "@/components/layout/page/Page";
+import Page from "@/claude components/layout/page/Page";
 import SectionTitle from "@/components/texts/SectionTitle";
 import LabelText from "@/components/texts/LabelText";
 import {

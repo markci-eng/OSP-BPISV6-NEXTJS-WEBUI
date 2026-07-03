@@ -1,6 +1,5 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { ReactNode } from "react";
-import { LuHash } from "react-icons/lu";
 
 export function Card({
   activeIcon,
@@ -61,7 +60,9 @@ export function Card({
             </Flex>
           </Box>
         </Flex>
-        {headerAction && <Box onClick={(e) => e.stopPropagation()}>{headerAction}</Box>}
+        {headerAction && (
+          <Box onClick={(e) => e.stopPropagation()}>{headerAction}</Box>
+        )}
       </Flex>
 
       <Box p={3} borderTopWidth={1} borderColor="gray.100">

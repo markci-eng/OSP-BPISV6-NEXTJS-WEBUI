@@ -120,9 +120,10 @@ export function DataTable<TData>({
   const columns = React.useMemo(() => {
     const enhancedColumns = userColumns.map((column, idx) => ({
       ...column,
-      meta: idx === 0
-        ? { isStickyLeft: true, ...(column.meta as object | undefined) }
-        : column.meta,
+      meta:
+        idx === 0
+          ? { isStickyLeft: true, ...(column.meta as object | undefined) }
+          : column.meta,
       filterFn: (column as any).filterFn ?? arrayFilterFn,
     }));
 
@@ -325,7 +326,7 @@ export function DataTable<TData>({
     <Box
       w="full"
       borderWidth="1px"
-      borderColor="gray.200"
+      borderColor={{ base: "transparent", lg: "gray.200" }}
       borderRadius="lg"
       overflow="clip"
       bg="white"

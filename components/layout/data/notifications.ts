@@ -1,4 +1,4 @@
-import { NotificationDataProps } from "../app-layout.type";
+import { NotificationDataProps } from "@/claude components/layout/app-layout.type";
 
 export const Notifications: NotificationDataProps[] = [
   {

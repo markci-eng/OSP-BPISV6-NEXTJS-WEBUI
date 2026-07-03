@@ -50,6 +50,7 @@ import {
 } from "./onboarding-tutorial";
 import { SecondarySmButton, TertiarySmButton } from "st-peter-ui";
 import ActionButtons from "../../claude components/buttons/ActionButtons";
+import { LiaHandHoldingUsdSolid } from "react-icons/lia";
 
 export interface Hyperlinks {
   payMyPlan?: string | undefined;
@@ -58,6 +59,7 @@ export interface Hyperlinks {
   claimApplication?: string | undefined;
   cashSurrenderedValue?: string | undefined;
   transferOfRights: string | undefined;
+  loanApplication?: string | undefined;
   reinstement: string | undefined;
 }
 
@@ -306,6 +308,16 @@ export default function PlanholderProfilePage({
             label: "Claim Application",
             href: props.hyperlinks.claimApplication as string,
             icon: () => <LuFile size={16} />,
+          },
+        ]
+      : []),
+
+    ...(props.hyperlinks?.loanApplication
+      ? [
+          {
+            label: "Loan Application",
+            href: props.hyperlinks.loanApplication as string,
+            icon: () => <LiaHandHoldingUsdSolid size={16} />,
           },
         ]
       : []),

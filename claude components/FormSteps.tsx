@@ -47,6 +47,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
 }) => {
   const formTopRef = useRef<HTMLDivElement | null>(null);
   const isCompact = stepsData.length < 3;
+  const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === stepsData.length - 1;
   const nextStepTitle = stepsData[currentStep + 1]?.title;
 
@@ -283,30 +284,34 @@ const FormSteps: React.FC<FormStepsProps> = ({
                 gap={2}
                 display={{ base: "flex", md: "none" }}
               >
-                <Steps.PrevTrigger asChild>
-                  <Box
-                    as="button"
-                    display="flex"
-                    alignItems="center"
-                    gap={1}
-                    px={3}
-                    py={2}
-                    borderRadius="lg"
-                    border="1.5px solid"
-                    borderColor="gray.200"
-                    bg="white"
-                    color="gray.700"
-                    fontSize="sm"
-                    fontWeight={500}
-                    cursor="pointer"
-                    _hover={{ bg: "gray.50" }}
-                    _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
-                    transition="all 0.15s"
-                  >
-                    <LuChevronLeft size={14} />
-                    Back
-                  </Box>
-                </Steps.PrevTrigger>
+                {!isFirstStep ? (
+                  <Steps.PrevTrigger asChild>
+                    <Box
+                      as="button"
+                      display="flex"
+                      alignItems="center"
+                      gap={1}
+                      px={3}
+                      py={2}
+                      borderRadius="lg"
+                      border="1.5px solid"
+                      borderColor="gray.200"
+                      bg="white"
+                      color="gray.700"
+                      fontSize="sm"
+                      fontWeight={500}
+                      cursor="pointer"
+                      _hover={{ bg: "gray.50" }}
+                      _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
+                      transition="all 0.15s"
+                    >
+                      <LuChevronLeft size={14} />
+                      Back
+                    </Box>
+                  </Steps.PrevTrigger>
+                ) : (
+                  <Box></Box>
+                )}
 
                 {!isLastStep ? (
                   <Box
@@ -370,12 +375,34 @@ const FormSteps: React.FC<FormStepsProps> = ({
                 display={{ base: "none", md: "flex" }}
               >
                 <Flex w="full" align="center" justify="space-between">
-                  <Steps.PrevTrigger asChild>
-                    <SecondaryMdButton>
-                      <LuChevronLeft />
-                      Previous
-                    </SecondaryMdButton>
-                  </Steps.PrevTrigger>
+                  {!isFirstStep ? (
+                    <Steps.PrevTrigger asChild>
+                      <Box
+                        as="button"
+                        display="flex"
+                        alignItems="center"
+                        gap={1}
+                        px={3}
+                        py={2}
+                        borderRadius="lg"
+                        border="1.5px solid"
+                        borderColor="gray.200"
+                        bg="white"
+                        color="gray.700"
+                        fontSize="sm"
+                        fontWeight={500}
+                        cursor="pointer"
+                        _hover={{ bg: "gray.50" }}
+                        _disabled={{ opacity: 0.4, cursor: "not-allowed" }}
+                        transition="all 0.15s"
+                      >
+                        <LuChevronLeft size={14} />
+                        Back
+                      </Box>
+                    </Steps.PrevTrigger>
+                  ) : (
+                    <Box></Box>
+                  )}
 
                   {!isLastStep ? (
                     <Box
