@@ -18,8 +18,7 @@ import {
   LoanAddressInfo,
   LoanApplicantInfo,
 } from "./loan-application";
-import type { LoanRecord } from "@/app/plan-management/planholder/[personId]/loan/loan-select-plan";
-
+import { LoanRecord } from "./loan-select-plan";
 const MOCK_SELECTED_PLANS: LoanRecord[] = [
   {
     lpaNo: "L12345678G",

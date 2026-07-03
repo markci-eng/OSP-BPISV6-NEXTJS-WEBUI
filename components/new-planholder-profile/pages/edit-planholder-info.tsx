@@ -51,6 +51,7 @@ const mockPlanholder: SalesAgent = {
   },
   isContractPrinted: true,
   isSFIDPrinted: false,
+  employer: "St. Peter Life Plan, Inc.",
 };
 
 export function EditPlanholderInfoPage() {
@@ -70,7 +71,9 @@ export function EditPlanholderInfoPage() {
     {
       title: "Documents",
       content: (
-        <EditDocumentsPage onFilesChange={(files) => setSelectedDocuments(files)} />
+        <EditDocumentsPage
+          onFilesChange={(files) => setSelectedDocuments(files)}
+        />
       ),
       icon: LuFileText,
       validateBeforeNext: () => {
