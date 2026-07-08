@@ -185,7 +185,19 @@ export default function PayViaQr({
                 borderColor={BRAND_COLORS.neutralBorder}
                 borderRadius={STANDARD_RADIUS.lg}
               >
-                <QRCodeSVG value={qrValue} size={180} bgColor="#ffffff" fgColor="#0F172A" level="M" />
+                <QRCodeSVG
+                  value={qrValue}
+                  size={180}
+                  bgColor="#ffffff"
+                  fgColor="#0F172A"
+                  level="H"
+                  imageSettings={{
+                    src: "/images/QR_Ph_Logo.png",
+                    height: 36,
+                    width: 36,
+                    excavate: true,
+                  }}
+                />
               </Flex>
 
               <VStack gap="2px">
