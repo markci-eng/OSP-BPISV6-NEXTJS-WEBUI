@@ -7,7 +7,6 @@ import {
   Grid,
   GridItem,
   Show,
-  Text,
   useBreakpointValue,
 } from "@chakra-ui/react";
 import {
@@ -23,8 +22,6 @@ import {
   LuChevronsDown,
   LuChevronsUp,
 } from "react-icons/lu";
-import DataTable from "../../common/reusable-tableV2/DataTable";
-import { ColumnDef } from "@tanstack/react-table";
 import { useState } from "react";
 import AgentEditForm from "../forms/agent-edit-form";
 import {
@@ -56,6 +53,7 @@ import ActionButtons, {
   ActionButtonItem,
 } from "@/claude components/buttons/ActionButtons";
 import MCPRList from "@/app/(bpis)/accounts-maintenance/mcpr/mcpr-list";
+import { SuperiorResultCard } from "@/app/(bpis)/sales-force/re-assign/components/SuperiorResultCard";
 
 const MOCK_AGENT_REQUESTS: RequestProps[] = [
   {
@@ -343,24 +341,19 @@ export function AgentDetails(params: {
             {selectedAgent.position !== "SA1" && (
               <Card.Root title="Team Members">
                 <Card.MainContent>
-                  <DataTable
-                    columns={columns}
-                    data={getSubordinates(selectedAgent.id)}
-                    onRowClick={(row) => {
-                      setSelectedTeamMember(row);
-                      setTeamDrawerOpen(true);
-                    }}
-                    features={{
-                      search: false,
-                      filtering: false,
-                      sorting: false,
-                      pagination: true,
-                      selection: false,
-                      draggable: false,
-                      columnToggle: false,
-                      detailSidebar: false,
-                    }}
-                  />
+                  <Flex direction="column" gap={2}>
+                    {getSubordinates(selectedAgent.id).map((member) => (
+                      <SuperiorResultCard
+                        key={member.id}
+                        agent={member}
+                        selected={selectedTeamMember?.id === member.id}
+                        onSelect={() => {
+                          setSelectedTeamMember(member);
+                          setTeamDrawerOpen(true);
+                        }}
+                      />
+                    ))}
+                  </Flex>
                 </Card.MainContent>
               </Card.Root>
             )}
@@ -414,18 +407,3 @@ export function AgentDetails(params: {
     </Page.Root>
   );
 }
-
-const columns: ColumnDef<SalesAgent>[] = [
-  {
-    accessorKey: "id",
-    header: "Agent ID",
-    enableColumnFilter: false,
-    cell: (info) => <Text>{info.getValue<string>()}</Text>,
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    enableColumnFilter: false,
-    cell: (info) => <Text>{info.getValue<string>()}</Text>,
-  },
-];

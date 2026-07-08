@@ -183,7 +183,7 @@ export function LPANumberButton({
                   px={5}
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.location.href = `/plan-management/planholder/${personId}/pay-my-plan`;
+                    window.location.href = `/plan-management/planholder/${personId}/pay?lpaNumber=${encodeURIComponent(plan.lpaNumber)}`;
                   }}
                 >
                   Pay

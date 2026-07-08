@@ -82,7 +82,6 @@ const mockAgent: SalesAgent = {
   },
   isContractPrinted: true,
   isSFIDPrinted: true,
-  employer: "St. Peter Life Plan, Inc.",
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -582,25 +581,21 @@ const AgentEditForm: React.FC<AgentEditFormProps> = ({
           borderColor="gray.100"
         >
           <SecondaryMdButton onClick={onCancel}>Cancel</SecondaryMdButton>
-          <PrimaryMdButton
-            onClick={async () => {
-              const confirmed = await messageBox({
-                title: "CONFIRMATION",
-                message: "Save changes to this agent's information?",
-                confirmText: "Yes",
-                cancelText: "No",
-                variant: "confirmation",
-              });
-              if (!confirmed) return;
-              if (successLink) {
-                router.push(successLink);
-              } else {
-                onSubmitted?.();
-              }
-            }}
-          >
-            Save Changes
-          </PrimaryMdButton>
+          <PrimaryMdButton onClick={async () => {
+            const confirmed = await messageBox({
+              title: "CONFIRMATION",
+              message: "Save changes to this agent's information?",
+              confirmText: "Yes",
+              cancelText: "No",
+              variant: "confirmation",
+            });
+            if (!confirmed) return;
+            if (successLink) {
+              router.push(successLink);
+            } else {
+              onSubmitted?.();
+            }
+          }}>Save Changes</PrimaryMdButton>
         </Flex>
       )}
     </Flex>
