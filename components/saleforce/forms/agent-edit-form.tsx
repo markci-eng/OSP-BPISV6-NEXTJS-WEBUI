@@ -82,6 +82,7 @@ const mockAgent: SalesAgent = {
   },
   isContractPrinted: true,
   isSFIDPrinted: true,
+  employer: ""
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);

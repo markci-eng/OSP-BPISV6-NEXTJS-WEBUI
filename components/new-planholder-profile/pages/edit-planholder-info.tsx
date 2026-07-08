@@ -51,6 +51,7 @@ const mockPlanholder: SalesAgent = {
   },
   isContractPrinted: true,
   isSFIDPrinted: false,
+  employer: ""
 };
 
 export function EditPlanholderInfoPage() {
