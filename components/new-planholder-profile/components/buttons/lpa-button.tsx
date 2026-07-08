@@ -186,7 +186,7 @@ export function LPANumberButton({
                     window.location.href = `/plan-management/planholder/${personId}/pay?lpaNumber=${encodeURIComponent(plan.lpaNumber)}`;
                   }}
                 >
-                  Pay
+                  Pay via QR
                 </Button>
               )}
             </Flex>

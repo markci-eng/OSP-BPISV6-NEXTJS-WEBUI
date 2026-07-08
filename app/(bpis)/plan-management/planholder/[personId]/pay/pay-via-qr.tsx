@@ -348,12 +348,13 @@ export default function PayViaQr({
   return (
     <Page.Root
       title="Pay via QR"
-      description="Review your payment information before generating a QR code."
+      description=""
     >
       <Page.MainContent maxW="560px" mx="auto">
         <Page.Row>
           <VStack align="stretch" gap={STANDARD_SPACING.xs}>
             <Text
+            mt={5}
               fontSize="11px"
               fontWeight="700"
               letterSpacing="0.06em"
