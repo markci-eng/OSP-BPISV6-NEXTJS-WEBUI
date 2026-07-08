@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Flex, HStack, Text, VStack } from "@chakra-ui/react";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 import { LuCheck, LuDownload, LuMinus, LuPlus, LuShare2 } from "react-icons/lu";
 import { TbQrcode } from "react-icons/tb";
@@ -54,6 +54,7 @@ export default function PayViaQr({
   const [option, setOption] = useState<PayOption>("due");
   const [multiplier, setMultiplier] = useState(1);
 
+  const qrDownloadRef = useRef<HTMLCanvasElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -94,6 +95,18 @@ export default function PayViaQr({
     () => `PAY|${lpaNumber}|${personId}|${Math.round(computedAmount)}`,
     [lpaNumber, personId, computedAmount],
   );
+
+  const downloadQr = () => {
+    const canvas = qrDownloadRef.current;
+    if (!canvas) return;
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = `payment-qr-${lpaNumber}.png`;
+    link.click();
+
+    toast.success("QR code saved to your device");
+  };
 
   if (screen === "loading" || screen === "success") {
     return (
@@ -200,6 +213,22 @@ export default function PayViaQr({
                 />
               </Flex>
 
+              <QRCodeCanvas
+                ref={qrDownloadRef}
+                value={qrValue}
+                size={512}
+                bgColor="#ffffff"
+                fgColor="#0F172A"
+                level="H"
+                imageSettings={{
+                  src: "/images/QR_Ph_Logo.png",
+                  height: 102,
+                  width: 102,
+                  excavate: true,
+                }}
+                style={{ display: "none" }}
+              />
+
               <VStack gap="2px">
                 <Text
                   fontSize="11px"
@@ -233,62 +262,6 @@ export default function PayViaQr({
                   </Text>
                 </Box>
               </HStack>
-
-              <HStack
-                gap="7px"
-                bg={BRAND_COLORS.successBg}
-                px={STANDARD_SPACING.sm}
-                py="8px"
-                borderRadius={STANDARD_RADIUS.full}
-              >
-                <Box boxSize="8px" borderRadius={STANDARD_RADIUS.full} bg={BRAND_COLORS.primaryGreen} />
-                <Text fontSize="13px" fontWeight="700" color={BRAND_COLORS.darkGreen}>
-                  Ready for Payment
-                </Text>
-              </HStack>
-            </VStack>
-          </Page.Row>
-
-          <Page.Row>
-            <VStack
-              align="stretch"
-              gap={STANDARD_SPACING.xs}
-              bg={BRAND_COLORS.white}
-              borderWidth="1px"
-              borderColor={BRAND_COLORS.neutralBorder}
-              borderRadius={STANDARD_RADIUS.xl}
-              boxShadow={STANDARD_SHADOWS.level1}
-              p={STANDARD_SPACING.md}
-            >
-              <HStack gap="9px" mb="4px">
-                <Flex boxSize="30px" borderRadius={STANDARD_RADIUS.md} bg={BRAND_COLORS.successBg} align="center" justify="center">
-                  <TbQrcode size={17} color={BRAND_COLORS.primaryGreen} />
-                </Flex>
-                <Text fontSize="16px" fontWeight="800" color={BRAND_COLORS.neutralText}>
-                  How to Pay
-                </Text>
-              </HStack>
-
-              {HOW_TO_PAY_STEPS.map((text, index) => (
-                <HStack key={text} align="flex-start" gap={STANDARD_SPACING.sm} py="4px">
-                  <Flex
-                    flexShrink={0}
-                    boxSize="24px"
-                    borderRadius={STANDARD_RADIUS.full}
-                    bg={BRAND_COLORS.successBg}
-                    color={BRAND_COLORS.primaryGreen}
-                    align="center"
-                    justify="center"
-                    fontSize="12.5px"
-                    fontWeight="800"
-                  >
-                    {index + 1}
-                  </Flex>
-                  <Text fontSize="14px" lineHeight="1.5" color={BRAND_COLORS.neutralText} fontWeight="500">
-                    {text}
-                  </Text>
-                </HStack>
-              ))}
             </VStack>
           </Page.Row>
 
@@ -310,7 +283,7 @@ export default function PayViaQr({
                 fontSize="15px"
                 cursor="pointer"
                 _active={{ transform: "scale(0.98)" }}
-                onClick={() => toast.success("QR code saved to your device")}
+                onClick={downloadQr}
               >
                 <LuDownload size={18} />
                 Download QR
@@ -489,10 +462,10 @@ export default function PayViaQr({
           >
             <Box p={STANDARD_SPACING.sm}>
               <Text fontSize="14.5px" fontWeight="800" color={BRAND_COLORS.neutralText}>
-                Number of Payments
+                Number of Installments
               </Text>
               <Text fontSize="12px" color={BRAND_COLORS.grey} fontWeight="500" mt="3px">
-                Choose how many billing periods to cover.
+                Choose how many installments to cover.
               </Text>
 
               <HStack gap={STANDARD_SPACING.sm} mt={STANDARD_SPACING.sm}>
@@ -550,7 +523,7 @@ export default function PayViaQr({
               </HStack>
 
               <Text fontSize="11.5px" color={BRAND_COLORS.grey} fontWeight="500" mt="9px" textAlign="center">
-                Maximum {maxMult} {maxMult === 1 ? "payment" : "payments"} available for this option
+                Maximum {maxMult} {maxMult === 1 ? "installment" : "installments"} available for this option
               </Text>
             </Box>
 
@@ -585,7 +558,7 @@ export default function PayViaQr({
               >
                 <Text fontSize="11.5px" lineHeight="1.45" color="whiteAlpha.900" fontWeight="500">
                   The total is calculated automatically from the selected option and the number of
-                  billing periods chosen.
+                  installments chosen.
                 </Text>
               </HStack>
             </Box>

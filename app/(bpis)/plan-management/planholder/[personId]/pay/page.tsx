@@ -3,6 +3,10 @@ import { planholderLookup } from "../../../data/planholder-lookup";
 import { PlanDetailsData } from "../../../data/plan-details.data";
 import PayViaQr from "./pay-via-qr";
 
+function toTitleCase(str: string) {
+  return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export default async function Page({
   params,
   searchParams,
@@ -39,8 +43,9 @@ export default async function Page({
     <PayViaQr
       personId={personId}
       lpaNumber={plan.lpaNumber}
-      planholderName={[planholder.firstName, planholder.middleName, planholder.lastName]
+      planholderName={[planholder.firstName, planholder.lastName]
         .filter(Boolean)
+        .map(toTitleCase)
         .join(" ")}
       planDescription={plan.planDescription}
       mode={plan.mode}
