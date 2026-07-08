@@ -7,6 +7,25 @@ function formatPeso(amount: number): string {
   return "₱" + amount.toLocaleString("en-PH");
 }
 
+function LabeledValue({ label, value }: { label: string; value: string }) {
+  return (
+    <Box>
+      <Box
+        fontSize="9px"
+        color="whiteAlpha.700"
+        letterSpacing="widest"
+        textTransform="uppercase"
+        mb="1px"
+      >
+        {label}
+      </Box>
+      <Box fontSize="xs" color="whiteAlpha.900" fontWeight="medium">
+        {value}
+      </Box>
+    </Box>
+  );
+}
+
 export function LPANumberButton({
   plan,
   isSelected,
@@ -108,13 +127,18 @@ export function LPANumberButton({
               color="white"
               lineHeight="short"
               letterSpacing="tight"
+              mb={2}
             >
               {plan.planDescription}
             </Box>
-            <Box fontSize="xs" color="whiteAlpha.800" mt="2px">
-              {plan.mode} · {plan.term} year{plan.term !== 1 ? "s" : ""} ·{" "}
-              {plan.branch}
-            </Box>
+            <Flex gap={4}>
+              <LabeledValue label="Mode" value={plan.mode} />
+              <LabeledValue
+                label="Term"
+                value={`${plan.term} year${plan.term !== 1 ? "s" : ""}`}
+              />
+              <LabeledValue label="Branch" value={plan.branch} />
+            </Flex>
           </Box>
 
           {/* Progress */}

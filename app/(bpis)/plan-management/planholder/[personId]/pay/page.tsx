@@ -38,7 +38,7 @@ export default async function Page({
   }
 
   const planholder = personRecords.find((ph) => ph.lpaNumber === plan.lpaNumber) ?? personRecords[0];
-
+  
   return (
     <PayViaQr
       personId={personId}
