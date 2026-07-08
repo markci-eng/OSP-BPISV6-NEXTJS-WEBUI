@@ -116,6 +116,7 @@ export default function PayViaQr({
             <VStack gap={STANDARD_SPACING.md} py="80px">
               {screen === "loading" ? (
                 <>
+                  <style>{`@keyframes payQrSpin { to { transform: rotate(360deg); } }`}</style>
                   <Box
                     boxSize="72px"
                     borderRadius={STANDARD_RADIUS.full}
@@ -123,12 +124,7 @@ export default function PayViaQr({
                     borderColor={BRAND_COLORS.neutralBorder}
                     borderTopColor={BRAND_COLORS.primaryGreen}
                     borderRightColor={BRAND_COLORS.primaryGreen}
-                    css={{
-                      animation: "spin 0.8s linear infinite",
-                      "@keyframes spin": {
-                        to: { transform: "rotate(360deg)" },
-                      },
-                    }}
+                    style={{ animation: "payQrSpin 0.8s linear infinite" }}
                   />
                   <VStack gap="4px">
                     <Text fontSize="18px" fontWeight="800" color={BRAND_COLORS.neutralText}>
@@ -547,20 +543,7 @@ export default function PayViaQr({
                   {peso(computedAmount)}
                 </Text>
               </Flex>
-              <HStack
-                align="flex-start"
-                gap="8px"
-                bg="whiteAlpha.200"
-                borderRadius={STANDARD_RADIUS.md}
-                px={STANDARD_SPACING.sm}
-                py="8px"
-                mt="11px"
-              >
-                <Text fontSize="11.5px" lineHeight="1.45" color="whiteAlpha.900" fontWeight="500">
-                  The total is calculated automatically from the selected option and the number of
-                  installments chosen.
-                </Text>
-              </HStack>
+              
             </Box>
           </VStack>
         </Page.Row>
