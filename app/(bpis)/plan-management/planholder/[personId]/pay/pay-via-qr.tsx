@@ -168,7 +168,7 @@ export default function PayViaQr({
       <QrScreen
         variant="with-amount"
         pageTitle="Payment QR"
-        pageSubtitle="Scan this QR using any supported banking or e-wallet application."
+        pageSubtitle="Scan using any supported banking or e-wallet."
         qrValue={qrValue}
         amount={computedAmount}
         downloadFileName={`payment-qr-${lpaNumber}`}
