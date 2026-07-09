@@ -6162,4 +6162,16 @@ export const PlanholderAddress: PlanholderAddressType[] = [
     province: "ZAMBOANGA DEL SUR",
     zipCode: 7000,
   },
+  {
+    lpaNumber: "L24746802H",
+    addressType: "RESIDENCE",
+    isMailAddress: true,
+    addressNo: null,
+    street: null,
+    barangay: "CURUAN",
+    district: "2",
+    city: "ZAMBOANGA CITY",
+    province: "ZAMBOANGA DEL SUR",
+    zipCode: 7000,
+  },
 ];

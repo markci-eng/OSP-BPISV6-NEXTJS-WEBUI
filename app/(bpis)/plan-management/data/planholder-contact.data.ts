@@ -2580,5 +2580,10 @@ export const PlanholderContactData : PlanholderContactType[] = [
     lpaNumber: "L25954586H",
     value: "991-6775",
     type: "LandlineNo"
+  },
+  {
+    lpaNumber: "L24746802H",
+    value: "09171234567",
+    type: "MobileNo"
   }
 ]

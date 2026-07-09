@@ -9576,5 +9576,24 @@ export const PlanholderInfoData : PlanholderInfoType[] = [
     "tin": null,
     "securityNo": "N/A",
     "sourceOfFund": "N/A"
+  },
+  {
+    "lpaNumber": "L24746802H",
+    "lastName": "TABAR",
+    "firstName": "IVY",
+    "middleName": "N/A",
+    "nationality": "FILIPINO",
+    "naturalizationDate": new Date("1900-01-01T00:00:00"),
+    "dateOfBirth": new Date("1988-03-14T00:00:00"),
+    "placeOfBirth": "ZAMBOANGA CITY",
+    "gender": "FEMALE",
+    "civilStatus": "MARRIED",
+    "height": "5`3``",
+    "weight": 52.0,
+    "employerName": "N/A",
+    "employmentStatus": "SELF-EMPLOYED",
+    "tin": "742062265",
+    "securityNo": "N/A",
+    "sourceOfFund": "SALARY/BUSINESS INCOME"
   }
 ];

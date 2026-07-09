@@ -156,11 +156,19 @@ export function LPANumberButton({
                 textTransform="uppercase"
                 letterSpacing="wide"
               >
-                {paidInstallments} of {totalInstallments} Installments
+                {paidInstallments} of {totalInstallments} PAID
               </Box>
-              <Box fontSize="xs" color="white" fontWeight="bold">
-                Due {nextDue}
-              </Box>
+              <Flex align="center" gap={1} direction="row">
+                <Box
+                  fontSize="9px"
+                  color="whiteAlpha.700"
+                  letterSpacing="widest"
+                  textTransform="uppercase"
+                  mb="1px"
+                >
+                  DUE: 
+                </Box> <Box  fontSize="xs" color="white" fontWeight="bold">{nextDue}</Box>
+              </Flex>
             </Flex>
           </Box>
 

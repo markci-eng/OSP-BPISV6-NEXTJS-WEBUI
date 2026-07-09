@@ -11592,5 +11592,28 @@ export const PlanDetailsData : PlanDetailType[] = [
     terminationStatus: "SERVICED - ASSIGNED",
     salesAgent1: "MARK KEVIN LEE",
     salesAgent2: "MARK KEVIN LEE"
+  },
+  {
+    lpaNumber: "L24746802H",
+    planDescription: "ST. BERNADETTE",
+    mode: "ANNUAL",
+    term: 5.0,
+    planClass: "REGULAR ACCOUNT",
+    accountClass: "REGULAR ACCOUNT",
+    planCode: "B5A6",
+    contractPrice: 125000.0,
+    installmentAmount: 25000.0,
+    totalAmountPayable: 125000.0,
+    effectivityDate: new Date("2025-07-08T00:00:00"),
+    newEffectivityDate: new Date("2025-07-08T00:00:00"),
+    branch: "ZAMBOANGA WEST",
+    cfpNumber: null,
+    cfpDate: null,
+    isServiceOnly: false,
+    isInsured: true,
+    accountStatus: "ACTIVE",
+    terminationStatus: "NOT YET TERMINATED",
+    salesAgent1: "MARK KEVIN LEE",
+    salesAgent2: "MARK KEVIN LEE"
   }
 ];
