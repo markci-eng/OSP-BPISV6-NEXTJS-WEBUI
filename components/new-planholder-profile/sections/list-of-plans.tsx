@@ -842,12 +842,12 @@ export function ListOfPlans({
         </Portal>
       </Drawer.Root>
 
-      {modalOpen && (
+      {/* {modalOpen && (
         <OnboardingTutorial
           steps={PLAN_DETAIL_STEPS}
           storageKey="osp-plan-detail-tour-v1"
         />
-      )}
+      )} */}
     </Box>
   );
 }

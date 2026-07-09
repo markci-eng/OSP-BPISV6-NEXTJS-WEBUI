@@ -41,6 +41,11 @@ export function LPANumberButton({
     100,
     Math.round((plan.installmentAmount / plan.totalAmountPayable) * 100),
   );
+  const totalInstallments = plan.term;
+  const paidInstallments = Math.min(
+    totalInstallments,
+    Math.round((progress / 100) * totalInstallments),
+  );
 
   if (isSelected) {
     const nextDue =
@@ -151,24 +156,15 @@ export function LPANumberButton({
                 textTransform="uppercase"
                 letterSpacing="wide"
               >
-                Paid {formatPeso(plan.installmentAmount)}
+                {paidInstallments} of {totalInstallments} Installments
               </Box>
               <Box fontSize="xs" color="white" fontWeight="bold">
-                {progress}%
+                Due {nextDue}
               </Box>
             </Flex>
-            <Box h="3px" borderRadius="full" bg="whiteAlpha.300">
-              <Box
-                h="full"
-                borderRadius="full"
-                bg="white"
-                w={`${progress}%`}
-                transition="width 0.4s ease"
-              />
-            </Box>
           </Box>
 
-          {/* Next due + Pay button */}
+          {/* Amount due + Pay button */}
           <Flex align="flex-end" justify="space-between">
             <Box>
               <Box
@@ -178,7 +174,7 @@ export function LPANumberButton({
                 textTransform="uppercase"
                 mb="1px"
               >
-                Next Due {nextDue}
+                Amount Due
               </Box>
               <Box fontSize="lg" fontWeight="bold" color="white">
                 {formatPeso(plan.installmentAmount)}

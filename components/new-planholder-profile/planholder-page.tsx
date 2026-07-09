@@ -512,7 +512,7 @@ export default function PlanholderProfilePage({
             />
           </Box>
         </Box>
-        <OnboardingTutorial
+        {/* <OnboardingTutorial
           steps={
             props.planholderInfo
               ? ACCOUNT_SUMMARY_STEPS.slice(1)
@@ -523,7 +523,7 @@ export default function PlanholderProfilePage({
               ? "osp-account-summary-tour-person-v1"
               : "osp-account-summary-tour-base-v1"
           }
-        />
+        /> */}
       </Page.MainContent>
     </Page.Root>
   );
