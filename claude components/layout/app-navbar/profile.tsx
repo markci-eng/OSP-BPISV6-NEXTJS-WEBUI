@@ -467,7 +467,7 @@ const Profile = () => {
     [role],
   );
 
-  const displayName = "Tejima, Yhuan Shin F.";
+  const displayName = "Joyce Basilio-Ramos";
 
   const resetPasswordForm = () => {
     setCurrentPw("");
@@ -627,7 +627,10 @@ const Profile = () => {
           mb={4}
           colorPalette={pickPalette(displayName || "U")}
         >
-          <Avatar.Image src="/images/profile.jpg" alt={displayName} />
+          <Avatar.Image
+                    src="https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no"
+                    alt={displayName}
+                  />
           <Avatar.Fallback name={displayName} />
         </Avatar.Root>
         <Text

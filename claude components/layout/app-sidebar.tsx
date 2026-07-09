@@ -15,6 +15,7 @@ import {
   GridItem,
   Show,
   Avatar,
+  NativeSelect,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -62,11 +63,18 @@ function parseDisplayName(session: string | null): string {
   }
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  branch: "Branch",
-  bmstl: "BM / STL",
-  "sales-agent": "Sales Agent",
-};
+const ROLE_OPTIONS = [
+  { value: "branch", label: "Branch Cashier/Encoder" },
+  { value: "bm", label: "Branch Manager" },
+  { value: "stl", label: "Sales Team Leader" },
+  { value: "claims", label: "Claims" },
+  { value: "amd", label: "Account Management" },
+  { value: "sales-agent", label: "Sales Agent" },
+];
+
+function setUserRoleCookie(role: string) {
+  document.cookie = `osp_user=${encodeURIComponent(role)}; path=/; max-age=${8 * 60 * 60}`;
+}
 
 interface NavItemRowProps {
   item: NavItem;
@@ -373,22 +381,14 @@ export default function Sidebar({
     const _role = readCookie("osp_user") ?? "";
     setDisplayName(parseDisplayName(session));
     setDisplayName("Joyce Basilio-Ramos");
-    setRole(
-      _role == "branch"
-        ? "Branch Cashier/Encoder"
-        : _role == "bm"
-          ? "Branch Manager"
-          : _role == "stl"
-            ? "Sales Team Leader"
-            : _role == "claims"
-              ? "Claims"
-              : _role == "amd"
-                ? "Account Management"
-                : _role == "sales-agent"
-                  ? "Sales Agent"
-                  : _role,
-    );
+    setRole(_role);
   }, []);
+
+  const handleRoleChange = (newRole: string) => {
+    setRole(newRole);
+    setUserRoleCookie(newRole);
+    router.refresh();
+  };
 
   // Detect mobile safely
   const isMobileRaw = useBreakpointValue({ base: true, lg: false });
@@ -500,9 +500,25 @@ export default function Sidebar({
                 >
                   {displayName || "—"}
                 </Text>
-                <Text fontSize="xs" color="primary" whiteSpace="nowrap">
-                  {ROLE_LABELS[role] ?? role}
-                </Text>
+                <NativeSelect.Root size="xs" variant="plain" mt={-2}>
+                  <NativeSelect.Field
+                    value={role}
+                    onChange={(e) => handleRoleChange(e.target.value)}
+                    color="primary"
+                    fontSize="xs"
+                    fontWeight="medium"
+                    px={0}
+                    py={0}
+                    aria-label="Switch user role"
+                  >
+                    {ROLE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label} 
+                      </option>
+                    ))}
+                  </NativeSelect.Field>
+                  {/* <NativeSelect.Indicator color="primary"/> */}
+                </NativeSelect.Root>
               </Box>
             </Flex>
 

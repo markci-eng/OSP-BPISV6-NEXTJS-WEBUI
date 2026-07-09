@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LoginPage } from "./new-login-page";
+import { LoginForm } from "./new-login-page-v2";
 
 interface ApiResponse {
   id: string;
@@ -33,53 +34,6 @@ export default function Login() {
     loadUsers();
   }, []);
 
-  const handleSignUp = async (
-    email: string,
-    password: string,
-    firstname: string,
-    lastname: string,
-    middlename: string,
-    contactnumber: string,
-  ) => {
-    try {
-      if (Array.isArray(users) && users.length > 0) {
-        const exists = users.some(
-          (u) => u.email?.toLowerCase() === email.toLowerCase(),
-        );
-        if (exists) {
-          alert("User with this email already exists.");
-          return;
-        }
-      }
-    } catch (error) {
-      console.error("Error checking existing users:", error);
-    }
-
-    try {
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          firstName: firstname,
-          middleName: middlename,
-          lastName: lastname,
-          contactNumber: contactnumber,
-        }),
-      });
-      if (response.ok) {
-        alert("User registered successfully!");
-        router.push("/login");
-      } else {
-        alert("Registration failed. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error adding user:", error);
-      alert("Registration failed. Please try again.");
-    }
-  };
-
   const handleSignIn = async (email: string, password: string) => {
     setLoginError(null);
     try {
@@ -107,5 +61,6 @@ export default function Login() {
     }
   };
 
-  return <LoginPage onLogin={handleSignIn} />;
+  // return <LoginPage onLogin={handleSignIn} />;
+  return <LoginForm/>
 }
