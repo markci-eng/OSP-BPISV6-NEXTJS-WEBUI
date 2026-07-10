@@ -16,7 +16,7 @@ import {
   Strong,
   VStack,
 } from "@chakra-ui/react";
-import type { CheckedPlan } from "./reinstatement.types";
+import type { CheckedPlan } from "@/data/plan-management/reinstate-plans/reinstatement.types";
 import {
   Body,
   Checkbox,
@@ -35,7 +35,7 @@ import {
 } from "st-peter-ui";
 import { useState } from "react";
 import { ReinstatementForm } from "./reinstatement-form";
-import { lapsedPlans } from "./data";
+import { lapsedPlans } from "@/data/plan-management/reinstate-plans/data";
 import { ReinstatementSummaryPage } from "./ri-summary";
 import PaymentPage from "./payment";
 import { FormSteps } from "osp.cis.nextjs.components";

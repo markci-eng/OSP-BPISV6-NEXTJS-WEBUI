@@ -23,7 +23,7 @@ import {
   Small,
   UnselectSolidButton,
 } from "st-peter-ui";
-import type { CheckedPlan, PhLapsedPlan } from "./reinstatement.types";
+import type { CheckedPlan, PhLapsedPlan } from "@/data/plan-management/reinstate-plans/reinstatement.types";
 import { useEffect, useState } from "react";
 
 interface RIPlanItemProps extends TableRowProps {

@@ -11,7 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { H4, Small, Body, Checkbox } from "st-peter-ui";
-import type { CheckedPlan, PhLapsedPlan } from "./reinstatement.types";
+import type { CheckedPlan, PhLapsedPlan } from "@/data/plan-management/reinstate-plans/reinstatement.types";
 import { RITableRow } from "./ri-table-row";
 import { LuSearch } from "react-icons/lu";
 

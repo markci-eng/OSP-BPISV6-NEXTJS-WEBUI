@@ -1,5 +1,5 @@
 import { Box, Separator } from "@chakra-ui/react";
-import type { CheckedPlanType } from "./change-mode.types";
+import type { CheckedPlanType } from "@/data/plan-management/change-of-mode/change-mode.types";
 import SummaryForm from "@/components/common/text/SummaryForm";
 import SummaryHeader from "@/components/common/text/SummaryHeader";
 import LabelText from "@/components/texts/LabelText";

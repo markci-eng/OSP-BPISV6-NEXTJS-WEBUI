@@ -7,7 +7,7 @@ import { LuFileStack, LuReceipt, LuUserCog, LuUsers } from "react-icons/lu";
 import Page from "@/claude components/layout/page/Page";
 import { BottomQuickActions } from "@/claude components/drawer/bottom-quick-actions";
 import { ApprovalsTable } from "./components/ApprovalsTable";
-import type { ApprovalView } from "./data/types";
+import type { ApprovalView } from "@/data/approvals/types";
 
 const APPROVAL_TYPES: {
   label: string;

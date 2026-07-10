@@ -15,7 +15,6 @@ import {
 import AgentInfoTabsMobile from "../tabs/agent-info-tabs-mobile";
 import {
   PendingRequests,
-  RequestProps,
 } from "@/components/new-planholder-profile/sections/pending-requests";
 import DataTable from "../../common/reusable-tableV2/DataTable";
 import TeamMemberDrawer from "../drawers/team-member-drawer";
@@ -27,31 +26,7 @@ import ActionButtons, {
 } from "@/claude components/buttons/ActionButtons";
 import Page from "@/claude components/layout/page/Page";
 import { useRouter } from "next/navigation";
-
-const MOCK_AGENT_REQUESTS: RequestProps[] = [
-  {
-    type: "Reinstatement",
-    title: "Contract Renewal",
-    description: "Waiting for approval.",
-    transactionId: "RI-202-6311",
-    currentStep: 3,
-    totalSteps: 7,
-    status: "Pending",
-    date: "",
-    hyperlink: "/transaction/CA-202-6311",
-  },
-  {
-    type: "Transfer of Rights",
-    title: "Transfer Approval",
-    description: "Waiting for approval.",
-    transactionId: "TR-202-6309",
-    currentStep: 2,
-    totalSteps: 3,
-    status: "Pending",
-    date: "",
-    hyperlink: "/transaction/TR-202-6311",
-  },
-];
+import { MOCK_AGENT_REQUESTS } from "@/data/saleforce/agent-requests";
 
 const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
   const { selectedAgent } = params;

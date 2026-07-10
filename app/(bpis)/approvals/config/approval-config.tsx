@@ -8,7 +8,7 @@ import {
   type SA2Reassignment,
   type EmployeeMovement,
   mapDRSToDepositAndPayments,
-} from "../data/types";
+} from "@/data/approvals/types";
 
 import {
   REASSIGNMENT_DATA,
@@ -18,11 +18,11 @@ import {
   depositHdrList,
   drsList,
   paymentList,
-} from "../data/data";
-import { reassignmentColumns } from "../data/columns/reassignment-columns";
-import { movementColumns } from "../data/columns/movement-columns";
-import { sa2Columns } from "../data/columns/sa2-columns";
-import { drsColumns } from "../data/columns/drs-columns";
+} from "@/data/approvals/data";
+import { reassignmentColumns } from "@/data/approvals/columns/reassignment-columns";
+import { movementColumns } from "@/data/approvals/columns/movement-columns";
+import { sa2Columns } from "@/data/approvals/columns/sa2-columns";
+import { drsColumns } from "@/data/approvals/columns/drs-columns";
 
 const DRS_DATA = mapDRSToDepositAndPayments(
   drsList,

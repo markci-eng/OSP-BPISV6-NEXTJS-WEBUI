@@ -35,7 +35,6 @@ import { useRouter } from "next/navigation";
 import TeamMemberDrawer from "../drawers/team-member-drawer";
 import {
   PendingRequests,
-  RequestProps,
 } from "@/components/new-planholder-profile/sections/pending-requests";
 import AgentReassignForm from "../forms/agent-reassign-form";
 import AgentMovementForm from "../forms/agent-movement-form";
@@ -54,31 +53,7 @@ import ActionButtons, {
 } from "@/claude components/buttons/ActionButtons";
 import MCPRList from "@/app/(bpis)/accounts-maintenance/mcpr/mcpr-list";
 import { SuperiorResultCard } from "@/app/(bpis)/sales-force/re-assign/components/SuperiorResultCard";
-
-const MOCK_AGENT_REQUESTS: RequestProps[] = [
-  {
-    type: "Reinstatement",
-    title: "Contract Renewal",
-    description: "Waiting for approval.",
-    transactionId: "RI-202-6311",
-    currentStep: 3,
-    totalSteps: 7,
-    status: "Pending",
-    date: "",
-    hyperlink: "/transaction/CA-202-6311",
-  },
-  {
-    type: "Transfer of Rights",
-    title: "Transfer Approval",
-    description: "Waiting for approval.",
-    transactionId: "TR-202-6309",
-    currentStep: 2,
-    totalSteps: 3,
-    status: "Pending",
-    date: "",
-    hyperlink: "/transaction/TR-202-6311",
-  },
-];
+import { MOCK_AGENT_REQUESTS } from "@/data/saleforce/agent-requests";
 
 export function AgentDetails(params: {
   selectedAgent: SalesAgent;

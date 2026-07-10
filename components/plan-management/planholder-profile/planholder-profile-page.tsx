@@ -56,7 +56,7 @@ import LookUp from "@/components/common/reusable-lookup/dynamic-lookup";
 import { PlanholderLookup } from "@/components/common/planholder-lookup/planholder-lookup";
 import { useRouter } from "next/navigation";
 import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
-import RequestHistoryDrawer from "./components/drawers/request-history-drawer";
+import RequestHistoryDrawer from "@/components/drawers/request-history-drawer";
 
 export interface PlanholderInfoType {
   personId: string;

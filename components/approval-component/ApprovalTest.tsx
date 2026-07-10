@@ -25,11 +25,11 @@ import {
   depositHdrList,
   depositDtlList,
   paymentList,
-} from "@/app/(bpis)/approvals/data/data";
+} from "@/data/approvals/data";
 import {
   DRSWithDepositAndPayments,
   mapDRSToDepositAndPayments,
-} from "@/app/(bpis)/approvals/data/types";
+} from "@/data/approvals/types";
 import { DRSPrintLayout } from "@/app/(bpis)/approvals/components/DRSPrintLayout";
 import Page from "@/claude components/layout/page/Page";
 

@@ -1,4 +1,12 @@
-export const processOverview = {
+import type {
+    ProcessOverview,
+    ProcessByType,
+    QuotaAndCollections,
+    StaffLeaderboardEntry,
+    MonthlyProcessYear,
+} from "@/data/dashboard/types";
+
+export const processOverview: ProcessOverview = {
     newRequests: 28,
     inProcess: 14,
     completed: 97,
@@ -9,14 +17,14 @@ export const processOverview = {
     prevPendingApproval: 12,
 };
 
-export const processByType = [
+export const processByType: ProcessByType[] = [
     { type: "Death", pending: 3, processing: 5, completed: 32 },
     { type: "WOI", pending: 2, processing: 3, completed: 21 },
     { type: "Dismemberment", pending: 1, processing: 2, completed: 14 },
     { type: "Service Payables", pending: 2, processing: 4, completed: 30 },
 ];
 
-export const quotaAndCollections = {
+export const quotaAndCollections: QuotaAndCollections = {
     comQuota: 54200,
     comCollection: 31800,
     comAcctDue: 40,
@@ -27,7 +35,7 @@ export const quotaAndCollections = {
     nComAcctCollection: 58
 }
 
-export const staffLeaderboard = [
+export const staffLeaderboard: StaffLeaderboardEntry[] = [
     { name: "GIL ANTHONY REYES", ns: 27 },
     { name: "MARJORIE CASTILLO", ns: 24 },
     { name: "EDUARDO NAVARRO", ns: 22 },
@@ -40,7 +48,7 @@ export const staffLeaderboard = [
     { name: "ANALYN PADILLA", ns: 5 },
 ];
 
-export const monthlyProcesses = [
+export const monthlyProcesses: MonthlyProcessYear[] = [
     {
         year: "2026",
         data: [

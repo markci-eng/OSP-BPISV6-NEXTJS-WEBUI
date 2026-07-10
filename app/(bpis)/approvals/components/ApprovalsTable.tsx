@@ -29,7 +29,7 @@ import type {
 
 import { approvalConfig } from "../config/approval-config";
 import { ApprovalDetailContent } from "./ApprovalDetailContent";
-import type { ApprovalView } from "../data/types";
+import type { ApprovalView } from "@/data/approvals/types";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 
 function getApprovalStatus(row: any) {

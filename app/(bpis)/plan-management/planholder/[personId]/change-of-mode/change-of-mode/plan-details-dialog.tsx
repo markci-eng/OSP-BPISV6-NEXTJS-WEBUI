@@ -12,8 +12,8 @@ import {
 } from "@chakra-ui/react";
 import { SaveButton, SelectButton, UnselectSolidButton } from "st-peter-ui";
 import { RowItem } from "@/components/info-card/row-item";
-import type { CheckedPlanType, PlanDetails } from "./change-mode.types";
-import { PlanTypes } from "./data";
+import type { CheckedPlanType, PlanDetails } from "@/data/plan-management/change-of-mode/change-mode.types";
+import { PlanTypes } from "@/data/plan-management/change-of-mode/data";
 import { useEffect, useMemo, useState } from "react";
 
 const MODES = ["Monthly", "Quarterly", "Semi-Annual", "Annual"] as const;

@@ -5,7 +5,7 @@ import {
   useBreakpointValue,
   useDisclosure,
 } from "@chakra-ui/react";
-import type { CheckedPlanType, PlanDetails } from "./change-mode.types";
+import type { CheckedPlanType, PlanDetails } from "@/data/plan-management/change-of-mode/change-mode.types";
 import { useEffect, useState } from "react";
 import { Checkbox, SecondarySmButton } from "st-peter-ui";
 import { PlanDetailsDialog } from "./plan-details-dialog";

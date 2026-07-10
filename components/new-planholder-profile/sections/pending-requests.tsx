@@ -18,7 +18,7 @@ import {
 import { ProgressCard } from "../cards/pending-request-card";
 import RequestHistoryDrawer, {
   RequestHistoryItem,
-} from "../drawers/request-history-drawer";
+} from "@/components/drawers/request-history-drawer";
 import { Small } from "st-peter-ui";
 import { Card } from "@/claude components/card-accordion/card";
 

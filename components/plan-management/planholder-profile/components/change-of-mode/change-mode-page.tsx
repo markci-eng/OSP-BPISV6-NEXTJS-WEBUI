@@ -1,8 +1,8 @@
 import { Box } from "@chakra-ui/react";
 import { useState } from "react";
-import type { CheckedPlanType } from "./change-mode.types";
+import type { CheckedPlanType } from "@/data/plan-management/change-of-mode/change-mode.types";
 import { ChangeModeForm } from "./change-mode-form";
-import { PHPlans } from "./data";
+import { PHPlans } from "@/data/plan-management/change-of-mode/data";
 import { ChangeModeSummaryPage } from "./change-mode-summary";
 import { FaFileAlt } from "react-icons/fa";
 import { FaFileShield } from "react-icons/fa6";

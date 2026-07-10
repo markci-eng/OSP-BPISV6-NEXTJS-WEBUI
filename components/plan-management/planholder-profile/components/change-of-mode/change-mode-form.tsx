@@ -6,7 +6,7 @@ import { LuChevronRight } from "react-icons/lu";
 import { DataTable } from "@/components/common/reusable-tableV2/DataTable";
 import { RowItem } from "@/components/info-card/row-item";
 import { OSPBadge } from "@/components/common/badge/badge";
-import type { CheckedPlanType, PlanDetails } from "./change-mode.types";
+import type { CheckedPlanType, PlanDetails } from "@/data/plan-management/change-of-mode/change-mode.types";
 import { PlanDetailsDialog } from "./plan-details-dialog";
 
 export function ChangeModeForm({
