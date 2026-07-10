@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Box, Text, Badge, HStack, Separator, VStack, Flex } from "@chakra-ui/react";
+import { Box, Text, Badge, HStack, VStack, Flex } from "@chakra-ui/react";
 import { Plus, Trash2, Ban, ArrowRightLeft, FileText, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,7 +29,7 @@ import {
 import AssignDocumentsForm, {
   AssignDocumentPayload,
 } from "./AssignDocumentsForm";
-import { H4 } from "st-peter-ui";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 
 function createEmployeeMap(employees: Employee[]) {
   return new Map(employees.map((employee) => [employee.id, employee]));
@@ -472,31 +472,26 @@ export default function DocumentTable({
   return (
     <>
       {employee && (
-        <Box
-          borderWidth="1px"
-          borderColor="gray.200"
-          borderRadius="lg"
-          bg="white"
-          p={{ base: 4, md: 5 }}
-          mb={4}
-        >
-          <Box mb={2}>
-            <H4>Assign Documents</H4>
-            <Separator mt={2} mb={5} />
-          </Box>
-
-          {topContent}
-          <Box
-            mt={topContent ? 5 : 0}
-            pt={topContent ? 5 : 0}
-            borderTopWidth={topContent ? "1px" : "0"}
-            borderColor="gray.100"
+        <Box mb={4} px={2}>
+          <InfoCardAccordion
+            icon={<User size={16} />}
+            title="Assign Documents"
+            subtitle={employee.name}
+            defaultOpen
           >
-            <AssignDocumentsForm
-              employee={employee}
-              onAssigned={handleAssignSubmit}
-            />
-          </Box>
+            {topContent}
+            <Box
+              mt={topContent ? 5 : 0}
+              pt={topContent ? 5 : 0}
+              borderTopWidth={topContent ? "1px" : "0"}
+              borderColor="gray.100"
+            >
+              <AssignDocumentsForm
+                employee={employee}
+                onAssigned={handleAssignSubmit}
+              />
+            </Box>
+          </InfoCardAccordion>
         </Box>
       )}
       <Box maxW="full">

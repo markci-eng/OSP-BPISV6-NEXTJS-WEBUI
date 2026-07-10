@@ -75,7 +75,7 @@ const page = () => {
         </Box>
 
         <Stack direction={{ base: "column", sm: "row" }} gap={4} w="full" justify="center">
-          <Button variant="outline" w={{ base: "full", sm: "auto" }} onClick={() => router.push("/sales-force")}>
+          <Button variant="outline" w={{ base: "full", sm: "auto" }} onClick={() => router.push("/")}>
             Go back to Home
           </Button>
           <Button colorScheme="blue" w={{ base: "full", sm: "auto" }} onClick={() => router.push("/sales-force/new")}>

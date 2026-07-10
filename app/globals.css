@@ -28,6 +28,9 @@
     left: 0;
     top: 0;
     width: 100%;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
     box-shadow: none !important;
     border: none !important;
   }

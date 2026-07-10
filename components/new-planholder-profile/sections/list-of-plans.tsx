@@ -344,9 +344,7 @@ export function ListOfPlans({
       icon: LuPrinter,
       onClick: () =>
         (window.location.href =
-          "/plan-management/planholder/" +
-          planDetails?.lpaNumber +
-          "/pay-my-plan"),
+          "/plan-management/planholder/" + personId + "/soa"),
     },
     {
       key: "phid",
