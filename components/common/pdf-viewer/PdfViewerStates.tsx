@@ -69,6 +69,9 @@ export function PdfViewerState({ variant, onRetry }: PdfViewerStateProps) {
       px={STANDARD_SPACING.sm}
       textAlign="center"
     >
+      {isSpinning && (
+        <style>{`@keyframes pdfViewerSpin { to { transform: rotate(360deg); } }`}</style>
+      )}
       <Box
         boxSize="64px"
         borderRadius={STANDARD_RADIUS.full}
@@ -82,17 +85,7 @@ export function PdfViewerState({ variant, onRetry }: PdfViewerStateProps) {
           as={Icon}
           boxSize="28px"
           color={isDanger ? BRAND_COLORS.errorRed : BRAND_COLORS.grey}
-          css={
-            isSpinning
-              ? {
-                  "@keyframes pdfViewerSpin": {
-                    from: { transform: "rotate(0deg)" },
-                    to: { transform: "rotate(360deg)" },
-                  },
-                  animation: "pdfViewerSpin 1s linear infinite",
-                }
-              : undefined
-          }
+          style={isSpinning ? { animation: "pdfViewerSpin 1s linear infinite" } : undefined}
         />
       </Box>
       <Text as="h2" fontWeight="700" fontSize="16px" color={BRAND_COLORS.neutralText}>

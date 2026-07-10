@@ -332,6 +332,10 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     },
   ];
 
+  const selectedSheetOption = sheetOptions.find(
+    (opt) => opt.value === accountFilter,
+  );
+
   return (
     <Box mx="auto" maxW="full">
       <QuickBottomSheet
@@ -340,12 +344,55 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
         title="What are you collecting for?"
         subtitle="Choose the business unit for this remittance batch."
         options={sheetOptions}
+        defaultValue={accountFilter}
         onConfirm={(value) => handleAccountFilterChange(value)}
       />
 
       <Flex flexDir="column" gap={4}>
-        <Flex justify="flex-end">
-        <Box width={{ base: "full", md: "sm" }}>
+        <Flex justify="space-between" align="center" gap={3}>
+          {selectedSheetOption && (
+            <Flex
+              align="center"
+              gap={2}
+              display={{ base: "none", md: "flex" }}
+              borderWidth="1px"
+              borderColor="gray.200"
+              borderRadius="full"
+              pl={1}
+              pr={3}
+              py={1}
+              bg="green.50"
+              flexShrink={0}
+            >
+              <Box
+                p={1.5}
+                borderRadius="full"
+                bg="white"
+                color="var(--chakra-colors-primary)"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                flexShrink={0}
+              >
+                <selectedSheetOption.icon size={14} />
+              </Box>
+              <Text fontWeight="medium" fontSize="sm" color="gray.700" whiteSpace="nowrap">
+                {selectedSheetOption.label}
+              </Text>
+              <Button
+                size="2xs"
+                variant="ghost"
+                minW="auto"
+                h="auto"
+                px={1}
+                onClick={() => setShowSheet(true)}
+              >
+                Change
+              </Button>
+            </Flex>
+          )}
+
+          <Box width={{ base: "full", md: "sm" }}>
           <LookupField<any>
             label=""
             placeholder="Search by Name / LPA#/ LAF#"
