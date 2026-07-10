@@ -59,7 +59,7 @@ export function PdfViewer({
     setPageAspect(new Map());
   }, [fileUrl]);
 
-  usePdfGestures(zoom.containerRef, zoom.zoomFactor, zoom.setZoom);
+  usePdfGestures(zoom.containerRef, zoom.zoomFactor, zoom.setZoomAtPoint);
 
   const registerPageNode = useCallback(
     (page: number, node: HTMLDivElement | null) => {

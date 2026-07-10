@@ -208,13 +208,11 @@ export function SoaViewerPage({ planholder, soaRecord }: SoaViewerPageProps) {
 
       <Page.MainContent>
         <Page.Row flex="1" minH={0}>
-          <Box h={{ base: "75vh", md: "72vh" }} minH="420px">
-            <PdfViewer
+          <PdfViewer
               fileUrl={soaRecord.pdfUrl}
               documentLabel={`Statement of Account ${soaRecord.soaNumber}`}
               renderAllPages={renderAllForPrint}
             />
-          </Box>
         </Page.Row>
       </Page.MainContent>
     </Page.Root>
