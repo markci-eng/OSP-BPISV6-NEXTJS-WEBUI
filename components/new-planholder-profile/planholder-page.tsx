@@ -465,11 +465,13 @@ export default function PlanholderProfilePage({
                     onToggle={() => setPersonalOpen((p) => !p)}
                   />
                 </Box>
-                {/* <PlanholderAddressCard
-                  phAddress={props.planholderAddress}
-                  isOpen={addressOpen}
-                  onToggle={() => setAddressOpen((p) => !p)}
-                /> */}
+                <Box display={{ base: "block", lg: "none" }}>
+                  <PlanholderAddressCard
+                    phAddress={props.planholderAddress}
+                    isOpen={addressOpen}
+                    onToggle={() => setAddressOpen((p) => !p)}
+                  />
+                </Box>
               </Flex>
             </GridItem>
 
@@ -481,24 +483,26 @@ export default function PlanholderProfilePage({
                     <PendingRequests requests={MOCK_REQUESTS} />
                   </Box>
                 </Show>
-                {/* <ContactInfo
-                  contacts={{
-                    Email:
-                      props.planholderContact
-                        ?.filter((x) => x.type === "Email")
-                        .map((x) => x.value) ?? [],
-                    MobileNo:
-                      props.planholderContact
-                        ?.filter((x) => x.type === "MobileNo")
-                        .map((x) => x.value) ?? [],
-                    LandlineNo:
-                      props.planholderContact
-                        ?.filter((x) => x.type === "LandlineNo")
-                        .map((x) => x.value) ?? [],
-                  }}
-                  isOpen={contactOpen}
-                  onToggle={() => setContactOpen((p) => !p)}
-                /> */}
+                <Box display={{ base: "block", lg: "none" }}>
+                  <ContactInfo
+                    contacts={{
+                      Email:
+                        props.planholderContact
+                          ?.filter((x) => x.type === "Email")
+                          .map((x) => x.value) ?? [],
+                      MobileNo:
+                        props.planholderContact
+                          ?.filter((x) => x.type === "MobileNo")
+                          .map((x) => x.value) ?? [],
+                      LandlineNo:
+                        props.planholderContact
+                          ?.filter((x) => x.type === "LandlineNo")
+                          .map((x) => x.value) ?? [],
+                    }}
+                    isOpen={contactOpen}
+                    onToggle={() => setContactOpen((p) => !p)}
+                  />
+                </Box>
                 <EmploymentInfo
                   planholderInfo={undefined}
                   isOpen={employmentOpen}

@@ -1,6 +1,7 @@
-import { Box, Grid, Separator, useBreakpointValue } from "@chakra-ui/react";
+import { Grid } from "@chakra-ui/react";
 import Card from "@/components/cards/Card";
 import InfoItem from "@/components/new-planholder-profile/components/info-item/info-item";
+import { RowItem } from "@/claude components/info-card/row-item";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import { LuUser, LuUserPen } from "react-icons/lu";
 
@@ -34,6 +35,27 @@ export function PlanholderInfo({
   isOpen?: boolean;
   onToggle?: () => void;
 }) {
+  const fields = [
+    { label: "Nationality", value: planholder?.nationality ?? "—" },
+    {
+      label: "Date of Birth",
+      value: planholder?.dateOfBirth?.toLocaleDateString() ?? "—",
+    },
+    { label: "Age", value: computeAge(planholder?.dateOfBirth ?? null) ?? "—" },
+    { label: "Civil Status", value: planholder?.civilStatus ?? "—" },
+    {
+      label: "Weight",
+      value: planholder?.weight ? planholder.weight + " KG" : "—",
+    },
+    {
+      label: "Naturalization Date",
+      value: planholder?.naturalizationDate?.toLocaleDateString() ?? "—",
+    },
+    { label: "Place of Birth", value: planholder?.placeOfBirth ?? "—" },
+    { label: "Gender", value: planholder?.gender ?? "—" },
+    { label: "Height", value: planholder?.height ?? "—" },
+  ];
+
   return (
     <InfoCardAccordion
       icon={<LuUser />}
@@ -42,43 +64,29 @@ export function PlanholderInfo({
       isOpen={isOpen}
       onToggle={onToggle}
     >
+      {/* Desktop: grid of InfoItems */}
       <Grid
+        display={{ base: "none", lg: "grid" }}
         py={2}
-        templateColumns={{ base: "1fr", lg: "repeat(4, 1fr)" }}
+        templateColumns="repeat(4, 1fr)"
         gap={1}
         gapY={2}
       >
-        <InfoItem label="Nationality" value={planholder?.nationality ?? "—"} />
-        {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <InfoItem
-          label="Date of Birth"
-          value={planholder?.dateOfBirth?.toLocaleDateString() ?? "—"}
-        />
-        {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <InfoItem
-          label="Age"
-          value={computeAge(planholder?.dateOfBirth ?? null) ?? "—"}
-        />
-        {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <InfoItem label="Civil Status" value={planholder?.civilStatus ?? "—"} />
-        {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <InfoItem
-          label="Weight"
-          value={planholder?.weight ? planholder.weight + " KG" : "—"}
-        />
-        <InfoItem
-          label="Naturalization Date"
-          value={planholder?.naturalizationDate?.toLocaleDateString() ?? "—"}
-        />
-        {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <InfoItem
-          label="Place of Birth"
-          value={planholder?.placeOfBirth ?? "—"}
-        />
-        {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <InfoItem label="Gender" value={planholder?.gender ?? "—"} />
-        {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <InfoItem label="Height" value={planholder?.height ?? "—"} />
+        {fields.map((field) => (
+          <InfoItem key={field.label} label={field.label} value={field.value} />
+        ))}
+      </Grid>
+
+      {/* Mobile: RowItems */}
+      <Grid
+        display={{ base: "grid", lg: "none" }}
+        py={2}
+        templateColumns="1fr"
+        gap={2}
+      >
+        {fields.map((field) => (
+          <RowItem key={field.label} label={field.label} value={field.value} />
+        ))}
       </Grid>
     </InfoCardAccordion>
   );

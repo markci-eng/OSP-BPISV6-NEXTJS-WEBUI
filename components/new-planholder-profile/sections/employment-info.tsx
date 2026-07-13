@@ -1,5 +1,6 @@
-import { Grid, Separator } from "@chakra-ui/react";
+import { Grid } from "@chakra-ui/react";
 import InfoItem from "@/components/new-planholder-profile/components/info-item/info-item";
+import { RowItem } from "@/claude components/info-card/row-item";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import { LuBriefcase } from "react-icons/lu";
 
@@ -19,6 +20,13 @@ export function EmploymentInfo({
   isOpen?: boolean;
   onToggle?: () => void;
 }) {
+  const fields = [
+    { label: "Employer", value: planholderInfo?.employerName ?? "—" },
+    { label: "TIN", value: planholderInfo?.tin ?? "—" },
+    { label: "SSS/GSIS Number", value: planholderInfo?.securityNo ?? "—" },
+    { label: "Source of Fund", value: planholderInfo?.sourceOfFund ?? "—" },
+  ];
+
   return (
     <InfoCardAccordion
       icon={<LuBriefcase />}
@@ -26,20 +34,22 @@ export function EmploymentInfo({
       isOpen={isOpen}
       onToggle={onToggle}
     >
-      <Grid templateColumns="repeat(2, 1fr)" gap={2}>
-        <InfoItem label="Employer" value={planholderInfo?.employerName ?? "—"} />
-        {/* <Separator display={{ base: "block", lg: "none" }} /> */}
-        <InfoItem label="TIN" value={planholderInfo?.tin ?? "—"} />
-        {/* <Separator display={{ base: "block", lg: "none" }} /> */}
-        <InfoItem
-          label="SSS/GSIS Number"
-          value={planholderInfo?.securityNo ?? "—"}
-        />
-        {/* <Separator display={{ base: "block", lg: "none" }} /> */}
-        <InfoItem
-          label="Source of Fund"
-          value={planholderInfo?.sourceOfFund ?? "—"}
-        />
+      {/* Desktop: grid of InfoItems */}
+      <Grid
+        display={{ base: "none", lg: "grid" }}
+        templateColumns="repeat(2, 1fr)"
+        gap={2}
+      >
+        {fields.map((field) => (
+          <InfoItem key={field.label} label={field.label} value={field.value} />
+        ))}
+      </Grid>
+
+      {/* Mobile: RowItems */}
+      <Grid display={{ base: "grid", lg: "none" }} templateColumns="1fr" gap={2}>
+        {fields.map((field) => (
+          <RowItem key={field.label} label={field.label} value={field.value} />
+        ))}
       </Grid>
     </InfoCardAccordion>
   );
