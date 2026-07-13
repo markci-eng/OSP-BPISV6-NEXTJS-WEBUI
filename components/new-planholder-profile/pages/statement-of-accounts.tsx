@@ -58,7 +58,7 @@ export function StatementOfAccount({
   return (
     <Box>
       {/* ── Desktop layout (md+) ── */}
-      <Box display={{ base: "none", md: "block" }}>
+      {/* <Box display={{ base: "none", md: "block" }}>
         <Grid
           templateColumns={{ md: "repeat(2, 1fr)", lg: "repeat(5, 1fr)" }}
           width="full"
@@ -110,10 +110,10 @@ export function StatementOfAccount({
             value={"₱ " + props.terminationValue.toLocaleString()}
           />
         </Grid>
-      </Box>
+      </Box> */}
 
       {/* ── Mobile layout (base → md) ── */}
-      <Box display={{ base: "block", md: "none" }} py={2}>
+      <Box py={2}>
         {/* Progress card */}
         <Box
           bg="var(--chakra-colors-primary)"
