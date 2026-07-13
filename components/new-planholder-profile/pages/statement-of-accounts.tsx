@@ -49,6 +49,9 @@ export function StatementOfAccount({
     100,
     Math.round((props.totalPayments / props.totalAmountPayable) * 100),
   );
+  const totalInstallments = Math.round(
+    props.totalAmountPayable / props.installmentAmount,
+  );
   const nextDue = props.dueDate.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
@@ -192,7 +195,8 @@ export function StatementOfAccount({
             <Box>
               <Flex justify="space-between" mb={1.5}>
                 <Text fontSize="xs" color="whiteAlpha.800">
-                  {props.installmentNumber} of {props.term} installments paid
+                  {props.installmentNumber} of {totalInstallments} installments
+                  paid
                 </Text>
                 <Text fontSize="xs" color="white" fontWeight="bold">
                   {progress}%
@@ -261,7 +265,7 @@ export function StatementOfAccount({
                   Installment No.
                 </Text>
                 <Text fontSize="sm" fontWeight="semibold" color="white">
-                  {props.installmentNumber} / {props.term}
+                  {props.installmentNumber} / {totalInstallments}
                 </Text>
               </Box>
             </Flex>

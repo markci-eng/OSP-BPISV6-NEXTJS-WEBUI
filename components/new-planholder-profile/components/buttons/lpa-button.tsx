@@ -2,6 +2,7 @@
 import { Box, Button, Flex, Text } from "@chakra-ui/react";
 import { PlanDetailType } from "@/components/plan-management/planholders/planholders.types";
 import { LuChevronRight } from "react-icons/lu";
+import { getPlanStatement } from "../../data/plan-statement";
 
 function formatPeso(amount: number): string {
   return "₱" + amount.toLocaleString("en-PH");
@@ -37,25 +38,17 @@ export function LPANumberButton({
   onClick: () => void;
   personId?: string;
 }) {
-  const progress = Math.min(
-    100,
-    Math.round((plan.installmentAmount / plan.totalAmountPayable) * 100),
-  );
-  const totalInstallments = plan.term;
-  const paidInstallments = Math.min(
-    totalInstallments,
-    Math.round((progress / 100) * totalInstallments),
-  );
+  const statement = getPlanStatement(plan);
+  const progress = statement.progress;
+  const totalInstallments = statement.totalInstallments;
+  const paidInstallments = statement.installmentsPaid;
 
   if (isSelected) {
-    const nextDue =
-      plan.newEffectivityDate instanceof Date
-        ? plan.newEffectivityDate.toLocaleDateString("en-US", {
-            month: "2-digit",
-            day: "2-digit",
-            year: "numeric",
-          })
-        : "—";
+    const nextDue = statement.nextDueDate.toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric",
+    });
 
     return (
       <Box
@@ -303,7 +296,7 @@ export function LPANumberButton({
         {/* Progress label */}
         <Flex justify="space-between" align="center" mb={1}>
           <Text fontSize="xs" color="gray.500">
-            {formatPeso(plan.installmentAmount)} paid
+            {formatPeso(statement.totalPayments)} paid
           </Text>
           <Text fontSize="xs" color="gray.500" fontWeight="semibold">
             {progress}%

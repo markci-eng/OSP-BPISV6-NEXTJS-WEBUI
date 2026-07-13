@@ -54,6 +54,7 @@ import { PlanDetailsPage } from "../pages/plan-details";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { Beneficiaries } from "../pages/beneficiaries";
 import { StatementOfAccount } from "../pages/statement-of-accounts";
+import { getPlanStatement } from "../data/plan-statement";
 import { HealthDeclaration } from "../pages/health-declaration";
 import AccountQuickActions, {
   QuickAction,
@@ -93,6 +94,7 @@ function PlanTabs({
   planDetails: PlanDetailType;
   planholderAddress?: string;
 }) {
+  const statement = getPlanStatement(planDetails);
   return (
     <Flex direction="column" gap={2}>
       <InfoCardSheet
@@ -134,110 +136,16 @@ function PlanTabs({
         <StatementOfAccount
           props={{
             lpaNumber: planDetails.lpaNumber,
-            dueDate: new Date("2026-05-23"),
+            dueDate: statement.nextDueDate,
             term: planDetails.term,
             mode: planDetails.mode,
-            installmentNumber: 7,
+            installmentNumber: statement.installmentsPaid,
             installmentAmount: planDetails.installmentAmount,
             totalAmountPayable: planDetails.totalAmountPayable,
-            totalPayments: planDetails.installmentAmount * 7,
-            balance:
-              planDetails.totalAmountPayable -
-              planDetails.installmentAmount * 7,
-            terminationValue: 600,
-            paymentRecords: [
-              {
-                lpaNumber: planDetails.lpaNumber,
-                payClass: "DC",
-                siNumber: "SI-2026-00001",
-                siDate: new Date("2026-01-15"),
-                siAmount: planDetails.installmentAmount,
-                planCode: planDetails.planCode,
-                installmentNumber: 7,
-                nextDueDate: new Date("2026-04-15"),
-                cvNumber: "CV-2026-00701",
-                pcvNumber: "PCV-2026-00701",
-                auditDate: new Date("2026-01-16"),
-              },
-              {
-                lpaNumber: planDetails.lpaNumber,
-                payClass: "DC",
-                siNumber: "SI-2025-00056",
-                siDate: new Date("2025-10-15"),
-                siAmount: planDetails.installmentAmount,
-                planCode: planDetails.planCode,
-                installmentNumber: 6,
-                nextDueDate: new Date("2026-01-15"),
-                cvNumber: "CV-2025-00601",
-                pcvNumber: "PCV-2025-00601",
-                auditDate: new Date("2025-10-16"),
-              },
-              {
-                lpaNumber: planDetails.lpaNumber,
-                payClass: "DC",
-                siNumber: "SI-2025-00043",
-                siDate: new Date("2025-07-15"),
-                siAmount: planDetails.installmentAmount,
-                planCode: planDetails.planCode,
-                installmentNumber: 5,
-                nextDueDate: new Date("2025-10-15"),
-                cvNumber: "CV-2025-00501",
-                pcvNumber: "PCV-2025-00501",
-                auditDate: new Date("2025-07-16"),
-              },
-              {
-                lpaNumber: planDetails.lpaNumber,
-                payClass: "DC",
-                siNumber: "SI-2025-00031",
-                siDate: new Date("2025-04-15"),
-                siAmount: planDetails.installmentAmount,
-                planCode: planDetails.planCode,
-                installmentNumber: 4,
-                nextDueDate: new Date("2025-07-15"),
-                cvNumber: "CV-2025-00401",
-                pcvNumber: "PCV-2025-00401",
-                auditDate: new Date("2025-04-16"),
-              },
-              {
-                lpaNumber: planDetails.lpaNumber,
-                payClass: "DC",
-                siNumber: "SI-2025-00018",
-                siDate: new Date("2025-01-15"),
-                siAmount: planDetails.installmentAmount,
-                planCode: planDetails.planCode,
-                installmentNumber: 3,
-                nextDueDate: new Date("2025-04-15"),
-                cvNumber: "CV-2025-00301",
-                pcvNumber: "PCV-2025-00301",
-                auditDate: new Date("2025-01-16"),
-              },
-              {
-                lpaNumber: planDetails.lpaNumber,
-                payClass: "DC",
-                siNumber: "SI-2024-00092",
-                siDate: new Date("2024-10-15"),
-                siAmount: planDetails.installmentAmount,
-                planCode: planDetails.planCode,
-                installmentNumber: 2,
-                nextDueDate: new Date("2025-01-15"),
-                cvNumber: "CV-2024-00201",
-                pcvNumber: "PCV-2024-00201",
-                auditDate: new Date("2024-10-16"),
-              },
-              {
-                lpaNumber: planDetails.lpaNumber,
-                payClass: "NS",
-                siNumber: "SI-2024-00071",
-                siDate: new Date("2024-07-15"),
-                siAmount: planDetails.installmentAmount,
-                planCode: planDetails.planCode,
-                installmentNumber: 1,
-                nextDueDate: new Date("2024-10-15"),
-                cvNumber: "CV-2024-00101",
-                pcvNumber: "PCV-2024-00101",
-                auditDate: new Date("2024-07-16"),
-              },
-            ],
+            totalPayments: statement.totalPayments,
+            balance: statement.balance,
+            terminationValue: statement.terminationValue,
+            paymentRecords: statement.paymentRecords,
           }}
         />
       </InfoCardSheet>
@@ -344,7 +252,10 @@ export function ListOfPlans({
       icon: LuPrinter,
       onClick: () =>
         (window.location.href =
-          "/plan-management/planholder/" + personId + "/soa"),
+          "/plan-management/planholder/" +
+          personId +
+          "/soa?lpaNumber=" +
+          encodeURIComponent(planDetails?.lpaNumber ?? "")),
     },
     {
       key: "phid",
