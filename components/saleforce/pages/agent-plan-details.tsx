@@ -21,6 +21,8 @@ import {
   LuShare2,
   LuChevronsDown,
   LuChevronsUp,
+  LuUsers,
+  LuClipboardList,
 } from "react-icons/lu";
 import { useState } from "react";
 import AgentEditForm from "../forms/agent-edit-form";
@@ -39,7 +41,7 @@ import {
 import AgentReassignForm from "../forms/agent-reassign-form";
 import AgentMovementForm from "../forms/agent-movement-form";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
-import Card from "@/components/cards/Card";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import AgentPersonalInfoCard from "../cards/AgentPersonalInfoCard";
 import AgentEmploymentInfoCard from "../cards/AgentEmploymentInfoCard";
 import Page from "@/claude components/layout/page/Page";
@@ -314,32 +316,38 @@ export function AgentDetails(params: {
 
             {/* Team Members — full width, hidden for SA1 positions */}
             {selectedAgent.position !== "SA1" && (
-              <Card.Root title="Team Members">
-                <Card.MainContent>
-                  <Flex direction="column" gap={2}>
-                    {getSubordinates(selectedAgent.id).map((member) => (
-                      <SuperiorResultCard
-                        key={member.id}
-                        agent={member}
-                        selected={selectedTeamMember?.id === member.id}
-                        onSelect={() => {
-                          setSelectedTeamMember(member);
-                          setTeamDrawerOpen(true);
-                        }}
-                      />
-                    ))}
-                  </Flex>
-                </Card.MainContent>
-              </Card.Root>
+              <InfoCardAccordion
+                icon={<LuUsers />}
+                title="Team Members"
+                subtitle={`${getSubordinates(selectedAgent.id).length} member(s)`}
+                defaultOpen
+              >
+                <Flex direction="column" gap={2}>
+                  {getSubordinates(selectedAgent.id).map((member) => (
+                    <SuperiorResultCard
+                      key={member.id}
+                      agent={member}
+                      selected={selectedTeamMember?.id === member.id}
+                      onSelect={() => {
+                        setSelectedTeamMember(member);
+                        setTeamDrawerOpen(true);
+                      }}
+                    />
+                  ))}
+                </Flex>
+              </InfoCardAccordion>
             )}
 
             {/* MCPR — full width, SA2 positions only */}
             {selectedAgent.position === "SA2" && (
-              <Card.Root title="Monthly Collection Performance Report">
-                <Card.MainContent>
-                  <MCPRList />
-                </Card.MainContent>
-              </Card.Root>
+              <InfoCardAccordion
+                icon={<LuClipboardList />}
+                title="Monthly Collection Performance Report"
+                subtitle="Collection performance summary by period"
+                defaultOpen
+              >
+                <MCPRList />
+              </InfoCardAccordion>
             )}
           </>
         ) : page === "reassign" ? (
