@@ -171,6 +171,26 @@ export default function PlanholderProfilePage({
       : undefined;
   })();
 
+  /** Build the newline-delimited address string ProfileHeaderCard expects. */
+  const buildAddressLines = (addr?: Address) =>
+    addr
+      ? [
+          [addr.addressNo, addr.street].filter(Boolean).join(" "),
+          [addr.barangay, addr.district].filter(Boolean).join(" "),
+          [addr.city, addr.province].filter(Boolean).join(" "),
+        ]
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .join("\n")
+      : undefined;
+
+  const homeAddress = buildAddressLines(
+    props.planholderAddress?.find((a) => a.addressType === "RESIDENCE"),
+  );
+  const officeAddress = buildAddressLines(
+    props.planholderAddress?.find((a) => a.addressType === "OFFICE"),
+  );
+
   const phone =
     props.planholderContact?.find((c) => c.type === "MobileNo")?.value ??
     props.planholderContact?.find((c) => c.type === "LandlineNo")?.value;
@@ -397,22 +417,8 @@ export default function PlanholderProfilePage({
                     }
                     personId={props.planholderInfo?.personId}
                     isInsured={props.plans?.[0]?.isInsured}
-                    homeAddress={
-                      (props.planholderAddress?.slice(-1)?.[0]?.addressNo ??
-                        "") +
-                      " " +
-                      (props.planholderAddress?.slice(-1)?.[0]?.street ?? "") +
-                      "\n" +
-                      (props.planholderAddress?.slice(-1)?.[0]?.barangay ??
-                        "") +
-                      " " +
-                      (props.planholderAddress?.slice(-1)?.[0]?.district ??
-                        "") +
-                      "\n" +
-                      (props.planholderAddress?.slice(-1)?.[0]?.city ?? "") +
-                      " " +
-                      (props.planholderAddress?.slice(-1)?.[0]?.province ?? "")
-                    }
+                    homeAddress={homeAddress}
+                    officeAddress={officeAddress}
                     email={
                       props.planholderContact?.find((x) => x.type === "Email")
                         ?.value
@@ -441,7 +447,7 @@ export default function PlanholderProfilePage({
                 </Show>
 
                 {/* Expand / Collapse strip */}
-                <Flex justify="flex-end" gap={2} mb={1}>
+                {/* <Flex justify="flex-end" gap={2} mb={1}>
                   <TertiarySmButton onClick={expandAll}>
                     <LuChevronsDown size={14} />
                     Expand All
@@ -450,7 +456,7 @@ export default function PlanholderProfilePage({
                     <LuChevronsUp size={14} />
                     Collapse All
                   </TertiarySmButton>
-                </Flex>
+                </Flex> */}
 
                 <Box id="tour-planholder-info">
                   <PlanholderInfo
@@ -459,11 +465,11 @@ export default function PlanholderProfilePage({
                     onToggle={() => setPersonalOpen((p) => !p)}
                   />
                 </Box>
-                <PlanholderAddressCard
+                {/* <PlanholderAddressCard
                   phAddress={props.planholderAddress}
                   isOpen={addressOpen}
                   onToggle={() => setAddressOpen((p) => !p)}
-                />
+                /> */}
               </Flex>
             </GridItem>
 
@@ -475,7 +481,7 @@ export default function PlanholderProfilePage({
                     <PendingRequests requests={MOCK_REQUESTS} />
                   </Box>
                 </Show>
-                <ContactInfo
+                {/* <ContactInfo
                   contacts={{
                     Email:
                       props.planholderContact
@@ -492,7 +498,7 @@ export default function PlanholderProfilePage({
                   }}
                   isOpen={contactOpen}
                   onToggle={() => setContactOpen((p) => !p)}
-                />
+                /> */}
                 <EmploymentInfo
                   planholderInfo={undefined}
                   isOpen={employmentOpen}

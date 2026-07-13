@@ -217,7 +217,7 @@ export default function TrackRequestPage({ requestId }: TrackRequestPageProps) {
               </Text>
 
               {/* Timestamp or status hint */}
-              {step.dateTime ? (
+              {/* {step.dateTime ? (
                 <Text
                   fontSize="9px"
                   color="gray.400"
@@ -238,7 +238,7 @@ export default function TrackRequestPage({ requestId }: TrackRequestPageProps) {
                 >
                   In Progress
                 </Text>
-              ) : null}
+              ) : null} */}
             </Flex>
 
             {/* Connector line */}

@@ -166,8 +166,11 @@ export function LPANumberButton({
                   textTransform="uppercase"
                   mb="1px"
                 >
-                  DUE: 
-                </Box> <Box  fontSize="xs" color="white" fontWeight="bold">{nextDue}</Box>
+                  DUE:
+                </Box>{" "}
+                <Box fontSize="xs" color="white" fontWeight="bold">
+                  {nextDue}
+                </Box>
               </Flex>
             </Flex>
           </Box>
@@ -197,6 +200,7 @@ export function LPANumberButton({
                 borderRadius="2xl"
                 fontWeight="semibold"
                 px={3}
+                display={{ base: "block", lg: "none" }}
               >
                 View Details
               </Button>

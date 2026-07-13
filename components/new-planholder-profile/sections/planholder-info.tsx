@@ -1,6 +1,6 @@
 import { Box, Grid, Separator, useBreakpointValue } from "@chakra-ui/react";
 import Card from "@/components/cards/Card";
-import { RowItem } from "@/claude components/info-card/row-item";
+import InfoItem from "@/components/new-planholder-profile/components/info-item/info-item";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import { LuUser, LuUserPen } from "react-icons/lu";
 
@@ -44,40 +44,41 @@ export function PlanholderInfo({
     >
       <Grid
         py={2}
-        templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }}
+        templateColumns={{ base: "1fr", lg: "repeat(4, 1fr)" }}
         gap={1}
+        gapY={2}
       >
-        <RowItem label="Nationality" value={planholder?.nationality ?? "—"} />
+        <InfoItem label="Nationality" value={planholder?.nationality ?? "—"} />
         {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <RowItem
+        <InfoItem
           label="Date of Birth"
           value={planholder?.dateOfBirth?.toLocaleDateString() ?? "—"}
         />
         {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <RowItem
+        <InfoItem
           label="Age"
           value={computeAge(planholder?.dateOfBirth ?? null) ?? "—"}
         />
         {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <RowItem label="Civil Status" value={planholder?.civilStatus ?? "—"} />
+        <InfoItem label="Civil Status" value={planholder?.civilStatus ?? "—"} />
         {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <RowItem
+        <InfoItem
           label="Weight"
           value={planholder?.weight ? planholder.weight + " KG" : "—"}
         />
-        <RowItem
+        <InfoItem
           label="Naturalization Date"
           value={planholder?.naturalizationDate?.toLocaleDateString() ?? "—"}
         />
         {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <RowItem
+        <InfoItem
           label="Place of Birth"
           value={planholder?.placeOfBirth ?? "—"}
         />
         {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <RowItem label="Gender" value={planholder?.gender ?? "—"} />
+        <InfoItem label="Gender" value={planholder?.gender ?? "—"} />
         {/* {useBreakpointValue({ base: true, lg: false }) && <Separator />} */}
-        <RowItem label="Height" value={planholder?.height ?? "—"} />
+        <InfoItem label="Height" value={planholder?.height ?? "—"} />
       </Grid>
     </InfoCardAccordion>
   );

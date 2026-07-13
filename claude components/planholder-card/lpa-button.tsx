@@ -169,6 +169,7 @@ export function LPANumberButton({
                 borderRadius="2xl"
                 fontWeight="semibold"
                 px={3}
+                display={{ base: "block", lg: "none" }}
               >
                 View Details
               </Button>

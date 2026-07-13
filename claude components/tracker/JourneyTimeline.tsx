@@ -185,11 +185,11 @@ export default function JourneyTimeline({
                 )}
 
                 {/* DateTime */}
-                {step.dateTime && (
+                {/* {step.dateTime && (
                   <Text fontSize="10px" color="gray.400" mt="3px">
                     {step.dateTime}
                   </Text>
-                )}
+                )} */}
               </Box>
             </Box>
           </MotionFlex>

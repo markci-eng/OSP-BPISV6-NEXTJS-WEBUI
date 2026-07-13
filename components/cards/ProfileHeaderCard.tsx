@@ -1,5 +1,12 @@
 import { Avatar, Box, Flex, Grid, GridItem, Link, Text } from "@chakra-ui/react";
-import { LuHash, LuMail, LuMapPin, LuPhone, LuSmartphone } from "react-icons/lu";
+import {
+  LuBuilding2,
+  LuHash,
+  LuMail,
+  LuMapPin,
+  LuPhone,
+  LuSmartphone,
+} from "react-icons/lu";
 import { OSPBadge } from "../common/badge/badge";
 import { ContactNumber } from "@/claude components/contact-number/contact-number";
 
@@ -8,6 +15,7 @@ interface ProfileHeaderCardProps {
   personId?: string;
   isInsured?: boolean;
   homeAddress?: string;
+  officeAddress?: string;
   contactNo?: string;
   email?: string;
   landlineNo?: string;
@@ -123,11 +131,45 @@ function ContactRow({
   );
 }
 
+/** Compact address pill used in the mobile/tablet layout. */
+function AddressChip({
+  icon,
+  address,
+}: {
+  icon: React.ReactNode;
+  address: string;
+}) {
+  return (
+    <a
+      href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <Box
+        px={2}
+        py={1}
+        fontSize="xs"
+        borderRadius="full"
+        bg="gray.50"
+        display="flex"
+        alignItems="center"
+        gap={1}
+        width="full"
+        color="gray.600"
+      >
+        {icon}
+        {address}
+      </Box>
+    </a>
+  );
+}
+
 const ProfileHeaderCard = ({
   name,
   personId,
   isInsured,
   homeAddress,
+  officeAddress,
   contactNo,
   email,
   landlineNo,
@@ -144,8 +186,9 @@ const ProfileHeaderCard = ({
   };
 
   const addressLine = formatAddress(homeAddress);
+  const officeLine = formatAddress(officeAddress);
   const hasAnyContact = Boolean(
-    addressLine || contactNo || landlineNo || email,
+    addressLine || officeLine || contactNo || landlineNo || email,
   );
 
   return (
@@ -222,29 +265,17 @@ const ProfileHeaderCard = ({
         </Flex>
 
         {/* QUICK INFO CHIPS */}
-        {homeAddress && (
-          <Flex gap={2} wrap="wrap" mb={3}>
-            <a
-              href={`https://maps.google.com/?q=${encodeURIComponent(homeAddress)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Box
-                px={2}
-                py={1}
-                fontSize="xs"
-                borderRadius="full"
-                bg="gray.50"
-                display="flex"
-                alignItems="center"
-                gap={1}
-                width={"full"}
-                color="gray.600"
-              >
-                <LuMapPin size={12} />
-                {homeAddress}
-              </Box>
-            </a>
+        {(homeAddress || officeAddress) && (
+          <Flex direction="column" gap={2} mb={3}>
+            {homeAddress && (
+              <AddressChip icon={<LuMapPin size={12} />} address={homeAddress} />
+            )}
+            {officeAddress && (
+              <AddressChip
+                icon={<LuBuilding2 size={12} />}
+                address={officeAddress}
+              />
+            )}
           </Flex>
         )}
 
@@ -363,6 +394,17 @@ const ProfileHeaderCard = ({
                       label="Home Address"
                       value={addressLine}
                       href={`https://maps.google.com/?q=${encodeURIComponent(homeAddress ?? "")}`}
+                      tone="gray"
+                    />
+                  </GridItem>
+                )}
+                {officeLine && (
+                  <GridItem colSpan={2}>
+                    <ContactRow
+                      icon={<LuBuilding2 size={16} />}
+                      label="Office Address"
+                      value={officeLine}
+                      href={`https://maps.google.com/?q=${encodeURIComponent(officeAddress ?? "")}`}
                       tone="gray"
                     />
                   </GridItem>

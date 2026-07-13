@@ -1,5 +1,5 @@
 import { Grid, Separator } from "@chakra-ui/react";
-import { RowItem } from "@/claude components/info-card/row-item";
+import InfoItem from "@/components/new-planholder-profile/components/info-item/info-item";
 import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import { LuBriefcase } from "react-icons/lu";
 
@@ -26,17 +26,17 @@ export function EmploymentInfo({
       isOpen={isOpen}
       onToggle={onToggle}
     >
-      <Grid templateColumns="1fr" gap={2}>
-        <RowItem label="Employer" value={planholderInfo?.employerName ?? "—"} />
+      <Grid templateColumns="repeat(2, 1fr)" gap={2}>
+        <InfoItem label="Employer" value={planholderInfo?.employerName ?? "—"} />
         {/* <Separator display={{ base: "block", lg: "none" }} /> */}
-        <RowItem label="TIN" value={planholderInfo?.tin ?? "—"} />
+        <InfoItem label="TIN" value={planholderInfo?.tin ?? "—"} />
         {/* <Separator display={{ base: "block", lg: "none" }} /> */}
-        <RowItem
+        <InfoItem
           label="SSS/GSIS Number"
           value={planholderInfo?.securityNo ?? "—"}
         />
         {/* <Separator display={{ base: "block", lg: "none" }} /> */}
-        <RowItem
+        <InfoItem
           label="Source of Fund"
           value={planholderInfo?.sourceOfFund ?? "—"}
         />
