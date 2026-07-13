@@ -299,13 +299,15 @@ export function ApprovalsTable({
     return (
       <Box
         bg={isActive ? `${card.accent}.100` : `${card.accent}.50`}
-        border="1px solid"
-        borderColor={isActive ? `${card.accent}.400` : `${card.accent}.200`}
+        border="2px solid"
+        borderColor={isActive ? `${card.accent}.500` : `${card.accent}.200`}
         borderRadius="xl"
         p={4}
-        boxShadow="xs"
+        mt={2}
+        boxShadow={isActive ? "lg" : "xs"}
         cursor="pointer"
-        h="full"
+        // h="full"
+        transform={isActive ? "translateY(-2px)" : "none"}
         onClick={() => {
           setStatusFilter(card.filter);
           setCarouselIdx(i);
@@ -320,20 +322,21 @@ export function ApprovalsTable({
           <Box>
             <Text
               fontSize="10px"
-              fontWeight="700"
+              fontWeight={isActive ? "800" : "700"}
               letterSpacing="0.08em"
               textTransform="uppercase"
-              color={`${card.accent}.500`}
+              color={isActive ? `${card.accent}.600` : `${card.accent}.500`}
               mb={1}
             >
               {card.label}
             </Text>
             <Text
-              fontSize="2xl"
+              fontSize={isActive ? "4xl" : "2xl"}
               fontWeight="bold"
               color={isActive ? `${card.accent}.700` : `${card.accent}.600`}
               lineHeight="1"
               mb={1}
+              transition="font-size 0.15s ease"
             >
               {card.value}
             </Text>
