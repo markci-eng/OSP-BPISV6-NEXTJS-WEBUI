@@ -96,7 +96,7 @@ function PlanTabs({
   planholderAddress?: string;
 }) {
   const statement = getPlanStatement(planDetails);
-  const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const isDesktop = useBreakpointValue({ base: false, md: true });
   const InfoCard = isDesktop ? InfoCardAccordion : InfoCardSheet;
 
   return (
