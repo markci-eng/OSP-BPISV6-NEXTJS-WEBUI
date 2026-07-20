@@ -6,29 +6,27 @@ import {
   Button,
   CloseButton,
   Dialog,
-  FileUpload,
-  Heading,
-  Icon,
   Portal,
   Text,
-  useFileUploadContext,
   VStack,
 } from "@chakra-ui/react";
-import { LuUpload } from "react-icons/lu";
 import { toast } from "sonner";
-import {
-  Body,
-  CancelButton,
-  H3,
-  NextButton,
-  PrimarySmButton,
-} from "st-peter-ui";
+import { Body, CancelButton, H3, NextButton } from "st-peter-ui";
 import Page from "@/claude components/layout/page/Page";
 import InfoCard from "@/claude components/info-card/info-card";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { SharedLifePlanApplication } from "@splpi/estore-shared-components";
+import {
+  ApplicationProvider,
+  useApplication,
+} from "@/app/(bpis)/sales-force/new/application/application-context";
+import { DocumentUploadCard } from "@/app/(bpis)/sales-force/new/application/components/DocumentUploadCard";
+import { DOCUMENT_TYPES } from "@/app/(bpis)/sales-force/new/application/document-config";
 
-const MAX_FILES = 4;
+const VALID_ID_CONFIG = DOCUMENT_TYPES.find((d) => d.id === "valid-id")!;
+const SIGNATURE_CONFIG = DOCUMENT_TYPES.find(
+  (d) => d.id === "specimen-signature",
+)!;
 
 const REQUIRED_INFO = [
   "Full Name",
@@ -45,51 +43,22 @@ const REQUIRED_DOCUMENTS = [
   "Specimen Signature",
 ];
 
-const ConditionalDropzone = () => {
-  const fileUpload = useFileUploadContext();
-  const acceptedFiles = fileUpload.acceptedFiles;
-
-  if (acceptedFiles.length >= MAX_FILES) {
-    return null;
-  }
-
-  const remaining = MAX_FILES - acceptedFiles.length;
-
-  return (
-    <FileUpload.Dropzone>
-      <Icon size="md" color="fg.muted">
-        <LuUpload />
-      </Icon>
-      <FileUpload.DropzoneContent>
-        <Box>Drag and drop files here</Box>
-        {remaining} more file{remaining === 1 ? "" : "s"} allowed
-        <Box color="fg.muted">
-          {/* <FileUpload.Trigger asChild>
-            <PrimarySmButton mt={2}>Browse Files</PrimarySmButton>
-          </FileUpload.Trigger> */}
-        </Box>
-      </FileUpload.DropzoneContent>
-    </FileUpload.Dropzone>
-  );
-};
-
-export default function NewSalePage() {
+function NewSalePageContent() {
   const [showApplication, setShowApplication] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
-  const [idFiles, setIdFiles] = useState<File[]>([]);
-  const [signatureFiles, setSignatureFiles] = useState<File[]>([]);
+  const { documents } = useApplication();
 
-  // Simulated requirements upload. Validates that both documents are provided,
-  // then resolves successfully so the flow can advance to the application.
+  // Validates that both documents have finished uploading/processing, then
+  // resolves successfully so the flow can advance to the application.
   const handleDummyRequirementsUpload = async (): Promise<{
     success: boolean;
   }> => {
-    if (idFiles.length === 0) {
+    if (documents[VALID_ID_CONFIG.id]?.status !== "completed") {
       toast.error("Please upload a government-issued ID.");
       return { success: false };
     }
 
-    if (signatureFiles.length === 0) {
+    if (documents[SIGNATURE_CONFIG.id]?.status !== "completed") {
       toast.error("Please upload your specimen signature.");
       return { success: false };
     }
@@ -184,39 +153,8 @@ export default function NewSalePage() {
                     To continue, please upload a valid ID. The system will use
                     it to populate your information automatically.
                   </InfoCard>
-                  <Box>
-                    <Body fontWeight="bold">Upload Government-issued ID</Body>
-                    <FileUpload.Root
-                      maxW="full"
-                      alignItems="stretch"
-                      maxFiles={MAX_FILES}
-                      accept={["image/png", "image/jpeg", "application/pdf"]}
-                      onFileChange={(details) =>
-                        setIdFiles(details.acceptedFiles)
-                      }
-                    >
-                      <FileUpload.HiddenInput />
-                      <ConditionalDropzone />
-                      <FileUpload.List clearable />
-                    </FileUpload.Root>
-                  </Box>
-
-                  <Box>
-                    <Body fontWeight="bold">Upload Specimen Signature</Body>
-                    <FileUpload.Root
-                      maxW="full"
-                      alignItems="stretch"
-                      maxFiles={MAX_FILES}
-                      accept={["image/png", "image/jpeg", "application/pdf"]}
-                      onFileChange={(details) =>
-                        setSignatureFiles(details.acceptedFiles)
-                      }
-                    >
-                      <FileUpload.HiddenInput />
-                      <ConditionalDropzone />
-                      <FileUpload.List clearable />
-                    </FileUpload.Root>
-                  </Box>
+                  <DocumentUploadCard config={VALID_ID_CONFIG} />
+                  <DocumentUploadCard config={SIGNATURE_CONFIG} />
                 </VStack>
               </Dialog.Body>
 
@@ -242,5 +180,13 @@ export default function NewSalePage() {
         </Portal>
       </Dialog.Root>
     </Box>
+  );
+}
+
+export default function NewSalePage() {
+  return (
+    <ApplicationProvider>
+      <NewSalePageContent />
+    </ApplicationProvider>
   );
 }
