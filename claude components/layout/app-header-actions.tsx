@@ -704,18 +704,25 @@ export function AppHeaderActions({
                         </Badge>
                       )}
                     </Flex>
-                    {unreadCount > 0 && (
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        fontSize="xs"
-                        fontWeight="medium"
-                        color="var(--chakra-colors-primary)"
-                        onClick={markAllRead}
-                      >
-                        Mark all read
-                      </Button>
-                    )}
+                    <Flex align="center" gap={1}>
+                      {unreadCount > 0 && (
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          fontSize="xs"
+                          fontWeight="medium"
+                          color="var(--chakra-colors-primary)"
+                          onClick={markAllRead}
+                        >
+                          Mark all read
+                        </Button>
+                      )}
+                      <Popover.CloseTrigger asChild>
+                        <IconButton size="xs" variant="ghost" aria-label="Close">
+                          <LuX />
+                        </IconButton>
+                      </Popover.CloseTrigger>
+                    </Flex>
                   </Flex>
                 </Box>
                 <Box maxH="380px" overflowY="auto">

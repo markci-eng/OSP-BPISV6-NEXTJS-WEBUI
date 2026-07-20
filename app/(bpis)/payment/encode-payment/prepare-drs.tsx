@@ -243,7 +243,7 @@ export default function PrepareDRS({ payments }: Props) {
               draggable: false,
               selection: false,
               filtering: false,
-              columnToggle: false,
+              columnToggle: true,
             }}
             headerContent={
               <Flex

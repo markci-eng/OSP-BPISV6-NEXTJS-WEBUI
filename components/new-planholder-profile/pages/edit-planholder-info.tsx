@@ -1,6 +1,6 @@
 "use client";
 import Page from "@/claude components/layout/page/Page";
-import FormSteps from "@/components/FormSteps";
+import FormSteps from "@/claude components/FormSteps";
 import { LuFileText, LuUser } from "react-icons/lu";
 import { EditDocumentsPage } from "./edit-documents-page";
 import { useState } from "react";
@@ -51,7 +51,7 @@ const mockPlanholder: SalesAgent = {
   },
   isContractPrinted: true,
   isSFIDPrinted: false,
-  employer: ""
+  employer: "",
 };
 
 export function EditPlanholderInfoPage() {
@@ -64,14 +64,11 @@ export function EditPlanholderInfoPage() {
 
   const stepsData = [
     {
-      title: "Planholder Info",
-      content: <PlanholderInfoForm selectedAgent={mockPlanholder} />,
-      icon: LuUser,
-    },
-    {
       title: "Documents",
       content: (
-        <EditDocumentsPage onFilesChange={(files) => setSelectedDocuments(files)} />
+        <EditDocumentsPage
+          onFilesChange={(files) => setSelectedDocuments(files)}
+        />
       ),
       icon: LuFileText,
       validateBeforeNext: () => {
@@ -88,12 +85,20 @@ export function EditPlanholderInfoPage() {
       },
     },
     {
+      title: "Planholder Info",
+      content: (
+        <PlanholderInfoForm selectedAgent={mockPlanholder} hideActions />
+      ),
+      icon: LuUser,
+    },
+    {
       title: "Review",
       description: "Review your application before submission.",
       content: (
         <EditPlanholderReview
           planholder={mockPlanholder}
           selectedDocuments={selectedDocuments}
+          onEditStep={setCurrentStep}
         />
       ),
       icon: FaFileShield,
@@ -105,31 +110,29 @@ export function EditPlanholderInfoPage() {
       description="Keep planholder information on track."
     >
       <Page.MainContent>
-        <Box mt={"-30px"}>
-          <FormSteps
-            stepsData={stepsData}
-            title=""
-            description=""
-            currentStep={currentStep}
-            setCurrentStep={setCurrentStep}
-            onStepsComplete={async () => {
-              const confirmed = await messageBox({
-                title: "Confirm Submission",
-                message:
-                  "Are you sure you want to submit the changes to the planholder information?",
-                variant: "warning",
-                confirmText: "Yes, Submit",
-                showCancel: true,
-                cancelText: "Cancel",
-              });
+        <FormSteps
+          stepsData={stepsData}
+          title=""
+          description=""
+          currentStep={currentStep}
+          setCurrentStep={setCurrentStep}
+          onStepsComplete={async () => {
+            const confirmed = await messageBox({
+              title: "Confirm Submission",
+              message:
+                "Are you sure you want to submit the changes to the planholder information?",
+              variant: "warning",
+              confirmText: "Yes, Submit",
+              showCancel: true,
+              cancelText: "Cancel",
+            });
 
-              if (confirmed) {
-                window.location.href = window.location.href + "/success";
-              }
-            }}
-            submitButtonText="Submit Changes"
-          />
-        </Box>
+            if (confirmed) {
+              window.location.href = window.location.href + "/success";
+            }
+          }}
+          submitButtonText="Submit Changes"
+        />
       </Page.MainContent>
     </Page.Root>
   );

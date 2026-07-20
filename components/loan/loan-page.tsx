@@ -133,6 +133,7 @@ export function LoanPage({ onProceed }: { onProceed: () => void }) {
             <LoanApplicationPage
               applicantInfo={applicantInfo}
               selectedPlans={selectedRecords}
+              onEditStep={setCurrentStep}
             />
           </Box>
         </Box>

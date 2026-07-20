@@ -1,9 +1,12 @@
 "use client";
 
 import Card from "@/components/cards/Card";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 import { Beneficiaries } from "@/components/new-planholder-profile/pages/beneficiaries";
 import { Box, createListCollection, Grid, Separator } from "@chakra-ui/react";
-import { Checkbox, InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
+import { Checkbox } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 
 const GenderCollection = createListCollection({
   items: [
@@ -23,6 +26,8 @@ const CivilStatusCollection = createListCollection({
 });
 
 export function NewPlanHolderInfoForm() {
+  const { messageBox } = useMessageDialog();
+
   return (
     <Box>
       <Card.Root title={"New Plan Holder Information"}>
@@ -31,19 +36,25 @@ export function NewPlanHolderInfoForm() {
             templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
             gapX={4}
           >
-            <InputFloatingLabel label={"Last Name"} name={""} />
-            <InputFloatingLabel label={"First Name"} name={""} />
-            <InputFloatingLabel label={"Middle Name"} name={""} />
-            <InputFloatingLabel label={"Date of Birth"} type="date" name={""} />
-            <SelectFloatingLabel
-              label={"Gender"}
-              collection={GenderCollection}
-            />
-            <SelectFloatingLabel
-              label={"Civil Status"}
-              collection={CivilStatusCollection}
-            />
-            <InputFloatingLabel
+            <FloatingLabelInput label={"Last Name"} name={""} />
+            <FloatingLabelInput label={"First Name"} name={""} />
+            <FloatingLabelInput label={"Middle Name"} name={""} />
+            <FloatingLabelInput label={"Date of Birth"} type="date" name={""} />
+            <FloatingLabelSelect label={"Gender"}>
+              {GenderCollection.items.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
+            <FloatingLabelSelect label={"Civil Status"}>
+              {CivilStatusCollection.items.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
+            <FloatingLabelInput
               label={"Contact Number"}
               type="number"
               name={""}
@@ -51,7 +62,12 @@ export function NewPlanHolderInfoForm() {
             <Checkbox
               label="Insurable"
               onCheckedChange={(details) => {
-                alert(details.checked ? "Checked" : "Unchecked");
+                messageBox({
+                  title: "Insurable",
+                  message: details.checked ? "Checked" : "Unchecked",
+                  confirmText: "Okay",
+                  variant: "information",
+                });
               }}
             />
           </Grid>
@@ -64,24 +80,36 @@ export function NewPlanHolderInfoForm() {
             templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
             gapX={4}
           >
-            <SelectFloatingLabel
-              label={"Province"}
-              collection={GenderCollection}
-            />
-            <SelectFloatingLabel
-              label={"City / Municipality"}
-              collection={GenderCollection}
-            />
-            <SelectFloatingLabel
-              label={"District"}
-              collection={GenderCollection}
-            />
-            <SelectFloatingLabel
-              label={"Barangay"}
-              collection={GenderCollection}
-            />
-            <InputFloatingLabel label={"Lot/Bldg/Unit No."} name={""} />
-            <InputFloatingLabel label={"Street"} name={""} />
+            <FloatingLabelSelect label={"Province"}>
+              {GenderCollection.items.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
+            <FloatingLabelSelect label={"City / Municipality"}>
+              {GenderCollection.items.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
+            <FloatingLabelSelect label={"District"}>
+              {GenderCollection.items.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
+            <FloatingLabelSelect label={"Barangay"}>
+              {GenderCollection.items.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
+            <FloatingLabelInput label={"Lot/Bldg/Unit No."} name={""} />
+            <FloatingLabelInput label={"Street"} name={""} />
           </Grid>
         </Card.MainContent>
       </Card.Root>

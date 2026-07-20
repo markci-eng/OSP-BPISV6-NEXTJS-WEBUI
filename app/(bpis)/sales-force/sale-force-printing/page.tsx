@@ -255,7 +255,7 @@ const SaleforcePrintingPage = () => {
                     filtering: true,
                     sorting: true,
                     pagination: true,
-                    columnToggle: false,
+                    columnToggle: true,
                     selection: false,
                     draggable: false,
                     detailSidebar: false,

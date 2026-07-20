@@ -20,7 +20,7 @@ export type MCPR = {
   MobileNo: string;
 };
 
-const mcprData: MCPR[] = [
+export const mcprData: MCPR[] = [
   {
     LPANo: "LPA001",
     PlanholderName: "Juan Dela Cruz",
@@ -482,7 +482,7 @@ function MCPRDetailContent({ row }: { row: MCPR }) {
       <SectionCard title="Plan Information" icon={<FileText size={13} />}>
         <Box
           display="grid"
-          gridTemplateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }}
+          gridTemplateColumns={{ base: "1fr" }}
           gap={{ base: 3, md: 4 }}
         >
           <DetailItem label="LPA Number" value={row.LPANo} />
@@ -501,7 +501,7 @@ function MCPRDetailContent({ row }: { row: MCPR }) {
       <SectionCard title="Financial Details" icon={<CreditCard size={13} />}>
         <Box
           display="grid"
-          gridTemplateColumns={{ base: "1fr", sm: "repeat(2, 1fr)" }}
+          gridTemplateColumns={{ base: "1fr" }}
           gap={{ base: 3, md: 4 }}
         >
           <DetailItem

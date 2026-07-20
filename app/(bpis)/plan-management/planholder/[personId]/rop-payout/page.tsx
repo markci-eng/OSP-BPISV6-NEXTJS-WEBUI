@@ -11,9 +11,7 @@ export default function Page() {
   return (
     <RopPayoutPage
       onClickHome={() => router.push("/")}
-      onClickTrack={() =>
-        router.push(`/plan-management/planholder/${personId}`)
-      }
+      onClickTrack={() => router.push(`/transaction/ROP-26-${personId}`)}
     />
   );
 }

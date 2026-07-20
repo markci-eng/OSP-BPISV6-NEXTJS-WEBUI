@@ -8,16 +8,19 @@ import {
   Steps,
   Text,
   Badge,
+  Show,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import { PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
 import { LuChevronLeft, LuChevronRight, LuCheck } from "react-icons/lu";
-import { useRef } from "react";
 
 const PRIMARY = "var(--chakra-colors-primary)";
 const PRIMARY_HOVER = "var(--chakra-colors-primary-hover)";
 const PRIMARY_DISABLED = "var(--chakra-colors-primary-disabled)";
 const SOFT_SHADOW =
   "0 1px 2px rgba(16,24,40,0.05), 0 1px 3px rgba(16,24,40,0.05)";
+// Offset so the scrolled-to step clears the sticky step header
+const SCROLL_OFFSET = 120;
 
 interface StepItem {
   title: string;
@@ -45,15 +48,14 @@ const FormSteps: React.FC<FormStepsProps> = ({
   onStepsComplete,
   submitButtonText,
 }) => {
-  const formTopRef = useRef<HTMLDivElement | null>(null);
   const isCompact = stepsData.length < 3;
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === stepsData.length - 1;
   const nextStepTitle = stepsData[currentStep + 1]?.title;
 
-  const scrollToTop = () => {
+  const scrollToStep = (index: number) => {
     requestAnimationFrame(() => {
-      formTopRef.current?.scrollIntoView({
+      document.getElementById(`step-${index}`)?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
@@ -67,13 +69,14 @@ const FormSteps: React.FC<FormStepsProps> = ({
 
   const handleNext = () => {
     if (!canGoNext()) return;
-    setCurrentStep((prev) => Math.min(prev + 1, stepsData.length - 1));
-    scrollToTop();
+    const nextStep = Math.min(currentStep + 1, stepsData.length - 1);
+    setCurrentStep(nextStep);
+    scrollToStep(nextStep);
   };
 
   const handleStepChange = (step: number) => {
     setCurrentStep(step);
-    scrollToTop();
+    scrollToStep(step);
   };
 
   return (
@@ -140,9 +143,9 @@ const FormSteps: React.FC<FormStepsProps> = ({
             pb={3}
             mx={-1}
             px={1}
-            borderBottomWidth="1px"
-            borderColor="gray.100"
-            boxShadow="0 2px 8px -2px rgba(0,0,0,0.06)"
+            // borderBottomWidth="1px"
+            // borderColor="gray.100"
+            // boxShadow="0 2px 8px -2px rgba(0,0,0,0.06)"
           >
             <Box w="full" style={{ display: "flex" }}>
               <Steps.List
@@ -160,7 +163,7 @@ const FormSteps: React.FC<FormStepsProps> = ({
                       key={index}
                       index={index}
                       title={stepItem.title}
-                      flex={isCompact ? "0 0 auto" : "1"}
+                      flex={isCompact ? "0 0 auto" : ""}
                       justifyContent={"center"}
                     >
                       <Steps.Trigger
@@ -229,28 +232,40 @@ const FormSteps: React.FC<FormStepsProps> = ({
             </Box>
 
             {/* Progress bar */}
-            <Box
-              w="full"
-              h="3px"
-              bg="gray.100"
-              borderRadius="full"
-              overflow="hidden"
-              mt={1}
+            <Show
+              when={
+                useBreakpointValue({ base: true, md: false }) ||
+                stepsData.length < 3
+              }
             >
               <Box
-                h="full"
-                style={{ background: PRIMARY }}
+                w="full"
+                h="3px"
+                bg="gray.100"
                 borderRadius="full"
-                transition="width 0.4s ease"
-                w={`${((currentStep + 1) / stepsData.length) * 100}%`}
-              />
-            </Box>
+                overflow="hidden"
+                mt={1}
+              >
+                <Box
+                  h="full"
+                  style={{ background: PRIMARY }}
+                  borderRadius="full"
+                  transition="width 0.4s ease"
+                  w={`${((currentStep + 1) / stepsData.length) * 100}%`}
+                />
+              </Box>
+            </Show>
           </Box>
 
           {/* Step content */}
           {stepsData.map((stepItem, index) => (
             <Steps.Content key={index} index={index}>
-              {stepItem.content}
+              <section
+                id={`step-${index}`}
+                style={{ scrollMarginTop: `${SCROLL_OFFSET}px` }}
+              >
+                {stepItem.content}
+              </section>
             </Steps.Content>
           ))}
 

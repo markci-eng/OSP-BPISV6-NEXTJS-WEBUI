@@ -10,12 +10,8 @@ import {
   Text,
   Textarea,
 } from "@chakra-ui/react";
-import {
-  Box,
-  PrimaryMdButton,
-  PrimaryMdFlexButton,
-  SelectFloatingLabel,
-} from "st-peter-ui";
+import { Box, PrimaryMdButton, PrimaryMdFlexButton } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { LuArrowRightLeft, LuFilter, LuUsers } from "react-icons/lu";
 import { TbTransferIn, TbTransferOut } from "react-icons/tb";
 
@@ -101,10 +97,13 @@ export default function AccountsTransferPage() {
                     alignItems="center"
                   >
                     <GridItem>
-                      <SelectFloatingLabel
-                        label="Select Transaction Month"
-                        collection={TrxMonth}
-                      />
+                      <FloatingLabelSelect label="Select Transaction Month">
+                        {TrxMonth.items.map((item) => (
+                          <option key={item.value} value={item.value}>
+                            {item.label}
+                          </option>
+                        ))}
+                      </FloatingLabelSelect>
                     </GridItem>
                     <GridItem>
                       <LookupField<SalesForceLookUpData>
@@ -156,16 +155,22 @@ export default function AccountsTransferPage() {
                     alignItems="center"
                   >
                     <GridItem>
-                      <SelectFloatingLabel
-                        label="Select Transfer Type"
-                        collection={TransferType}
-                      />
+                      <FloatingLabelSelect label="Select Transfer Type">
+                        {TransferType.items.map((item) => (
+                          <option key={item.value} value={item.value}>
+                            {item.label}
+                          </option>
+                        ))}
+                      </FloatingLabelSelect>
                     </GridItem>
                     <GridItem>
-                      <SelectFloatingLabel
-                        label="Select Transaction Month"
-                        collection={TrxMonth}
-                      />
+                      <FloatingLabelSelect label="Select Transaction Month">
+                        {TrxMonth.items.map((item) => (
+                          <option key={item.value} value={item.value}>
+                            {item.label}
+                          </option>
+                        ))}
+                      </FloatingLabelSelect>
                     </GridItem>
                     <GridItem>
                       <LookupField<SalesForceLookUpData>

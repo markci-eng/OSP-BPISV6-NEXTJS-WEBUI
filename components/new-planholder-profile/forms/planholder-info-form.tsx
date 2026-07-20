@@ -1,11 +1,11 @@
 "use client";
 import React, { useState } from "react";
-import { Box, Flex, Grid, IconButton } from "@chakra-ui/react";
-import {
-  InputFloatingLabel,
-  PrimaryMdButton,
-  SecondaryMdButton,
-} from "st-peter-ui";
+import { useRouter } from "next/navigation";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { Box, Flex, Grid, IconButton, Text } from "@chakra-ui/react";
+import { PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { LuMapPin, LuPhone, LuPlus, LuTrash2, LuUserPen } from "react-icons/lu";
 import { SalesAgent } from "../../common/agent-lookup/agent-lookup.type";
 import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
@@ -14,6 +14,8 @@ interface PlanholderEditFormProps {
   selectedAgent?: SalesAgent;
   onCancel?: () => void;
   onSubmitted?: () => void;
+  successLink?: string;
+  hideActions?: boolean;
 }
 
 interface AddressEntry {
@@ -27,12 +29,22 @@ interface AddressEntry {
   zipCode: string;
 }
 
+type ContactType = "Email" | "Mobile Number" | "Landline Number";
+
 interface ContactEntry {
   id: string;
-  email: string;
-  mobile: string;
-  landline: string;
+  type: ContactType | "";
+  value: string;
 }
+
+const CONTACT_TYPE_INPUT_PROPS: Record<
+  ContactType,
+  { type: string; inputMode?: "email" | "tel" }
+> = {
+  Email: { type: "email", inputMode: "email" },
+  "Mobile Number": { type: "tel", inputMode: "tel" },
+  "Landline Number": { type: "tel", inputMode: "tel" },
+};
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -49,34 +61,96 @@ const emptyAddress = (): AddressEntry => ({
 
 const emptyContact = (): ContactEntry => ({
   id: uid(),
-  email: "",
-  mobile: "",
-  landline: "",
+  type: "",
+  value: "",
 });
+
+const FEET_OPTIONS = Array.from({ length: 6 }, (_, i) => String(i + 3)); // 3-8 ft
+const INCH_OPTIONS = Array.from({ length: 12 }, (_, i) => String(i)); // 0-11 in
+
+const parseHeight = (height?: string) => {
+  const match = height?.match(/(\d+)'\s*(\d+)/);
+  return { feet: match?.[1] ?? "", inches: match?.[2] ?? "" };
+};
+
+const formatHeight = (feet: string, inches: string) =>
+  feet && inches ? `${feet}'${inches}"` : "";
 
 const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
   selectedAgent,
   onCancel,
   onSubmitted,
+  successLink,
+  hideActions,
 }) => {
+  const router = useRouter();
+  const { messageBox } = useMessageDialog();
+
+  const [personalInfo, setPersonalInfo] = useState<{
+    lastName: string;
+    firstName: string;
+    middleName: string;
+    suffix: string;
+    gender: string;
+    birthDate: string;
+    placeOfBirth: string;
+    civilStatus: string;
+    nationality: string;
+    naturalizationDate: string;
+    height: string;
+    weight: string;
+  }>({
+    lastName: selectedAgent?.lastName ?? "",
+    firstName: selectedAgent?.firstName ?? "",
+    middleName: selectedAgent?.middleName ?? "",
+    suffix: selectedAgent?.suffix ?? "",
+    gender: selectedAgent?.gender ?? "",
+    birthDate: selectedAgent?.birthDate ?? "",
+    placeOfBirth: selectedAgent?.placeOfBirth ?? "",
+    civilStatus: selectedAgent?.civilStatus ?? "",
+    nationality: selectedAgent?.nationality ?? "",
+    naturalizationDate: selectedAgent?.naturalizationDate ?? "",
+    height: selectedAgent?.height ?? "",
+    weight: selectedAgent?.weight ?? "",
+  });
+
+  const [heightFeet, setHeightFeet] = useState(
+    () => parseHeight(selectedAgent?.height).feet,
+  );
+  const [heightInches, setHeightInches] = useState(
+    () => parseHeight(selectedAgent?.height).inches,
+  );
+
+  const updateHeightFeet = (feet: string) => {
+    setHeightFeet(feet);
+    updatePersonalInfo({ height: formatHeight(feet, heightInches) });
+  };
+
+  const updateHeightInches = (inches: string) => {
+    setHeightInches(inches);
+    updatePersonalInfo({ height: formatHeight(heightFeet, inches) });
+  };
+
   const [addresses, setAddresses] = useState<AddressEntry[]>(() =>
     selectedAgent?.address
       ? [{ id: uid(), ...selectedAgent.address }]
       : [emptyAddress()],
   );
 
-  const [contacts, setContacts] = useState<ContactEntry[]>(() =>
-    selectedAgent
-      ? [
-          {
-            id: uid(),
-            email: selectedAgent.email ?? "",
-            mobile: selectedAgent.mobile ?? "",
-            landline: selectedAgent.landline ?? "",
-          },
-        ]
-      : [emptyContact()],
-  );
+  const [contacts, setContacts] = useState<ContactEntry[]>(() => {
+    const entries: [ContactType, string | undefined][] = [
+      ["Email", selectedAgent?.email],
+      ["Mobile Number", selectedAgent?.mobile],
+      ["Landline Number", selectedAgent?.landline],
+    ];
+    const existing: ContactEntry[] = entries
+      .filter(([, value]) => Boolean(value))
+      .map(([type, value]) => ({ id: uid(), type, value: value as string }));
+    return existing.length > 0 ? existing : [emptyContact()];
+  });
+
+  const updatePersonalInfo = (patch: Partial<typeof personalInfo>) =>
+    setPersonalInfo((prev) => ({ ...prev, ...patch }));
 
   const updateAddress = (id: string, patch: Partial<AddressEntry>) =>
     setAddresses((prev) =>
@@ -98,24 +172,6 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
 
   const addContact = () => setContacts((prev) => [...prev, emptyContact()]);
 
-  const [personalInfo, setPersonalInfo] = useState({
-    lastName: selectedAgent?.lastName ?? "",
-    firstName: selectedAgent?.firstName ?? "",
-    middleName: selectedAgent?.middleName ?? "",
-    suffix: selectedAgent?.suffix ?? "",
-    gender: selectedAgent?.gender ?? "",
-    birthDate: selectedAgent?.birthDate ?? "",
-    placeOfBirth: selectedAgent?.placeOfBirth ?? "",
-    civilStatus: selectedAgent?.civilStatus ?? "",
-    nationality: selectedAgent?.nationality ?? "",
-    naturalizationDate: selectedAgent?.naturalizationDate ?? "",
-    height: selectedAgent?.height ?? "",
-    weight: selectedAgent?.weight ?? "",
-  });
-
-  const updatePersonalInfo = (patch: Partial<typeof personalInfo>) =>
-    setPersonalInfo((prev) => ({ ...prev, ...patch }));
-
   const isPersonalInfoComplete = Object.values(personalInfo).every(
     (v) => v.trim() !== "",
   );
@@ -125,12 +181,17 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
       <InputCardAccordion
         defaultOpen
         icon={<LuUserPen />}
-        title={"Personal Information"}
+        title="Personal Information"
         subtitle="Update planholder personal information"
         isComplete={isPersonalInfoComplete}
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gapX={2}>
-          <InputFloatingLabel
+        <Grid
+          templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }}
+          gapX={2}
+          gapY={3}
+          mb={3}
+        >
+          <FloatingLabelInput
             required
             label="Last Name"
             value={personalInfo.lastName}
@@ -138,7 +199,7 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
               updatePersonalInfo({ lastName: e.target.value })
             }
           />
-          <InputFloatingLabel
+          <FloatingLabelInput
             required
             label="First Name"
             value={personalInfo.firstName}
@@ -146,39 +207,39 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
               updatePersonalInfo({ firstName: e.target.value })
             }
           />
-          <InputFloatingLabel
-            required
+          <FloatingLabelInput
             label="Middle Name"
             value={personalInfo.middleName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               updatePersonalInfo({ middleName: e.target.value })
             }
           />
-          <InputFloatingLabel
-            required
+          <FloatingLabelInput
             label="Suffix"
             value={personalInfo.suffix}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               updatePersonalInfo({ suffix: e.target.value })
             }
           />
-          <InputFloatingLabel
+          <FloatingLabelSelect
             required
             label="Gender"
             value={personalInfo.gender}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              updatePersonalInfo({ gender: e.target.value })
-            }
-          />
-          <InputFloatingLabel
+            onValueChange={(value) => updatePersonalInfo({ gender: value })}
+          >
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+          </FloatingLabelSelect>
+          <FloatingLabelInput
             required
             label="Date of Birth"
+            type="date"
             value={personalInfo.birthDate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               updatePersonalInfo({ birthDate: e.target.value })
             }
           />
-          <InputFloatingLabel
+          <FloatingLabelInput
             required
             label="Place of Birth"
             value={personalInfo.placeOfBirth}
@@ -186,15 +247,20 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
               updatePersonalInfo({ placeOfBirth: e.target.value })
             }
           />
-          <InputFloatingLabel
+          <FloatingLabelSelect
             required
             label="Civil Status"
             value={personalInfo.civilStatus}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              updatePersonalInfo({ civilStatus: e.target.value })
+            onValueChange={(value) =>
+              updatePersonalInfo({ civilStatus: value })
             }
-          />
-          <InputFloatingLabel
+          >
+            <option value="Single">Single</option>
+            <option value="Married">Married</option>
+            <option value="Widowed">Widowed</option>
+            <option value="Separated">Separated</option>
+          </FloatingLabelSelect>
+          <FloatingLabelInput
             required
             label="Nationality"
             value={personalInfo.nationality}
@@ -202,30 +268,67 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
               updatePersonalInfo({ nationality: e.target.value })
             }
           />
-          <InputFloatingLabel
-            required
+          <FloatingLabelInput
+            type="date"
             label="Naturalization Date"
             value={personalInfo.naturalizationDate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               updatePersonalInfo({ naturalizationDate: e.target.value })
             }
           />
-          <InputFloatingLabel
-            required
-            label="Height"
-            value={personalInfo.height}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              updatePersonalInfo({ height: e.target.value })
-            }
-          />
-          <InputFloatingLabel
-            required
-            label="Weight"
-            value={personalInfo.weight}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              updatePersonalInfo({ weight: e.target.value })
-            }
-          />
+          <Flex gap={2}>
+            <FloatingLabelSelect
+              required
+              label="Height (ft)"
+              value={heightFeet}
+              onValueChange={updateHeightFeet}
+            >
+              {FEET_OPTIONS.map((ft) => (
+                <option key={ft} value={ft}>
+                  {ft} ft
+                </option>
+              ))}
+            </FloatingLabelSelect>
+            <FloatingLabelSelect
+              required
+              label="Height (in)"
+              value={heightInches}
+              onValueChange={updateHeightInches}
+            >
+              {INCH_OPTIONS.map((inch) => (
+                <option key={inch} value={inch}>
+                  {inch} in
+                </option>
+              ))}
+            </FloatingLabelSelect>
+          </Flex>
+          <Box pos="relative">
+            <FloatingLabelInput
+              required
+              type="number"
+              inputMode="decimal"
+              min={0}
+              step="0.1"
+              pe="10"
+              label="Weight"
+              value={personalInfo.weight}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                updatePersonalInfo({ weight: e.target.value })
+              }
+            />
+            <Text
+              pos="absolute"
+              insetEnd="3"
+              top="50%"
+              transform="translateY(-50%)"
+              fontSize="sm"
+              fontWeight="medium"
+              color="gray.400"
+              pointerEvents="none"
+            >
+              lbs
+            </Text>
+          </Box>
         </Grid>
       </InputCardAccordion>
 
@@ -253,7 +356,7 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
               borderRadius="md"
               borderWidth={1}
               borderColor="gray.200"
-              bg="gray.50"
+              bg="white"
             >
               <Flex justify="space-between" align="center" mb={2}>
                 <Box fontWeight="medium" color="gray.600">
@@ -271,57 +374,81 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
                 </IconButton>
               </Flex>
               <Grid
-                templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+                templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }}
                 gapX={2}
+                gapY={3}
               >
-                <InputFloatingLabel
+                <FloatingLabelInput
                   label="Lot/Bldg/Unit No."
                   value={addr.unit}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     updateAddress(addr.id, { unit: e.target.value })
                   }
+                  required
                 />
-                <InputFloatingLabel
+                <FloatingLabelInput
                   label="Street"
                   value={addr.street}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     updateAddress(addr.id, { street: e.target.value })
                   }
+                  required
                 />
-                <InputFloatingLabel
-                  label="Barangay"
-                  value={addr.barangay}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateAddress(addr.id, { barangay: e.target.value })
-                  }
-                />
-                <InputFloatingLabel
-                  label="District"
-                  value={addr.district}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateAddress(addr.id, { district: e.target.value })
-                  }
-                />
-                <InputFloatingLabel
-                  label="City"
-                  value={addr.city}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateAddress(addr.id, { city: e.target.value })
-                  }
-                />
-                <InputFloatingLabel
+
+                <FloatingLabelSelect
                   label="Province"
                   value={addr.province}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
                     updateAddress(addr.id, { province: e.target.value })
                   }
-                />
-                <InputFloatingLabel
+                  required
+                >
+                  {addr.province && (
+                    <option value={addr.province}>{addr.province}</option>
+                  )}
+                </FloatingLabelSelect>
+                <FloatingLabelSelect
+                  label="City"
+                  value={addr.city}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    updateAddress(addr.id, { city: e.target.value })
+                  }
+                  required
+                >
+                  {addr.city && <option value={addr.city}>{addr.city}</option>}
+                </FloatingLabelSelect>
+                <FloatingLabelSelect
+                  label="District"
+                  value={addr.district}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    updateAddress(addr.id, { district: e.target.value })
+                  }
+                  required
+                >
+                  {addr.district && (
+                    <option value={addr.district}>{addr.district}</option>
+                  )}
+                </FloatingLabelSelect>
+
+                <FloatingLabelSelect
+                  label="Barangay"
+                  value={addr.barangay}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    updateAddress(addr.id, { barangay: e.target.value })
+                  }
+                  required
+                >
+                  {addr.barangay && (
+                    <option value={addr.barangay}>{addr.barangay}</option>
+                  )}
+                </FloatingLabelSelect>
+                <FloatingLabelInput
                   label="Zip Code"
                   value={addr.zipCode}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     updateAddress(addr.id, { zipCode: e.target.value })
                   }
+                  required
                 />
               </Grid>
             </Box>
@@ -353,7 +480,7 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
               borderRadius="md"
               borderWidth={1}
               borderColor="gray.200"
-              bg="gray.50"
+              bg="white"
             >
               <Flex justify="space-between" align="center" mb={2}>
                 <Box fontWeight="medium" color="gray.600">
@@ -373,26 +500,33 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
               <Grid
                 templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
                 gapX={2}
+                gapY={3}
               >
-                <InputFloatingLabel
-                  label="Email"
-                  value={contact.email}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateContact(contact.id, { email: e.target.value })
+                <FloatingLabelSelect
+                  required
+                  label="Contact Type"
+                  value={contact.type}
+                  onValueChange={(value) =>
+                    updateContact(contact.id, {
+                      type: value as ContactType,
+                      value: "",
+                    })
                   }
-                />
-                <InputFloatingLabel
-                  label="Mobile Number"
-                  value={contact.mobile}
+                >
+                  <option value="Email">Email</option>
+                  <option value="Mobile Number">Mobile Number</option>
+                  <option value="Landline Number">Landline Number</option>
+                </FloatingLabelSelect>
+                <FloatingLabelInput
+                  required
+                  label={contact.type || "Contact Details"}
+                  disabled={!contact.type}
+                  {...(contact.type
+                    ? CONTACT_TYPE_INPUT_PROPS[contact.type]
+                    : {})}
+                  value={contact.value}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateContact(contact.id, { mobile: e.target.value })
-                  }
-                />
-                <InputFloatingLabel
-                  label="Landline Number"
-                  value={contact.landline}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    updateContact(contact.id, { landline: e.target.value })
+                    updateContact(contact.id, { value: e.target.value })
                   }
                 />
               </Grid>
@@ -400,6 +534,40 @@ const PlanholderEditForm: React.FC<PlanholderEditFormProps> = ({
           ))}
         </Flex>
       </InputCardAccordion>
+
+      {!hideActions && (
+        <Flex
+          bottom={0}
+          bg="white"
+          py={3}
+          width="full"
+          justify="flex-end"
+          gap={2}
+          borderTopWidth={1}
+          borderColor="gray.100"
+        >
+          <SecondaryMdButton onClick={onCancel}>Cancel</SecondaryMdButton>
+          <PrimaryMdButton
+            onClick={async () => {
+              const confirmed = await messageBox({
+                title: "CONFIRMATION",
+                message: "Save changes to this planholder's information?",
+                confirmText: "Yes",
+                cancelText: "No",
+                variant: "confirmation",
+              });
+              if (!confirmed) return;
+              if (successLink) {
+                router.push(successLink);
+              } else {
+                onSubmitted?.();
+              }
+            }}
+          >
+            Save Changes
+          </PrimaryMdButton>
+        </Flex>
+      )}
     </Flex>
   );
 };

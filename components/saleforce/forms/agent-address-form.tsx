@@ -1,4 +1,4 @@
-import { InputFloatingLabel } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 import { Grid, Box, Strong } from "@chakra-ui/react";
 import SectionTitle from "@/components/texts/SectionTitle";
 
@@ -37,13 +37,13 @@ const AgentAddressForm = (props: AgentAddressFormProps) => {
           md: 2,
         }}
       >
-        <InputFloatingLabel label="Lot/Bldg/Unit No." value={lotNumber} />
-        <InputFloatingLabel label="Street" value={street} />
-        <InputFloatingLabel label="Barangay" value={barangay} />
-        <InputFloatingLabel label="District" value={district} />
-        <InputFloatingLabel label="City" value={city} />
-        <InputFloatingLabel label="Province" value={province} />
-        <InputFloatingLabel label="Zip Code" value={zipCode} />
+        <FloatingLabelInput label="Lot/Bldg/Unit No." value={lotNumber} />
+        <FloatingLabelInput label="Street" value={street} />
+        <FloatingLabelInput label="Barangay" value={barangay} />
+        <FloatingLabelInput label="District" value={district} />
+        <FloatingLabelInput label="City" value={city} />
+        <FloatingLabelInput label="Province" value={province} />
+        <FloatingLabelInput label="Zip Code" value={zipCode} />
       </Grid>
     </Box>
   );

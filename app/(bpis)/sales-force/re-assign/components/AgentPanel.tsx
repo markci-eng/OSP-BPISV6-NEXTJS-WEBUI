@@ -91,7 +91,7 @@ export const AgentPanel = ({
               filtering: true,
               sorting: true,
               pagination: true,
-              columnToggle: false,
+              columnToggle: true,
               selection: true,
               draggable: false,
               detailSidebar: false,

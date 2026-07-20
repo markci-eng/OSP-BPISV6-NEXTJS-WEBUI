@@ -41,6 +41,8 @@ export function DataTableRowActions<TData>({
     );
   }
 
+  const allDisabled = visibleActions.every((action) => action.disabled?.(row));
+
   return (
     <Menu.Root positioning={{ placement: "bottom-end" }}>
       <Menu.Trigger asChild>
@@ -48,6 +50,7 @@ export function DataTableRowActions<TData>({
           aria-label="Row actions"
           variant="ghost"
           size="sm"
+          disabled={allDisabled}
           onClick={(event) => event.stopPropagation()}
         >
           <MoreHorizontal size={16} />

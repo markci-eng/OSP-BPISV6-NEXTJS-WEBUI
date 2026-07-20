@@ -4,9 +4,11 @@ import { Box } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { Breadcrumb } from "st-peter-ui";
 import { ReinstatementPage } from "./reinstatement-page";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 
 export default function Reinstatement() {
   const router = useRouter();
+  const { messageBox } = useMessageDialog();
 
   const breadcrumbItems = [
     {
@@ -33,13 +35,17 @@ export default function Reinstatement() {
     <Box mx="auto" p={4}>
       <Breadcrumb items={breadcrumbItems} />
       <ReinstatementPage
-        onSuccess={(transactionId, transactionAmt) => {
-          alert(
-            "Reinstatement Application Submitted Successfully! \n Transaction No: " +
+        onSuccess={async (transactionId, transactionAmt) => {
+          await messageBox({
+            title: "Reinstatement Submitted",
+            message:
+              "Reinstatement Application Submitted Successfully!\nTransaction No: " +
               transactionId +
-              "\n Transaction Amount: ₱ " +
+              "\nTransaction Amount: ₱ " +
               transactionAmt.toLocaleString(),
-          );
+            confirmText: "Okay",
+            variant: "success",
+          });
           router.push("/plan-management/reinstatement/success");
         }}
         successLink={"/plan-management/reinstatement/success"}

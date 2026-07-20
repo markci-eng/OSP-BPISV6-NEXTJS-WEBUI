@@ -331,6 +331,7 @@ export function DataTable<TData>({
       overflow="clip"
       bg="white"
       position="relative"
+      fontFamily="'Open Sans'"
       className={className}
     >
       <DataTableToolbar

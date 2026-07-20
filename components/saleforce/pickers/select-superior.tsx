@@ -6,13 +6,15 @@ import {
   SalesAgent,
 } from "../../common/agent-lookup/agent-lookup.type";
 import { createListCollection } from "@chakra-ui/react";
-import { SelectFloatingLabel } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 
 const SelectSuperiorInput = (params: {
   currentAgent: SalesAgent | null;
   onSuperiorSelect: (params: SalesAgent) => void;
 }) => {
   const { currentAgent, onSuperiorSelect } = params;
+
+  const [selectedId, setSelectedId] = React.useState("");
 
   const posibleSuperior = getPosibleSuperior(currentAgent);
   const superiorCollection = createListCollection({
@@ -24,11 +26,21 @@ const SelectSuperiorInput = (params: {
   });
 
   return (
-    <SelectFloatingLabel
+    <FloatingLabelSelect
       label="Select Superior"
-      collection={superiorCollection}
-      onValueChanged={(x) => onSuperiorSelect(getAgentById(x[0])!)}
-    />
+      value={selectedId}
+      onChange={(e) => {
+        setSelectedId(e.target.value);
+        const agent = getAgentById(e.target.value);
+        if (agent) onSuperiorSelect(agent);
+      }}
+    >
+      {superiorCollection.items.map((item) => (
+        <option key={item.value} value={item.value}>
+          {item.label}
+        </option>
+      ))}
+    </FloatingLabelSelect>
   );
 };
 

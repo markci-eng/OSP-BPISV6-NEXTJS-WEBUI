@@ -21,7 +21,6 @@ import {
   Body,
   Checkbox,
   H3,
-  InputFloatingLabel,
   NextButton,
   PreviousButton,
   PrimaryLgFlexButton,
@@ -29,10 +28,10 @@ import {
   PrimarySmButton,
   SaveButton,
   SelectButton,
-  SelectFloatingLabel,
   Small,
   UnselectSolidButton,
 } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { useState } from "react";
 import { ReinstatementForm } from "./reinstatement-form";
 import { lapsedPlans } from "@/data/plan-management/reinstate-plans/data";
@@ -47,6 +46,7 @@ import { useRouter } from "next/navigation";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import SingleFileUpload from "@/components/inputs/single-file-upload";
 import Page from "@/claude components/layout/page/Page";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 
 const steps = ["Select Lapsed Plan", "Review Reinstatement", "Payment"];
 
@@ -63,6 +63,7 @@ export function ReinstatementPage({
   const requestId = "";
 
   const router = useRouter();
+  const { messageBox } = useMessageDialog();
 
   const stepsData = [
     {
@@ -76,7 +77,12 @@ export function ReinstatementPage({
       ),
       validateBeforeNext: () => {
         if (checkedPlans.length === 0) {
-          alert("Please select at least one plan to reinstate.");
+          messageBox({
+            title: "No Plan Selected",
+            message: "Please select at least one plan to reinstate.",
+            confirmText: "Okay",
+            variant: "warning",
+          });
           return false;
         }
         return true;
@@ -124,8 +130,6 @@ export function ReinstatementPage({
     ],
   });
 
-  const { messageBox } = useMessageDialog();
-
   return (
     // <FormSteps
     //   stepsData={stepsData}
@@ -148,12 +152,14 @@ export function ReinstatementPage({
             templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }}
             gapX={5}
           >
-            <SelectFloatingLabel
-              label={"RI Types"}
-              collection={riTypes}
-              required
-            />
-            <InputFloatingLabel label="Contact Number" type="number" required />
+            <FloatingLabelSelect label={"RI Types"}>
+              {riTypes.items.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
+            <FloatingLabelInput label="Contact Number" type="number" required />
           </Grid>
         </Box>
         <Box my={1} bg={"white"} p={5} boxShadow={"sm"} borderRadius={"lg"}>

@@ -1,6 +1,7 @@
 import React from "react";
 import { Grid, Separator, Strong } from "@chakra-ui/react";
-import { Box, H4, InputFloatingLabel, Small } from "st-peter-ui";
+import { Box, H4, Small } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 import { Text, Flex } from "@chakra-ui/react";
 import Card from "@/components/cards/Card";
 import FormTitle from "@/components/texts/FormTitle";
@@ -50,16 +51,16 @@ const AgentEmploymentForm = (props: AgentEmploymentFormProps) => {
             md: 2,
           }}
         >
-          <InputFloatingLabel label="Employer" value={employer} />
-          <InputFloatingLabel label="Position" value={position} />
-          <InputFloatingLabel label="Hire Date" value={hiredate} type="date" />
-          <InputFloatingLabel
+          <FloatingLabelInput label="Employer" value={employer} />
+          <FloatingLabelInput label="Position" value={position} />
+          <FloatingLabelInput label="Hire Date" value={hiredate} type="date" />
+          <FloatingLabelInput
             label="Employment Status"
             value={employmentStatus}
           />
-          <InputFloatingLabel label="NBI Number" value={nbiNumber} />
-          <InputFloatingLabel label="TIN Number" value={tinNumber} />
-          <InputFloatingLabel label="SSS Number" value={sssNumber} />
+          <FloatingLabelInput label="NBI Number" value={nbiNumber} />
+          <FloatingLabelInput label="TIN Number" value={tinNumber} />
+          <FloatingLabelInput label="SSS Number" value={sssNumber} />
         </Grid>
       </Card.MainContent>
     </Card.Root>

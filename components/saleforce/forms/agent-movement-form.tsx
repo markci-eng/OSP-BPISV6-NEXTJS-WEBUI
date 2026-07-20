@@ -6,9 +6,9 @@ import {
   H4,
   PrimaryMdButton,
   SecondaryMdButton,
-  SelectFloatingLabel,
   Small,
 } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import {
   LuArrowRight,
   LuMoveDown,
@@ -147,14 +147,23 @@ export function AgentMovementForm({
                 </Caption>
 
                 <Box w={{ base: "full", sm: "320px" }}>
-                  <SelectFloatingLabel
+                  <FloatingLabelSelect
                     label="New Position"
-                    collection={positionCollection}
-                    onValueChanged={(vals) => {
-                      const v = vals?.[0] as Position | undefined;
-                      setNewPosition(v ?? null);
-                    }}
-                  />
+                    value={newPosition ?? ""}
+                    onChange={(e) =>
+                      setNewPosition((e.target.value as Position) || null)
+                    }
+                  >
+                    {positionCollection.items.map((item) => (
+                      <option
+                        key={item.value}
+                        value={item.value}
+                        disabled={item.disabled}
+                      >
+                        {item.label}
+                      </option>
+                    ))}
+                  </FloatingLabelSelect>
                 </Box>
               </Flex>
 

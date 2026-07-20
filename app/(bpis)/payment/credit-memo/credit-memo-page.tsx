@@ -32,7 +32,8 @@ import {
   LookupField,
   LookupColumn,
 } from "@/components/common/reusable-lookup/LookUpField";
-import { InputFloatingLabel, PrimaryMdFlexButton } from "st-peter-ui";
+import { PrimaryMdFlexButton } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import SectionTitle from "@/components/texts/SectionTitle";
 
@@ -299,7 +300,7 @@ export default function CreditMemoPage() {
                     gap={4}
                     mb={4}
                   >
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="SI Number"
                       value={paymentForm.siNumber}
                       onChange={(e) =>
@@ -309,7 +310,7 @@ export default function CreditMemoPage() {
                         }))
                       }
                     />
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="SI Date"
                       type="date"
                       value={paymentForm.siDate}
@@ -320,7 +321,7 @@ export default function CreditMemoPage() {
                         }))
                       }
                     />
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="No. of Installments"
                       type="number"
                       value={paymentForm.installments.toString()}
@@ -331,10 +332,10 @@ export default function CreditMemoPage() {
                         }))
                       }
                     />
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="Amount"
                       type="number"
-                      value={paymentForm.amount || ""}
+                      value={paymentForm.amount ? String(paymentForm.amount) : ""}
                       onChange={(e) =>
                         setPaymentForm((f) => ({
                           ...f,
@@ -366,10 +367,10 @@ export default function CreditMemoPage() {
                         <NativeSelect.Indicator />
                       </NativeSelect.Root>
                     </VStack>
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="Charges (Optional)"
                       type="number"
-                      value={paymentForm.charges || ""}
+                      value={paymentForm.charges ? String(paymentForm.charges) : ""}
                       onChange={(e) =>
                         setPaymentForm((f) => ({
                           ...f,

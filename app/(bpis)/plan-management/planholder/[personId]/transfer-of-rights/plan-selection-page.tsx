@@ -10,14 +10,7 @@ import {
   Table,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import {
-  Body,
-  Checkbox,
-  H4,
-  InputFloatingLabel,
-  SelectFloatingLabel,
-  Small,
-} from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { CheckedPlan } from "./transfer-of-rights.types";
 import { PlanDetailType } from "@/components/plan-management/planholders/planholders.types";
 import { TanstackDataTable } from "@/components/reusable-table/TanstackDataTable";
@@ -28,6 +21,7 @@ import {
   PlanholderListTable,
   PlanholderLookup,
 } from "@/components/plan-management/planholders/tables/planholder-list-table";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 
 const lpaNumbers = createListCollection({
   items: [
@@ -47,12 +41,14 @@ export function PlanSelectionPage({ plans }: { plans: PlanholderLookup[] }) {
         </Strong>
         <Separator my={3} />
         <Grid templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} gapX={5}>
-          <SelectFloatingLabel
-            label={"Select Plan To Transfer"}
-            collection={lpaNumbers}
-            required
-          />
-          <InputFloatingLabel label="Contact Number" type="number" required />
+          <FloatingLabelSelect label={"Select Plan To Transfer"}>
+            {lpaNumbers.items.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </FloatingLabelSelect>
+          <FloatingLabelInput label="Contact Number" type="number" required />
         </Grid>
       </Box>
     </Box>

@@ -1,6 +1,6 @@
 import SectionTitle from "@/components/texts/SectionTitle";
 import { Grid, Box, Separator, Text, Strong } from "@chakra-ui/react";
-import { InputFloatingLabel } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 
 interface AgentContactFormProps {
   email: string;
@@ -23,9 +23,9 @@ const AgentContactForm = (props: AgentContactFormProps) => {
           md: 2,
         }}
       >
-        <InputFloatingLabel label="Email" value={email} />
-        <InputFloatingLabel label="Mobile Number" value={mobileNumber} />
-        <InputFloatingLabel label="Landline Number" value={landlineNumber} />
+        <FloatingLabelInput label="Email" value={email} />
+        <FloatingLabelInput label="Mobile Number" value={mobileNumber} />
+        <FloatingLabelInput label="Landline Number" value={landlineNumber} />
       </Grid>
     </Box>
   );

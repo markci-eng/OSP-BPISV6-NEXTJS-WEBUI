@@ -232,7 +232,7 @@ export default function ReferralPage() {
               pagination: true,
               selection: false,
               draggable: false,
-              columnToggle: false,
+              columnToggle: true,
               detailSidebar: false,
             }}
           />

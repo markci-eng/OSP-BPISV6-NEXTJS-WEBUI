@@ -13,13 +13,13 @@ import {
   Textarea,
 } from "@chakra-ui/react";
 import {
-  InputFloatingLabel,
   PrimaryMdButton,
   SecondaryMdButton,
-  SelectFloatingLabel,
 } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import React, { useEffect, useState } from "react";
 import type { BeneficiaryProps } from "../pages/beneficiaries";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 
 const relationships = createListCollection({
   items: [
@@ -175,7 +175,7 @@ export function EditBeneficiaryDrawer({
                 gapX={3}
               >
                 <FieldWrapper error={errors.lastName}>
-                  <InputFloatingLabel
+                  <FloatingLabelInput
                     label="Last Name"
                     required
                     value={form.lastName}
@@ -186,7 +186,7 @@ export function EditBeneficiaryDrawer({
                 </FieldWrapper>
 
                 <FieldWrapper error={errors.firstName}>
-                  <InputFloatingLabel
+                  <FloatingLabelInput
                     label="First Name"
                     required
                     value={form.firstName}
@@ -197,7 +197,7 @@ export function EditBeneficiaryDrawer({
                 </FieldWrapper>
 
                 <FieldWrapper>
-                  <InputFloatingLabel
+                  <FloatingLabelInput
                     label="Middle Initial"
                     value={form.middleInitial}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -207,19 +207,21 @@ export function EditBeneficiaryDrawer({
                 </FieldWrapper>
 
                 <FieldWrapper error={errors.relationship}>
-                  <SelectFloatingLabel
+                  <FloatingLabelSelect
                     label="Relationship"
-                    required
-                    collection={relationships}
-                    value={form.relationship ? [form.relationship] : []}
-                    onValueChanged={(value: string[]) =>
-                      update("relationship", value[0] ?? "")
-                    }
-                  />
+                    value={form.relationship ?? ""}
+                    onChange={(e) => update("relationship", e.target.value)}
+                  >
+                    {relationships.items.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </FloatingLabelSelect>
                 </FieldWrapper>
 
                 <FieldWrapper error={errors.age}>
-                  <InputFloatingLabel
+                  <FloatingLabelInput
                     label="Age"
                     required
                     type="number"

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { PrimaryMdFlexButton, SelectFloatingLabel } from "st-peter-ui";
+import { PrimaryMdFlexButton } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { LuCalendar, LuCircleCheck, LuLoader } from "react-icons/lu";
 
 import Page from "@/claude components/layout/page/Page";
@@ -125,18 +126,23 @@ export default function NextMonthLoadingPage() {
             <Flex
               // direction={{ base: "column", md: "row" }}
               gap={4}
-              align="flex-start"
+              align="center"
             >
               <Box flex="1" maxW={"full"}>
-                <SelectFloatingLabel
+                <FloatingLabelSelect
                   label="Select Transaction Month"
-                  collection={TrxMonth}
-                  w="full"
-                  onValueChanged={(value) => {
-                    setSelectedMonth(value[0]);
+                  value={selectedMonth ?? ""}
+                  onChange={(e) => {
+                    setSelectedMonth(e.target.value);
                     setErrorMessage("");
                   }}
-                />
+                >
+                  {TrxMonth.items.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </FloatingLabelSelect>
                 {errorMessage && (
                   <Text color="red.500" fontSize="sm" mt="6px">
                     {errorMessage}
@@ -145,7 +151,7 @@ export default function NextMonthLoadingPage() {
               </Box>
 
               {selectedMonth && (
-                <Box flex="1" pt={{ base: 0, md: "6px" }}>
+                <Box flex="1">
                   <InfoCard icon={LuCalendar}>
                     Selected month: <strong>{selectedMonthLabel}</strong>
                   </InfoCard>

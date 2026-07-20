@@ -3,7 +3,8 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Button, Flex, createListCollection } from "@chakra-ui/react";
-import { InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import type { AssignedDocRow, BlockDocumentPayload } from "./types";
 import {
   ModalForm,
@@ -119,7 +120,7 @@ export default function BlockDocumentModal({
       }
     >
       <ModalFormField>
-        <InputFloatingLabel
+        <FloatingLabelInput
           label="Employee ID"
           value={employeeID ?? row?.salesForceId ?? ""}
           readOnly
@@ -127,7 +128,7 @@ export default function BlockDocumentModal({
       </ModalFormField>
 
       <ModalFormField>
-        <InputFloatingLabel
+        <FloatingLabelInput
           label="Document Code"
           value={row?.documentCode ?? ""}
           readOnly
@@ -135,7 +136,7 @@ export default function BlockDocumentModal({
       </ModalFormField>
 
       <ModalFormField fullWidth>
-        <InputFloatingLabel
+        <FloatingLabelInput
           label="Document Type"
           value={row?.documentType ?? ""}
           readOnly
@@ -143,18 +144,22 @@ export default function BlockDocumentModal({
       </ModalFormField>
 
       <ModalFormField fullWidth>
-        <SelectFloatingLabel
+        <FloatingLabelSelect
           label="Block Type"
-          collection={blockTypeCollection}
-          value={blockType ? [blockType] : []}
-          onValueChanged={(vals) => setBlockType(vals[0] ?? "")}
-          required
-        />
+          value={blockType}
+          onChange={(e) => setBlockType(e.target.value)}
+        >
+          {blockTypeCollection.items.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </FloatingLabelSelect>
       </ModalFormField>
 
       <ModalFormSection title="Document Range" fullWidth>
         <ModalFormField>
-          <InputFloatingLabel
+          <FloatingLabelInput
             label="Document Start"
             value={documentStart}
             onChange={(e) => setDocumentStart(e.target.value)}
@@ -162,7 +167,7 @@ export default function BlockDocumentModal({
         </ModalFormField>
 
         <ModalFormField>
-          <InputFloatingLabel
+          <FloatingLabelInput
             label="Document End"
             value={documentEnd}
             onChange={(e) => setDocumentEnd(e.target.value)}
@@ -171,7 +176,7 @@ export default function BlockDocumentModal({
       </ModalFormSection>
 
       <ModalFormField fullWidth>
-        <InputFloatingLabel
+        <FloatingLabelInput
           label="Remarks"
           placeholder="Enter remarks"
           value={remarks}

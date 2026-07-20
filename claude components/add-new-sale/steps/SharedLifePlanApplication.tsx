@@ -6,6 +6,7 @@ import Page from "@/claude components/layout/page/Page";
 import { CartItem } from "../cartItem";
 import HorizontalStepper from "../horizontal-stepper";
 import { createLifePlanSteps } from "../lifePlanSteps";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 
 type SharedLifePlanApplicationProps = {
   title?: string;
@@ -34,6 +35,7 @@ const SharedLifePlanApplication = ({
   const [applicationSection, setApplicationSection] = useState<string>();
   const [applicationSectionKey, setApplicationSectionKey] = useState(0);
   const [applicationValid, setApplicationValid] = useState(false);
+  const { messageBox } = useMessageDialog();
 
   const steps = createLifePlanSteps({
     onAllAcceptedChange: setAllAgreementsAccepted,
@@ -80,7 +82,12 @@ const SharedLifePlanApplication = ({
     } catch (error) {
       console.error(error);
       onPaymentError?.(error);
-      alert("Failed to proceed to payment");
+      await messageBox({
+        title: "Payment Error",
+        message: "Failed to proceed to payment.",
+        confirmText: "Okay",
+        variant: "error",
+      });
     } finally {
       setLoading(false);
     }

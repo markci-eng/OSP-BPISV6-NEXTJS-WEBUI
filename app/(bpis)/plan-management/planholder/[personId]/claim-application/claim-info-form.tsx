@@ -2,7 +2,6 @@
 
 import React from "react";
 import { Box, createListCollection, Flex, Grid, Text } from "@chakra-ui/react";
-import { InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
 import { LuCalendar, LuUpload, LuUser } from "react-icons/lu";
 
 import SingleFileUpload from "@/components/inputs/single-file-upload";
@@ -10,8 +9,11 @@ import { PlanholderInfoType } from "@/components/plan-management/planholders/pla
 import { Card } from "@/claude components/card-accordion/card";
 import InfoCard from "@/claude components/info-card/info-card";
 import { RowItem } from "@/claude components/info-card/row-item";
+import InfoItem from "@/components/common/info-item/info-item";
 
 import { ClaimInfoState } from "./claims.types";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 
 interface DocReqLabel {
   label: string;
@@ -154,23 +156,51 @@ const ClaimInfoForm = ({
           title="Planholder Detail"
           subtitle={planholder?.lpaNumber ?? ""}
         >
-          <RowItem label="LPA Number" value={planholder?.lpaNumber} />
-          <RowItem label="Full Name" value={planholderName} />
-          <RowItem
-            label="Date of Birth"
-            value={
-              planholder?.dateOfBirth
-                ? new Date(planholder.dateOfBirth).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
-                : "—"
-            }
-          />
-          <RowItem label="Gender" value={planholder?.gender} />
-          <RowItem label="Civil Status" value={planholder?.civilStatus} />
-          <RowItem label="Nationality" value={planholder?.nationality} />
+          {(() => {
+            const details: { label: string; value?: string | null }[] = [
+              { label: "LPA Number", value: planholder?.lpaNumber },
+              { label: "Full Name", value: planholderName },
+              {
+                label: "Date of Birth",
+                value: planholder?.dateOfBirth
+                  ? new Date(planholder.dateOfBirth).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }
+                    )
+                  : "—",
+              },
+              { label: "Gender", value: planholder?.gender },
+              { label: "Civil Status", value: planholder?.civilStatus },
+              { label: "Nationality", value: planholder?.nationality },
+            ];
+
+            return (
+              <>
+                {/* Mobile: keep the RowItem layout */}
+                <Box display={{ base: "block", md: "none" }}>
+                  {details.map((d) => (
+                    <RowItem key={d.label} label={d.label} value={d.value} />
+                  ))}
+                </Box>
+
+                {/* Desktop: 3-column InfoItem grid */}
+                <Grid
+                  display={{ base: "none", md: "grid" }}
+                  templateColumns="repeat(3, 1fr)"
+                  gap={3}
+                  mt={2}
+                >
+                  {details.map((d) => (
+                    <InfoItem key={d.label} label={d.label} value={d.value} />
+                  ))}
+                </Grid>
+              </>
+            );
+          })()}
         </Card>
 
         {/* Incident Details */}
@@ -184,25 +214,33 @@ const ClaimInfoForm = ({
             gap={3}
             mt={2}
           >
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Incident Date"
               type="date"
               value={claimInfo.incidentDate}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                onClaimInfoChange({ ...claimInfo, incidentDate: e.target.value })
-              }
-            />
-            <SelectFloatingLabel
-              label="Incident Type"
-              collection={incidentTypes}
-              value={claimInfo.incidentType ? [claimInfo.incidentType] : []}
-              onValueChange={(e: { value: string[] }) =>
                 onClaimInfoChange({
                   ...claimInfo,
-                  incidentType: e.value[0] ?? "",
+                  incidentDate: e.target.value,
                 })
               }
             />
+            <FloatingLabelSelect
+              label="Incident Type"
+              value={claimInfo.incidentType ? claimInfo.incidentType : ""}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                onClaimInfoChange({
+                  ...claimInfo,
+                  incidentType: e.target.value ?? "",
+                })
+              }
+            >
+              {incidentTypes.items.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
           </Grid>
         </Card>
 

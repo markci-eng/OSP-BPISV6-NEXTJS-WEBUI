@@ -6,27 +6,25 @@ import {
   CloseButton,
   Collapsible,
   Dialog,
-  FileUpload,
   Flex,
   Grid,
   GridItem,
   HStack,
   Portal,
   Separator,
-  Spinner,
   Text,
   VStack,
 } from "@chakra-ui/react";
 import { ChevronDown, ChevronUp, Receipt, Trash2 } from "lucide-react";
 import {
-  Body,
   Box,
   CancelSolidButton,
-  InputFloatingLabel,
   PrimaryMdFlexButton,
   SaveButton,
-  SelectFloatingLabel,
 } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
+import { SlipUpload } from "../components/SlipUpload";
 
 import {
   LoanPayClass,
@@ -60,6 +58,7 @@ import { RowItem } from "@/claude components/info-card/row-item";
 import { BottomQuickActions } from "@/claude components/drawer/bottom-quick-actions";
 import { QuickBottomSheet } from "@/claude components/drawer/quick-bottom-sheet";
 import { ShieldCheck, Banknote } from "lucide-react";
+import InfoItem from "@/components/common/info-item/info-item";
 
 type Props = {
   payments: PaymentRecord[];
@@ -257,15 +256,23 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     );
   }, [selectPlanholder, installmentAmount]);
 
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const [chequeData, setChequeData] = useState({
+  const EMPTY_CHEQUE_DATA = {
     actno: "",
     accname: "",
     bankName: "",
     bankBranch: "",
     chequeNumber: "",
-  });
+  };
+
+  const [chequeData, setChequeData] = useState(EMPTY_CHEQUE_DATA);
+  const [chequeStatus, setChequeStatus] = useState<
+    "idle" | "processing" | "completed" | "failed"
+  >("idle");
+  const [chequeFile, setChequeFile] = useState<File | null>(null);
+  const [chequePreviewUrl, setChequePreviewUrl] = useState<string | undefined>(
+    undefined,
+  );
+  const [chequeError, setChequeError] = useState<string | undefined>(undefined);
 
   const mockOCR = async (_file: File) => {
     return new Promise<typeof chequeData>((resolve) => {
@@ -281,25 +288,47 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
     });
   };
 
-  const handleFileChange = async (files: File[]) => {
-    if (!files || files.length === 0) return;
-    setChequeData({
-      actno: "",
-      accname: "",
-      bankName: "",
-      bankBranch: "",
-      chequeNumber: "",
+  const processChequeFile = async (file: File) => {
+    setChequeFile(file);
+    setChequePreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file.type.startsWith("image/")
+        ? URL.createObjectURL(file)
+        : undefined;
     });
-    setIsProcessing(true);
+    setChequeData(EMPTY_CHEQUE_DATA);
+    setChequeError(undefined);
+    setChequeStatus("processing");
     try {
-      const result = await mockOCR(files[0]);
+      const result = await mockOCR(file);
       setChequeData(result);
+      setChequeStatus("completed");
       toast.success("Cheque details extracted!");
     } catch {
+      setChequeStatus("failed");
+      setChequeError(
+        "We couldn't read this cheque. Please retry or choose another file.",
+      );
       toast.error("Failed to process cheque");
-    } finally {
-      setIsProcessing(false);
     }
+  };
+
+  const handleChequeFilesSelected = (files: File[]) => {
+    if (!files || files.length === 0) return;
+    void processChequeFile(files[0]);
+  };
+
+  const handleChequeRetry = () => {
+    if (chequeFile) void processChequeFile(chequeFile);
+  };
+
+  const handleChequeRemove = () => {
+    if (chequePreviewUrl) URL.revokeObjectURL(chequePreviewUrl);
+    setChequeFile(null);
+    setChequePreviewUrl(undefined);
+    setChequeError(undefined);
+    setChequeStatus("idle");
+    setChequeData(EMPTY_CHEQUE_DATA);
   };
 
   const handleDecrease = () => {
@@ -376,7 +405,12 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
               >
                 <selectedSheetOption.icon size={14} />
               </Box>
-              <Text fontWeight="medium" fontSize="sm" color="gray.700" whiteSpace="nowrap">
+              <Text
+                fontWeight="medium"
+                fontSize="sm"
+                color="gray.700"
+                whiteSpace="nowrap"
+              >
                 {selectedSheetOption.label}
               </Text>
               <Button
@@ -393,40 +427,46 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
           )}
 
           <Box width={{ base: "full", md: "sm" }}>
-          <LookupField<any>
-            label=""
-            placeholder="Search by Name / LPA#/ LAF#"
-            modalTitle="Search Planholder"
-            columns={SearchHeader}
-            dataSource={filteredLookup}
-            searchKeys={[
-              "LPANo",
-              "LAFNo",
-              "FirstName",
-              "LastName",
-              "MiddleName",
-            ]}
-            onSelect={handleSelectPlanholder}
-            renderDisplay={(a) => {
-              const fullName = [
-                a.LastName,
-                [a.FirstName, a.MiddleName].filter(Boolean).join(" "),
-              ]
-                .filter(Boolean)
-                .join(", ");
-              return a.EntryType === "LOAN"
-                ? `LOAN: ${a.LAFNo} - ${fullName}`
-                : `PLAN: ${a.LPANo} - ${fullName}`;
-            }}
-            value={selectPlanholder}
-          />
-        </Box>
+            <LookupField<any>
+              label=""
+              placeholder="Search by Name / LPA#/ LAF#"
+              modalTitle="Search Planholder"
+              columns={SearchHeader}
+              dataSource={filteredLookup}
+              searchKeys={[
+                "LPANo",
+                "LAFNo",
+                "FirstName",
+                "LastName",
+                "MiddleName",
+              ]}
+              onSelect={handleSelectPlanholder}
+              renderDisplay={(a) => {
+                const fullName = [
+                  a.LastName,
+                  [a.FirstName, a.MiddleName].filter(Boolean).join(" "),
+                ]
+                  .filter(Boolean)
+                  .join(", ");
+                return a.EntryType === "LOAN"
+                  ? `LOAN: ${a.LAFNo} - ${fullName}`
+                  : `PLAN: ${a.LPANo} - ${fullName}`;
+              }}
+              value={selectPlanholder}
+            />
+          </Box>
         </Flex>
 
         {selectPlanholder && (
           <>
             {/* MOBILE: original stacked card */}
-            <Box mt={4} borderRadius={"2xl"} shadow="sm" p={4} display={{ base: "block", md: "none" }}>
+            <Box
+              mt={4}
+              borderRadius={"2xl"}
+              shadow="sm"
+              p={4}
+              display={{ base: "block", md: "none" }}
+            >
               <Flex justify="space-between" align="start" mb={3}>
                 <Flex align="center" gap={2}>
                   <Box p={2} borderRadius="full" bg="gray.100">
@@ -451,25 +491,42 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                     w="2"
                     h="2"
                     borderRadius="full"
-                    bg={selectPlanholder.EntryType == "PH" ? "green.400" : "blue.400"}
+                    bg={
+                      selectPlanholder.EntryType == "PH"
+                        ? "green.400"
+                        : "blue.400"
+                    }
                     shadow="sm"
                   />
                   <Badge
-                    colorPalette={selectPlanholder.EntryType == "PH" ? "green" : "blue"}
+                    colorPalette={
+                      selectPlanholder.EntryType == "PH" ? "green" : "blue"
+                    }
                     variant="subtle"
                     px={2}
                     py={1}
                     fontSize="0.75rem"
                   >
-                    {selectPlanholder.EntryType == "PH" ? "Plan Holder" : "Loan"}
+                    {selectPlanholder.EntryType == "PH"
+                      ? "Plan Holder"
+                      : "Loan"}
                   </Badge>
                 </Flex>
               </Flex>
-              <Grid templateColumns="repeat(2, 1fr)" gap={2} fontSize="sm" color="gray.600" px={2} mb={3}>
+              <Grid
+                templateColumns="repeat(2, 1fr)"
+                gap={2}
+                fontSize="sm"
+                color="gray.600"
+                px={2}
+                mb={3}
+              >
                 <Flex align="center" gap={2} gridColumn="span 2">
                   <LuHash size={14} />
                   <Text>
-                    <Text as="span" fontWeight="semibold">Plan:</Text>{" "}
+                    <Text as="span" fontWeight="semibold">
+                      Plan:
+                    </Text>{" "}
                     {selectPlanholder.PlanData?.PlanCatalog?.CatalogDescription}
                   </Text>
                 </Flex>
@@ -478,28 +535,42 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                     <Flex align="center" gap={2}>
                       <LuCalendar size={14} />
                       <Text>
-                        <Text as="span" fontWeight="semibold">Effectivity:</Text>{" "}
-                        {new Date(String(selectPlanholder.Planholders[0].EffectivityDate)).toLocaleDateString()}
+                        <Text as="span" fontWeight="semibold">
+                          Effectivity:
+                        </Text>{" "}
+                        {new Date(
+                          String(
+                            selectPlanholder.Planholders[0].EffectivityDate,
+                          ),
+                        ).toLocaleDateString()}
                       </Text>
                     </Flex>
                     <Flex align="center" gap={2}>
                       <LuCalendar size={14} />
                       <Text>
-                        <Text as="span" fontWeight="semibold">Due:</Text>{" "}
-                        {new Date(String(selectPlanholder.Planholders[0].DueDate)).toLocaleDateString()}
+                        <Text as="span" fontWeight="semibold">
+                          Due:
+                        </Text>{" "}
+                        {new Date(
+                          String(selectPlanholder.Planholders[0].DueDate),
+                        ).toLocaleDateString()}
                       </Text>
                     </Flex>
                     <Flex align="center" gap={2}>
                       <LuUser size={14} />
                       <Text>
-                        <Text as="span" fontWeight="semibold">Agent:</Text>{" "}
+                        <Text as="span" fontWeight="semibold">
+                          Agent:
+                        </Text>{" "}
                         {selectPlanholder.FirstName || ""}
                       </Text>
                     </Flex>
                     <Flex align="center" gap={2}>
                       <LuUser size={14} />
                       <Text>
-                        <Text as="span" fontWeight="semibold">Agent 2:</Text>{" "}
+                        <Text as="span" fontWeight="semibold">
+                          Agent 2:
+                        </Text>{" "}
                         {selectPlanholder.LastName || ""}
                       </Text>
                     </Flex>
@@ -509,7 +580,16 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
             </Box>
 
             {/* WEB: compact single-row layout */}
-            <Box mt={2} borderRadius="xl" shadow="xs" px={3} py={2} borderWidth="1px" borderColor="gray.100" display={{ base: "none", md: "block" }}>
+            <Box
+              mt={2}
+              borderRadius="xl"
+              shadow="xs"
+              px={4}
+              py={3}
+              borderWidth="1px"
+              borderColor="gray.100"
+              display={{ base: "none", md: "block" }}
+            >
               <Flex align="center" gap={3}>
                 {/* Name + ID */}
                 <Flex align="center" gap={2} flex="1" minW="0">
@@ -517,7 +597,12 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                     <LuUser size={14} />
                   </Box>
                   <Box minW="0">
-                    <Text fontWeight="semibold" fontSize="sm" lineHeight="1.2" truncate>
+                    <Text
+                      fontWeight="semibold"
+                      fontSize="sm"
+                      lineHeight="1.2"
+                      truncate
+                    >
                       {`${selectPlanholder.LastName}, ${selectPlanholder.FirstName} ${selectPlanholder.MiddleName}`}
                     </Text>
                     <Flex align="center" gap={1} fontSize="xs" color="gray.400">
@@ -534,9 +619,21 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                 <Box w="1px" h="32px" bg="gray.200" flexShrink={0} />
 
                 {/* Plan */}
-                <Flex align="center" gap={1.5} fontSize="xs" color="gray.600" flexShrink={0}>
+                <Flex
+                  align="center"
+                  gap={1.5}
+                  fontSize="xs"
+                  color="gray.600"
+                  flexShrink={0}
+                >
                   <LuHash size={12} color="var(--chakra-colors-gray-400)" />
-                  <Text fontWeight="medium" color="gray.400" whiteSpace="nowrap">Plan:</Text>
+                  <Text
+                    fontWeight="medium"
+                    color="gray.400"
+                    whiteSpace="nowrap"
+                  >
+                    Plan:
+                  </Text>
                   <Text truncate maxW="160px">
                     {selectPlanholder.PlanData?.PlanCatalog?.CatalogDescription}
                   </Text>
@@ -545,25 +642,63 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                 {selectPlanholder.EntryType == "PH" && (
                   <>
                     <Box w="1px" h="32px" bg="gray.200" flexShrink={0} />
-                    <Flex align="center" gap={1.5} fontSize="xs" color="gray.600" flexShrink={0}>
-                      <LuCalendar size={12} color="var(--chakra-colors-gray-400)" />
-                      <Text fontWeight="medium" color="gray.400" whiteSpace="nowrap">Eff:</Text>
+                    <Flex
+                      align="center"
+                      gap={1.5}
+                      fontSize="xs"
+                      color="gray.600"
+                      flexShrink={0}
+                    >
+                      <LuCalendar
+                        size={12}
+                        color="var(--chakra-colors-gray-400)"
+                      />
+                      <Text
+                        fontWeight="medium"
+                        color="gray.400"
+                        whiteSpace="nowrap"
+                      >
+                        Eff:
+                      </Text>
                       <Text whiteSpace="nowrap">
-                        {new Date(String(selectPlanholder.Planholders[0].EffectivityDate)).toLocaleDateString()}
+                        {new Date(
+                          String(
+                            selectPlanholder.Planholders[0].EffectivityDate,
+                          ),
+                        ).toLocaleDateString()}
                       </Text>
                     </Flex>
-                    <Flex align="center" gap={1.5} fontSize="xs" color="gray.600" flexShrink={0}>
-                      <LuCalendar size={12} color="var(--chakra-colors-gray-400)" />
-                      <Text fontWeight="medium" color="gray.400" whiteSpace="nowrap">Due:</Text>
+                    <Flex
+                      align="center"
+                      gap={1.5}
+                      fontSize="xs"
+                      color="gray.600"
+                      flexShrink={0}
+                    >
+                      <LuCalendar
+                        size={12}
+                        color="var(--chakra-colors-gray-400)"
+                      />
+                      <Text
+                        fontWeight="medium"
+                        color="gray.400"
+                        whiteSpace="nowrap"
+                      >
+                        Due:
+                      </Text>
                       <Text whiteSpace="nowrap">
-                        {new Date(String(selectPlanholder.Planholders[0].DueDate)).toLocaleDateString()}
+                        {new Date(
+                          String(selectPlanholder.Planholders[0].DueDate),
+                        ).toLocaleDateString()}
                       </Text>
                     </Flex>
                   </>
                 )}
 
                 <Badge
-                  colorPalette={selectPlanholder.EntryType == "PH" ? "green" : "blue"}
+                  colorPalette={
+                    selectPlanholder.EntryType == "PH" ? "green" : "blue"
+                  }
                   variant="subtle"
                   fontSize="xs"
                   px={2}
@@ -628,23 +763,34 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   xl: "repeat(4,1fr)",
                 }}
                 gapX={{ base: 1, md: 2 }}
+                gapY={3}
                 alignItems="center"
               >
-                <SelectFloatingLabel
+                <FloatingLabelSelect
                   label="Payment Class"
-                  collection={isLoan ? LoanPayClass : PayClass}
-                  value={[paymentClass]}
-                  onValueChanged={(e) => setPaymentClass(e[0])}
-                />
+                  value={paymentClass}
+                  onChange={(e) => setPaymentClass(e.target.value)}
+                >
+                  {(isLoan ? LoanPayClass : PayClass).items.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </FloatingLabelSelect>
 
-                <SelectFloatingLabel
+                <FloatingLabelSelect
                   label="Payment Type"
-                  collection={PayType}
-                  value={[paymentType]}
-                  onValueChanged={(e) => setPaymentType(e[0])}
-                />
+                  value={paymentType}
+                  onChange={(e) => setPaymentType(e.target.value)}
+                >
+                  {PayType.items.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </FloatingLabelSelect>
 
-                <InputFloatingLabel
+                <FloatingLabelInput
                   key={nextSI}
                   label={
                     selectPlanholder?.EntryType == "PH"
@@ -662,7 +808,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   }}
                 />
 
-                <InputFloatingLabel
+                <FloatingLabelInput
                   label={
                     selectPlanholder?.EntryType == "PH"
                       ? "Sales Invoice Extension"
@@ -678,7 +824,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   >
                     -
                   </Button>
-                  <InputFloatingLabel
+                  <FloatingLabelInput
                     key={installmentAmount}
                     label="Amount"
                     name="amount"
@@ -695,7 +841,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   </Button>
                 </HStack>
 
-                <InputFloatingLabel
+                <FloatingLabelInput
                   label={
                     selectPlanholder?.EntryType == "PH"
                       ? "Sales Invoice Date"
@@ -711,12 +857,13 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   colSpan={{ base: 1, lg: 3, xl: 2 }}
                   display={selectPlanholder?.EntryType == "PH" ? "" : "none"}
                   boxShadow="sm"
-                  p={3}
+                  px={3}
+                  py={2}
                   borderRadius="sm"
                 >
                   <Grid
-                    templateColumns={{ base: "1fr", md: "repeat(2,1fr)" }}
-                    gap={{ base: 1, md: 2, xl: 4 }}
+                    templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }}
+                    gap={{ base: 1, md: 2, lg: 4 }}
                   >
                     <RowItem
                       label="Com CBI"
@@ -747,122 +894,96 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   <Separator my={4} />
                   <SectionTitle>Cheque Details</SectionTitle>
                   <Separator my={3} />
-                  <Grid
-                    templateColumns={{
-                      base: "1fr",
-                      sm: "repeat(2,1fr)",
-                      lg: "repeat(3,1fr)",
-                      xl: "repeat(4,1fr)",
-                    }}
-                    gap={{ base: 1, md: 2, xl: 4 }}
-                    alignItems="center"
-                  >
-                    <InputFloatingLabel
-                      key={chequeData.actno}
-                      label="Account Number"
-                      value={chequeData.actno}
-                      onChange={(e) =>
-                        setChequeData((prev) => ({
-                          ...prev,
-                          actno: e.target.value,
-                        }))
-                      }
-                    />
-                    <InputFloatingLabel
-                      key={chequeData.accname}
-                      label="Account Name"
-                      name="accname"
-                      value={chequeData.accname}
-                      onChange={(e) =>
-                        setChequeData((prev) => ({
-                          ...prev,
-                          accname: e.target.value,
-                        }))
-                      }
-                    />
-                    <InputFloatingLabel
-                      key={chequeData.bankName}
-                      label="Bank Name"
-                      name="bankName"
-                      value={chequeData.bankName}
-                      disabled={isProcessing}
-                      onChange={(e) =>
-                        setChequeData((prev) => ({
-                          ...prev,
-                          bankName: e.target.value,
-                        }))
-                      }
-                    />
-                    <InputFloatingLabel
-                      key={chequeData.bankBranch}
-                      label="Bank Branch"
-                      name="bankBranch"
-                      value={chequeData.bankBranch}
-                      disabled={isProcessing}
-                      onChange={(e) =>
-                        setChequeData((prev) => ({
-                          ...prev,
-                          bankBranch: e.target.value,
-                        }))
-                      }
-                    />
-                    <InputFloatingLabel
-                      key={chequeData.chequeNumber}
-                      label="Cheque Number"
-                      name="chequeNumber"
-                      value={chequeData.chequeNumber}
-                      disabled={isProcessing}
-                      onChange={(e) =>
-                        setChequeData((prev) => ({
-                          ...prev,
-                          chequeNumber: e.target.value,
-                        }))
-                      }
-                    />
-                    <GridItem colSpan={{ base: 1, md: 2 }}>
-                      <FileUpload.Root width="100%">
-                        <FileUpload.HiddenInput
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files || []);
-                            handleFileChange(files);
-                          }}
-                        />
-                        <FileUpload.Context>
-                          {({ acceptedFiles }) => (
-                            <Box
-                              asChild
-                              width="100%"
-                              border="1px solid"
-                              borderColor="gray.300"
-                              borderRadius="sm"
-                              cursor="pointer"
-                              p={2}
-                              fontSize="sm"
-                              _hover={{ borderColor: "gray.400" }}
-                            >
-                              <FileUpload.Trigger>
-                                {isProcessing ? (
-                                  <Flex align="center" gap={2}>
-                                    <Spinner size="sm" />
-                                    <Body>Processing cheque...</Body>
-                                  </Flex>
-                                ) : acceptedFiles.length === 0 ? (
-                                  <Body>Upload Cheque Slip</Body>
-                                ) : (
-                                  <Body>{acceptedFiles[0].name}</Body>
-                                )}
-                              </FileUpload.Trigger>
-                            </Box>
-                          )}
-                        </FileUpload.Context>
-                      </FileUpload.Root>
-                      {!isProcessing && chequeData.actno && (
-                        <Body fontSize="xs" color="green.500" mt={1}>
-                          ✔ OCR data loaded
-                        </Body>
-                      )}
-                    </GridItem>
-                  </Grid>
+
+                  <SlipUpload
+                    documentLabel="cheque slip"
+                    status={chequeStatus}
+                    fileName={chequeFile?.name}
+                    fileSize={chequeFile?.size}
+                    previewUrl={chequePreviewUrl}
+                    error={chequeError}
+                    extractedCount={
+                      Object.values(chequeData).filter(Boolean).length
+                    }
+                    onFilesSelected={handleChequeFilesSelected}
+                    onRetry={handleChequeRetry}
+                    onRemove={handleChequeRemove}
+                  />
+
+                  {chequeStatus === "completed" && (
+                    <Grid
+                      templateColumns={{
+                        base: "1fr",
+                        sm: "repeat(2,1fr)",
+                        lg: "repeat(3,1fr)",
+                        xl: "repeat(4,1fr)",
+                      }}
+                      gap={{ base: 1, md: 2, xl: 4 }}
+                      gapY={3}
+                      alignItems="center"
+                      mt={3}
+                    >
+                      <FloatingLabelInput
+                        key={chequeData.actno}
+                        label="Account Number"
+                        value={chequeData.actno}
+                        onChange={(e) =>
+                          setChequeData((prev) => ({
+                            ...prev,
+                            actno: e.target.value,
+                          }))
+                        }
+                      />
+                      <FloatingLabelInput
+                        key={chequeData.accname}
+                        label="Account Name"
+                        name="accname"
+                        value={chequeData.accname}
+                        onChange={(e) =>
+                          setChequeData((prev) => ({
+                            ...prev,
+                            accname: e.target.value,
+                          }))
+                        }
+                      />
+                      <FloatingLabelInput
+                        key={chequeData.bankName}
+                        label="Bank Name"
+                        name="bankName"
+                        value={chequeData.bankName}
+                        onChange={(e) =>
+                          setChequeData((prev) => ({
+                            ...prev,
+                            bankName: e.target.value,
+                          }))
+                        }
+                      />
+                      <FloatingLabelInput
+                        key={chequeData.bankBranch}
+                        label="Bank Branch"
+                        name="bankBranch"
+                        value={chequeData.bankBranch}
+                        onChange={(e) =>
+                          setChequeData((prev) => ({
+                            ...prev,
+                            bankBranch: e.target.value,
+                          }))
+                        }
+                      />
+                      <FloatingLabelInput
+                        key={chequeData.chequeNumber}
+                        label="Cheque Number"
+                        name="chequeNumber"
+                        value={chequeData.chequeNumber}
+                        onChange={(e) =>
+                          setChequeData((prev) => ({
+                            ...prev,
+                            chequeNumber: e.target.value,
+                          }))
+                        }
+                      />
+                    </Grid>
+                  )}
                 </Collapsible.Content>
               </Collapsible.Root>
 
@@ -1023,7 +1144,7 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
             draggable: false,
             selection: false,
             filtering: false,
-            columnToggle: false,
+            columnToggle: true,
           }}
           headerButton={{
             label: "DELETE ALL",

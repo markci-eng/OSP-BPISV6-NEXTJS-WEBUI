@@ -1,9 +1,10 @@
 "use client";
 
-import { Box, Flex, SimpleGrid } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { Box, Flex, Grid, SimpleGrid, Text } from "@chakra-ui/react";
+import { ReactNode, useEffect, useState } from "react";
 
-import { InputFloatingLabel, PrimaryMdFlexButton } from "st-peter-ui";
+import { PrimaryMdFlexButton } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 import { drsItems, samplePayments } from "../data/paymentDetails";
 
 import DrsDataTable from "../components/drsDataTable";
@@ -24,8 +25,50 @@ import { useRouter } from "next/navigation";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import Page from "@/claude components/layout/page/Page";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
-import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
+import { Card as CardAccordion } from "@/claude components/card-accordion/card";
 import { LuBanknote, LuSearch } from "react-icons/lu";
+import { SlipUpload, SlipUploadStatus } from "../components/SlipUpload";
+import Card from "@/components/cards/Card";
+import { OSPBadge } from "@/components/common/badge/badge";
+
+const parseCurrency = (value?: string) => {
+  const parsed = Number((value ?? "").replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const formatCurrency = (value: number) =>
+  `₱${value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+const DEPOSIT_STATUS_META = {
+  exact: { label: "Exact", badgeType: "success" as const },
+  short: { label: "Short", badgeType: "danger" as const },
+  excess: { label: "Excess", badgeType: "warning" as const },
+};
+
+const MetaItem = ({
+  label,
+  value,
+  valueColor,
+  children,
+}: {
+  label: string;
+  value: ReactNode;
+  valueColor?: string;
+  children?: ReactNode;
+}) => (
+  <Box>
+    <Text fontSize="xs" color="gray.500" mb={1}>
+      {label}
+    </Text>
+    <Text fontSize="md" fontWeight="bold" color={valueColor}>
+      {value}
+    </Text>
+    {children}
+  </Box>
+);
 
 export default function EncodeDeposit() {
   const { totals } = DrsFunction(samplePayments);
@@ -33,7 +76,6 @@ export default function EncodeDeposit() {
 
   const [selectedDRS, setSelectedDRS] = useState<DepositHdr | null>(null);
   const [searchOpen, setSearchOpen] = useState(true);
-  const [depositOpen, setDepositOpen] = useState(false);
 
   const drsColumns: LookupColumn<DepositHdr>[] = [
     { key: "name", header: "DRS" },
@@ -45,7 +87,6 @@ export default function EncodeDeposit() {
     if (data) {
       setSelectedDRS(JSON.parse(data));
       setSearchOpen(false);
-      setDepositOpen(true);
       sessionStorage.removeItem("selectedDRS");
     }
   }, []);
@@ -65,6 +106,79 @@ export default function EncodeDeposit() {
     { key: "BankCode", header: "Bank Code" },
     { key: "BankBranch", header: "Bank Description" },
   ];
+
+  const EMPTY_DEPOSIT_DATA = { depositDateTime: "", accountNo: "", amount: "" };
+  const [depositData, setDepositData] = useState(EMPTY_DEPOSIT_DATA);
+  const [depositSlipStatus, setDepositSlipStatus] =
+    useState<SlipUploadStatus>("idle");
+  const [depositSlipFile, setDepositSlipFile] = useState<File | null>(null);
+  const [depositSlipPreviewUrl, setDepositSlipPreviewUrl] = useState<
+    string | undefined
+  >(undefined);
+  const [depositSlipError, setDepositSlipError] = useState<string | undefined>(
+    undefined,
+  );
+
+  const mockDepositSlipOCR = async (_file: File) => {
+    return new Promise<typeof depositData & { bankCode: string }>((resolve) => {
+      setTimeout(() => {
+        resolve({
+          depositDateTime: "2026-07-16T09:30",
+          accountNo: "2010073262",
+          amount: selectedDRS ? String(parseCurrency(selectedDRS.Amount)) : "",
+          bankCode: "124",
+        });
+      }, 2000);
+    });
+  };
+
+  const processDepositSlipFile = async (file: File) => {
+    setDepositSlipFile(file);
+    setDepositSlipPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file.type.startsWith("image/")
+        ? URL.createObjectURL(file)
+        : undefined;
+    });
+    setDepositData(EMPTY_DEPOSIT_DATA);
+    setSelectedBank(null);
+    setDepositSlipError(undefined);
+    setDepositSlipStatus("processing");
+    try {
+      const { bankCode, ...result } = await mockDepositSlipOCR(file);
+      setDepositData(result);
+      setSelectedBank(
+        refBankBranchData.find((b) => b.BankCode === bankCode) ?? null,
+      );
+      setDepositSlipStatus("completed");
+      toast.success("Deposit slip details extracted!");
+    } catch {
+      setDepositSlipStatus("failed");
+      setDepositSlipError(
+        "We couldn't read this deposit slip. Please retry or choose another file.",
+      );
+      toast.error("Failed to process deposit slip");
+    }
+  };
+
+  const handleDepositSlipFilesSelected = (files: File[]) => {
+    if (!files || files.length === 0) return;
+    void processDepositSlipFile(files[0]);
+  };
+
+  const handleDepositSlipRetry = () => {
+    if (depositSlipFile) void processDepositSlipFile(depositSlipFile);
+  };
+
+  const handleDepositSlipRemove = () => {
+    if (depositSlipPreviewUrl) URL.revokeObjectURL(depositSlipPreviewUrl);
+    setDepositSlipFile(null);
+    setDepositSlipPreviewUrl(undefined);
+    setDepositSlipError(undefined);
+    setDepositSlipStatus("idle");
+    setDepositData(EMPTY_DEPOSIT_DATA);
+    setSelectedBank(null);
+  };
 
   const { messageBox } = useMessageDialog();
   const handleConfirm = async () => {
@@ -113,13 +227,11 @@ export default function EncodeDeposit() {
                 onSelect={(e) => {
                   if (!e) {
                     setSelectedDRS(null);
-                    setDepositOpen(false);
                     return;
                   }
                   if (drsItems[0].id === e.id) {
                     setSelectedDRS(e);
                     setSearchOpen(false);
-                    setDepositOpen(true);
                   } else {
                     toast.error("Please encode the first created DRS");
                   }
@@ -131,12 +243,10 @@ export default function EncodeDeposit() {
           </Flex>
 
           {/* SECTION 2 — Deposit Details */}
-          <InputCardAccordion
-            icon={<LuBanknote size={16} />}
+          <CardAccordion
+            activeIcon={<LuBanknote size={16} />}
             title="Deposit Details"
             subtitle={selectedDRS ? selectedDRS.name : "Select a DRS first"}
-            isOpen={depositOpen}
-            onToggle={() => setDepositOpen((p) => !p)}
           >
             {!selectedDRS ? (
               <EmptyStateCard
@@ -145,56 +255,197 @@ export default function EncodeDeposit() {
               />
             ) : (
               <>
-                <SimpleGrid
-                  columns={{ base: 1, sm: 2, lg: 3 }}
-                  gapX={2}
-                  gapY={1}
-                >
-                  <InputFloatingLabel
-                    type="datetime-local"
-                    id="depositdate"
-                    label="Deposit Date Time"
-                  />
-                  <InputFloatingLabel
-                    type="number"
-                    id="AccountNo"
-                    label="Account number"
-                    value={"2010073262"}
-                  />
-                  <Flex alignItems="center">
-                    <LookupField<refBankBranch>
-                      variant="dropdown"
-                      label=""
-                      placeholder="Bank Branch"
-                      modalTitle="Search Bank Branch"
-                      columns={bankBranchColumns}
-                      dataSource={refBankBranchData}
-                      searchKeys={["BankCode", "BankBranch"]}
-                      onSelect={setSelectedBank}
-                      renderDisplay={(b) => `${b.BankCode} (${b.BankBranch})`}
-                      value={selectedBank}
-                    />
-                  </Flex>
-                  <InputFloatingLabel
-                    id="Amount"
-                    label="Amount"
-                    value={selectedDRS.Amount || "₱0.00"}
-                  />
-                  <Flex alignItems="center">
-                    <LookupField<Employee>
-                      variant="dropdown"
-                      label=""
-                      placeholder="Search by name or ID..."
-                      modalTitle="Search Employee"
-                      columns={employeeColumns}
-                      dataSource={EMPLOYEES}
-                      searchKeys={["id", "name", "branch"]}
-                      onSelect={setSelectedEmployee}
-                      renderDisplay={(emp) => `${emp.name} (${emp.id})`}
-                      value={selectedEmployee || defaultEmployee}
-                    />
-                  </Flex>
-                </SimpleGrid>
+                <SlipUpload
+                  documentLabel="deposit slip"
+                  status={depositSlipStatus}
+                  fileName={depositSlipFile?.name}
+                  fileSize={depositSlipFile?.size}
+                  previewUrl={depositSlipPreviewUrl}
+                  error={depositSlipError}
+                  extractedCount={
+                    Object.values(depositData).filter(Boolean).length +
+                    (selectedBank ? 1 : 0)
+                  }
+                  onFilesSelected={handleDepositSlipFilesSelected}
+                  onRetry={handleDepositSlipRetry}
+                  onRemove={handleDepositSlipRemove}
+                />
+
+                {depositSlipStatus === "completed" && (
+                  <>
+                    <SimpleGrid
+                      columns={{ base: 1, sm: 2, lg: 3 }}
+                      gapX={2}
+                      gapY={3}
+                      mt={3}
+                    >
+                      <FloatingLabelInput
+                        type="datetime-local"
+                        id="depositdate"
+                        label="Deposit Date Time"
+                        value={depositData.depositDateTime}
+                        onChange={(e) =>
+                          setDepositData((prev) => ({
+                            ...prev,
+                            depositDateTime: e.target.value,
+                          }))
+                        }
+                      />
+                      <FloatingLabelInput
+                        type="number"
+                        id="AccountNo"
+                        label="Account number"
+                        value={depositData.accountNo}
+                        onChange={(e) =>
+                          setDepositData((prev) => ({
+                            ...prev,
+                            accountNo: e.target.value,
+                          }))
+                        }
+                      />
+                      <Flex alignItems="center">
+                        <LookupField<refBankBranch>
+                          variant="dropdown"
+                          label=""
+                          placeholder="Bank Branch"
+                          modalTitle="Search Bank Branch"
+                          columns={bankBranchColumns}
+                          dataSource={refBankBranchData}
+                          searchKeys={["BankCode", "BankBranch"]}
+                          onSelect={setSelectedBank}
+                          renderDisplay={(b) =>
+                            `${b.BankCode} (${b.BankBranch})`
+                          }
+                          value={selectedBank}
+                        />
+                      </Flex>
+                      <FloatingLabelInput
+                        type="number"
+                        id="Amount"
+                        label="Deposited Amount"
+                        value={depositData.amount}
+                        onChange={(e) =>
+                          setDepositData((prev) => ({
+                            ...prev,
+                            amount: e.target.value,
+                          }))
+                        }
+                      />
+                      <Flex alignItems="center">
+                        <LookupField<Employee>
+                          variant="dropdown"
+                          label=""
+                          placeholder="Search by name or ID..."
+                          modalTitle="Search Employee"
+                          columns={employeeColumns}
+                          dataSource={EMPLOYEES}
+                          searchKeys={["id", "name", "branch"]}
+                          onSelect={setSelectedEmployee}
+                          renderDisplay={(emp) => `${emp.name} (${emp.id})`}
+                          value={selectedEmployee || defaultEmployee}
+                        />
+                      </Flex>
+                    </SimpleGrid>
+
+                    {(() => {
+                      const expectedAmount = parseCurrency(selectedDRS.Amount);
+                      const depositedAmount = parseCurrency(depositData.amount);
+                      const variance = depositedAmount - expectedAmount;
+                      const status: keyof typeof DEPOSIT_STATUS_META =
+                        Math.abs(variance) < 0.01
+                          ? "exact"
+                          : variance < 0
+                            ? "short"
+                            : "excess";
+                      const meta = DEPOSIT_STATUS_META[status];
+
+                      const varianceColor =
+                        status === "exact"
+                          ? "green.600"
+                          : status === "short"
+                            ? "red.500"
+                            : "yellow.600";
+
+                      return (
+                        <Box mt={3}>
+                          <Card.Root title="Deposit Verification">
+                            <Card.MainContent>
+                              {/* Mobile — stacked rows */}
+                              <Flex
+                                direction="column"
+                                gap={2}
+                                display={{ base: "flex", md: "none" }}
+                              >
+                                <Flex justify="space-between" fontSize="sm">
+                                  <Text color="gray.500">Expected Amount</Text>
+                                  <Text fontWeight="medium">
+                                    {formatCurrency(expectedAmount)}
+                                  </Text>
+                                </Flex>
+                                <Flex justify="space-between" fontSize="sm">
+                                  <Text color="gray.500">Deposited Amount</Text>
+                                  <Text fontWeight="medium">
+                                    {formatCurrency(depositedAmount)}
+                                  </Text>
+                                </Flex>
+                                <Flex
+                                  justify="space-between"
+                                  align="center"
+                                  mt={2}
+                                  pt={2}
+                                  borderTop="1px solid"
+                                  borderColor="gray.200"
+                                >
+                                  <Flex align="center" gap={2}>
+                                    <Text fontSize="sm" fontWeight="medium">
+                                      Variance
+                                    </Text>
+                                    <OSPBadge type={meta.badgeType}>
+                                      {meta.label}
+                                    </OSPBadge>
+                                  </Flex>
+                                  <Text
+                                    fontSize="md"
+                                    fontWeight="bold"
+                                    color={varianceColor}
+                                  >
+                                    {variance > 0 ? "+" : ""}
+                                    {formatCurrency(variance)}
+                                  </Text>
+                                </Flex>
+                              </Flex>
+
+                              {/* Desktop — 3-column grid */}
+                              <Grid
+                                templateColumns="repeat(3, 1fr)"
+                                gap={4}
+                                display={{ base: "none", md: "grid" }}
+                              >
+                                <MetaItem
+                                  label="Expected Amount"
+                                  value={formatCurrency(expectedAmount)}
+                                />
+                                <MetaItem
+                                  label="Deposited Amount"
+                                  value={formatCurrency(depositedAmount)}
+                                />
+                                <MetaItem
+                                  label="Variance"
+                                  value={`${variance > 0 ? "+" : ""}${formatCurrency(variance)}`}
+                                  valueColor={varianceColor}
+                                >
+                                  <OSPBadge type={meta.badgeType} mt={1}>
+                                    {meta.label}
+                                  </OSPBadge>
+                                </MetaItem>
+                              </Grid>
+                            </Card.MainContent>
+                          </Card.Root>
+                        </Box>
+                      );
+                    })()}
+                  </>
+                )}
 
                 <Box mt={4}>
                   <DrsDataTable
@@ -218,7 +469,7 @@ export default function EncodeDeposit() {
                 </Flex>
               </>
             )}
-          </InputCardAccordion>
+          </CardAccordion>
         </Flex>
       </Page.MainContent>
     </Page.Root>

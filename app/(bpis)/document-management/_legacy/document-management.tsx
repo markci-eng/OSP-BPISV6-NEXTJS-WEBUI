@@ -2,22 +2,67 @@
 
 import { EMPLOYEES } from "@/data/doc-management/documenttype";
 import { Employee } from "@/data/doc-management/employeeSelector";
-import { Box, Grid, Text, VStack } from "@chakra-ui/react";
-import { FolderSearch } from "lucide-react";
+import { Box, Flex, Grid, Text } from "@chakra-ui/react";
+import { User } from "lucide-react";
 import React from "react";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   LookupColumn,
   LookupField,
 } from "@/components/common/reusable-lookup/LookUpField";
 import { AnimatePresence, motion } from "framer-motion";
 import DocumentTable from "./_components/DocumentTable";
+import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import Page from "@/claude components/layout/page/Page";
 import LabelText from "@/components/texts/LabelText";
+import { MetaCard } from "../../payment/viewvalidated-deposit/viewDeposit";
 
 const employeeColumns: LookupColumn<Employee>[] = [
   { key: "id", header: "Employee ID" },
   { key: "name", header: "Name" },
   { key: "branch", header: "Branch" },
+];
+
+const employeeTableColumns: ColumnDef<Employee>[] = [
+  {
+    id: "employee",
+    header: "Employee",
+    accessorFn: (row) => row.name,
+    cell: ({ row }) => {
+      const emp = row.original;
+      return (
+        <Flex align="center" gap={3}>
+          <Box
+            p={2}
+            borderRadius="full"
+            bg="gray.100"
+            color="gray.600"
+            flexShrink={0}
+            _dark={{ bg: "gray.800", color: "gray.300" }}
+          >
+            <User size={16} />
+          </Box>
+          <Box>
+            <Text fontWeight="semibold" fontSize="sm" lineHeight="1.3">
+              {emp.name}
+            </Text>
+            <Text fontSize="xs" color="gray.500">
+              {emp.id}
+            </Text>
+          </Box>
+        </Flex>
+      );
+    },
+  },
+  {
+    accessorKey: "branch",
+    header: "Branch",
+    cell: (info) => (
+      <Text fontSize="sm" color="gray.700" _dark={{ color: "gray.300" }}>
+        {String(info.getValue())}
+      </Text>
+    ),
+  },
 ];
 
 const springTransition = {
@@ -38,18 +83,11 @@ const DocumentManagement = () => {
       description="Manage employee policy documents."
       headerButton="menu"
     >
-      <Page.MainContent
-        justifyContent={
-          selectedEmployee ? undefined : { base: undefined, lg: "center" }
-        }
-        minH={selectedEmployee ? undefined : { base: undefined, lg: "60vh" }}
-      >
+      <Page.MainContent>
         <Box
           w={{ base: "full", md: "320px", lg: "360px" }}
           ml={{ base: 0, md: "auto" }}
-          mr={{ base: 0, md: selectedEmployee ? 0 : "auto" }}
           flexShrink={0}
-          order={selectedEmployee ? 0 : { base: 0, lg: 2 }}
         >
           <LookupField<Employee>
             label=""
@@ -83,14 +121,15 @@ const DocumentManagement = () => {
                       sm: "repeat(2, 1fr)",
                       lg: "repeat(3, 1fr)",
                     }}
-                    gap={4}
+                    gapX={5}
+                    gapY={2}
                   >
                     {[
                       { label: "Employee ID", value: selectedEmployee.id },
                       { label: "Name", value: selectedEmployee.name },
                       { label: "Branch", value: selectedEmployee.branch },
                     ].map((detail) => (
-                      <LabelText
+                      <MetaCard
                         key={detail.label}
                         label={detail.label}
                         value={detail.value}
@@ -104,43 +143,34 @@ const DocumentManagement = () => {
         </AnimatePresence>
 
         {!selectedEmployee && (
-          <VStack
-            gap={3}
-            pt={{ base: 20, lg: 4 }}
-            pb={4}
-            alignItems="center"
-            justifyContent="center"
-            order={1}
-          >
-            <Box
-              p={5}
-              borderRadius="full"
-              bg="gray.100"
-              color="gray.400"
-              _dark={{ bg: "gray.800", color: "gray.500" }}
-            >
-              <FolderSearch size={36} strokeWidth={1.5} />
-            </Box>
-            <VStack gap={1} textAlign="center">
-              <Text
-                fontWeight="semibold"
-                fontSize="md"
-                color="gray.600"
-                _dark={{ color: "gray.300" }}
-              >
-                No employee selected
-              </Text>
-              <Text
-                fontSize="sm"
-                color="gray.400"
-                _dark={{ color: "gray.500" }}
-                maxW="xs"
-              >
-                Search for an employee to view and manage their policy
-                documents.
-              </Text>
-            </VStack>
-          </VStack>
+          <Box w="full">
+            <DataTable<Employee>
+              columns={employeeTableColumns}
+              data={EMPLOYEES}
+              getRowId={(row) => row.id}
+              onRowClick={(row) => setSelectedEmployee(row)}
+              size="md"
+              emptyState="No employees found."
+              features={{
+                search: false,
+                filtering: false,
+                sorting: true,
+                pagination: true,
+                columnToggle: true,
+                selection: false,
+                draggable: false,
+                detailSidebar: false,
+              }}
+              mobileConfig={{
+                viewMode: "card",
+                primaryField: "name",
+                titleTransform: "none",
+                secondaryField: "id",
+                labelMap: { id: "Employee ID" },
+                visibleFields: ["branch"],
+              }}
+            />
+          </Box>
         )}
       </Page.MainContent>
     </Page.Root>

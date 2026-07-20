@@ -95,8 +95,8 @@ export default function AppHeader({
       justify="space-between"
       bg="bg"
       _dark={{ bg: "rgba(20, 24, 36, 0.88)" }}
-      borderBottom="1px solid"
-      borderColor="gray.200"
+      // borderBottom="1px solid"
+      // borderColor="gray.200"
     >
       {/* Left side */}
       <Flex align="center" gap={2}>

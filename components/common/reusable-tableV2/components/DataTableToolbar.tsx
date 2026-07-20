@@ -17,6 +17,7 @@ import {
 import { Checkbox } from "@chakra-ui/react";
 import { Columns3, Search, X } from "lucide-react";
 import { DataTableFeatures, HeaderButton } from "../types";
+import { FiSliders } from "react-icons/fi";
 
 type DataTableToolbarProps<TData> = {
   table: TanStackTable<TData>;
@@ -207,55 +208,65 @@ export function DataTableToolbar<TData>({
               </HStack>
             )}
 
-            {features.columnToggle && (
-              <Menu.Root>
-                <Menu.Trigger asChild>
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    h="30px"
-                    flexShrink={0}
-                    w={{ base: "full", md: "auto" }}
-                  >
-                    <Columns3 size={13} style={{ marginRight: 4 }} />
-                    Columns
-                  </Button>
-                </Menu.Trigger>
+            {features.columnToggle &&
+              (() => {
+                const hideableColumns = table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide());
 
-                <Portal>
-                  <Menu.Positioner>
-                    <Menu.Content minW="180px" zIndex="popover">
-                      {table
-                        .getAllColumns()
-                        .filter((column) => column.getCanHide())
-                        .map((column) => (
-                          <Menu.Item
-                            key={column.id}
-                            value={column.id}
-                            closeOnSelect={false}
-                            onClick={() =>
-                              column.toggleVisibility(!column.getIsVisible())
-                            }
-                          >
-                            <HStack justify="space-between" w="full">
-                              <Text textTransform="capitalize" fontSize="xs">
-                                {column.id
-                                  .replace(/([A-Z])/g, " $1")
-                                  .replace(/_/g, " ")}
-                              </Text>
+                return (
+                  <Menu.Root>
+                    <Menu.Trigger asChild>
+                      <Button
+                        bg={"white"}
+                        color={"gray.700"}
+                        border={"1px solid"}
+                        borderColor={"gray.200"}
+                        boxShadow={"sm"}
+                        variant="solid"
+                        size="xs"
+                        h="30px"
+                        flexShrink={0}
+                        w={{ base: "full", md: "auto" }}
+                        disabled={hideableColumns.length === 0}
+                      >
+                        <FiSliders size={13} style={{ marginRight: 4 }} />
+                        Columns
+                      </Button>
+                    </Menu.Trigger>
 
-                              <Checkbox.Root checked={column.getIsVisible()}>
-                                <Checkbox.HiddenInput />
-                                <Checkbox.Control />
-                              </Checkbox.Root>
-                            </HStack>
-                          </Menu.Item>
-                        ))}
-                    </Menu.Content>
-                  </Menu.Positioner>
-                </Portal>
-              </Menu.Root>
-            )}
+                    <Portal>
+                      <Menu.Positioner>
+                        <Menu.Content minW="180px" zIndex="popover">
+                          {hideableColumns.map((column) => (
+                            <Menu.Item
+                              key={column.id}
+                              value={column.id}
+                              closeOnSelect={false}
+                              onClick={() =>
+                                column.toggleVisibility(!column.getIsVisible())
+                              }
+                            >
+                              <HStack justify="space-between" w="full">
+                                <Text textTransform="capitalize" fontSize="xs">
+                                  {column.id
+                                    .replace(/([A-Z])/g, " $1")
+                                    .replace(/_/g, " ")}
+                                </Text>
+
+                                <Checkbox.Root checked={column.getIsVisible()}>
+                                  <Checkbox.HiddenInput />
+                                  <Checkbox.Control />
+                                </Checkbox.Root>
+                              </HStack>
+                            </Menu.Item>
+                          ))}
+                        </Menu.Content>
+                      </Menu.Positioner>
+                    </Portal>
+                  </Menu.Root>
+                );
+              })()}
 
             {headerButton && (
               <Button

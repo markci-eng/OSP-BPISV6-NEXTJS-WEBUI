@@ -50,6 +50,11 @@ export function PlanholderHamburgerModules({
                 fontWeight="semibold"
               >
                 <Flex
+                  as="button"
+                  w="full"
+                  textAlign="left"
+                  bg="transparent"
+                  border="none"
                   align="center"
                   gap={1}
                   p={1}
@@ -77,6 +82,11 @@ export function PlanholderHamburgerModules({
                   <Body>Reinstatement</Body>
                 </Flex> */}
                 <Flex
+                  as="button"
+                  w="full"
+                  textAlign="left"
+                  bg="transparent"
+                  border="none"
                   align="center"
                   gap={1}
                   p={1} // decreased padding
@@ -109,6 +119,11 @@ export function PlanholderHamburgerModules({
                   <Body>Transfer of Rights</Body>
                 </Flex> */}
                 <Flex
+                  as="button"
+                  w="full"
+                  textAlign="left"
+                  bg="transparent"
+                  border="none"
                   align="center"
                   gap={1}
                   p={1} // decreased padding
@@ -123,6 +138,11 @@ export function PlanholderHamburgerModules({
                   <Body>Return of Premium</Body>
                 </Flex>
                 <Flex
+                  as="button"
+                  w="full"
+                  textAlign="left"
+                  bg="transparent"
+                  border="none"
                   align="center"
                   gap={1}
                   p={1} // decreased padding
@@ -134,6 +154,11 @@ export function PlanholderHamburgerModules({
                   <Body>Claim Application</Body>
                 </Flex>
                 <Flex
+                  as="button"
+                  w="full"
+                  textAlign="left"
+                  bg="transparent"
+                  border="none"
                   align="center"
                   gap={1}
                   p={1} // decreased padding

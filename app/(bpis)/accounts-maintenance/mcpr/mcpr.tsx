@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Grid, GridItem } from "@chakra-ui/react";
-import {
-  PrimaryMdButton,
-  PrimaryMdFlexButton,
-  SelectFloatingLabel,
-} from "st-peter-ui";
+import { PrimaryMdButton, PrimaryMdFlexButton } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { LuUsers } from "react-icons/lu";
 
 import Page from "@/claude components/layout/page/Page";
@@ -80,10 +77,13 @@ export default function MCPRPage() {
                 alignItems="center"
               >
                 <GridItem>
-                  <SelectFloatingLabel
-                    label="Select Transaction Month"
-                    collection={TrxMonth}
-                  />
+                  <FloatingLabelSelect label="Select Transaction Month">
+                    {TrxMonth.items.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </FloatingLabelSelect>
                 </GridItem>
                 <GridItem>
                   <LookupField<SalesForceLookUpData>

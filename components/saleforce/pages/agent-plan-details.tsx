@@ -7,6 +7,7 @@ import {
   Grid,
   GridItem,
   Show,
+  Text,
   useBreakpointValue,
 } from "@chakra-ui/react";
 import {
@@ -23,6 +24,8 @@ import {
   LuChevronsUp,
   LuUsers,
   LuClipboardList,
+  LuTarget,
+  LuHandCoins,
 } from "react-icons/lu";
 import { useState } from "react";
 import AgentEditForm from "../forms/agent-edit-form";
@@ -35,9 +38,7 @@ import MenuButton, {
 } from "@/claude components/buttons/MenuButton";
 import { useRouter } from "next/navigation";
 import TeamMemberDrawer from "../drawers/team-member-drawer";
-import {
-  PendingRequests,
-} from "@/components/new-planholder-profile/sections/pending-requests";
+import { PendingRequests } from "@/components/new-planholder-profile/sections/pending-requests";
 import AgentReassignForm from "../forms/agent-reassign-form";
 import AgentMovementForm from "../forms/agent-movement-form";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
@@ -48,14 +49,79 @@ import Page from "@/claude components/layout/page/Page";
 import { PlanholderAddressCard } from "@/components/new-planholder-profile/sections/address-info";
 import ReferralPage from "./referral-page";
 import AgentContactInfoCard from "../cards/AgentContactInfoCard";
-import { TertiarySmButton } from "st-peter-ui";
+import { SecondarySmButton } from "st-peter-ui";
 import ProfileHeaderCard from "@/components/cards/ProfileHeaderCard";
 import ActionButtons, {
   ActionButtonItem,
 } from "@/claude components/buttons/ActionButtons";
-import MCPRList from "@/app/(bpis)/accounts-maintenance/mcpr/mcpr-list";
+import MCPRList, {
+  mcprData,
+} from "@/app/(bpis)/accounts-maintenance/mcpr/mcpr-list";
 import { SuperiorResultCard } from "@/app/(bpis)/sales-force/re-assign/components/SuperiorResultCard";
 import { MOCK_AGENT_REQUESTS } from "@/data/saleforce/agent-requests";
+
+const peso = (value: number) =>
+  `₱ ${value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+function MCPRStatCard({
+  icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  accent: string;
+}) {
+  return (
+    <Flex
+      align="center"
+      gap={3}
+      p={4}
+      rounded="lg"
+      borderWidth="1px"
+      borderColor="border.muted"
+      bg="bg"
+    >
+      <Flex
+        align="center"
+        justify="center"
+        boxSize={10}
+        rounded="lg"
+        bg={`${accent}.50`}
+        color={`${accent}.600`}
+        flexShrink={0}
+      >
+        {icon}
+      </Flex>
+      <Box minW={0}>
+        <Text
+          fontSize="xs"
+          fontWeight="semibold"
+          color="fg.muted"
+          textTransform="uppercase"
+          letterSpacing="wider"
+          truncate
+        >
+          {label}
+        </Text>
+        <Text
+          fontSize="xl"
+          fontWeight="bold"
+          color="fg"
+          lineHeight="1.2"
+          fontVariantNumeric="tabular-nums"
+        >
+          {value}
+        </Text>
+      </Box>
+    </Flex>
+  );
+}
 
 export function AgentDetails(params: {
   selectedAgent: SalesAgent;
@@ -201,7 +267,8 @@ export function AgentDetails(params: {
 
   const profileBase = `/sales-force/profile/${selectedAgent.id}`;
 
-  const actionButtonDefs: ActionButtonItem[] = [
+  // Primary actions — surfaced as visible toolbar buttons
+  const primaryActions = [
     {
       label: "Edit",
       icon: LuUserPen,
@@ -236,7 +303,14 @@ export function AgentDetails(params: {
     >
       {page === "default" && (
         <Page.ToolContent>
-          <ActionButtons buttons={actionButtonDefs} />
+          <Flex align="center" gap={2}>
+            {primaryActions.map((action) => (
+              <SecondarySmButton key={action.label} onClick={action.onClick}>
+                <action.icon />
+                {action.label}
+              </SecondarySmButton>
+            ))}
+          </Flex>
         </Page.ToolContent>
       )}
 
@@ -300,7 +374,7 @@ export function AgentDetails(params: {
                     agent={selectedAgent}
                     isOpen={personalOpen}
                     onToggle={() => setPersonalOpen((p) => !p)}
-                    h="full"
+                    h={personalOpen ? "full" : undefined}
                   />
                 </GridItem>
                 <GridItem>
@@ -308,7 +382,7 @@ export function AgentDetails(params: {
                     agent={selectedAgent}
                     isOpen={employmentOpen}
                     onToggle={() => setEmploymentOpen((p) => !p)}
-                    h="full"
+                    h={employmentOpen ? "full" : undefined}
                   />
                 </GridItem>
               </Grid>
@@ -346,6 +420,67 @@ export function AgentDetails(params: {
                 subtitle="Collection performance summary by period"
                 defaultOpen
               >
+                {(() => {
+                  const collected = mcprData.filter((r) => r.Aging === 0);
+                  const noOfAccounts = mcprData.length;
+                  const commQuota = mcprData.reduce(
+                    (sum, r) => sum + r.CommQ30,
+                    0,
+                  );
+                  const ncommQuota = mcprData.reduce(
+                    (sum, r) => sum + r.QNCom,
+                    0,
+                  );
+                  const commCollection = collected.reduce(
+                    (sum, r) => sum + r.CommQ30,
+                    0,
+                  );
+                  const ncommCollection = collected.reduce(
+                    (sum, r) => sum + r.QNCom,
+                    0,
+                  );
+                  return (
+                    <Grid
+                      templateColumns={{
+                        base: "1fr",
+                        sm: "repeat(auto-fit, minmax(180px, 1fr))",
+                      }}
+                      gap={3}
+                      mb={4}
+                    >
+                      <MCPRStatCard
+                        icon={<LuUsers size={20} />}
+                        label="No. of Accounts"
+                        value={noOfAccounts.toLocaleString()}
+                        accent="blue"
+                      />
+                      <MCPRStatCard
+                        icon={<LuTarget size={20} />}
+                        label="Comm. Quota"
+                        value={peso(commQuota)}
+                        accent="purple"
+                      />
+                      <MCPRStatCard
+                        icon={<LuTarget size={20} />}
+                        label="Non-Comm. Quota"
+                        value={peso(ncommQuota)}
+                        accent="teal"
+                      />
+                      <MCPRStatCard
+                        icon={<LuHandCoins size={20} />}
+                        label="Comm. Collection"
+                        value={peso(commCollection)}
+                        accent="green"
+                      />
+                      <MCPRStatCard
+                        icon={<LuHandCoins size={20} />}
+                        label="Non-Comm. Collection"
+                        value={peso(ncommCollection)}
+                        accent="orange"
+                      />
+                    </Grid>
+                  );
+                })()}
                 <MCPRList />
               </InfoCardAccordion>
             )}

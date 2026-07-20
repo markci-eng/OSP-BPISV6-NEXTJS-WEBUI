@@ -162,7 +162,8 @@ export function ModalForm({
         <Dialog.Backdrop />
         <Dialog.Positioner p={{ base: 0, md: undefined }}>
           <Dialog.Content
-            borderRadius={{ base: "0", md: undefined }}
+            minH={{ base: "100vh", md: "auto" }}
+            borderRadius={{ base: "0", md: "xl" }}
           >
             <Dialog.CloseTrigger position="absolute" top={3} insetEnd={3} />
 

@@ -6,7 +6,15 @@ import {
   SalesAgent,
 } from "@/components/common/agent-lookup/agent-lookup.type";
 import { Card } from "@/claude components/card-accordion/card";
-import { Avatar, Badge, Box, Flex, HStack, Text, VStack } from "@chakra-ui/react";
+import {
+  Avatar,
+  Badge,
+  Box,
+  Flex,
+  HStack,
+  SimpleGrid,
+  Text,
+} from "@chakra-ui/react";
 import {
   LuLayoutDashboard,
   LuTriangleAlert,
@@ -92,86 +100,6 @@ export const ReviewPanel = ({
       </Text>
     </Flex>
 
-    <Flex direction={{ base: "column", lg: "row" }} gap={4} align="stretch">
-      {/* Receiving superior */}
-      <Box flex={1} minW={0}>
-        <Card
-          activeIcon={<LuUserRoundCheck size={16} />}
-          title="Receiving Superior"
-          subtitle="Destination for the selected agents"
-        >
-          <HStack gap={3} mb={3}>
-            <Avatar.Root colorPalette={"gray"} size="lg" flexShrink={0}>
-              <Avatar.Fallback>{initials(superior)}</Avatar.Fallback>
-            </Avatar.Root>
-            <Box minW={0}>
-              <Text fontWeight="700" fontSize="md" color="gray.900" truncate>
-                {fullName(superior)}
-              </Text>
-              <StatusBadge status={superior.employeeStatus} />
-            </Box>
-          </HStack>
-          <InfoRow label="Agent Code" value={superior.id} />
-          <InfoRow
-            label="Position"
-            value={getPositionDesc(superior.position) ?? superior.position}
-          />
-          <InfoRow label="Branch" value={superior.branch} />
-          <InfoRow label="Area" value={superior.address.province} />
-        </Card>
-      </Box>
-
-      {/* Summary */}
-      <Box flex={1} minW={0}>
-        <Card
-          activeIcon={<LuLayoutDashboard size={16} />}
-          title="Summary"
-          subtitle="Reorganization overview"
-        >
-          <Flex
-            align="center"
-            justify="space-between"
-            p={4}
-            mb={3}
-            borderRadius="12px"
-            bg="gray.50"
-            borderWidth="1px"
-            borderColor="gray.200"
-          >
-            <Box>
-              <Text fontSize="12px" color="gray.500" fontWeight="600">
-                Total agents affected
-              </Text>
-              <Text
-                fontSize="28px"
-                fontWeight="800"
-                color="gray.900"
-                lineHeight="1.1"
-              >
-                {agents.length}
-              </Text>
-            </Box>
-            <Flex
-              align="center"
-              justify="center"
-              boxSize="48px"
-              borderRadius="full"
-              bg="gray.800"
-              color="white"
-            >
-              <LuUsers size={22} />
-            </Flex>
-          </Flex>
-          <InfoRow
-            label="Effective receiving superior"
-            value={fullName(superior)}
-          />
-          <InfoRow label="Superior code" value={superior.id} />
-          <InfoRow label="Request type" value="Re-organization" />
-        </Card>
-      </Box>
-    </Flex>
-
     {/* Selected agents list */}
     <Card
       activeIcon={<LuUsers size={16} />}
@@ -190,11 +118,17 @@ export const ReviewPanel = ({
         </Badge>
       }
     >
-      <VStack align="stretch" gap={2} maxH="360px" overflowY="auto" pr={1}>
+      <SimpleGrid
+        columns={{ base: 1, md: 2 }}
+        gap={2}
+        maxH="360px"
+        overflowY="auto"
+        pr={1}
+      >
         {agents.map((a) => (
           <ReviewRow key={a.id} agent={a} />
         ))}
-      </VStack>
+      </SimpleGrid>
     </Card>
   </Flex>
 );

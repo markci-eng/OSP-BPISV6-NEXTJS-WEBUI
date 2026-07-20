@@ -3,7 +3,8 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Button, Flex, createListCollection } from "@chakra-ui/react";
-import { InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { EMPLOYEES } from "@/data/doc-management/documenttype";
 import type { AssignedDocRow, ReassignDocumentPayload } from "./types";
 import {
@@ -114,7 +115,7 @@ export default function ReassignDocumentModal({
       }
     >
       <ModalFormField>
-        <InputFloatingLabel
+        <FloatingLabelInput
           label="Employee ID"
           value={employeeID ?? row?.salesForceId ?? ""}
           readOnly
@@ -122,7 +123,7 @@ export default function ReassignDocumentModal({
       </ModalFormField>
 
       <ModalFormField>
-        <InputFloatingLabel
+        <FloatingLabelInput
           label="Document Code"
           value={row?.documentCode ?? ""}
           readOnly
@@ -130,7 +131,7 @@ export default function ReassignDocumentModal({
       </ModalFormField>
 
       <ModalFormField fullWidth>
-        <InputFloatingLabel
+        <FloatingLabelInput
           label="Current Assignee"
           value={row?.employeeName ?? ""}
           readOnly
@@ -138,17 +139,21 @@ export default function ReassignDocumentModal({
       </ModalFormField>
 
       <ModalFormField fullWidth>
-        <SelectFloatingLabel
+        <FloatingLabelSelect
           label="Reassign To"
-          collection={employeeCollection}
-          value={newEmployeeId ? [newEmployeeId] : []}
-          onValueChanged={(vals) => setNewEmployeeId(vals[0] ?? "")}
-          required
-        />
+          value={newEmployeeId}
+          onChange={(e) => setNewEmployeeId(e.target.value)}
+        >
+          {employeeCollection.items.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </FloatingLabelSelect>
       </ModalFormField>
 
       <ModalFormField fullWidth>
-        <InputFloatingLabel
+        <FloatingLabelInput
           label="Remarks"
           placeholder="Enter remarks"
           value={remarks}

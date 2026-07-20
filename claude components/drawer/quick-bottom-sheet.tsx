@@ -6,15 +6,19 @@ import {
   Dialog,
   Drawer,
   Flex,
+  Input,
+  InputGroup,
   Portal,
-  Separator,
   Text,
   VStack,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import { ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search } from "lucide-react";
+import { motion, useDragControls } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
+
+/** Below this count the list is short enough to scan without a search box. */
+const SEARCH_THRESHOLD = 10;
 
 export type QuickBottomSheetOption = {
   value: string;
@@ -32,7 +36,6 @@ type Props = {
   subtitle?: string;
   options: QuickBottomSheetOption[];
   onConfirm: (value: string) => void;
-  continueLabel?: string;
   defaultValue?: string;
 };
 
@@ -66,8 +69,12 @@ function OptionList({
             py={4}
             cursor="pointer"
             transition="all 0.14s"
-            boxShadow={active ? "0 0 0 3px var(--chakra-colors-primary-disabled)" : "xs"}
-            _hover={active ? undefined : { borderColor: "green.300", bg: "green.50" }}
+            boxShadow={
+              active ? "0 0 0 3px var(--chakra-colors-primary-disabled)" : "xs"
+            }
+            _hover={
+              active ? undefined : { borderColor: "green.300", bg: "green.50" }
+            }
             onClick={() => onSelect(opt.value)}
           >
             <Flex align="center" gap={3}>
@@ -100,14 +107,18 @@ function OptionList({
                 h="20px"
                 borderRadius="full"
                 borderWidth="1.5px"
-                borderColor={active ? "var(--chakra-colors-primary)" : "gray.300"}
+                borderColor={
+                  active ? "var(--chakra-colors-primary)" : "gray.300"
+                }
                 bg={active ? "var(--chakra-colors-primary)" : "white"}
                 flexShrink={0}
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
               >
-                {active && <Box w="8px" h="8px" borderRadius="full" bg="white" />}
+                {active && (
+                  <Box w="8px" h="8px" borderRadius="full" bg="white" />
+                )}
               </Box>
             </Flex>
           </Box>
@@ -117,38 +128,27 @@ function OptionList({
   );
 }
 
-function ContinueButton({
-  selected,
-  label,
-  onClick,
+function SearchBox({
+  value,
+  onChange,
+  autoFocus,
 }: {
-  selected: boolean;
-  label: string;
-  onClick: () => void;
+  value: string;
+  onChange: (value: string) => void;
+  autoFocus?: boolean;
 }) {
   return (
-    <Box
-      as="button"
-      w="full"
-      py={3}
-      borderRadius="xl"
-      bg={selected ? "var(--chakra-colors-primary)" : "gray.200"}
-      color={selected ? "white" : "gray.400"}
-      fontWeight="semibold"
-      fontSize="sm"
-      cursor={selected ? "pointer" : "not-allowed"}
-      transition="all 0.14s"
-      display="flex"
-      alignItems="center"
-      justifyContent="center"
-      gap={1}
-      onClick={onClick}
-      _hover={selected ? { opacity: 0.9 } : undefined}
-      _active={selected ? { transform: "scale(0.98)" } : undefined}
-    >
-      {label}
-      <ChevronRight size={16} />
-    </Box>
+    <InputGroup startElement={<Search size={15} />} my={3}>
+      <Input
+        autoFocus={autoFocus}
+        size="sm"
+        borderRadius="lg"
+        bg="white"
+        placeholder="Search…"
+        value={value}
+        onChange={(e) => onChange(e.currentTarget.value)}
+      />
+    </InputGroup>
   );
 }
 
@@ -159,12 +159,37 @@ export function QuickBottomSheet({
   subtitle,
   options,
   onConfirm,
-  continueLabel = "Continue",
   defaultValue,
 }: Props) {
   const [selected, setSelected] = useState<string | null>(defaultValue ?? null);
+  const [query, setQuery] = useState("");
   const [hasMounted, setHasMounted] = useState(false);
   const isDesktop = useBreakpointValue({ base: false, md: true }) ?? false;
+  const dragControls = useDragControls();
+
+  // Re-sync from `defaultValue` each time the sheet opens, discarding any
+  // unconfirmed selection (and search text) from a previous open. This runs
+  // instead of remounting via a `key` prop — swapping keys while `open` is
+  // also flipping to false in the same batch unmounts the Dialog/Drawer mid
+  // close and can crash focus-trap's teardown ("needs at least one
+  // focusable element").
+  useEffect(() => {
+    if (open) {
+      setSelected(defaultValue ?? null);
+      setQuery("");
+    }
+  }, [open, defaultValue]);
+
+  const showSearch = options.length > SEARCH_THRESHOLD;
+  const q = query.trim().toLowerCase();
+  const filteredOptions =
+    showSearch && q
+      ? options.filter(
+          (o) =>
+            o.label.toLowerCase().includes(q) ||
+            (o.description?.toLowerCase().includes(q) ?? false),
+        )
+      : options;
 
   // Defer rendering until the breakpoint is resolved on the client. Otherwise
   // the first render mounts the mobile Drawer and the second swaps in the
@@ -192,9 +217,9 @@ export function QuickBottomSheet({
     return () => window.clearTimeout(t);
   }, [open]);
 
-  const handleConfirm = () => {
-    if (!selected) return;
-    onConfirm(selected);
+  const handleSelect = (value: string) => {
+    setSelected(value);
+    onConfirm(value);
     onOpenChange(false);
   };
 
@@ -207,7 +232,7 @@ export function QuickBottomSheet({
         onOpenChange={(e) => onOpenChange(e.open)}
         placement="center"
         closeOnEscape={false}
-        closeOnInteractOutside={false}
+        closeOnInteractOutside
       >
         <Portal>
           <Dialog.Backdrop bg="blackAlpha.500" backdropFilter="blur(4px)" />
@@ -221,7 +246,13 @@ export function QuickBottomSheet({
               overflow="hidden"
             >
               <Dialog.Body px={5} pt={6} pb={2}>
-                <Text fontSize="xl" fontWeight="bold" lineHeight="1.25" color="gray.900" mb={1}>
+                <Text
+                  fontSize="xl"
+                  fontWeight="bold"
+                  lineHeight="1.25"
+                  color="gray.900"
+                  mb={1}
+                >
                   {title}
                 </Text>
                 {subtitle && (
@@ -229,18 +260,28 @@ export function QuickBottomSheet({
                     {subtitle}
                   </Text>
                 )}
-                <OptionList options={options} selected={selected} onSelect={setSelected} />
+                {showSearch && (
+                  <SearchBox value={query} onChange={setQuery} autoFocus />
+                )}
+                <Box maxH="45vh" overflowY="auto">
+                  {filteredOptions.length === 0 ? (
+                    <Text
+                      fontSize="sm"
+                      color="gray.500"
+                      textAlign="center"
+                      py={5}
+                    >
+                      No matches
+                    </Text>
+                  ) : (
+                    <OptionList
+                      options={filteredOptions}
+                      selected={selected}
+                      onSelect={handleSelect}
+                    />
+                  )}
+                </Box>
               </Dialog.Body>
-
-              <Separator opacity={0.2} mt={3} />
-
-              <Dialog.Footer px={5} py={4}>
-                <ContinueButton
-                  selected={!!selected}
-                  label={continueLabel}
-                  onClick={handleConfirm}
-                />
-              </Dialog.Footer>
             </Dialog.Content>
           </Dialog.Positioner>
         </Portal>
@@ -254,13 +295,23 @@ export function QuickBottomSheet({
       onOpenChange={(e) => onOpenChange(e.open)}
       placement="bottom"
       closeOnEscape={false}
-      closeOnInteractOutside={false}
+      closeOnInteractOutside
     >
       <Portal>
         <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
         <Drawer.Positioner>
           <Drawer.Content asChild bg="transparent" shadow="none">
             <MotionBox
+              drag="y"
+              dragControls={dragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={{ top: 0, bottom: 0.6 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 120 || info.velocity.y > 500) {
+                  onOpenChange(false);
+                }
+              }}
               initial={{ y: 500, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 500, opacity: 0 }}
@@ -275,12 +326,30 @@ export function QuickBottomSheet({
                 flexDirection: "column",
               }}
             >
-              <Box pt={3} pb={1} display="flex" justifyContent="center">
-                <Box w="36px" h="4px" bg="gray.300" borderRadius="full" opacity={0.6} />
+              <Box
+                pt={3}
+                pb={1}
+                display="flex"
+                justifyContent="center"
+                onPointerDown={(e) => dragControls.start(e)}
+                style={{ touchAction: "none", cursor: "grab" }}
+              >
+                <Box
+                  w="36px"
+                  h="4px"
+                  bg="gray.300"
+                  borderRadius="full"
+                  opacity={0.6}
+                />
               </Box>
 
               <Box px={5} pt={4} pb={3}>
-                <Text fontSize="xl" fontWeight="bold" lineHeight="1.25" color="gray.900">
+                <Text
+                  fontSize="xl"
+                  fontWeight="bold"
+                  lineHeight="1.25"
+                  color="gray.900"
+                >
                   {title}
                 </Text>
                 {subtitle && (
@@ -291,18 +360,26 @@ export function QuickBottomSheet({
               </Box>
 
               <Drawer.Body px={4} pb={2} pt={0}>
-                <OptionList options={options} selected={selected} onSelect={setSelected} />
+                {showSearch && <SearchBox value={query} onChange={setQuery} />}
+                <Box maxH="50vh" overflowY="auto">
+                  {filteredOptions.length === 0 ? (
+                    <Text
+                      fontSize="sm"
+                      color="gray.500"
+                      textAlign="center"
+                      py={5}
+                    >
+                      No matches
+                    </Text>
+                  ) : (
+                    <OptionList
+                      options={filteredOptions}
+                      selected={selected}
+                      onSelect={handleSelect}
+                    />
+                  )}
+                </Box>
               </Drawer.Body>
-
-              <Separator opacity={0.2} />
-
-              <Box px={4} py={4}>
-                <ContinueButton
-                  selected={!!selected}
-                  label={continueLabel}
-                  onClick={handleConfirm}
-                />
-              </Box>
             </MotionBox>
           </Drawer.Content>
         </Drawer.Positioner>

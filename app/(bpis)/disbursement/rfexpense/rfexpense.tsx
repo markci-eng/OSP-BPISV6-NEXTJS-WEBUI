@@ -17,11 +17,9 @@ import {
 import { BsPrinter } from "react-icons/bs";
 import { FaMoneyBillWave, FaWallet } from "react-icons/fa6";
 import { LuPencilLine } from "react-icons/lu";
-import {
-  InputFloatingLabel,
-  PrimaryMdFlexButton,
-  SelectFloatingLabel,
-} from "st-peter-ui";
+import { PrimaryMdFlexButton } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 
 export default function RFexpense() {
   const expense = 25000;
@@ -89,15 +87,18 @@ export default function RFexpense() {
               }}
               gapX={{ base: 0, md: 2 }}
             >
-              <InputFloatingLabel label="PCV Number" />
-              <SelectFloatingLabel
-                label="Account Name"
-                collection={AccountName}
-              />
-              <InputFloatingLabel type="date" label="PCV Date" />
-              <InputFloatingLabel type="number" label="PCV Amount" />
-              <InputFloatingLabel label="Pay To" />
-              <InputFloatingLabel label="Remarks" />
+              <FloatingLabelInput label="PCV Number" />
+              <FloatingLabelSelect label="Account Name">
+                {AccountName.items.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </FloatingLabelSelect>
+              <FloatingLabelInput type="date" label="PCV Date" />
+              <FloatingLabelInput type="number" label="PCV Amount" />
+              <FloatingLabelInput label="Pay To" />
+              <FloatingLabelInput label="Remarks" />
             </Grid>
 
             <Flex justify="flex-end" mt={4}>
@@ -119,7 +120,7 @@ export default function RFexpense() {
               draggable: false,
               selection: false,
               filtering: false,
-              columnToggle: false,
+              columnToggle: true,
             }}
             headerActions={
               <Flex w="full" justify="flex-end">

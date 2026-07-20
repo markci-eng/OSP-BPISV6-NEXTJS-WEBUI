@@ -1,6 +1,6 @@
 import { Flex, Separator, Strong, Tabs } from "@chakra-ui/react";
 import { LuHouse, LuNotebook, LuUser } from "react-icons/lu";
-import { InputFloatingLabel } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 
 const AgentEditFormMobile = () => {
   return (
@@ -34,10 +34,10 @@ const AgentEditFormMobile = () => {
             <Separator />
 
             <Flex flexDir="column" px={1}>
-              <InputFloatingLabel marginBottom={0} label="Last Name" />
-              <InputFloatingLabel marginBottom={0} label="First Name" />
-              <InputFloatingLabel marginBottom={0} label="Midlle Name" />
-              <InputFloatingLabel marginBottom={0} label="Suffix" />
+              <FloatingLabelInput marginBottom={0} label="Last Name" />
+              <FloatingLabelInput marginBottom={0} label="First Name" />
+              <FloatingLabelInput marginBottom={0} label="Midlle Name" />
+              <FloatingLabelInput marginBottom={0} label="Suffix" />
             </Flex>
           </Flex>
 
@@ -49,17 +49,17 @@ const AgentEditFormMobile = () => {
             <Separator />
 
             <Flex flexDir="column" px={1}>
-              <InputFloatingLabel marginBottom={0} label="Gender" />
-              <InputFloatingLabel marginBottom={0} label="Date Of Birth" />
-              <InputFloatingLabel marginBottom={0} label="Place of Birth" />
-              <InputFloatingLabel marginBottom={0} label="Civil Status" />
-              <InputFloatingLabel marginBottom={0} label="Nationality" />
-              <InputFloatingLabel
+              <FloatingLabelInput marginBottom={0} label="Gender" />
+              <FloatingLabelInput marginBottom={0} label="Date Of Birth" />
+              <FloatingLabelInput marginBottom={0} label="Place of Birth" />
+              <FloatingLabelInput marginBottom={0} label="Civil Status" />
+              <FloatingLabelInput marginBottom={0} label="Nationality" />
+              <FloatingLabelInput
                 marginBottom={0}
                 label="Naturalization Date"
               />
-              <InputFloatingLabel marginBottom={0} label="Height" />
-              <InputFloatingLabel marginBottom={0} label="Weight" />
+              <FloatingLabelInput marginBottom={0} label="Height" />
+              <FloatingLabelInput marginBottom={0} label="Weight" />
             </Flex>
           </Flex>
         </Flex>
@@ -75,13 +75,13 @@ const AgentEditFormMobile = () => {
             <Separator />
 
             <Flex flexDir="column" px={1}>
-              <InputFloatingLabel label="Lot/Bldg/Unit No." />
-              <InputFloatingLabel label="Street" />
-              <InputFloatingLabel label="Barangay" />
-              <InputFloatingLabel label="District" />
-              <InputFloatingLabel label="City" />
-              <InputFloatingLabel label="Province" />
-              <InputFloatingLabel label="Zip Code" />
+              <FloatingLabelInput label="Lot/Bldg/Unit No." />
+              <FloatingLabelInput label="Street" />
+              <FloatingLabelInput label="Barangay" />
+              <FloatingLabelInput label="District" />
+              <FloatingLabelInput label="City" />
+              <FloatingLabelInput label="Province" />
+              <FloatingLabelInput label="Zip Code" />
             </Flex>
           </Flex>
 
@@ -93,13 +93,13 @@ const AgentEditFormMobile = () => {
             <Separator />
 
             <Flex flexDir="column" px={1}>
-              <InputFloatingLabel label="Lot/Bldg/Unit No." />
-              <InputFloatingLabel label="Street" />
-              <InputFloatingLabel label="Barangay" />
-              <InputFloatingLabel label="District" />
-              <InputFloatingLabel label="City" />
-              <InputFloatingLabel label="Province" />
-              <InputFloatingLabel label="Zip Code" />
+              <FloatingLabelInput label="Lot/Bldg/Unit No." />
+              <FloatingLabelInput label="Street" />
+              <FloatingLabelInput label="Barangay" />
+              <FloatingLabelInput label="District" />
+              <FloatingLabelInput label="City" />
+              <FloatingLabelInput label="Province" />
+              <FloatingLabelInput label="Zip Code" />
             </Flex>
           </Flex>
         </Flex>
@@ -115,9 +115,9 @@ const AgentEditFormMobile = () => {
             <Separator />
 
             <Flex flexDir="column" px={1}>
-              <InputFloatingLabel label="Mobile" />
-              <InputFloatingLabel label="Landline" />
-              <InputFloatingLabel label="Email" />
+              <FloatingLabelInput label="Mobile" />
+              <FloatingLabelInput label="Landline" />
+              <FloatingLabelInput label="Email" />
             </Flex>
           </Flex>
         </Flex>

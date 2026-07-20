@@ -2,7 +2,8 @@
 
 import { Badge, Box, Grid } from "@chakra-ui/react";
 import { createListCollection } from "@chakra-ui/react";
-import { InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { BatchInfo, CREDIT_MEMO_TYPES, getDepositStatus } from "./types";
 import Card from "@/components/cards/Card";
 
@@ -57,26 +58,36 @@ export function BatchHeaderForm({ batch, onChange }: BatchHeaderFormProps) {
           }}
           gap={4}
         >
-          <InputFloatingLabel
+          <FloatingLabelInput
             label="Batch No"
             value={batch.batchNo}
             onChange={(e) => onChange({ ...batch, batchNo: e.target.value })}
           />
-          <SelectFloatingLabel
+          <FloatingLabelSelect
             label="Credit Memo Type"
-            collection={memoTypeCollection}
-            value={batch.type ? [batch.type] : []}
-            onValueChanged={(e) =>
-              onChange({ ...batch, type: e[0] as BatchInfo["type"] })
+            value={batch.type ?? ""}
+            onChange={(e) =>
+              onChange({ ...batch, type: e.target.value as BatchInfo["type"] })
             }
-          />
-          <SelectFloatingLabel
+          >
+            {memoTypeCollection.items.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </FloatingLabelSelect>
+          <FloatingLabelSelect
             label="Subtype"
-            collection={subtypeCollection}
-            value={batch.subtype ? [batch.subtype] : []}
-            onValueChanged={(e) => onChange({ ...batch, subtype: e[0] })}
-          />
-          <InputFloatingLabel
+            value={batch.subtype ?? ""}
+            onChange={(e) => onChange({ ...batch, subtype: e.target.value })}
+          >
+            {subtypeCollection.items.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </FloatingLabelSelect>
+          <FloatingLabelInput
             label="Description"
             value={batch.description}
             onChange={(e) => onChange({ ...batch, description: e.target.value })}

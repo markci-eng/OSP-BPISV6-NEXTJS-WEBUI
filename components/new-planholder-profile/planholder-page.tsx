@@ -48,7 +48,7 @@ import {
   ACCOUNT_SUMMARY_STEPS,
   OnboardingTutorial,
 } from "./onboarding-tutorial";
-import { SecondarySmButton, TertiarySmButton } from "st-peter-ui";
+import { SecondarySmButton } from "st-peter-ui";
 import ActionButtons from "../../claude components/buttons/ActionButtons";
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";
 
@@ -274,15 +274,16 @@ export default function PlanholderProfilePage({
   //   </Flex>
   // ) : undefined;
 
-  const actionButtonDefs = [
+  // Primary actions — surfaced as visible toolbar buttons on desktop
+  const primaryActions = [
     {
       label: "Edit",
       href: `/plan-management/planholder/${props.planholderInfo?.personId}/edit`,
-      icon: () => <LuUserPen size={16} />,
+      icon: LuUserPen,
     },
     {
       label: "Delete",
-      icon: () => <LuTrash2 size={16} />,
+      icon: LuTrash2,
       onClick: () =>
         messageBox({
           title: "Unable to delete planholder.",
@@ -291,17 +292,44 @@ export default function PlanholderProfilePage({
           variant: "error",
         }),
     },
-
     ...(props.hyperlinks?.payMyPlan
       ? [
           {
             label: "Pay My Plan",
             href: props.hyperlinks.payMyPlan as string,
-            icon: () => <MdPayment size={16} />,
+            icon: MdPayment,
           },
         ]
       : []),
+  ];
 
+  // Secondary actions — kept in the overflow quick-actions sheet
+  const overflowActions = [
+    {
+      label: "Edit",
+      href: `/plan-management/planholder/${props.planholderInfo?.personId}/edit`,
+      icon: LuUserPen,
+    },
+    {
+      label: "Delete",
+      icon: LuTrash2,
+      onClick: () =>
+        messageBox({
+          title: "Unable to delete planholder.",
+          message: "Unable to delete planholder with active plans.",
+          confirmText: "Dismiss",
+          variant: "error",
+        }),
+    },
+    ...(props.hyperlinks?.payMyPlan
+      ? [
+          {
+            label: "Pay My Plan",
+            href: props.hyperlinks.payMyPlan as string,
+            icon: MdPayment,
+          },
+        ]
+      : []),
     ...(props.hyperlinks?.changeOfMode
       ? [
           {
@@ -353,13 +381,44 @@ export default function PlanholderProfilePage({
       : []),
   ];
 
+  // On mobile every action lives in the overflow sheet
+  const actionButtonDefs = [...primaryActions, ...overflowActions];
+
+  const handleAction = (action: { href?: string; onClick?: () => void }) => {
+    if (action.onClick) action.onClick();
+    else if (action.href) router.push(action.href);
+  };
+
   return (
     <Page.Root
       title={"Planholder Profile"}
       description="Clear Access to Every Planholder Detail."
     >
       <Page.ToolContent>
-        {props.planholderInfo && <ActionButtons buttons={actionButtonDefs} />}
+        {props.planholderInfo && (
+          <>
+            {/* Desktop — surface primary actions as buttons, rest in overflow */}
+            <Flex display={{ base: "none", lg: "flex" }} align="center" gap={2}>
+              {primaryActions.map((action) => (
+                <SecondarySmButton
+                  key={action.label}
+                  onClick={() => handleAction(action)}
+                >
+                  <action.icon />
+                  {action.label}
+                </SecondarySmButton>
+              ))}
+              {overflowActions.length > 0 && (
+                <ActionButtons buttons={overflowActions} />
+              )}
+            </Flex>
+
+            {/* Mobile — keep every action in the overflow sheet */}
+            <Box display={{ base: "block", lg: "none" }}>
+              <ActionButtons buttons={actionButtonDefs} />
+            </Box>
+          </>
+        )}
       </Page.ToolContent>
       <Page.MainContent>
         {/* Mobile empty state — visible only on mobile when no planholder is selected */}

@@ -68,7 +68,7 @@ export function ChangeModePage({
         <ChangeModeSummaryPage
           selectedPlans={checkedPlans}
           onSubmit={handleSubmit}
-          onBack={() => {}}
+          onBack={() => setCurrentStep(0)}
         />
       ),
     },

@@ -38,7 +38,6 @@ import {
   BreadcrumbItemType,
   CancelButton,
   H3,
-  InputFloatingLabel,
   SaveButton,
 } from "st-peter-ui";
 import { PlanholderHamburgerModules } from "./components/planholder-hamburger-modules";
@@ -57,6 +56,7 @@ import { PlanholderLookup } from "@/components/common/planholder-lookup/planhold
 import { useRouter } from "next/navigation";
 import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
 import RequestHistoryDrawer from "@/components/drawers/request-history-drawer";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 
 export interface PlanholderInfoType {
   personId: string;
@@ -399,23 +399,23 @@ export function PlanholderProfilePage({
                         lg: "repeat(3, 1fr)",
                       }}
                     >
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"First Name"}
                         value={props.planholderInfo?.firstName ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Middle Name"}
                         value={props.planholderInfo?.middleName ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Last Name"}
                         value={props.planholderInfo?.lastName ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Nationality"}
                         value={props.planholderInfo?.nationality ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Naturalization Date"}
                         type="date"
                         value={
@@ -424,7 +424,7 @@ export function PlanholderProfilePage({
                             : "1900-01-01"
                         }
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Date of Birth"}
                         type="date"
                         value={
@@ -433,23 +433,23 @@ export function PlanholderProfilePage({
                             : "1900-01-01"
                         }
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Place of Birth"}
                         value={props.planholderInfo?.placeOfBirth ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Gender"}
                         value={props.planholderInfo?.gender ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Civil Status"}
                         value={props.planholderInfo?.civilStatus ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Height"}
                         value={props.planholderInfo?.height ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Weight"}
                         value={
                           props.planholderInfo?.weight?.toLocaleString() ?? ""
@@ -469,31 +469,31 @@ export function PlanholderProfilePage({
                         lg: "repeat(2, 1fr)",
                       }}
                     >
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Lot Number"}
                         value={addresses?.residence?.[0]?.addressNo ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Street"}
                         value={addresses?.residence?.[0]?.street ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Barangay"}
                         value={addresses?.residence?.[0]?.barangay ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"District"}
                         value={addresses?.residence?.[0]?.district ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"City"}
                         value={addresses?.residence?.[0]?.city ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Province"}
                         value={addresses?.residence?.[0]?.province ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Zip Code"}
                         type="number"
                         value={
@@ -506,7 +506,7 @@ export function PlanholderProfilePage({
                     <Strong>Contact Information</Strong>
 
                     <Flex direction="column">
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Email Address"}
                         value={
                           props.planholderContact?.find(
@@ -515,7 +515,7 @@ export function PlanholderProfilePage({
                         }
                         required
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Mobile Number"}
                         value={
                           props.planholderContact?.find(
@@ -524,7 +524,7 @@ export function PlanholderProfilePage({
                         }
                         required
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Landline (Optional)"}
                         value={
                           props.planholderContact?.find(
@@ -543,19 +543,19 @@ export function PlanholderProfilePage({
                         lg: "repeat(2, 1fr)",
                       }}
                     >
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Employer"}
                         value={props.planholderInfo?.employerName ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"TIN"}
                         value={props.planholderInfo?.tin ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"SSS/GSIS Number"}
                         value={props.planholderInfo?.securityNo ?? ""}
                       />
-                      <InputFloatingLabel
+                      <FloatingLabelInput
                         label={"Source of Fund if Not Employed"}
                         value={props.planholderInfo?.sourceOfFund ?? ""}
                       />

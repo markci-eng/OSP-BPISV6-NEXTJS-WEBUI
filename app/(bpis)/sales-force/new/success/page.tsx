@@ -1,7 +1,16 @@
 "use client";
-import { Box, Button, Flex, Heading, Icon, Stack, Text, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Icon,
+  Stack,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { LuCircleCheck } from "react-icons/lu";
+import { LuCheck } from "react-icons/lu";
 
 const page = () => {
   const router = useRouter();
@@ -23,7 +32,12 @@ const page = () => {
       px={{ base: 4, md: 6 }}
       py={{ base: 12, md: 16 }}
     >
-      <VStack w="full" maxW={{ base: "md", md: "lg" }} gap={8} textAlign="center">
+      <VStack
+        w="full"
+        maxW={{ base: "md", md: "lg" }}
+        gap={8}
+        textAlign="center"
+      >
         <Flex
           boxSize={{ base: 20, md: 24 }}
           borderWidth={4}
@@ -34,16 +48,21 @@ const page = () => {
           bg="white"
           shadow="sm"
         >
-          <Icon as={LuCircleCheck} boxSize={{ base: 10, md: 12 }} color="green.500" />
+          <Icon as={LuCheck} boxSize={{ base: 10, md: 12 }} color="green.500" />
         </Flex>
 
-        <Heading fontSize={{ base: "2xl", md: "3xl" }} fontWeight="bold" color="gray.900">
+        <Heading
+          fontSize={{ base: "2xl", md: "3xl" }}
+          fontWeight="bold"
+          color="gray.900"
+        >
           Agent Created
         </Heading>
 
         <Text fontSize={{ base: "sm", md: "md" }} color="gray.600">
-          The new sales agent has been registered successfully. A confirmation email has also been
-          sent, and you can view or track this anytime in your account.
+          The new sales agent has been registered successfully. A confirmation
+          email has also been sent, and you can view or track this anytime in
+          your account.
         </Text>
 
         <Box
@@ -54,7 +73,12 @@ const page = () => {
           shadow="sm"
           p={{ base: 4, md: 6 }}
         >
-          <Text fontWeight="semibold" mb={2} color="gray.700" fontSize={{ base: "sm", md: "md" }}>
+          <Text
+            fontWeight="semibold"
+            mb={2}
+            color="gray.700"
+            fontSize={{ base: "sm", md: "md" }}
+          >
             Reference Details
           </Text>
           <Box h="1px" bg="gray.200" mb={4} />
@@ -74,11 +98,24 @@ const page = () => {
           </VStack>
         </Box>
 
-        <Stack direction={{ base: "column", sm: "row" }} gap={4} w="full" justify="center">
-          <Button variant="outline" w={{ base: "full", sm: "auto" }} onClick={() => router.push("/")}>
+        <Stack
+          direction={{ base: "column", sm: "row" }}
+          gap={4}
+          w="full"
+          justify="center"
+        >
+          <Button
+            variant="outline"
+            w={{ base: "full", sm: "auto" }}
+            onClick={() => router.push("/")}
+          >
             Go back to Home
           </Button>
-          <Button colorScheme="blue" w={{ base: "full", sm: "auto" }} onClick={() => router.push("/sales-force/new")}>
+          <Button
+            colorScheme="blue"
+            w={{ base: "full", sm: "auto" }}
+            onClick={() => router.push("/sales-force/new")}
+          >
             Add New Sales Agent
           </Button>
         </Stack>

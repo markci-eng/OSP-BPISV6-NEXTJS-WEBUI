@@ -9,6 +9,8 @@ import BottomQuickActions, {
 import { LuEllipsis } from "react-icons/lu";
 import { IoGrid, IoGridOutline } from "react-icons/io5";
 import { BsFillGrid3X2GapFill } from "react-icons/bs";
+import { SecondaryMdButton, SecondarySmButton } from "st-peter-ui";
+import { FaEllipsis } from "react-icons/fa6";
 
 export type ActionButtonItem =
   | {
@@ -68,7 +70,7 @@ export default function ActionButtons({
       >
         Actions <BiCaretDown />
       </Button> */}
-      <IconButton
+      {/* <IconButton
         onClick={() => setOpen(true)}
         borderRadius="10px"
         boxShadow={"sm"}
@@ -77,9 +79,11 @@ export default function ActionButtons({
         borderColor={"gray.200"}
         color={"gray.600"}
       >
-        {/* <IoGrid /> */}
         <BsFillGrid3X2GapFill />
-      </IconButton>
+      </IconButton> */}
+      <SecondarySmButton onClick={() => setOpen(true)}>
+        <FaEllipsis /> More
+      </SecondarySmButton>
 
       <BottomQuickActions
         open={open}

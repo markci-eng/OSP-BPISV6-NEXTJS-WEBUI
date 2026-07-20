@@ -5,6 +5,7 @@ import { Box, Separator, Text } from "@chakra-ui/react";
 import { BottomQuickActions } from "@/claude components/drawer/bottom-quick-actions";
 import type { QuickAction } from "@/claude components/drawer/bottom-quick-actions";
 import { RowItem } from "@/claude components/info-card/row-item";
+import { formatLabel } from "../utils";
 
 type DataTableDetailDrawerProps<TData> = {
   title?: React.ReactNode;
@@ -13,12 +14,6 @@ type DataTableDetailDrawerProps<TData> = {
   actions?: QuickAction[];
   onClose: () => void;
 };
-
-const formatKey = (key: string) =>
-  key
-    .replace(/([A-Z])/g, " $1")
-    .replace(/_/g, " ")
-    .trim();
 
 const isNumericField = (value: unknown): boolean =>
   typeof value === "number";
@@ -53,7 +48,7 @@ export function DataTableDetailDrawer<TData>({
                     Information
                   </Text>
                   {textFields.map(([key, value]) => (
-                    <RowItem key={key} label={formatKey(key)} value={value} />
+                    <RowItem key={key} label={formatLabel(key)} value={value} />
                   ))}
                 </Box>
               )}
@@ -72,7 +67,7 @@ export function DataTableDetailDrawer<TData>({
                     Amounts
                   </Text>
                   {numericFields.map(([key, value]) => (
-                    <RowItem key={key} label={formatKey(key)} value={value} />
+                    <RowItem key={key} label={formatLabel(key)} value={value} />
                   ))}
                 </Box>
               )}

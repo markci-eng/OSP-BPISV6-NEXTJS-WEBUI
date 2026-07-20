@@ -26,8 +26,8 @@ import {
 } from "@tanstack/react-table";
 import { BsX } from "react-icons/bs";
 import type { ColumnFiltersState, Row } from "@tanstack/react-table";
-import { InputFloatingLabel } from "st-peter-ui";
 import { LuChevronsLeft, LuChevronsRight } from "react-icons/lu";
+import { FloatingLabelInput } from "../inputs/floating-label-input";
 
 // A tiny default global filter: checks any cell text
 const defaultGlobalFilter: FilterFn<any> = (row, _columnId, filterValue) => {
@@ -249,7 +249,7 @@ export function TanstackDataTable<T>({
                 ) : undefined
               }
             >
-              <InputFloatingLabel
+              <FloatingLabelInput
                 key={inputKey}
                 size={"md"}
                 textStyle={"xs"}

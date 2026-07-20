@@ -64,7 +64,7 @@ export function TransferOfRightsPage() {
     {
       title: "Review & Submit",
       description: "Review your application before submission.",
-      content: <TFReviewApplicationPage />,
+      content: <TFReviewApplicationPage onEditStep={setCurrentStep} />,
       icon: FaFileShield,
     },
   ];

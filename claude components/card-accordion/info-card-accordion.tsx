@@ -27,11 +27,7 @@ export function InfoCardAccordion({
   onToggle,
   h,
 }: InfoCardAccordionProps) {
-  const [internalOpen, setInternalOpen] = useState(() => {
-    if (defaultOpen !== undefined) return defaultOpen;
-    if (typeof window !== "undefined") return window.innerWidth >= 768;
-    return false;
-  });
+  const [internalOpen, setInternalOpen] = useState(defaultOpen ?? false);
   const isControlled = controlledOpen !== undefined;
   const isOpen = isControlled ? controlledOpen : internalOpen;
 

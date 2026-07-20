@@ -1,5 +1,7 @@
-import DocumentManagement from "./document-management";
+// import DocumentManagement from "./_redesign/DocumentManagement";
 
-export default function page() {
+import DocumentManagement from "./_legacy/document-management";
+
+export default function Page() {
   return <DocumentManagement />;
 }

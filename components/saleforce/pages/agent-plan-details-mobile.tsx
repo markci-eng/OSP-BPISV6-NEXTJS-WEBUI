@@ -112,7 +112,7 @@ const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
                 pagination: true,
                 selection: false,
                 draggable: false,
-                columnToggle: false,
+                columnToggle: true,
                 detailSidebar: false,
               }}
               mobileConfig={{

@@ -67,6 +67,11 @@ export function PlanholderPage({ props }: { props: PlanholdersProps }) {
                         fontWeight="semibold"
                       >
                         <Flex
+                          as="button"
+                          w="full"
+                          textAlign="left"
+                          bg="transparent"
+                          border="none"
                           align="center"
                           gap={1}
                           p={1}
@@ -80,6 +85,11 @@ export function PlanholderPage({ props }: { props: PlanholdersProps }) {
                           <Body>Pay My Plan</Body>
                         </Flex>
                         <Flex
+                          as="button"
+                          w="full"
+                          textAlign="left"
+                          bg="transparent"
+                          border="none"
                           align="center"
                           gap={1}
                           p={1} // decreased padding
@@ -96,6 +106,11 @@ export function PlanholderPage({ props }: { props: PlanholdersProps }) {
                           <Body>Reinstatement</Body>
                         </Flex>
                         <Flex
+                          as="button"
+                          w="full"
+                          textAlign="left"
+                          bg="transparent"
+                          border="none"
                           align="center"
                           gap={1}
                           p={1} // decreased padding
@@ -112,6 +127,11 @@ export function PlanholderPage({ props }: { props: PlanholdersProps }) {
                           <Body>Change of Mode</Body>
                         </Flex>
                         <Flex
+                          as="button"
+                          w="full"
+                          textAlign="left"
+                          bg="transparent"
+                          border="none"
                           align="center"
                           gap={1}
                           p={1} // decreased padding
@@ -128,6 +148,11 @@ export function PlanholderPage({ props }: { props: PlanholdersProps }) {
                           <Body>Transfer of Rights</Body>
                         </Flex>
                         <Flex
+                          as="button"
+                          w="full"
+                          textAlign="left"
+                          bg="transparent"
+                          border="none"
                           align="center"
                           gap={1}
                           p={1} // decreased padding
@@ -144,6 +169,11 @@ export function PlanholderPage({ props }: { props: PlanholdersProps }) {
                           <Body>Return of Premium</Body>
                         </Flex>
                         <Flex
+                          as="button"
+                          w="full"
+                          textAlign="left"
+                          bg="transparent"
+                          border="none"
                           align="center"
                           gap={1}
                           p={1} // decreased padding
@@ -155,6 +185,11 @@ export function PlanholderPage({ props }: { props: PlanholdersProps }) {
                           <Body>Claim Application</Body>
                         </Flex>
                         <Flex
+                          as="button"
+                          w="full"
+                          textAlign="left"
+                          bg="transparent"
+                          border="none"
                           align="center"
                           gap={1}
                           p={1} // decreased padding

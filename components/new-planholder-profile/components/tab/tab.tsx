@@ -64,7 +64,7 @@ export function Tab({ tabItems }: { tabItems: TabItem[] }) {
           }}
         >
           <ScrollArea.Content py={"8px"}>
-            <Tabs.List maxW={"full"} overflowX={"auto"}>
+            <Tabs.List maxW={"full"} overflowX={"auto"} overflowY={"hidden"}>
               {tabItems.map((tab) => {
                 const TabIcon = tab.icon;
 

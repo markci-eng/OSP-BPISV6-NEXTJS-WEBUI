@@ -4,6 +4,7 @@
 import * as React from "react";
 import {
   Box,
+  CloseButton,
   Flex,
   Drawer,
   useBreakpointValue,
@@ -111,6 +112,9 @@ export function SplitDetailsShell<T>({
           <Drawer.Backdrop />
           <Drawer.Positioner>
             <Drawer.Content>
+              <Drawer.CloseTrigger asChild position="absolute" top={2} insetEnd={2} zIndex={1}>
+                <CloseButton size="sm" />
+              </Drawer.CloseTrigger>
               <Drawer.Body p={0}>
                 {renderDetails({ selected, close })}
               </Drawer.Body>

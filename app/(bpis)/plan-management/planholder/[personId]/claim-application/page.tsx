@@ -101,6 +101,7 @@ const ClaimsPage = () => {
           planholder={planholder}
           claimInfo={claimInfo}
           payees={payees}
+          onEditStep={setCurrentStep}
         />
       ),
     },
@@ -110,7 +111,7 @@ const ClaimsPage = () => {
     <Page.Root
       title="Claim Application"
       description="Please fill out the following details."
-      headerButton="menu"
+      headerButton="back"
     >
       <Page.MainContent>
         <FormSteps

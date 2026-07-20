@@ -27,7 +27,7 @@ export function ConfirmDialog({
     <Dialog.Root
       open={open}
       onOpenChange={(details) => {
-        if (!details.open && !loading) {
+        if (!details.open) {
           onCancel();
         }
       }}
@@ -58,7 +58,7 @@ export function ConfirmDialog({
 
             <Dialog.Footer>
               <HStack gap={3}>
-                <Button variant="outline" onClick={onCancel} disabled={loading}>
+                <Button variant="outline" onClick={onCancel}>
                   Cancel
                 </Button>
 

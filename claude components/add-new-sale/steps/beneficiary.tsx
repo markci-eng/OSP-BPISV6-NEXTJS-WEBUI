@@ -29,6 +29,7 @@ import {
 } from "st-peter-ui";
 import { IBeneficiary } from "../planholder";
 import FloatingLabelInput from "../floating-label-input";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 
 const beneficiaryTypes = createListCollection({
   items: [
@@ -73,6 +74,7 @@ interface BeneficiaryProps {
 
 const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const { messageBox } = useMessageDialog();
 
   const [principalBeneficiaries, setPrincipalBeneficiaries] = useState<
     IBeneficiary[]
@@ -120,7 +122,7 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
     );
   };
 
-  const handleSaveAddBeneficiary = () => {
+  const handleSaveAddBeneficiary = async () => {
     if (
       !addFormBeneficiary.firstName ||
       !addFormBeneficiary.lastName ||
@@ -128,7 +130,12 @@ const Beneficiary = ({ onUpdate }: BeneficiaryProps) => {
       !addFormBeneficiary.relationship ||
       !addFormBeneficiary.address
     ) {
-      alert("Please fill in all required fields");
+      await messageBox({
+        title: "Missing Information",
+        message: "Please fill in all required fields.",
+        confirmText: "Okay",
+        variant: "warning",
+      });
       return;
     }
 

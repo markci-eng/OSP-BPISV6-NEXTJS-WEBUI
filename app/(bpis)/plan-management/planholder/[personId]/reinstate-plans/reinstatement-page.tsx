@@ -9,6 +9,7 @@ import PaymentPage from "./payment";
 import { FaFileShield } from "react-icons/fa6";
 import { FaFileAlt } from "react-icons/fa";
 import FormSteps from "@/components/FormSteps";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 
 const steps = ["Select Lapsed Plan", "Review Reinstatement", "Payment"];
 
@@ -21,6 +22,7 @@ export function ReinstatementPage({
 }) {
   const [checkedPlans, setCheckedPlans] = useState<CheckedPlan[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
+  const { messageBox } = useMessageDialog();
 
   const stepsData = [
     {
@@ -34,7 +36,12 @@ export function ReinstatementPage({
       ),
       validateBeforeNext: () => {
         if (checkedPlans.length === 0) {
-          alert("Please select at least one plan to reinstate.");
+          messageBox({
+            title: "No Plan Selected",
+            message: "Please select at least one plan to reinstate.",
+            confirmText: "Okay",
+            variant: "warning",
+          });
           return false;
         }
         return true;

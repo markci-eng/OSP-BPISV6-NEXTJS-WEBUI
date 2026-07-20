@@ -82,7 +82,7 @@ export default function DrsDataTable({
           draggable: false,
           selection: false,
           filtering: false,
-          columnToggle: false,
+          columnToggle: true,
         }}
         // headerContent={
         //   // <Flex justify="space-between" wrap="wrap" gap="6">

@@ -3,7 +3,14 @@
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Box, Text, Badge, HStack, VStack, Flex } from "@chakra-ui/react";
-import { Plus, Trash2, Ban, ArrowRightLeft, FileText, User } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Ban,
+  ArrowRightLeft,
+  FileText,
+  User,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -175,7 +182,12 @@ function DocSectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <Box rounded="lg" borderWidth="1px" borderColor="border.muted" overflow="hidden">
+    <Box
+      rounded="lg"
+      borderWidth="1px"
+      borderColor="border.muted"
+      overflow="hidden"
+    >
       <HStack
         gap={2}
         px={4}
@@ -202,7 +214,13 @@ function DocSectionCard({
   );
 }
 
-function DocDetailItem({ label, value }: { label: string; value: React.ReactNode }) {
+function DocDetailItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) {
   return (
     <Box width="full">
       <Flex align="center" py={1.5} fontSize="sm">
@@ -226,8 +244,9 @@ function DocDetailItem({ label, value }: { label: string; value: React.ReactNode
 
 function AssignedDocumentDetail({ row }: { row: AssignedDocRow }) {
   const statusMeta =
-    ASSIGNED_STATUS_META[row.assignedStatus as keyof typeof ASSIGNED_STATUS_META] ??
-    ASSIGNED_STATUS_META.Unassigned;
+    ASSIGNED_STATUS_META[
+      row.assignedStatus as keyof typeof ASSIGNED_STATUS_META
+    ] ?? ASSIGNED_STATUS_META.Unassigned;
 
   const range = `${row.documentStart}-${row.documentEnd}${
     row.documentExt ? ` (${row.documentExt})` : ""
@@ -472,7 +491,7 @@ export default function DocumentTable({
   return (
     <>
       {employee && (
-        <Box mb={4} px={2}>
+        <Box mb={4} px={2} mt={2}>
           <InfoCardAccordion
             icon={<User size={16} />}
             title="Assign Documents"
@@ -509,7 +528,7 @@ export default function DocumentTable({
             filtering: true,
             sorting: true,
             pagination: true,
-            columnToggle: false,
+            columnToggle: true,
             selection: false,
             draggable: false,
             detailSidebar: true,

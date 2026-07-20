@@ -15,7 +15,7 @@ import {
 import React from "react";
 import Caption from "../../texts/Caption";
 import BackButton from "./BackButton";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LuChevronLeft, LuMenu } from "react-icons/lu";
 import { useSidebarToggle } from "../sidebar-context";
 
@@ -49,13 +49,16 @@ const pageTransition: Transition = {
 
 const MobileBackBtn = () => {
   const router = useRouter();
+  const pathname = usePathname();
+
+  const parentPath = pathname.split("/").slice(0, -1).join("/");
 
   return (
     <Flex
       as="button"
       align="center"
       gap="2px"
-      onClick={() => router.back()}
+      onClick={() => router.push(parentPath)}
       cursor="pointer"
       color="green.600"
       _dark={{ color: "green.400" }}
@@ -90,6 +93,12 @@ const PageScrollShell = ({
 }: PageScrollShellProps) => {
   const toggleSidebar = useSidebarToggle();
 
+  // When a page sets overflowY it wants to own its vertical scroll: fill the
+  // scroll container and move the overflow onto the body, so the header stays
+  // fixed and only the content region scrolls (or clips, for "hidden").
+  const { overflowY, ...restBoxProps } = boxProps ?? {};
+  const ownsScroll = overflowY !== undefined;
+
   return (
     // <MotionDiv
     //   initial="initial"
@@ -107,9 +116,17 @@ const PageScrollShell = ({
     //     paddingBottom: "96px",
     //   }}
     // >
-    <Box px={{ base: 0, lg: "44px" }} paddingBottom="96px" {...boxProps}>
+    <Box
+      px={{ base: 0, lg: "44px" }}
+      paddingBottom="96px"
+      display={ownsScroll ? "flex" : undefined}
+      flexDirection={ownsScroll ? "column" : undefined}
+      h={ownsScroll ? "100%" : undefined}
+      minH={ownsScroll ? 0 : undefined}
+      {...restBoxProps}
+    >
       {/* ── MOBILE HEADER ── */}
-      <Box display={{ base: "block", lg: "none" }}>
+      <Box display={{ base: "block", lg: "none" }} flexShrink={0}>
         <Box
           position="sticky"
           top={0}
@@ -176,8 +193,8 @@ const PageScrollShell = ({
       </Box>
 
       {/* ── DESKTOP HEADER ── */}
-      <Box display={{ base: "none", lg: "block" }}>
-        <Box mx="-44px" px="66px" pt="36px" mb="0px">
+      <Box display={{ base: "none", lg: "block" }} flexShrink={0}>
+        <Box pt="10px" mb="0px">
           <Flex
             direction="row"
             align="center"
@@ -185,46 +202,53 @@ const PageScrollShell = ({
             gap="32px"
             pb="24px"
           >
-            <Box minW={0} flex="1">
-              {/* {headerButton === "back" && <BackButton />} */}
-
-              {subtitle && (
-                <Box
-                  fontFamily="var(--font-dm-sans), system-ui, sans-serif"
-                  color="fg.muted"
-                  fontSize="10px"
-                  fontWeight={700}
-                  lineHeight="1"
-                  letterSpacing="0.06em"
-                  textTransform="uppercase"
-                  mb="2px"
-                >
-                  {subtitle}
+            <Flex direction={"row"} align={"start"} gap={1}>
+              {headerButton === "back" && (
+                <Box mt={1}>
+                  <MobileBackBtn />
                 </Box>
               )}
+              <Box minW={0} flex="1">
+                {/* {headerButton === "back" && <BackButton />} */}
 
-              <Box
-                as="h1"
-                m="0"
-                fontFamily="var(--font-dm-sans), system-ui, sans-serif"
-                fontWeight={subtitle ? 600 : 500}
-                color="fg"
-                lineHeight="1"
-                letterSpacing={subtitle ? "-0.025em" : "-0.015em"}
-                fontSize={{ lg: subtitle ? "28px" : "32px" }}
-              >
-                {title}
-              </Box>
+                {subtitle && (
+                  <Box
+                    fontFamily="var(--font-dm-sans), system-ui, sans-serif"
+                    color="fg.muted"
+                    fontSize="10px"
+                    fontWeight={700}
+                    lineHeight="1"
+                    letterSpacing="0.06em"
+                    textTransform="uppercase"
+                    mb="2px"
+                  >
+                    {subtitle}
+                  </Box>
+                )}
 
-              {description && (
-                <Caption
+                <Box
+                  as="h1"
+                  m="0"
                   fontFamily="var(--font-dm-sans), system-ui, sans-serif"
-                  mt="6px"
+                  fontWeight={subtitle ? 600 : 500}
+                  color="fg"
+                  lineHeight="1"
+                  letterSpacing={subtitle ? "-0.025em" : "-0.015em"}
+                  fontSize={{ lg: subtitle ? "28px" : "32px" }}
                 >
-                  {description}
-                </Caption>
-              )}
-            </Box>
+                  {title}
+                </Box>
+
+                {description && (
+                  <Caption
+                    fontFamily="var(--font-dm-sans), system-ui, sans-serif"
+                    mt="6px"
+                  >
+                    {description}
+                  </Caption>
+                )}
+              </Box>
+            </Flex>
 
             {toolContent}
           </Flex>
@@ -232,7 +256,13 @@ const PageScrollShell = ({
       </Box>
 
       {/* ── MAIN CONTENT ── */}
-      <Box px={{ base: 4, lg: 0 }} pt={{ base: 3, lg: 0 }}>
+      <Box
+        px={{ base: 4, lg: 0 }}
+        pt={{ base: 3, lg: 0 }}
+        flex={ownsScroll ? "1" : undefined}
+        minH={ownsScroll ? 0 : undefined}
+        overflowY={ownsScroll ? overflowY : undefined}
+      >
         {mainContent}
       </Box>
     </Box>

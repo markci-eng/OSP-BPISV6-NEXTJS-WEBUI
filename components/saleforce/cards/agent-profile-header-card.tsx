@@ -2,7 +2,7 @@
 
 import {
   SalesAgent,
-  getPositionDesc,
+  SalesAgentAddress,
 } from "../../common/agent-lookup/agent-lookup.type";
 import ProfileHeaderCard from "@/components/cards/ProfileHeaderCard";
 
@@ -10,12 +10,35 @@ interface AgentProfileHeaderCardProps {
   agent?: SalesAgent;
 }
 
+/** Flatten the structured agent address into a newline-delimited string
+ *  that ProfileHeaderCard collapses into a single readable line. */
+const formatAgentAddress = (address?: SalesAgentAddress): string | undefined => {
+  if (!address) return undefined;
+  const line = [
+    address.unit,
+    address.street,
+    address.barangay,
+    address.district,
+    address.city,
+    address.province,
+    address.zipCode,
+  ]
+    .filter(Boolean)
+    .join("\n");
+  return line || undefined;
+};
+
 const AgentProfileHeaderCard = ({ agent }: AgentProfileHeaderCardProps) => {
-  const isActive = agent?.employeeStatus?.toLowerCase() === "active";
-  const positionDesc =
-    getPositionDesc(agent?.position ?? "") +
-    (agent?.branch ? ` · ${agent.branch}` : "");
-  return <ProfileHeaderCard name={agent?.name ?? undefined} />;
+  return (
+    <ProfileHeaderCard
+      name={agent?.name ?? undefined}
+      personId={agent?.id}
+      homeAddress={formatAgentAddress(agent?.address)}
+      contactNo={agent?.mobile}
+      landlineNo={agent?.landline}
+      email={agent?.email}
+    />
+  );
 };
 
 export default AgentProfileHeaderCard;

@@ -9,15 +9,16 @@ import {
   Grid,
   GridItem,
   Input,
-  NativeSelect,
   Portal,
   Separator,
+  SimpleGrid,
   Text,
   VStack,
 } from "@chakra-ui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import type { IconType } from "react-icons";
 import { FaFileAlt } from "react-icons/fa";
 import { FaFileShield } from "react-icons/fa6";
 import {
@@ -25,6 +26,7 @@ import {
   LuCirclePlus,
   LuFileText,
   LuMapPin,
+  LuMinus,
   LuPencil,
   LuPhone,
 } from "react-icons/lu";
@@ -33,6 +35,8 @@ import { z } from "zod";
 
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import DocumentUploader from "@/components/document-uploader/DragAndDrop";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import Page from "@/claude components/layout/page/Page";
 import {
   Tab,
@@ -41,7 +45,6 @@ import {
 import { Card } from "@/claude components/card-accordion/card";
 import FormSteps from "@/claude components/FormSteps";
 import InfoCard from "@/claude components/info-card/info-card";
-import { RowItem } from "@/claude components/info-card/row-item";
 import SuccessMessage from "@/claude components/pages/success-message";
 
 // ---- Types ----
@@ -104,6 +107,54 @@ type AddressFormValues = z.infer<typeof AddressSchema>;
 
 function getFullName(r: RopRecord) {
   return [r.firstName, r.middleName, r.lastName].filter(Boolean).join(" ");
+}
+
+// ---- Payout info item: dashed row on mobile, card on desktop ----
+function PayoutInfoItem({ label, value }: { label: string; value?: string }) {
+  return (
+    <Box
+      borderWidth={{ base: "0", md: "1px" }}
+      borderColor="gray.200"
+      borderRadius={{ md: "lg" }}
+      bg={{ md: "gray.50" }}
+      px={{ base: 0, md: 4 }}
+      py={{ base: 1.5, md: 3 }}
+    >
+      <Flex
+        align={{ base: "center", md: "flex-start" }}
+        direction={{ base: "row", md: "column" }}
+        gap={{ base: 0, md: 1 }}
+        fontSize="sm"
+      >
+        <Text
+          color="gray.500"
+          whiteSpace="nowrap"
+          fontSize={{ base: "sm", md: "xs" }}
+          fontWeight={{ md: "medium" }}
+        >
+          {label}
+        </Text>
+
+        <Box
+          display={{ base: "block", md: "none" }}
+          flex="1"
+          mx={3}
+          borderBottom="1px dashed"
+          borderColor="gray.300"
+          transform="translateY(2px)"
+        />
+
+        <Text
+          fontWeight={{ base: "medium", md: "semibold" }}
+          textAlign={{ base: "right", md: "left" }}
+          whiteSpace="nowrap"
+          color="gray.900"
+        >
+          {value ?? "-"}
+        </Text>
+      </Flex>
+    </Box>
+  );
 }
 
 // ---- Placeholder document box ----
@@ -269,8 +320,16 @@ function PayoutChannelStep({
         title={`${EXISTING_PAYOUT.channel} Payout`}
         subtitle="Active Registered Channel"
       >
-        <RowItem label="Payout Account" value={EXISTING_PAYOUT.account} />
-        <RowItem label="Channel Type" value={EXISTING_PAYOUT.type} />
+        <Grid
+          templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+          gap={{ base: 0, md: 3 }}
+        >
+          <PayoutInfoItem
+            label="Payout Account"
+            value={EXISTING_PAYOUT.account}
+          />
+          <PayoutInfoItem label="Channel Type" value={EXISTING_PAYOUT.type} />
+        </Grid>
 
         <Separator my={4} />
 
@@ -298,31 +357,21 @@ function PayoutChannelStep({
         gap={4}
         mt={4}
       >
-        <Field.Root>
-          <Field.Label fontSize="sm">Payout Channel</Field.Label>
-          <NativeSelect.Root size="sm">
-            <NativeSelect.Field
-              value={payoutChannel}
-              onChange={(e) => setPayoutChannel(e.target.value)}
-            >
-              <option value="">Select Payout Channel</option>
-              <option value="GCash">GCash</option>
-              <option value="Bank">Bank</option>
-              <option value="Maya">Maya</option>
-            </NativeSelect.Field>
-            <NativeSelect.Indicator />
-          </NativeSelect.Root>
-        </Field.Root>
+        <FloatingLabelSelect
+          label="Payout Channel"
+          value={payoutChannel}
+          onValueChange={setPayoutChannel}
+        >
+          <option value="GCash">GCash</option>
+          <option value="Bank">Bank</option>
+          <option value="Maya">Maya</option>
+        </FloatingLabelSelect>
 
-        <Field.Root>
-          <Field.Label fontSize="sm">Payout Account</Field.Label>
-          <Input
-            size="sm"
-            placeholder="Enter account number"
-            value={payoutAccount}
-            onChange={(e) => setPayoutAccount(e.target.value)}
-          />
-        </Field.Root>
+        <FloatingLabelInput
+          label="Payout Account"
+          value={payoutAccount}
+          onValueChange={setPayoutAccount}
+        />
 
         <GridItem colSpan={{ base: 1, md: 2 }}>
           <Text fontSize="sm" fontWeight="medium" color="gray.700" mb={2}>
@@ -356,17 +405,209 @@ function PayoutChannelStep({
   return <Tab tabItems={tabItems} />;
 }
 
+// ---- Summary building blocks (agent-summary styling) ----
+interface SummaryField {
+  label: string;
+  value?: string | null;
+}
+
+const isEmpty = (value?: string | null) => {
+  if (value == null) return true;
+  const trimmed = value.trim();
+  return trimmed === "" || trimmed.toUpperCase() === "N/A";
+};
+
+const EditButton = ({
+  onClick,
+  label = "Edit",
+}: {
+  onClick: () => void;
+  label?: string;
+}) => (
+  <Flex
+    as="button"
+    align="center"
+    gap={1.5}
+    px={3}
+    py={1.5}
+    borderRadius="lg"
+    borderWidth="1px"
+    borderColor="gray.200"
+    bg="white"
+    color="gray.700"
+    fontSize="sm"
+    fontWeight="medium"
+    cursor="pointer"
+    transition="all 0.15s ease"
+    _hover={{ bg: "gray.50", borderColor: "gray.300", color: "gray.900" }}
+    flexShrink={0}
+    onClick={onClick}
+  >
+    <Box as={LuPencil} boxSize="13px" />
+    {label}
+  </Flex>
+);
+
+const FieldCell = ({ field }: { field: SummaryField }) => {
+  const empty = isEmpty(field.value);
+  return (
+    <Flex
+      fontSize="sm"
+      py={{ base: 1.5, md: 0 }}
+      // Mobile: RowItem-style row (label · dashed leader · value).
+      // Desktop: stacked label above value.
+      direction={{ base: "row", md: "column" }}
+      align={{ base: "center", md: "stretch" }}
+      gap={{ base: 0, md: 0.5 }}
+      minW={0}
+    >
+      {/* LABEL */}
+      <Text
+        color="gray.500"
+        whiteSpace="nowrap"
+        fontSize={{ base: "sm", md: "xs" }}
+        fontWeight={{ base: "normal", md: "medium" }}
+        letterSpacing={{ md: "0.01em" }}
+      >
+        {field.label}
+      </Text>
+
+      {/* DASHED LEADER — mobile only */}
+      <Box
+        display={{ base: "block", md: "none" }}
+        flex="1"
+        mx={3}
+        borderBottom="1px dashed"
+        borderColor="gray.300"
+        transform="translateY(2px)"
+      />
+
+      {/* VALUE */}
+      {empty ? (
+        <Flex align="center" gap={1} color="gray.400" flexShrink={0}>
+          <Box as={LuMinus} boxSize="13px" />
+          <Text fontStyle="italic" whiteSpace="nowrap">
+            Not provided
+          </Text>
+        </Flex>
+      ) : (
+        <Text
+          fontWeight="semibold"
+          color="gray.900"
+          textAlign={{ base: "right", md: "left" }}
+          whiteSpace={{ base: "nowrap", md: "normal" }}
+          lineHeight={{ md: "1.35" }}
+          flexShrink={0}
+        >
+          {field.value}
+        </Text>
+      )}
+    </Flex>
+  );
+};
+
+const SectionCard = ({
+  icon,
+  title,
+  description,
+  fields,
+  onEdit,
+  editLabel,
+}: {
+  icon: IconType;
+  title: string;
+  description?: string;
+  fields: SummaryField[];
+  onEdit?: () => void;
+  editLabel?: string;
+}) => (
+  <Box
+    bg="white"
+    borderWidth="1px"
+    borderColor="gray.200"
+    borderRadius="2xl"
+    shadow="xs"
+    overflow="hidden"
+  >
+    {/* Header */}
+    <Flex
+      align="flex-start"
+      justify="space-between"
+      gap={3}
+      flexWrap="wrap"
+      px={{ base: 4, md: 5 }}
+      py={4}
+    >
+      <Flex align="center" gap={3} minW={0} flex="1 1 auto">
+        <Flex
+          align="center"
+          justify="center"
+          boxSize={9}
+          borderRadius="lg"
+          bg="gray.100"
+          color="gray.700"
+          flexShrink={0}
+        >
+          <Box as={icon} boxSize="18px" />
+        </Flex>
+        <Box minW={0}>
+          <Text
+            fontSize="md"
+            fontWeight="semibold"
+            color="gray.900"
+            lineHeight="1.2"
+          >
+            {title}
+          </Text>
+          {description && (
+            <Text fontSize="xs" color="gray.500">
+              {description}
+            </Text>
+          )}
+        </Box>
+      </Flex>
+
+      {onEdit && (
+        <Flex align="center" gap={2} flexShrink={0}>
+          <EditButton onClick={onEdit} label={editLabel} />
+        </Flex>
+      )}
+    </Flex>
+
+    {/* Definition grid */}
+    <Box
+      px={{ base: 4, md: 5 }}
+      py={4}
+      borderTopWidth="1px"
+      borderColor="gray.100"
+      bg="white"
+    >
+      <SimpleGrid
+        columns={{ base: 1, md: 4 }}
+        columnGap={6}
+        rowGap={{ base: 0.5, md: 4 }}
+      >
+        {fields.map((field) => (
+          <FieldCell key={field.label} field={field} />
+        ))}
+      </SimpleGrid>
+    </Box>
+  </Box>
+);
+
 // ---- Step 2: Review Details ----
 function ReviewDetailsStep({
   records,
   address,
   onEditAddress,
+  onEditPayout,
   payoutChannel,
   payoutAccount,
 }: {
   records: RopRecord[];
   address: AddressFields;
   onEditAddress: () => void;
+  onEditPayout?: () => void;
   payoutChannel: string;
   payoutAccount: string;
 }) {
@@ -382,56 +623,59 @@ function ReviewDetailsStep({
 
       <Flex direction="column" gap={4} mt={5}>
         {records.map((record) => (
-          <Card
+          <SectionCard
             key={record.lpaNo}
-            activeIcon={<LuFileText />}
+            icon={LuFileText}
             title="Plan Details"
-            subtitle={record.lpaNo}
-          >
-            <RowItem label="Contract No." value={record.lpaNo} />
-            <RowItem label="Full Name" value={getFullName(record)} />
-            <RowItem label="Plan Type" value={record.planType} />
-            <RowItem label="ROP Amount" value={record.totalAmt} />
-            <RowItem label="Schedule Date" value={record.ropDate} />
-            <RowItem label="Inst. Schedule" value={record.ropSched} />
-          </Card>
+            description={record.lpaNo}
+            fields={[
+              { label: "Contract No.", value: record.lpaNo },
+              { label: "Full Name", value: getFullName(record) },
+              { label: "Plan Type", value: record.planType },
+              { label: "ROP Amount", value: record.totalAmt },
+              { label: "Schedule Date", value: record.ropDate },
+              { label: "Inst. Schedule", value: record.ropSched },
+            ]}
+          />
         ))}
 
-        <Card activeIcon={<LuPhone />} title="Contact Information" subtitle="">
-          <RowItem label="Email Address" value={MOCK_CONTACT.email} />
-          <RowItem label="Mobile Number" value={MOCK_CONTACT.mobile} />
-        </Card>
+        <SectionCard
+          icon={LuPhone}
+          title="Contact Information"
+          description="Phone and email"
+          fields={[
+            { label: "Email Address", value: MOCK_CONTACT.email },
+            { label: "Mobile Number", value: MOCK_CONTACT.mobile },
+          ]}
+        />
 
-        <Card activeIcon={<LuMapPin />} title="Planholder Address" subtitle="">
-          <Flex justify="flex-end" mb={2}>
-            <Box
-              as="button"
-              onClick={onEditAddress}
-              display="inline-flex"
-              alignItems="center"
-              gap={1}
-              fontSize="xs"
-              color="blue.600"
-              cursor="pointer"
-              _hover={{ textDecoration: "underline" }}
-            >
-              <Box as={LuPencil} boxSize="12px" />
-              Edit Address
-            </Box>
-          </Flex>
-          <RowItem label="Lot #" value={address.lot} />
-          <RowItem label="Street" value={address.street} />
-          <RowItem label="Barangay" value={address.barangay} />
-          <RowItem label="District" value={address.district} />
-          <RowItem label="City" value={address.city} />
-          <RowItem label="Province" value={address.province} />
-          <RowItem label="Zip Code" value={address.zipCode} />
-        </Card>
+        <SectionCard
+          icon={LuMapPin}
+          title="Planholder Address"
+          description="Residential details"
+          onEdit={onEditAddress}
+          editLabel="Edit Address"
+          fields={[
+            { label: "Lot #", value: address.lot },
+            { label: "Street", value: address.street },
+            { label: "Barangay", value: address.barangay },
+            { label: "District", value: address.district },
+            { label: "City", value: address.city },
+            { label: "Province", value: address.province },
+            { label: "Zip Code", value: address.zipCode },
+          ]}
+        />
 
-        <Card activeIcon={<LuBanknote />} title="Payout Details" subtitle="">
-          <RowItem label="Payout Channel" value={resolvedChannel} />
-          <RowItem label="Account Number" value={resolvedAccount} />
-        </Card>
+        <SectionCard
+          icon={LuBanknote}
+          title="Payout Details"
+          description="Registered payout channel"
+          onEdit={onEditPayout}
+          fields={[
+            { label: "Payout Channel", value: resolvedChannel },
+            { label: "Account Number", value: resolvedAccount },
+          ]}
+        />
       </Flex>
     </Box>
   );
@@ -502,6 +746,7 @@ export function RopPayoutPage({
           records={records}
           address={address}
           onEditAddress={() => setEditAddressOpen(true)}
+          onEditPayout={() => setCurrentStep(0)}
           payoutChannel={payoutChannel}
           payoutAccount={payoutAccount}
         />
@@ -521,20 +766,42 @@ export function RopPayoutPage({
             secondaryActionLabel="Track Request"
             onSecondaryAction={onClickTrack}
           >
-            <VStack gap={1} fontSize="sm">
-              <Text color="gray.500">
-                Transaction ID:{" "}
-                <Box as="span" fontWeight="semibold" color="gray.800">
-                  {transactionId}
-                </Box>
+            <Box
+              w="full"
+              bg="white"
+              borderWidth="1px"
+              rounded="md"
+              shadow="sm"
+              p={{ base: 4, md: 6 }}
+            >
+              <Text
+                fontWeight="semibold"
+                mb={2}
+                color="gray.700"
+                fontSize={{ base: "sm", md: "md" }}
+              >
+                Reference Details
               </Text>
-              <Text color="gray.500">
-                Date & Time:{" "}
-                <Box as="span" fontWeight="semibold" color="gray.800">
-                  {submittedAt}
-                </Box>
-              </Text>
-            </VStack>
+              <Box h="1px" bg="gray.200" mb={4} />
+              <VStack
+                gap={3}
+                align="stretch"
+                fontSize={{ base: "sm", md: "md" }}
+              >
+                <Flex justify="space-between" wrap="wrap" gap={2}>
+                  <Text color="gray.600">Transaction ID:</Text>
+                  <Text fontWeight="medium" color="gray.800">
+                    {transactionId}
+                  </Text>
+                </Flex>
+                <Flex justify="space-between" wrap="wrap" gap={2}>
+                  <Text color="gray.600">Date & Time:</Text>
+                  <Text fontWeight="medium" color="gray.800">
+                    {submittedAt}
+                  </Text>
+                </Flex>
+              </VStack>
+            </Box>
           </SuccessMessage>
         </Page.MainContent>
       </Page.Root>

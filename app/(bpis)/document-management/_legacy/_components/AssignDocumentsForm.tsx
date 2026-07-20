@@ -12,7 +12,8 @@ import {
 import { DocumentType } from "@/data/doc-management/documenttype";
 import { Employee } from "@/data/doc-management/employeeSelector";
 import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { InputFloatingLabel, SelectFloatingLabel } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 
 const springTransition = {
   type: "spring" as const,
@@ -96,20 +97,19 @@ export default function AssignDocumentsForm({ employee, onAssigned }: Props) {
         gap={4}
         alignItems="center"
       >
-        <SelectFloatingLabel
+        <FloatingLabelSelect
           label="Document Type"
-          collection={documentTypeCollection}
-          value={[docType]}
-          onValueChange={(details: any) => {
-            const value = Array.isArray(details.value)
-              ? details.value[0]
-              : details.value;
+          value={docType}
+          onChange={(e) => handleDocTypeChange(e.target.value)}
+        >
+          {documentTypeCollection.items.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </FloatingLabelSelect>
 
-            handleDocTypeChange(value ?? "");
-          }}
-        />
-
-        <InputFloatingLabel
+        <FloatingLabelInput
           type="number"
           min="1"
           label="Quantity"
@@ -117,7 +117,7 @@ export default function AssignDocumentsForm({ employee, onAssigned }: Props) {
           onChange={(e) => setQuantity(e.target.value)}
         />
 
-        <InputFloatingLabel
+        <FloatingLabelInput
           label="Document Series"
           value={documentSeries}
           onChange={(e) => setDocumentSeries(e.target.value)}

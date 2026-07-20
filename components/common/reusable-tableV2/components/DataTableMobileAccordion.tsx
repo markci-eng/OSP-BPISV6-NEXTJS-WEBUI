@@ -21,6 +21,7 @@ import type {
   DataTableMobileConfig,
   RowAction,
 } from "../types";
+import { formatLabel } from "../utils";
 
 type DataTableMobileAccordionProps<TData> = {
   table: TanStackTable<TData>;
@@ -32,22 +33,6 @@ type DataTableMobileAccordionProps<TData> = {
 
   onRowActivate: (rowId: string, row: TData) => void;
 };
-
-function formatLabel(value: string) {
-  return value
-    .replace(/([A-Z])/g, " $1")
-    .replace(/_/g, " ")
-    .trim()
-    .replace(/\w\S*/g, (text) => {
-      const upperWords = ["ID", "NO", "OR", "SI", "LPA"];
-
-      if (upperWords.includes(text.toUpperCase())) {
-        return text.toUpperCase();
-      }
-
-      return text.charAt(0).toUpperCase() + text.slice(1);
-    });
-}
 
 function getLabel<TData>(
   field: keyof TData & string,

@@ -22,7 +22,7 @@ import type { ApprovalPageProps, FilterConfig } from "./types";
 import { ApprovalTable } from "./ApprovalTable";
 import { ApprovalDrawer } from "./ApprovalDrawer";
 import { BulkActionBar } from "./BulkActionBar";
-import { SelectFloatingLabel } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 
 export function ApprovalPage<T extends Record<string, any>>({
   data,
@@ -343,17 +343,18 @@ function FilterSelect({
     //   </NativeSelect.Field>
     //   <NativeSelect.Indicator />
     // </NativeSelect.Root>
-    <SelectFloatingLabel
-      label={filter.key}
-      value={[value]}
-      onValueChanged={(values) => onChange(values[0])} // 👈 correct
-      collection={createListCollection({
-        items: filter.options.map((o) => ({
-          label: o.label,
-          value: o.value,
-        })),
-      })}
-      w={{ base: "full", lg: "160px" }}
-    />
+    <Box w={{ base: "full", lg: "160px" }}>
+      <FloatingLabelSelect
+        label={filter.key}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {filter.options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </FloatingLabelSelect>
+    </Box>
   );
 }

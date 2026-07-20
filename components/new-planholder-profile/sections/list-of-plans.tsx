@@ -45,6 +45,7 @@ import { LPANumberButton } from "../components/buttons/lpa-button";
 import { H4, PrimaryMdButton, PrimarySmButton, Small } from "st-peter-ui";
 import { HiRefresh } from "react-icons/hi";
 import { InfoCardSheet } from "@/claude components/card-accordion/info-card-sheet";
+import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import { FiFileText } from "react-icons/fi";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
 import { MdHealthAndSafety } from "react-icons/md";
@@ -95,17 +96,20 @@ function PlanTabs({
   planholderAddress?: string;
 }) {
   const statement = getPlanStatement(planDetails);
+  const isDesktop = useBreakpointValue({ base: false, lg: true });
+  const InfoCard = isDesktop ? InfoCardAccordion : InfoCardSheet;
+
   return (
     <Flex direction="column" gap={2}>
-      <InfoCardSheet
+      <InfoCard
         icon={<FiFileText size={16} />}
         title="Plan Details"
         subtitle="Coverage & premium info"
       >
         <PlanDetailsPage planDetails={planDetails} />
-      </InfoCardSheet>
+      </InfoCard>
 
-      <InfoCardSheet
+      <InfoCard
         icon={<LuUsersRound size={16} />}
         title="Beneficiaries"
         subtitle="Named beneficiaries"
@@ -126,9 +130,9 @@ function PlanTabs({
           ]}
           planholderAddress={planholderAddress}
         />
-      </InfoCardSheet>
+      </InfoCard>
 
-      <InfoCardSheet
+      <InfoCard
         icon={<HiOutlineDocumentCurrencyDollar size={16} />}
         title="Statement of Accounts"
         subtitle="Payment history & balance"
@@ -148,17 +152,17 @@ function PlanTabs({
             paymentRecords: statement.paymentRecords,
           }}
         />
-      </InfoCardSheet>
+      </InfoCard>
 
-      <InfoCardSheet
+      <InfoCard
         icon={<MdHealthAndSafety size={16} />}
         title="Health Declaration"
         subtitle="Medical disclosures"
       >
         <HealthDeclaration />
-      </InfoCardSheet>
+      </InfoCard>
 
-      <InfoCardSheet
+      <InfoCard
         icon={<LiaHandHoldingUsdSolid size={16} />}
         title="Loan"
         subtitle="Loan records"
@@ -167,9 +171,9 @@ function PlanTabs({
           title="No Record Found"
           description="Loan details displays here."
         />
-      </InfoCardSheet>
+      </InfoCard>
 
-      <InfoCardSheet
+      <InfoCard
         icon={<GiMartyrMemorial size={16} />}
         title="Service"
         subtitle="Service records"
@@ -178,9 +182,9 @@ function PlanTabs({
           title="No Record Found"
           description="Service Information displays here."
         />
-      </InfoCardSheet>
+      </InfoCard>
 
-      <InfoCardSheet
+      <InfoCard
         icon={<FiFileText size={16} />}
         title="ROP History"
         subtitle="Return of premium history"
@@ -189,9 +193,9 @@ function PlanTabs({
           title="No Record Found"
           description="ROP history displays here."
         />
-      </InfoCardSheet>
+      </InfoCard>
 
-      <InfoCardSheet
+      <InfoCard
         icon={<LuUsersRound size={16} />}
         title="Transfer History"
         subtitle="Plan transfer records"
@@ -200,7 +204,7 @@ function PlanTabs({
           title="No Record Found"
           description="Transfer history displays here."
         />
-      </InfoCardSheet>
+      </InfoCard>
     </Flex>
   );
 }

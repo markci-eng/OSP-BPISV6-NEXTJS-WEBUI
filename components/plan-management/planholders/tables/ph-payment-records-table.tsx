@@ -124,7 +124,7 @@ export function PhPaymentRecordTable() {
             filtering: false, // Enable column filters
             sorting: false, // Enable sorting
             pagination: true, // Enable pagination
-            columnToggle: false, // Allow showing/hiding columns
+            columnToggle: true, // Allow showing/hiding columns
             selection: false, // Enable row selection
             draggable: false, // Disable drag-and-drop for now (can be enabled if needed)
             detailSidebar: false, // Enable detail sidebar on row click

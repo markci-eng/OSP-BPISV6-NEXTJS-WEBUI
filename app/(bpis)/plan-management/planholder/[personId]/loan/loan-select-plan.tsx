@@ -177,7 +177,7 @@ export function LoanSelectPlanStep({
             filtering: false,
             search: true,
             pagination: false,
-            columnToggle: false,
+            columnToggle: true,
             selection: false,
             draggable: false,
             detailSidebar: false,

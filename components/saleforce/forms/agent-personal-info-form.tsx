@@ -11,7 +11,8 @@ import {
   Flex,
   VStack,
 } from "@chakra-ui/react";
-import { H4, InputFloatingLabel } from "st-peter-ui";
+import { H4 } from "st-peter-ui";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 
 interface AgentPersonalInfoFormProps {
   lastName: string;
@@ -69,10 +70,10 @@ const AgentPersonalInfoForm = (props: AgentPersonalInfoFormProps) => {
                 base: "full",
               }}
             >
-              <InputFloatingLabel label="Last Name" value={lastName} />
-              <InputFloatingLabel label="First Name" value={firstName} />
-              <InputFloatingLabel label="Middle Name" value={middleName} />
-              <InputFloatingLabel label="Suffix" value={suffix} />
+              <FloatingLabelInput label="Last Name" value={lastName} />
+              <FloatingLabelInput label="First Name" value={firstName} />
+              <FloatingLabelInput label="Middle Name" value={middleName} />
+              <FloatingLabelInput label="Suffix" value={suffix} />
             </Grid>
           </Flex>
 
@@ -88,8 +89,8 @@ const AgentPersonalInfoForm = (props: AgentPersonalInfoFormProps) => {
                 md: 2,
               }}
             >
-              <InputFloatingLabel label="Date of Birth" value={dateOfBirth} />
-              <InputFloatingLabel label="Place of Birth" value={placeOfBirth} />
+              <FloatingLabelInput label="Date of Birth" value={dateOfBirth} />
+              <FloatingLabelInput label="Place of Birth" value={placeOfBirth} />
             </Flex>
           </Flex>
 
@@ -106,8 +107,8 @@ const AgentPersonalInfoForm = (props: AgentPersonalInfoFormProps) => {
                 md: 2,
               }}
             >
-              <InputFloatingLabel label="Gender" value={gender} />
-              <InputFloatingLabel label="Civil Status" value={civilStatus} />
+              <FloatingLabelInput label="Gender" value={gender} />
+              <FloatingLabelInput label="Civil Status" value={civilStatus} />
             </Flex>
 
             <Flex
@@ -120,8 +121,8 @@ const AgentPersonalInfoForm = (props: AgentPersonalInfoFormProps) => {
                 md: 2,
               }}
             >
-              <InputFloatingLabel label="Nationality" value={nationality} />
-              <InputFloatingLabel
+              <FloatingLabelInput label="Nationality" value={nationality} />
+              <FloatingLabelInput
                 label="Naturalization Date"
                 value={naturalizationDate}
               />

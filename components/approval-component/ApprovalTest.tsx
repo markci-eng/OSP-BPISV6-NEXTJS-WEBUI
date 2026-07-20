@@ -19,7 +19,7 @@ import type {
 import type { DrawerSections } from "@/components/approval-component/ApprovalDrawer";
 import { StatusBadge } from "@/components/approval-component/StatusBadge";
 import { ApprovalPage } from "@/components/approval-component/ApprovalConfig";
-import { Breadcrumb, H3, SelectFloatingLabel } from "st-peter-ui";
+import { Breadcrumb, H3 } from "st-peter-ui";
 import {
   drsList,
   depositHdrList,

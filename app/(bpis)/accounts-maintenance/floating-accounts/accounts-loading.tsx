@@ -2,12 +2,8 @@
 
 import { useState } from "react";
 import { Grid, GridItem } from "@chakra-ui/react";
-import {
-  Box,
-  PrimaryMdButton,
-  PrimaryMdFlexButton,
-  SelectFloatingLabel,
-} from "st-peter-ui";
+import { Box, PrimaryMdButton, PrimaryMdFlexButton } from "st-peter-ui";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { LuFilter, LuUserCheck } from "react-icons/lu";
 
 import Page from "@/claude components/layout/page/Page";
@@ -59,16 +55,22 @@ export default function AccountsLoadingPage() {
           >
             <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
               <GridItem>
-                <SelectFloatingLabel
-                  label="Select Transaction Month"
-                  collection={TrxMonth}
-                />
+                <FloatingLabelSelect label="Select Transaction Month">
+                  {TrxMonth.items.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </FloatingLabelSelect>
               </GridItem>
               <GridItem>
-                <SelectFloatingLabel
-                  label="Select Sales Team Leader"
-                  collection={STLList}
-                />
+                <FloatingLabelSelect label="Select Sales Team Leader">
+                  {STLList.items.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </FloatingLabelSelect>
               </GridItem>
             </Grid>
           </InfoCardAccordion>

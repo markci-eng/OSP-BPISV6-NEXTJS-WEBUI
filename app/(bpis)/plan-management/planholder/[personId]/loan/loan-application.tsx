@@ -10,11 +10,6 @@ import {
   Text,
 } from "@chakra-ui/react";
 import {
-  InputFloatingLabel,
-  SelectFloatingLabel,
-  TertiarySmButton,
-} from "st-peter-ui";
-import {
   LuBriefcase,
   LuChevronsDown,
   LuChevronsUp,
@@ -28,6 +23,9 @@ import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-
 import InfoCard from "@/claude components/info-card/info-card";
 import { RowItem } from "@/claude components/info-card/row-item";
 import { LoanRecord } from "./loan-select-plan";
+import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
+import { TertiarySmButton } from "st-peter-ui";
 
 export interface LoanAddressInfo {
   number: string;
@@ -262,20 +260,25 @@ const LoanInfoForm = ({
             gap={3}
             mt={2}
           >
-            <InputFloatingLabel
+            <FloatingLabelInput
               key={totalIndicativeLoanAmount}
               label="Indicative Loan Amount"
               value={formatLoanCurrency(totalIndicativeLoanAmount)}
               readOnly
             />
-            <SelectFloatingLabel
+            <FloatingLabelSelect
               label="Loan Term"
-              collection={loanTermOptions}
-              value={loanTerm ? [loanTerm] : []}
-              onValueChanged={(val: string[]) =>
-                onChange({ ...value, loanTerm: val[0] ?? "" })
+              value={loanTerm}
+              onChange={(val: React.ChangeEvent<HTMLSelectElement>) =>
+                onChange({ ...value, loanTerm: val.target.value ?? "" })
               }
-            />
+            >
+              {loanTermOptions.items.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
           </Grid>
 
           {amortizationSchedule.length > 0 && (
@@ -301,7 +304,7 @@ const LoanInfoForm = ({
             gap={3}
             mt={2}
           >
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Last Name"
               value={fullName.lastName}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -312,7 +315,7 @@ const LoanInfoForm = ({
               }
               required
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="First Name"
               value={fullName.firstName}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -323,7 +326,7 @@ const LoanInfoForm = ({
               }
               required
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Middle Name"
               value={fullName.middleName}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -333,7 +336,7 @@ const LoanInfoForm = ({
                 })
               }
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Suffix (Optional)"
               value={fullName.suffix}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -343,7 +346,7 @@ const LoanInfoForm = ({
                 })
               }
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Birthdate"
               type="date"
               value={birthdate}
@@ -356,13 +359,13 @@ const LoanInfoForm = ({
               }
               required
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Age"
               type="number"
               value={age}
               readOnly
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Contact Number"
               value={contactNumber}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -370,7 +373,7 @@ const LoanInfoForm = ({
               }
               required
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Email Address"
               type="email"
               value={email}
@@ -394,7 +397,7 @@ const LoanInfoForm = ({
             Present Address
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Address Number"
               value={presentAddress.number}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -404,7 +407,7 @@ const LoanInfoForm = ({
                 })
               }
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Street"
               value={presentAddress.street}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -414,7 +417,7 @@ const LoanInfoForm = ({
                 })
               }
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Barangay"
               value={presentAddress.barangay}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -427,7 +430,7 @@ const LoanInfoForm = ({
                 })
               }
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="District"
               value={presentAddress.district}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -440,7 +443,7 @@ const LoanInfoForm = ({
                 })
               }
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="City"
               value={presentAddress.city}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -450,7 +453,7 @@ const LoanInfoForm = ({
                 })
               }
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="Province"
               value={presentAddress.province}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -463,7 +466,7 @@ const LoanInfoForm = ({
                 })
               }
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               label="ZIP Code"
               type="number"
               value={presentAddress.zip}
@@ -496,7 +499,7 @@ const LoanInfoForm = ({
             Permanent Address
           </Text>
           <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
-            <InputFloatingLabel
+            <FloatingLabelInput
               key={`permanent-number-${isSameAddress}`}
               label="Address Number"
               value={permanentAddress.number}
@@ -511,7 +514,7 @@ const LoanInfoForm = ({
               }
               disabled={isSameAddress}
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               key={`permanent-street-${isSameAddress}`}
               label="Street"
               value={permanentAddress.street}
@@ -526,7 +529,7 @@ const LoanInfoForm = ({
               }
               disabled={isSameAddress}
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               key={`permanent-barangay-${isSameAddress}`}
               label="Barangay"
               value={permanentAddress.barangay}
@@ -541,7 +544,7 @@ const LoanInfoForm = ({
               }
               disabled={isSameAddress}
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               key={`permanent-district-${isSameAddress}`}
               label="District"
               value={permanentAddress.district}
@@ -556,7 +559,7 @@ const LoanInfoForm = ({
               }
               disabled={isSameAddress}
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               key={`permanent-city-${isSameAddress}`}
               label="City"
               value={permanentAddress.city}
@@ -571,7 +574,7 @@ const LoanInfoForm = ({
               }
               disabled={isSameAddress}
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               key={`permanent-province-${isSameAddress}`}
               label="Province"
               value={permanentAddress.province}
@@ -586,7 +589,7 @@ const LoanInfoForm = ({
               }
               disabled={isSameAddress}
             />
-            <InputFloatingLabel
+            <FloatingLabelInput
               key={`permanent-zip-${isSameAddress}`}
               label="ZIP Code"
               type="number"
@@ -618,14 +621,19 @@ const LoanInfoForm = ({
             gap={3}
             mt={2}
           >
-            <SelectFloatingLabel
+            <FloatingLabelSelect
               label="Occupation"
-              collection={occupationOptions}
-              value={occupation ? [occupation] : []}
-              onValueChanged={(val: string[]) =>
-                onChange({ ...value, occupation: val[0] ?? "" })
+              value={occupation}
+              onChange={(val: React.ChangeEvent<HTMLSelectElement>) =>
+                onChange({ ...value, occupation: val.target.value })
               }
-            />
+            >
+              {occupationOptions.items.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
           </Grid>
         </InfoCardAccordion>
       </Flex>

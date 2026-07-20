@@ -426,7 +426,7 @@ export default function Sidebar({
         h="100dvh"
         w={`${sidebarWidth}px`}
         minW={`${sidebarWidth}px`}
-        transition="width 0.2s, left 0.3s"
+        transition="width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1), left 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
         onMouseEnter={() => !isMobile && setIsExpanded(true)}
         onMouseLeave={() => !isMobile && setIsExpanded(false)}
         gap={0}
@@ -513,7 +513,7 @@ export default function Sidebar({
                   >
                     {ROLE_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
-                        {opt.label} 
+                        {opt.label}
                       </option>
                     ))}
                   </NativeSelect.Field>
@@ -571,13 +571,19 @@ export default function Sidebar({
                 />
               </Box>
 
-              <Box>
+              <Box
+                overflow="hidden"
+                opacity={isSidebarOpen ? 1 : 0}
+                maxWidth={isSidebarOpen ? "220px" : "0px"}
+                transition="opacity 0.2s, max-width 0.25s"
+              >
                 <Text
                   fontWeight="700"
                   fontSize="md"
                   color="gray.800"
                   lineHeight="1.2"
                   letterSpacing="-0.01em"
+                  whiteSpace="nowrap"
                 >
                   {appName}
                 </Text>
@@ -588,6 +594,7 @@ export default function Sidebar({
                   letterSpacing="0.18em"
                   textTransform="uppercase"
                   fontWeight="600"
+                  whiteSpace="nowrap"
                 >
                   {appSubtitle}
                 </Text>

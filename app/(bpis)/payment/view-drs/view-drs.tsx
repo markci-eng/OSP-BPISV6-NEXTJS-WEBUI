@@ -1,11 +1,13 @@
 "use client";
 import {
+  Badge,
   Box,
   Button,
   Flex,
   Grid,
   GridItem,
   IconButton,
+  SimpleGrid,
   Stack,
   Text,
   useBreakpointValue,
@@ -47,6 +49,7 @@ import { useMessageDialog } from "@/components/common/message-box/message-box-pr
 import Page from "@/claude components/layout/page/Page";
 import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
 import { OSPBadge } from "@/components/common/badge/badge";
+import { MetaCard } from "../viewvalidated-deposit/viewDeposit";
 
 const STATUS_STYLES: Record<
   string,
@@ -173,6 +176,17 @@ export default function ViewDrs() {
     sessionStorage.setItem("selectedDRS", JSON.stringify(selected));
     router.push("/payment/encodevalidated-deposit");
   };
+
+  const drsMeta = (
+    <SimpleGrid columns={{ base: 1, lg: 3 }} gap={3} mt={3}>
+      <MetaCard
+        label="Date Prepared"
+        value={formatSlipDate(selectedItem?.SlipDate)}
+      />
+      <MetaCard label="Amount" value={selectedItem?.Amount ?? "0"} />
+      <MetaCard label="Prepared By" value={selectedItem?.DepositedBy} />
+    </SimpleGrid>
+  );
 
   // ── List items (shared between mobile and desktop) ───────────────────────
   const slipList = (
@@ -424,9 +438,9 @@ export default function ViewDrs() {
   // ── Desktop: left panel ───────────────────────────────────────────────────
   const desktopListPanel = showStrip ? (
     <Box
-      w="full"
+      px={5}
       p={1}
-      borderRadius="2xl"
+      borderRadius="lg"
       bg="white"
       shadow="sm"
       overflow="hidden"
@@ -441,7 +455,9 @@ export default function ViewDrs() {
         >
           <LuChevronRight />
         </IconButton>
-        <OSPBadge type="success">{sortedDrsItems.length}</OSPBadge>
+        <Badge size={"lg"} colorPalette={"red"} borderRadius={"full"}>
+          {sortedDrsItems.length}
+        </Badge>
         <Body
           fontWeight="semibold"
           fontSize="sm"
@@ -455,7 +471,7 @@ export default function ViewDrs() {
       </Flex>
     </Box>
   ) : (
-    <Box>
+    <Flex direction="column" h="full">
       <Flex align="center" justify="space-between" mb={3}>
         <Flex align="center" gap={2}>
           <Box p={1.5} borderRadius="lg" bg="gray.100">
@@ -501,15 +517,15 @@ export default function ViewDrs() {
           renderDisplay={(item) => item.name}
         />
       </Box>
-      <Box maxH={{ md: "450px", xl: "560px" }} overflowY="auto" pr={1}>
+      <Box flex="1" minH={0} overflowY="auto" pr={1}>
         {slipList}
       </Box>
-    </Box>
+    </Flex>
   );
 
   // ── Desktop: right panel ──────────────────────────────────────────────────
   const desktopDetailPanel = (
-    <Box>
+    <Flex direction="column" h="full">
       {!selectedId ? (
         <EmptyStateCard
           title="No DRS Selected"
@@ -595,15 +611,24 @@ export default function ViewDrs() {
             </Box>
           )}
 
-          <DrsDataTable
-            payments={samplePayments}
-            onRowClick={(row) => {}}
-          />
+          <Flex
+            direction={"column"}
+            minW={0}
+            minH={0}
+            overflow="auto"
+            px={1}
+            gapY={2}
+          >
+            {drsMeta}
+            <DrsDataTable payments={samplePayments} />
 
-          <DrsPaymentSummary totals={totals} displayProp={false} />
+            <Box display={{ base: "block", lg: "none" }}>
+              <DrsPaymentSummary totals={totals} displayProp={false} />
+            </Box>
+          </Flex>
         </>
       )}
-    </Box>
+    </Flex>
   );
 
   return (
@@ -611,8 +636,10 @@ export default function ViewDrs() {
       title="Digital Remittance Slip"
       description="Manage your digital remittance slip"
       headerButton="menu"
+      paddingBottom={{ base: "96px", lg: 0 }}
+      overflowY={{ base: "auto", lg: "hidden" }}
     >
-      <Page.MainContent>
+      <Page.MainContent h={{ base: "auto", lg: "full" }} minH={0}>
         {/* Mobile: show one panel at a time */}
         {isMobile ? (
           mobileView === "list" ? (
@@ -621,20 +648,24 @@ export default function ViewDrs() {
             mobileDetailPanel
           )
         ) : (
-          // Desktop: side-by-side panels
+          // Desktop: panels fill the page height; only the panels scroll
           <Grid
             gap={6}
             templateColumns={{
               lg: showStrip ? "56px 1fr" : "380px 1fr",
               xl: showStrip ? "56px 1fr" : "420px 1fr",
             }}
-            alignItems="start"
+            templateRows="minmax(0, 1fr)"
+            alignItems="stretch"
+            h="full"
+            minH={0}
+            overflow="hidden"
             transition="grid-template-columns 0.3s ease"
           >
-            <GridItem minW={0} overflow="hidden" h="full">
+            <GridItem minW={0} overflow="hidden" h="full" p={2}>
               {desktopListPanel}
             </GridItem>
-            <GridItem h="full" overflow="hidden">
+            <GridItem minW={0} h="full" overflow="hidden" py={2}>
               {desktopDetailPanel}
             </GridItem>
           </Grid>

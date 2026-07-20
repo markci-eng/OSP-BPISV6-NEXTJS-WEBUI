@@ -6,10 +6,11 @@ import {
   Position,
   refPosition,
   SalesAgent,
+  SalesAgentAddress,
   salesAgents,
 } from "@/data/saleforce/sales-agent-data";
 
-export type { Position, SalesAgent };
+export type { Position, SalesAgent, SalesAgentAddress };
 export { refPosition };
 
 const getRank = (position: Position): number => hierarchy.indexOf(position);

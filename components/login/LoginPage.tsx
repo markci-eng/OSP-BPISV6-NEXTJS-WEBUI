@@ -18,7 +18,6 @@ import {
 import { useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  InputFloatingLabel,
   Body,
   H4,
   Small,
@@ -31,6 +30,8 @@ import imgAppleLogo from "@/public/images/osp-chakra-reusable-components/icons8-
 import imgGoogleLogo from "@/public/images/osp-chakra-reusable-components/icons8-google-48.png";
 import imgTwitterLogo from "@/public/images/osp-chakra-reusable-components/icons8-x-48.png";
 import imgBackground from "@/public/images/hoabout.jpg";
+import { FloatingLabelInput } from "../inputs/floating-label-input";
+import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => void;
@@ -57,6 +58,7 @@ export function LoginPage({
 }: LoginPageProps) {
   const isMobile = useBreakpointValue({ base: true, md: false });
   const [isSignUp, setIsSignUp] = useState(false);
+  const { messageBox } = useMessageDialog();
 
   const handleSignUpClick = () => setIsSignUp(true);
   const handleSignInClick = () => setIsSignUp(false);
@@ -80,7 +82,15 @@ export function LoginPage({
     const middlename = form.get("middlenameInput");
     const contactnumber = form.get("contactInput");
     const confirm = form.get("confirmPasswordInput");
-    if (password !== confirm) return alert("Passwords do not match");
+    if (password !== confirm) {
+      messageBox({
+        title: "Password Mismatch",
+        message: "Passwords do not match.",
+        confirmText: "Okay",
+        variant: "error",
+      });
+      return;
+    }
     if (
       typeof email === "string" &&
       typeof password === "string" &&
@@ -159,14 +169,14 @@ export function LoginPage({
                   <center>
                     <H4>Log In</H4>
                   </center>
-                  <InputFloatingLabel
+                  <FloatingLabelInput
                     type="email"
                     label="Email"
                     name="emailInput"
                     required
                     autoComplete="off"
                   />
-                  <InputFloatingLabel
+                  <FloatingLabelInput
                     type="password"
                     label="Password"
                     name="passwordInput"
@@ -305,46 +315,46 @@ export function LoginPage({
                     templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
                     gapX={4}
                   >
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="Last Name"
                       name="lastnameInput"
                       required
                       autoComplete="off"
                     />
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="First Name"
                       name="firstnameInput"
                       required
                       autoComplete="off"
                     />
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="Middle Name"
                       name="middlenameInput"
                       required
                       autoComplete="off"
                     />
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="Email"
                       type="email"
                       name="emailInput"
                       required
                       autoComplete="off"
                     />
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="Contact No."
                       type="number"
                       name="contactInput"
                       required
                       autoComplete="off"
                     />
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="Password"
                       type="password"
                       name="passwordInput"
                       required
                       autoComplete="off"
                     />
-                    <InputFloatingLabel
+                    <FloatingLabelInput
                       label="Confirm Password"
                       type="password"
                       name="confirmPasswordInput"

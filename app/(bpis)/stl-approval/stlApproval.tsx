@@ -53,7 +53,7 @@ export default function StlApproval() {
           features={{
             selection: false,
             draggable: false,
-            columnToggle: false,
+            columnToggle: true,
           }}
         />
       </Box>
@@ -118,7 +118,7 @@ export default function StlApproval() {
                 features={{
                   search: false,
                   sorting: false,
-                  columnToggle: false,
+                  columnToggle: true,
                   draggable: false,
                   selection: false,
                   filtering: false,

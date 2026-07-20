@@ -58,8 +58,37 @@ export function ApprovalsTable({
 
   const data = dataByView[view];
 
-  const [statusFilter, setStatusFilter] = React.useState<string>("Pending");
+  const [statusFilter, setStatusFilterState] =
+    React.useState<string>("Pending");
+  // TEMP DIAGNOSTIC — remove once the "switches to All" bug is found.
+  const setStatusFilter = React.useCallback((value: string) => {
+    if (value === "All") {
+      // Prints the exact call stack of whatever forces the active card to "All".
+      // eslint-disable-next-line no-console
+      console.trace("[ApprovalsTable] setStatusFilter('All')");
+    }
+    setStatusFilterState(value);
+  }, []);
   const [carouselIdx, setCarouselIdx] = React.useState(1);
+  const carouselReady = React.useRef(false);
+
+  // TEMP DIAGNOSTIC — confirms this build is actually running in the browser.
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log("[ApprovalsTable] diagnostic build v3 mounted");
+  }, []);
+
+  // Only mount the mobile carousel on mobile viewports. When hidden with
+  // `display: none` on desktop it can't measure its slides and re-emits
+  // onPageChange(0), which would clobber the Pending default with "All".
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const mq = window.matchMedia("(max-width: 47.99em)"); // below Chakra `md`
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   React.useEffect(() => {
     setStatusFilter("Pending");
@@ -298,6 +327,7 @@ export function ApprovalsTable({
     const isActive = statusFilter === card.filter;
     return (
       <Box
+        position="relative"
         bg={isActive ? `${card.accent}.100` : `${card.accent}.50`}
         border="2px solid"
         borderColor={isActive ? `${card.accent}.500` : `${card.accent}.200`}
@@ -318,6 +348,31 @@ export function ApprovalsTable({
           borderColor: `${card.accent}.400`,
         }}
       >
+        {/* CHECKMARK — corner badge, only renders when the card is the active
+            filter. Offset onto the corner so it doesn't clash with the icon. */}
+        {isActive && (
+          <Box
+            position="absolute"
+            top={-2}
+            right={-2}
+            zIndex={2}
+            w="22px"
+            h="22px"
+            borderRadius="full"
+            bg={`${card.accent}.500`}
+            color="white"
+            border="2px solid"
+            borderColor="white"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            fontSize="11px"
+            fontWeight="800"
+            boxShadow="sm"
+          >
+            ✓
+          </Box>
+        )}
         <Flex justify="space-between" align="flex-start">
           <Box>
             <Text
@@ -366,41 +421,51 @@ export function ApprovalsTable({
         ))}
       </SimpleGrid>
 
-      {/* Mobile: carousel */}
-      <Box display={{ base: "block", md: "none" }}>
-        <Carousel.Root
-          slideCount={cards.length}
-          page={carouselIdx}
-          onPageChange={(details: { page: number }) => {
-            setCarouselIdx(details.page);
-            setStatusFilter(cards[details.page].filter);
-          }}
-        >
-          <Carousel.ItemGroup>
-            {cards.map((card, i) => (
-              <Carousel.Item key={card.label} index={i}>
-                {renderCardContent(card, i)}
-              </Carousel.Item>
-            ))}
-          </Carousel.ItemGroup>
+      {/* Mobile: carousel (only mounted on mobile so its page events can't
+          leak into statusFilter on desktop) */}
+      {isMobile && (
+        <Box>
+          <Carousel.Root
+            slideCount={cards.length}
+            page={carouselIdx}
+            onPageChange={(details: { page: number }) => {
+              // The carousel emits an initial onPageChange(0) on mount (even while
+              // hidden on desktop), which would clobber the Pending default. Skip
+              // that first firing and only react to real page changes afterward.
+              if (!carouselReady.current) {
+                carouselReady.current = true;
+                return;
+              }
+              setCarouselIdx(details.page);
+              setStatusFilter(cards[details.page].filter);
+            }}
+          >
+            <Carousel.ItemGroup>
+              {cards.map((card, i) => (
+                <Carousel.Item key={card.label} index={i}>
+                  {renderCardContent(card, i)}
+                </Carousel.Item>
+              ))}
+            </Carousel.ItemGroup>
 
-          <Carousel.Control justifyContent="center" gap="4">
-            <Carousel.PrevTrigger asChild>
-              <IconButton size="xs" variant="ghost" aria-label="Previous">
-                <ChevronLeft size={16} />
-              </IconButton>
-            </Carousel.PrevTrigger>
+            <Carousel.Control justifyContent="center" gap="4">
+              <Carousel.PrevTrigger asChild>
+                <IconButton size="xs" variant="ghost" aria-label="Previous">
+                  <ChevronLeft size={16} />
+                </IconButton>
+              </Carousel.PrevTrigger>
 
-            <Carousel.Indicators />
+              <Carousel.Indicators />
 
-            <Carousel.NextTrigger asChild>
-              <IconButton size="xs" variant="ghost" aria-label="Next">
-                <ChevronRight size={16} />
-              </IconButton>
-            </Carousel.NextTrigger>
-          </Carousel.Control>
-        </Carousel.Root>
-      </Box>
+              <Carousel.NextTrigger asChild>
+                <IconButton size="xs" variant="ghost" aria-label="Next">
+                  <ChevronRight size={16} />
+                </IconButton>
+              </Carousel.NextTrigger>
+            </Carousel.Control>
+          </Carousel.Root>
+        </Box>
+      )}
 
       <DataTable<any>
         key={view}
