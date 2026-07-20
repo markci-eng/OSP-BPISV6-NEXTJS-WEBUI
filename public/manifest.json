@@ -4,7 +4,7 @@
   "description": "Integrated system for life plan operations.",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#0f172a",
   "icons": [
