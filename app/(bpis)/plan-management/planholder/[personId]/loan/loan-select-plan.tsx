@@ -4,12 +4,10 @@ import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2 } from "lucide-react";
 import { Checkbox, H4, Small } from "st-peter-ui";
-
-import { OSPBadge } from "@/components/common/badge/badge";
-import { DataTable } from "@/components/common/reusable-tableV2/DataTable";
-import InfoCard from "@/claude components/info-card/info-card";
-import { RowItem } from "@/claude components/info-card/row-item";
+import InfoCard from "@/components/info-card/info-card";
+import { RowItem } from "@/components/info-card/row-item";
 import { REQUIRED_DOCUMENTS } from "./loan-documents";
+import { DataTable, OSPBadge } from "osp-ui-kit";
 
 // ---- Types ----
 export interface LoanRecord {
@@ -173,13 +171,12 @@ export function LoanSelectPlanStep({
           columns={columns}
           getRowId={(row) => row.lpaNo}
           features={{
-            sorting: false,
-            filtering: false,
+            sorting: true,
+            filtering: true,
             search: true,
             pagination: false,
             columnToggle: true,
             selection: false,
-            draggable: false,
             detailSidebar: false,
           }}
           mobileConfig={{

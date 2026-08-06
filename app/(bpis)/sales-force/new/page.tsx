@@ -10,8 +10,7 @@ import {
   LuScan,
 } from "react-icons/lu";
 import { toast } from "sonner";
-import Page from "@/claude components/layout/page/Page";
-import FormSteps from "@/claude components/FormSteps";
+import { FormStepper, Page } from "osp-ui-kit";
 import AgentSummary from "@/components/saleforce/pages/agent-summary";
 import {
   ApplicationProvider,
@@ -81,7 +80,7 @@ function NewSalesForceFlow() {
       description="Upload documents to autofill, then review and register."
     >
       <Page.MainContent>
-        <FormSteps
+        <FormStepper
           stepsData={stepsData}
           title=""
           description=""

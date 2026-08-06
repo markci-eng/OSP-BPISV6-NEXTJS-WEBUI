@@ -1,6 +1,7 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
+import { Page } from "osp-ui-kit";
 import { LuHammer } from "react-icons/lu";
-import Page from "@/claude components/layout/page/Page";
+
 
 export default function ComingSoon({
   title,

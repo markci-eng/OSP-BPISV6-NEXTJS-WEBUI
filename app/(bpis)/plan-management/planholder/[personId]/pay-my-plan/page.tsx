@@ -23,7 +23,7 @@ import {
 } from "@/lib/theme/standard-design-tokens";
 import { BaseButton, PrimaryMdButton } from "st-peter-ui";
 import { useEffect, useMemo, useState } from "react";
-import { useDemoAuth } from "@/components/ui/demo-auth";
+import { useDemoAuth } from "osp-ui-kit";
 import { FaEllipsisH } from "react-icons/fa";
 import {
   LuChevronFirst,
@@ -40,8 +40,8 @@ import {
   LuSearch,
   LuUser,
 } from "react-icons/lu";
-import Page from "@/claude components/layout/page/Page";
-import InfoCard from "@/claude components/info-card/info-card";
+import { Page } from "osp-ui-kit";
+import InfoCard from "@/components/info-card/info-card";
 import { ActivePlan, activePlans } from "./activeplan";
 import { TbCurrencyPeso } from "react-icons/tb";
 
@@ -571,7 +571,7 @@ const PayMyPlan = () => {
                       fontSize="14px"
                       _focus={{
                         borderColor: BRAND_COLORS.primaryGreen,
-                        boxShadow: "0 0 0 1px #109448",
+                        boxShadow: `0 0 0 1px ${BRAND_COLORS.primaryGreen}`,
                       }}
                     />
                   </Box>
@@ -1119,7 +1119,7 @@ const PayMyPlan = () => {
                       outline="none"
                       _focus={{
                         borderColor: BRAND_COLORS.primaryGreen,
-                        boxShadow: "0 0 0 1px #109448",
+                        boxShadow: `0 0 0 1px ${BRAND_COLORS.primaryGreen}`,
                       }}
                     />
                   </Box>

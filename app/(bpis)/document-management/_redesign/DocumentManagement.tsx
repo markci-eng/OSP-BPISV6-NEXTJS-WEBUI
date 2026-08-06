@@ -24,10 +24,43 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import Page from "@/claude components/layout/page/Page";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import { DataTableRowActions } from "@/components/common/reusable-tableV2/components/DataTableRowActions";
-import type { RowAction } from "@/components/common/reusable-tableV2/types";
+import { Page } from "osp-ui-kit";
+import { DataTable } from "osp-ui-kit";
+import { MenuButton, MenuItemButton } from "osp-ui-kit";
+import type { RowAction } from "osp-ui-kit";
+
+/**
+ * Standalone row-actions menu for the custom mobile card. osp-ui-kit's
+ * DataTable renders row actions itself, but the mobile card uses a bespoke
+ * layout, so we drive the same `RowAction[]` through osp-ui-kit's MenuButton.
+ */
+function DataTableRowActions<TData>({
+  row,
+  actions,
+}: {
+  row: TData;
+  actions: RowAction<TData>[];
+}) {
+  const visible = actions.filter((a) => !a.hidden?.(row));
+  if (visible.length === 0) return null;
+  return (
+    <MenuButton>
+      {visible.map((action) => {
+        const Icon = action.icon;
+        return (
+          <MenuItemButton
+            key={action.id}
+            itemKey={action.id}
+            value={action.id}
+            label={action.label}
+            icon={Icon ? <Icon size={16} /> : null}
+            onClick={() => action.onClick(row)}
+          />
+        );
+      })}
+    </MenuButton>
+  );
+}
 
 import {
   type DocumentRecord,
@@ -448,13 +481,12 @@ export default function DocumentManagement() {
           onRowClick={openDrawer}
           emptyState={emptyState}
           features={{
-            search: false,
-            filtering: false,
+            search: true,
+            filtering: true,
             sorting: true,
             pagination: true,
             columnToggle: true,
             selection: false,
-            draggable: false,
             detailSidebar: false,
           }}
           mobileConfig={{

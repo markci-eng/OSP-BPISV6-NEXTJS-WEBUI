@@ -1,8 +1,8 @@
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
-import { RowItem } from "@/claude components/info-card/row-item";
+import { RowItem } from "@/components/info-card/row-item";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
 import { Flex } from "@chakra-ui/react";
 import { LuPhone } from "react-icons/lu";
+import { InfoCardAccordion } from "osp-ui-kit";
 
 interface AgentContactInfoCardProps {
   agent: SalesAgent | undefined | null;

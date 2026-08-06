@@ -6,12 +6,10 @@ import { useRouter } from "next/navigation";
 import { FaFileAlt } from "react-icons/fa";
 import { FaFileShield } from "react-icons/fa6";
 import { LuUsers } from "react-icons/lu";
-
-import FormSteps from "@/claude components/FormSteps";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { FormStepper, useMessageDialog } from "osp-ui-kit";
 import { PlanholderInfoData } from "@/app/(bpis)/plan-management/data/planholder-info.data";
 import { PlanholderInfoType } from "@/components/plan-management/planholders/planholders.types";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 
 import ClaimInfoForm from "./claim-info-form";
 import ClaimsPayeeForm from "./claim-payee";
@@ -114,7 +112,7 @@ const ClaimsPage = () => {
       headerButton="back"
     >
       <Page.MainContent>
-        <FormSteps
+        <FormStepper
           stepsData={stepsData}
           title=""
           description=""

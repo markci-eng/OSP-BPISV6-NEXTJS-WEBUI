@@ -2,8 +2,8 @@
 
 import { Flex, Grid } from "@chakra-ui/react";
 import { LuUser, LuCalendar, LuNotebook, LuIdCard } from "react-icons/lu";
-import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
 import { AiField } from "../../../../../../components/inputs/AiField";
+import { InputCardAccordion } from "osp-ui-kit";
 
 export function PersonalInfoStep() {
   return (
@@ -14,7 +14,7 @@ export function PersonalInfoStep() {
         subtitle="Last, First, Middle, Suffix"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
           <AiField fieldKey="lastName" label="Last Name" />
           <AiField fieldKey="firstName" label="First Name" />
           <AiField fieldKey="middleName" label="Middle Name" />
@@ -28,7 +28,7 @@ export function PersonalInfoStep() {
         subtitle="Date and place of birth"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
           <AiField fieldKey="dateOfBirth" label="Date of Birth" type="date" />
           <AiField fieldKey="placeOfBirth" label="Place of Birth" />
         </Grid>
@@ -40,7 +40,7 @@ export function PersonalInfoStep() {
         subtitle="Sex, civil status, and nationality"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
           <AiField
             fieldKey="sex"
             label="Sex"
@@ -77,7 +77,7 @@ export function PersonalInfoStep() {
         subtitle="Read from your uploaded valid ID"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
           <AiField fieldKey="idType" label="ID Type" />
           <AiField fieldKey="idNumber" label="ID Number" />
           <AiField fieldKey="issueDate" label="Issue Date" type="date" />

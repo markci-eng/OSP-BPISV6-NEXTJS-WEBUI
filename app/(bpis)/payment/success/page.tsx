@@ -1,21 +1,21 @@
 "use client";
 
-import { SuccessPage } from "@splpi/operations";
+import { SuccessPage } from "osp-ui-kit";
 import React from "react";
-{
-  /* { title, description, transactionId, totalAmount, dateTime, onClickHome, onClickProceed, variant, } */
-}
+
 export default function Page() {
   return (
     <SuccessPage
       title="DRS Successfully Created"
-      onClickHome={function (): void {
+      description=""
+      primaryActionLabel="Go back to Home"
+      onPrimaryAction={function (): void {
         throw new Error("Function not implemented.");
       }}
-      onClickProceed={function (): void {
+      secondaryActionLabel="Track My Request"
+      onSecondaryAction={function (): void {
         throw new Error("Function not implemented.");
       }}
-      variant={"application"}
     />
   );
 }

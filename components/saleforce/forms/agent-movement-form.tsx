@@ -8,7 +8,6 @@ import {
   SecondaryMdButton,
   Small,
 } from "st-peter-ui";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import {
   LuArrowRight,
   LuMoveDown,
@@ -19,18 +18,19 @@ import {
 } from "react-icons/lu";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import {
+  FloatingLabelSelect,
+  SectionTitle,
+  useMessageDialog,
+} from "osp-ui-kit";
 import {
   getPositionDesc,
   Position,
   SalesAgent,
 } from "../../common/agent-lookup/agent-lookup.type";
 import RequestSubmittedDialog from "../dialogs/request-submitted-dialog";
-import Card from "@/components/cards/Card";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
-import FormTitle from "@/components/texts/FormTitle";
-import SectionTitle from "@/components/texts/SectionTitle";
-import Caption from "@/components/texts/Caption";
+import { Card } from "osp-ui-kit";
 
 interface AgentMovementFormProps {
   selectedAgent: SalesAgent;
@@ -141,10 +141,10 @@ export function AgentMovementForm({
             <Flex direction="column" gap={6}>
               <Flex direction="column" gap={2}>
                 <SectionTitle>Select New Position</SectionTitle>
-                <Caption>
+                <Text fontSize="xs" color="gray.500" lineHeight="1.5">
                   Pick a target position. The system will determine whether the
                   movement is a promotion or a demotion.
-                </Caption>
+                </Text>
 
                 <Box w={{ base: "full", sm: "320px" }}>
                   <FloatingLabelSelect

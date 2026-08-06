@@ -1,9 +1,9 @@
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
-import { RowItem } from "@/claude components/info-card/row-item";
+import { RowItem } from "@/components/info-card/row-item";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
-import InfoItem from "@/components/common/info-item/info-item";
 import { Badge, Box, Flex, Grid, Strong } from "@chakra-ui/react";
 import { LuBriefcase } from "react-icons/lu";
+import { AGENT_EMPLOYEE_STATUS_COLOR } from "@/lib/status/agent-employee-status";
+import { InfoCardAccordion, InfoItem, OSPBadge } from "osp-ui-kit";
 
 interface AgentEmploymentInfoCardProps {
   agent: SalesAgent | undefined | null;
@@ -13,28 +13,14 @@ interface AgentEmploymentInfoCardProps {
   h?: string | Record<string, string>;
 }
 
-const statusColorPalette: Record<SalesAgent["employeeStatus"], string> = {
-  Active: "green",
-  Inactive: "orange",
-  Resigned: "red",
-};
-
 const EmployeeStatusBadge = ({
   status,
 }: {
   status: SalesAgent["employeeStatus"];
 }) => (
-  <Badge
-    colorPalette={statusColorPalette[status] ?? "gray"}
-    variant="subtle"
-    borderRadius="full"
-    px={3}
-    py={1}
-    gap={2}
-  >
-    <Box boxSize={2} borderRadius="full" bg="colorPalette.solid" />
+  <OSPBadge type={AGENT_EMPLOYEE_STATUS_COLOR[status] ?? null}>
     {status}
-  </Badge>
+  </OSPBadge>
 );
 
 const EmploymentInfo = ({ agent }: AgentEmploymentInfoCardProps) => {
@@ -46,7 +32,10 @@ const EmploymentInfo = ({ agent }: AgentEmploymentInfoCardProps) => {
         <RowItem label="Position" value={agent.position ?? "N/A"} />
         <RowItem label="Employer" value={agent.employer ?? "N/A"} />
         <RowItem label="Date Hired" value={agent.hireDate ?? "N/A"} />
-        <RowItem label="Employee Status" value={agent.employeeStatus ?? "N/A"} />
+        <RowItem
+          label="Employee Status"
+          value={agent.employeeStatus ?? "N/A"}
+        />
         <RowItem label="Branch" value={agent.branch ?? "N/A"} />
         <RowItem label="Supervisor" value={agent.superiorId ?? "N/A"} />
         <RowItem label="SSS No." value={agent.sssNumber ?? "N/A"} />

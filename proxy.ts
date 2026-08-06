@@ -54,6 +54,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|manifest.json|service-worker.js|images/|icons/|documents/|pdf.worker.min.mjs).*)",
+    // Service-worker infrastructure (service-worker.js, /sw/*, sw-manifest.json,
+    // offline.html) must stay publicly reachable: the worker fetches these
+    // without a session, and a redirect to /login would break registration,
+    // update detection and the offline fallback.
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|service-worker.js|sw/|sw-manifest.json|offline.html|images/|icons/|documents/|pdf.worker.min.mjs).*)",
   ],
 };

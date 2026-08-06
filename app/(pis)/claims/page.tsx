@@ -58,14 +58,14 @@ import {
   monthlyProcesses,
   processOverview,
 } from "./dashboard-data";
-import { OSPBadge } from "@/components/common/badge/badge";
+import { OSPBadge } from "osp-ui-kit";
 import { IconType } from "react-icons";
-import UserWelcomeBanner from "@/claude components/layout/page/UserWelcomeBanner";
-import { useDemoAuth } from "@/components/ui/demo-auth";
-import { Card } from "@/claude components/card-accordion/card";
-import { RowItem } from "@/claude components/info-card/row-item";
-import { AppHeaderActions } from "@/claude components/layout/app-header-actions";
-import { useSidebarToggle } from "@/claude components/layout/sidebar-context";
+import { UserWelcomeBanner } from "osp-ui-kit";
+import { useDemoAuth } from "osp-ui-kit";
+import { StaticCard as Card } from "osp-ui-kit";
+import { RowItem } from "@/components/info-card/row-item";
+import { AppHeaderActions } from "osp-ui-kit";
+import { Page } from "osp-ui-kit";
 
 // --- Types ---
 type DashboardKeys = "request" | "service" | "reservation" | "activetrips";
@@ -469,376 +469,303 @@ export default function Dashboard() {
 
   const name = "Mark Cristian";
   const { login } = useDemoAuth();
-  const toggleSidebar = useSidebarToggle();
 
   useEffect(() => {
     login();
   }, [login]);
 
   return (
-    <Box
-      minH="100vh"
-      display="flex"
-      flexDirection="column"
-      gap={{ base: 4, md: 6 }}
-      px={2}
-      style={{
-        paddingBottom: "calc(108px + env(safe-area-inset-bottom, 0px))",
-      }}
+    // The shared page shell, same as every other claims page: it owns the
+    // header bar (menu button, title, description) and the page padding, so
+    // this dashboard no longer carries a hand-rolled home header of its own.
+    <Page.Root
+      subtitle="Claims"
+      title="Dashboard"
+      description="Claims processing at a glance."
+      headerButton="menu"
     >
-      {/* ── MOBILE HOME HEADER (login-page style, scrolls with content) ── */}
-      <Box
-        display={{ base: "block", lg: "none" }}
-        mx={-2}
-        px={4}
-        py={1}
-        bg="white"
-        borderBottom="1px solid"
-        borderColor="gray.100"
-        style={{
-          paddingTop: "max(env(safe-area-inset-top, 0px), 12px)",
-        }}
-      >
-        <Flex align="center" justify="space-between" gap={2}>
-          {/* LEFT SIDE */}
-          <Flex align="center" gap={2}>
-            {toggleSidebar && (
-              <IconButton
-                aria-label="Open menu"
-                size="sm"
-                variant="ghost"
-                color="gray.700"
-                _hover={{ bg: "gray.100" }}
-                onClick={toggleSidebar}
-              >
-                <LuMenu size={20} />
-              </IconButton>
-            )}
+      {/* The notification / profile actions the old home bar carried. */}
+      <Page.ToolContent>
+        <AppHeaderActions iconColor="#065f46" />
+      </Page.ToolContent>
 
-            <Box
-              w="40px"
-              h="40px"
-              borderRadius="12px"
-              bg="green.50"
-              borderWidth="1px"
-              borderColor="green.100"
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              boxShadow="sm"
-              flexShrink={0}
-            >
-              <img
-                src="/images/logo/icon.png"
-                alt="St. Peter Logo"
-                width={26}
-                height={26}
-                style={{ objectFit: "contain" }}
+      <Page.MainContent>
+        {/* ── Process Overview ── */}
+        <Page.Row>
+          <Flex direction="column" gap={3}>
+            <SectionLabel
+              title="Process Overview"
+              subtitle="Staff processing volume this month"
+            />
+            {/* Mobile: carousel; Desktop (md+): 4-column grid */}
+            <Box display={{ base: "block", md: "none" }}>
+              <Carousel.Root slideCount={4} loop>
+                <Carousel.ItemGroup>
+                  <Carousel.Item index={0} px={2}>
+                    <TileItem
+                      Icon={RiInboxArchiveLine}
+                      title="New Requests"
+                      value={processOverview.newRequests.toLocaleString()}
+                      prevVal={processOverview.prevNewRequests.toLocaleString()}
+                      color="#1B9E57"
+                      monthOverMonthPercentage={
+                        ((processOverview.newRequests -
+                          processOverview.prevNewRequests) /
+                          processOverview.prevNewRequests) *
+                        100
+                      }
+                    />
+                  </Carousel.Item>
+                  <Carousel.Item index={1} px={2}>
+                    <TileItem
+                      Icon={RiLoader4Line}
+                      title="Currently Processing"
+                      value={processOverview.inProcess.toLocaleString()}
+                      prevVal={processOverview.prevInProcess.toLocaleString()}
+                      order="desc"
+                      color="#1976D2"
+                      monthOverMonthPercentage={
+                        ((processOverview.inProcess -
+                          processOverview.prevInProcess) /
+                          processOverview.prevInProcess) *
+                        100
+                      }
+                    />
+                  </Carousel.Item>
+                  <Carousel.Item index={2} px={2}>
+                    <TileItem
+                      Icon={RiTimeLine}
+                      title="Pending Approval"
+                      value={processOverview.pendingApproval.toLocaleString()}
+                      prevVal={processOverview.prevPendingApproval.toLocaleString()}
+                      order="desc"
+                      color="#F57C00"
+                      monthOverMonthPercentage={
+                        ((processOverview.pendingApproval -
+                          processOverview.prevPendingApproval) /
+                          processOverview.prevPendingApproval) *
+                        100
+                      }
+                    />
+                  </Carousel.Item>
+                  <Carousel.Item index={3} px={2}>
+                    <TileItem
+                      Icon={RiCheckboxCircleLine}
+                      title="Completed"
+                      value={processOverview.completed.toLocaleString()}
+                      prevVal={processOverview.prevCompleted.toLocaleString()}
+                      color="#1B9E57"
+                      monthOverMonthPercentage={
+                        ((processOverview.completed -
+                          processOverview.prevCompleted) /
+                          processOverview.prevCompleted) *
+                        100
+                      }
+                    />
+                  </Carousel.Item>
+                </Carousel.ItemGroup>
+                <Carousel.Control mt={3} justifyContent="center">
+                  <Carousel.PrevTrigger>
+                    <LuChevronLeft />
+                  </Carousel.PrevTrigger>
+                  <Carousel.Indicators />
+                  <Carousel.NextTrigger>
+                    <LuChevronRight />
+                  </Carousel.NextTrigger>
+                </Carousel.Control>
+              </Carousel.Root>
+            </Box>
+            <SimpleGrid display={{ base: "none", md: "grid" }} columns={4} gap={3}>
+              <TileItem
+                Icon={RiInboxArchiveLine}
+                title="New Requests"
+                value={processOverview.newRequests.toLocaleString()}
+                prevVal={processOverview.prevNewRequests.toLocaleString()}
+                color="#1B9E57"
+                monthOverMonthPercentage={
+                  ((processOverview.newRequests - processOverview.prevNewRequests) /
+                    processOverview.prevNewRequests) *
+                  100
+                }
               />
-            </Box>
-
-            <Box>
-              <Text
-                fontWeight="700"
-                fontSize="md"
-                color="gray.800"
-                lineHeight="1.2"
-                letterSpacing="-0.01em"
-              >
-                One St. Peter
-              </Text>
-
-              <Text
-                fontSize="9px"
-                color="#085725"
-                letterSpacing="0.18em"
-                textTransform="uppercase"
-                fontWeight="600"
-              >
-                Life Plan Operations
-              </Text>
-            </Box>
+              <TileItem
+                Icon={RiLoader4Line}
+                title="Currently Processing"
+                value={processOverview.inProcess.toLocaleString()}
+                prevVal={processOverview.prevInProcess.toLocaleString()}
+                order="desc"
+                color="#1976D2"
+                monthOverMonthPercentage={
+                  ((processOverview.inProcess - processOverview.prevInProcess) /
+                    processOverview.prevInProcess) *
+                  100
+                }
+              />
+              <TileItem
+                Icon={RiTimeLine}
+                title="Pending Approval"
+                value={processOverview.pendingApproval.toLocaleString()}
+                prevVal={processOverview.prevPendingApproval.toLocaleString()}
+                order="desc"
+                color="#F57C00"
+                monthOverMonthPercentage={
+                  ((processOverview.pendingApproval -
+                    processOverview.prevPendingApproval) /
+                    processOverview.prevPendingApproval) *
+                  100
+                }
+              />
+              <TileItem
+                Icon={RiCheckboxCircleLine}
+                title="Completed"
+                value={processOverview.completed.toLocaleString()}
+                prevVal={processOverview.prevCompleted.toLocaleString()}
+                color="#1B9E57"
+                monthOverMonthPercentage={
+                  ((processOverview.completed - processOverview.prevCompleted) /
+                    processOverview.prevCompleted) *
+                  100
+                }
+              />
+            </SimpleGrid>
           </Flex>
+        </Page.Row>
 
-          {/* RIGHT SIDE */}
-          <Flex align="center" flexShrink={0}>
-            <AppHeaderActions iconColor="#065f46" />
-          </Flex>
-        </Flex>
-      </Box>
-      {/* <UserWelcomeBanner firstName={"Joyce"} branch={"Head Office"} /> */}
-
-      {/* ── Process Overview ── */}
-      <Flex direction="column" gap={3} mt={{ base: 0, lg: 4 }}>
-        <SectionLabel
-          title="Process Overview"
-          subtitle="Staff processing volume this month"
-        />
-        {/* Mobile: carousel; Desktop (md+): 4-column grid */}
-        <Box display={{ base: "block", md: "none" }}>
-          <Carousel.Root slideCount={4} loop>
-            <Carousel.ItemGroup>
-              <Carousel.Item index={0} px={2}>
-                <TileItem
-                  Icon={RiInboxArchiveLine}
-                  title="New Requests"
-                  value={processOverview.newRequests.toLocaleString()}
-                  prevVal={processOverview.prevNewRequests.toLocaleString()}
-                  color="#1B9E57"
-                  monthOverMonthPercentage={
-                    ((processOverview.newRequests -
-                      processOverview.prevNewRequests) /
-                      processOverview.prevNewRequests) *
-                    100
-                  }
-                />
-              </Carousel.Item>
-              <Carousel.Item index={1} px={2}>
-                <TileItem
-                  Icon={RiLoader4Line}
-                  title="Currently Processing"
-                  value={processOverview.inProcess.toLocaleString()}
-                  prevVal={processOverview.prevInProcess.toLocaleString()}
-                  order="desc"
-                  color="#1976D2"
-                  monthOverMonthPercentage={
-                    ((processOverview.inProcess -
-                      processOverview.prevInProcess) /
-                      processOverview.prevInProcess) *
-                    100
-                  }
-                />
-              </Carousel.Item>
-              <Carousel.Item index={2} px={2}>
-                <TileItem
-                  Icon={RiTimeLine}
-                  title="Pending Approval"
-                  value={processOverview.pendingApproval.toLocaleString()}
-                  prevVal={processOverview.prevPendingApproval.toLocaleString()}
-                  order="desc"
-                  color="#F57C00"
-                  monthOverMonthPercentage={
-                    ((processOverview.pendingApproval -
-                      processOverview.prevPendingApproval) /
-                      processOverview.prevPendingApproval) *
-                    100
-                  }
-                />
-              </Carousel.Item>
-              <Carousel.Item index={3} px={2}>
-                <TileItem
-                  Icon={RiCheckboxCircleLine}
-                  title="Completed"
-                  value={processOverview.completed.toLocaleString()}
-                  prevVal={processOverview.prevCompleted.toLocaleString()}
-                  color="#1B9E57"
-                  monthOverMonthPercentage={
-                    ((processOverview.completed -
-                      processOverview.prevCompleted) /
-                      processOverview.prevCompleted) *
-                    100
-                  }
-                />
-              </Carousel.Item>
-            </Carousel.ItemGroup>
-            <Carousel.Control mt={3} justifyContent="center">
-              <Carousel.PrevTrigger>
-                <LuChevronLeft />
-              </Carousel.PrevTrigger>
-              <Carousel.Indicators />
-              <Carousel.NextTrigger>
-                <LuChevronRight />
-              </Carousel.NextTrigger>
-            </Carousel.Control>
-          </Carousel.Root>
-        </Box>
-        <SimpleGrid display={{ base: "none", md: "grid" }} columns={4} gap={3}>
-          <TileItem
-            Icon={RiInboxArchiveLine}
-            title="New Requests"
-            value={processOverview.newRequests.toLocaleString()}
-            prevVal={processOverview.prevNewRequests.toLocaleString()}
-            color="#1B9E57"
-            monthOverMonthPercentage={
-              ((processOverview.newRequests - processOverview.prevNewRequests) /
-                processOverview.prevNewRequests) *
-              100
-            }
-          />
-          <TileItem
-            Icon={RiLoader4Line}
-            title="Currently Processing"
-            value={processOverview.inProcess.toLocaleString()}
-            prevVal={processOverview.prevInProcess.toLocaleString()}
-            order="desc"
-            color="#1976D2"
-            monthOverMonthPercentage={
-              ((processOverview.inProcess - processOverview.prevInProcess) /
-                processOverview.prevInProcess) *
-              100
-            }
-          />
-          <TileItem
-            Icon={RiTimeLine}
-            title="Pending Approval"
-            value={processOverview.pendingApproval.toLocaleString()}
-            prevVal={processOverview.prevPendingApproval.toLocaleString()}
-            order="desc"
-            color="#F57C00"
-            monthOverMonthPercentage={
-              ((processOverview.pendingApproval -
-                processOverview.prevPendingApproval) /
-                processOverview.prevPendingApproval) *
-              100
-            }
-          />
-          <TileItem
-            Icon={RiCheckboxCircleLine}
-            title="Completed"
-            value={processOverview.completed.toLocaleString()}
-            prevVal={processOverview.prevCompleted.toLocaleString()}
-            color="#1B9E57"
-            monthOverMonthPercentage={
-              ((processOverview.completed - processOverview.prevCompleted) /
-                processOverview.prevCompleted) *
-              100
-            }
-          />
-        </SimpleGrid>
-      </Flex>
-
-      {/* ── Performance ── */}
-      <Flex direction="column" gap={3}>
-        <SectionLabel
-          title="Performance"
-          subtitle="Staff rankings and monthly performance"
-        />
-        <Grid
-          templateColumns={{ base: "1fr", xl: "2fr 3fr" }}
-          gap={4}
-          alignItems="stretch"
-        >
-          {/* Leaderboard */}
-          <Box>
-            <Card
-              activeIcon={<LuTrophy />}
-              title={"Staff Leaderboard"}
-              subtitle={"Ranked by claims processed this month"}
-              h={{ xl: "full" }}
+        {/* ── Performance ── */}
+        <Page.Row>
+          <Flex direction="column" gap={3}>
+            <SectionLabel
+              title="Performance"
+              subtitle="Staff rankings and monthly performance"
+            />
+            <Grid
+              templateColumns={{ base: "1fr", xl: "2fr 3fr" }}
+              gap={4}
+              alignItems="stretch"
             >
-              <ScrollArea.Root height="360px">
-                <ScrollArea.Viewport
-                  css={{
-                    "--scroll-shadow-size": "2rem",
-                    "&[data-at-top]": {
-                      maskImage:
-                        "linear-gradient(180deg,#000 calc(100% - var(--scroll-shadow-size)),transparent)",
-                    },
-                    "&[data-at-bottom]": {
-                      maskImage:
-                        "linear-gradient(0deg,#000 calc(100% - var(--scroll-shadow-size)),transparent)",
-                    },
-                  }}
+              {/* Leaderboard */}
+              <Box>
+                <Card
+                  activeIcon={<LuTrophy />}
+                  title={"Staff Leaderboard"}
+                  subtitle={"Ranked by claims processed this month"}
+                  h={{ xl: "full" }}
                 >
-                  <ScrollArea.Content px={4} py={2}>
-                    <Flex direction="column">
-                      {staffLeaderboard.map((agent, i) => (
-                        <LeaderboardItem
-                          key={agent.name}
-                          rank={i + 1}
-                          name={agent.name}
-                          ns={agent.ns}
-                          max={staffLeaderboard[0].ns}
-                        />
-                      ))}
-                    </Flex>
-                  </ScrollArea.Content>
-                </ScrollArea.Viewport>
-                <ScrollArea.Scrollbar visibility="hidden">
-                  <ScrollArea.Thumb />
-                </ScrollArea.Scrollbar>
-                <ScrollArea.Corner />
-              </ScrollArea.Root>
-            </Card>
-          </Box>
-
-          {/* Monthly claims processed chart */}
-          <Card
-            activeIcon={<LuChartBar size={14} />}
-            title="Monthly Claims Processed"
-            subtitle="Claims processed per month"
-            h={{ xl: "full" }}
-          >
-            <Flex justify="flex-end" mb={3}>
-              <Tabs.Root
-                value={year}
-                onValueChange={(details) => setYear(details.value)}
-                variant="subtle"
-                size="sm"
-              >
-                <Tabs.List dir="rtl">
-                  {["2026", "2025", "2024"].map((y) => (
-                    <Tabs.Trigger
-                      key={y}
-                      value={y}
-                      px={2.5}
-                      py={1}
-                      fontSize="xs"
-                      borderRadius="md"
-                      _selected={{
-                        bg: "var(--chakra-colors-primary)",
-                        color: "white",
-                        fontWeight: "semibold",
+                  <ScrollArea.Root height="360px">
+                    <ScrollArea.Viewport
+                      css={{
+                        "--scroll-shadow-size": "2rem",
+                        "&[data-at-top]": {
+                          maskImage:
+                            "linear-gradient(180deg,#000 calc(100% - var(--scroll-shadow-size)),transparent)",
+                        },
+                        "&[data-at-bottom]": {
+                          maskImage:
+                            "linear-gradient(0deg,#000 calc(100% - var(--scroll-shadow-size)),transparent)",
+                        },
                       }}
                     >
-                      {y}
-                    </Tabs.Trigger>
-                  ))}
-                </Tabs.List>
-              </Tabs.Root>
-            </Flex>
-            <ResponsiveContainer width="100%" height={330}>
-              <BarChart
-                data={chartData}
-                margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+                      <ScrollArea.Content px={4} py={2}>
+                        <Flex direction="column">
+                          {staffLeaderboard.map((agent, i) => (
+                            <LeaderboardItem
+                              key={agent.name}
+                              rank={i + 1}
+                              name={agent.name}
+                              ns={agent.ns}
+                              max={staffLeaderboard[0].ns}
+                            />
+                          ))}
+                        </Flex>
+                      </ScrollArea.Content>
+                    </ScrollArea.Viewport>
+                    <ScrollArea.Scrollbar visibility="hidden">
+                      <ScrollArea.Thumb />
+                    </ScrollArea.Scrollbar>
+                    <ScrollArea.Corner />
+                  </ScrollArea.Root>
+                </Card>
+              </Box>
+
+              {/* Monthly claims processed chart */}
+              <Card
+                activeIcon={<LuChartBar size={14} />}
+                title="Monthly Claims Processed"
+                subtitle="Claims processed per month"
+                h={{ xl: "full" }}
               >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#F3F4F6"
-                  vertical={false}
-                />
-                <XAxis
-                  axisLine={false}
-                  tickLine={false}
-                  dataKey="month"
-                  tick={{ fontSize: 11, fill: "#9CA3AF" }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fill: "#9CA3AF" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "10px",
-                    border: "1px solid #F3F4F6",
-                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                    fontSize: "12px",
-                  }}
-                  cursor={{ fill: "rgba(0,0,0,0.03)", radius: 8 }}
-                />
-                <Bar
-                  dataKey="value"
-                  fill="var(--chakra-colors-primary)"
-                  radius={[6, 6, 0, 0]}
-                  maxBarSize={40}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-        </Grid>
-      </Flex>
-    </Box>
+                <Flex justify="flex-end" mb={3}>
+                  <Tabs.Root
+                    value={year}
+                    onValueChange={(details) => setYear(details.value)}
+                    variant="subtle"
+                    size="sm"
+                  >
+                    <Tabs.List dir="rtl">
+                      {["2026", "2025", "2024"].map((y) => (
+                        <Tabs.Trigger
+                          key={y}
+                          value={y}
+                          px={2.5}
+                          py={1}
+                          fontSize="xs"
+                          borderRadius="md"
+                          _selected={{
+                            bg: "var(--chakra-colors-primary)",
+                            color: "white",
+                            fontWeight: "semibold",
+                          }}
+                        >
+                          {y}
+                        </Tabs.Trigger>
+                      ))}
+                    </Tabs.List>
+                  </Tabs.Root>
+                </Flex>
+                <ResponsiveContainer width="100%" height={330}>
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 4, right: 4, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="#F3F4F6"
+                      vertical={false}
+                    />
+                    <XAxis
+                      axisLine={false}
+                      tickLine={false}
+                      dataKey="month"
+                      tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: "#9CA3AF" }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "10px",
+                        border: "1px solid #F3F4F6",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                        fontSize: "12px",
+                      }}
+                      cursor={{ fill: "rgba(0,0,0,0.03)", radius: 8 }}
+                    />
+                    <Bar
+                      dataKey="value"
+                      fill="var(--chakra-colors-primary)"
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={40}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Card>
+            </Grid>
+          </Flex>
+        </Page.Row>
+      </Page.MainContent>
+    </Page.Root>
   );
 }
 

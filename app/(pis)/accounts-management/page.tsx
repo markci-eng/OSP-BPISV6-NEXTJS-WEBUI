@@ -58,14 +58,15 @@ import {
   monthlyProcesses,
   processOverview,
 } from "./dashboard-data";
-import { OSPBadge } from "@/components/common/badge/badge";
+
 import { IconType } from "react-icons";
-import UserWelcomeBanner from "@/claude components/layout/page/UserWelcomeBanner";
-import { useDemoAuth } from "@/components/ui/demo-auth";
-import { Card } from "@/claude components/card-accordion/card";
-import { RowItem } from "@/claude components/info-card/row-item";
-import { AppHeaderActions } from "@/claude components/layout/app-header-actions";
-import { useSidebarToggle } from "@/claude components/layout/sidebar-context";
+import {
+  AppHeaderActions,
+  Card,
+  StaticCard,
+  useDemoAuth,
+  useSidebarToggle,
+} from "osp-ui-kit";
 
 // --- Types ---
 type DashboardKeys = "request" | "service" | "reservation" | "activetrips";
@@ -727,7 +728,7 @@ export default function Dashboard() {
           // bg="white"
           // overflow="hidden"
           >
-            <Card
+            <StaticCard
               activeIcon={<LuTrophy />}
               title={"Staff Leaderboard"}
               subtitle={"Ranked by processes this month"}
@@ -766,11 +767,11 @@ export default function Dashboard() {
                 </ScrollArea.Scrollbar>
                 <ScrollArea.Corner />
               </ScrollArea.Root>
-            </Card>
+            </StaticCard>
           </Box>
 
           {/* Monthly processes chart */}
-          <Card
+          <StaticCard
             activeIcon={<LuChartBar size={14} />}
             title="Monthly Processes"
             subtitle="Requests processed per month"
@@ -842,7 +843,7 @@ export default function Dashboard() {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </Card>
+          </StaticCard>
         </Grid>
       </Flex>
     </Box>

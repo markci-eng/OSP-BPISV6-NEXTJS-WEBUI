@@ -18,8 +18,7 @@ import {
   getPosibleSubordinates,
   SalesAgent,
 } from "@/components/common/agent-lookup/agent-lookup.type";
-import Page from "@/claude components/layout/page/Page";
-import FormSteps from "@/claude components/FormSteps";
+import { FormStepper, Page } from "osp-ui-kit";
 import { Flex } from "@chakra-ui/react";
 import { redirect } from "next/navigation";
 import React from "react";
@@ -160,7 +159,7 @@ const ReorganizationWizard = () => {
       description="Move agents to a new receiving superior."
     >
       <Page.MainContent>
-        <FormSteps
+        <FormStepper
           stepsData={stepsData}
           title=""
           description=""

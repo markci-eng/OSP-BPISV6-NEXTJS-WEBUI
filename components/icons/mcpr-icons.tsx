@@ -1,9 +1,4 @@
-import React from "react";
-
-interface SVGIconProps extends React.SVGProps<SVGSVGElement> {
-  size?: string | number;
-  color?: string;
-}
+import type { SVGIconProps } from "./svg-icon.types";
 
 export function McprOutlineIcon({ size = "1em", color, style, ...props }: SVGIconProps) {
   return (

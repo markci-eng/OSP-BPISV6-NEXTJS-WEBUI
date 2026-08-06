@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Flex, SimpleGrid, Text } from "@chakra-ui/react";
+import { DASHBOARD_ACCENT_COLORS } from "@/lib/theme/dashboard-colors";
 import {
   LuFiles,
   LuCircleCheck,
@@ -15,7 +16,7 @@ import {
   LuArrowRight,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 import { drsItems } from "@/app/(bpis)/payment/data/paymentDetails";
 
 /* ── Section landing hub for Payment ── */
@@ -41,28 +42,28 @@ const actions: ActionCard[] = [
     description: "Record installment payments against a planholder's plan.",
     href: "/payment/encode-payment",
     Icon: LuPencilLine,
-    color: "#1B9E57",
+    color: DASHBOARD_ACCENT_COLORS.positive,
   },
   {
     title: "View DRS",
     description: "Review Daily Remittance Slips and their commission details.",
     href: "/payment/view-drs",
     Icon: LuFileText,
-    color: "#1976D2",
+    color: DASHBOARD_ACCENT_COLORS.info,
   },
   {
     title: "Encode Validated Deposit Slip",
     description: "Enter validated bank deposit slips for reconciliation.",
     href: "/payment/encodevalidated-deposit",
     Icon: LuBanknote,
-    color: "#8E24AA",
+    color: DASHBOARD_ACCENT_COLORS.purple,
   },
   {
     title: "View Encoded Deposit Slip",
     description: "Browse previously encoded deposit slips and their status.",
     href: "/payment/viewvalidated-deposit",
     Icon: LuFileCheck,
-    color: "#F57C00",
+    color: DASHBOARD_ACCENT_COLORS.warning,
   },
   {
     title: "Request Credit Memo",
@@ -195,20 +196,20 @@ export default function PaymentLandingPage() {
         label: "Deposit Slips",
         value: total,
         Icon: LuFiles,
-        color: "#1976D2",
+        color: DASHBOARD_ACCENT_COLORS.info,
       },
       {
         label: "Validated",
         value: validated,
         Icon: LuCircleCheck,
-        color: "#1B9E57",
+        color: DASHBOARD_ACCENT_COLORS.positive,
       },
-      { label: "Pending", value: pending, Icon: LuClock, color: "#F57C00" },
+      { label: "Pending", value: pending, Icon: LuClock, color: DASHBOARD_ACCENT_COLORS.warning },
       {
         label: "For Deposit",
         value: forDeposit,
         Icon: LuBanknote,
-        color: "#8E24AA",
+        color: DASHBOARD_ACCENT_COLORS.purple,
       },
     ];
   }, []);

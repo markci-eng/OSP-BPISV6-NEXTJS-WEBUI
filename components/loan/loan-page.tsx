@@ -4,10 +4,9 @@ import { Box } from "@chakra-ui/react";
 import { useState } from "react";
 import { FaFileShield } from "react-icons/fa6";
 
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import Page from "@/claude components/layout/page/Page";
-import FormSteps from "@/claude components/FormSteps";
-import InfoCard from "@/claude components/info-card/info-card";
+import { FormStepper, useMessageDialog } from "osp-ui-kit";
+import { Page } from "osp-ui-kit";
+import InfoCard from "@/components/info-card/info-card";
 import { FiBriefcase, FiFileText, FiUser } from "react-icons/fi";
 import LoanInfoForm, {
   LoanApplicantInfo,
@@ -147,7 +146,7 @@ export function LoanPage({ onProceed }: { onProceed: () => void }) {
       description="Apply for a loan application."
     >
       <Page.MainContent>
-        <FormSteps
+        <FormStepper
           stepsData={stepsData}
           title=""
           description=""

@@ -4,32 +4,33 @@ import { Box, Flex, Grid, SimpleGrid, Text } from "@chakra-ui/react";
 import { ReactNode, useEffect, useState } from "react";
 
 import { PrimaryMdFlexButton } from "st-peter-ui";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { drsItems, samplePayments } from "../data/paymentDetails";
+import { useDrsList } from "../hooks/useDrsList";
+import { useSamplePayments } from "../hooks/useSamplePayments";
 
 import DrsDataTable from "../components/drsDataTable";
-import {
-  LookupColumn,
-  LookupField,
-} from "@/components/common/reusable-lookup/LookUpField";
 
 import { DepositHdr } from "../data/payment.types";
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
 import { toast } from "sonner";
-import { Employee } from "@/data/doc-management/employeeSelector";
-import { EMPLOYEES } from "@/data/doc-management/documenttype";
+import { Employee } from "@/app/(bpis)/data/doc-management/employeeSelector";
+import { EMPLOYEES } from "@/app/(bpis)/data/doc-management/documenttype";
 import { refBankBranch } from "@/app/(bpis)/Model/Types/global.types";
 import { refBankBranchData } from "@/app/(bpis)/Model/Data/rawData";
 import { useRouter } from "next/navigation";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import Page from "@/claude components/layout/page/Page";
-import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
-import { Card as CardAccordion } from "@/claude components/card-accordion/card";
-import { LuBanknote, LuSearch } from "react-icons/lu";
+import {
+  StaticCard,
+  Card,
+  EmptyStateCard,
+  FloatingLabelInput,
+  LookupColumn,
+  LookupField,
+  OSPBadge,
+  Page,
+  useMessageDialog,
+} from "osp-ui-kit";
+import { LuBanknote } from "react-icons/lu";
 import { SlipUpload, SlipUploadStatus } from "../components/SlipUpload";
-import Card from "@/components/cards/Card";
-import { OSPBadge } from "@/components/common/badge/badge";
 
 const parseCurrency = (value?: string) => {
   const parsed = Number((value ?? "").replace(/[^0-9.-]/g, ""));
@@ -71,6 +72,8 @@ const MetaItem = ({
 );
 
 export default function EncodeDeposit() {
+  const { data: drsItems } = useDrsList();
+  const { data: samplePayments } = useSamplePayments();
   const { totals } = DrsFunction(samplePayments);
   const router = useRouter();
 
@@ -229,7 +232,7 @@ export default function EncodeDeposit() {
                     setSelectedDRS(null);
                     return;
                   }
-                  if (drsItems[0].id === e.id) {
+                  if (drsItems[0]?.id === e.id) {
                     setSelectedDRS(e);
                     setSearchOpen(false);
                   } else {
@@ -243,7 +246,7 @@ export default function EncodeDeposit() {
           </Flex>
 
           {/* SECTION 2 — Deposit Details */}
-          <CardAccordion
+          <StaticCard
             activeIcon={<LuBanknote size={16} />}
             title="Deposit Details"
             subtitle={selectedDRS ? selectedDRS.name : "Select a DRS first"}
@@ -469,7 +472,7 @@ export default function EncodeDeposit() {
                 </Flex>
               </>
             )}
-          </CardAccordion>
+          </StaticCard>
         </Flex>
       </Page.MainContent>
     </Page.Root>

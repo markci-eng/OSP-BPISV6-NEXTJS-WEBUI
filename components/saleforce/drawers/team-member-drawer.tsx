@@ -7,15 +7,9 @@ import {
   getAgentNameById,
   getPositionDesc,
 } from "../../common/agent-lookup/agent-lookup.type";
-import BottomQuickActions, {
-  QuickActionsHeaderCard,
-} from "@/claude components/drawer/bottom-quick-actions";
-import { RowItem } from "@/claude components/info-card/row-item";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import {
-  STANDARD_RADIUS,
-  STANDARD_SPACING,
-} from "@/lib/theme/standard-design-tokens";
+import { RowItem } from "@/components/info-card/row-item";
+import { STANDARD_SPACING } from "@/lib/theme/standard-design-tokens";
+import { BottomQuickActions, QuickActionsHeaderCard } from "osp-ui-kit";
 
 interface TeamMemberDrawerProps {
   agent: SalesAgent | null;

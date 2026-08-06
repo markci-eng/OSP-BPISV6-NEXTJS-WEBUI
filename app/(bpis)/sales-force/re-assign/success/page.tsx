@@ -1,5 +1,5 @@
 "use client";
-import { SuccessPage } from "@splpi/operations";
+import { SuccessPage } from "osp-ui-kit";
 import { useRouter } from "next/navigation";
 
 const page = () => {
@@ -7,7 +7,6 @@ const page = () => {
 
   return (
     <SuccessPage
-      variant="application"
       title="Re-Organization Request Submitted"
       description="The re-organization request has been submitted and is subject to approval. A confirmation email has also been sent, and you can view or track this anytime in your account."
       transactionId="RA-0000000"
@@ -19,10 +18,12 @@ const page = () => {
         minute: "2-digit",
         hour12: true,
       })}
-      onClickHome={() => {
+      primaryActionLabel="Go back to Home"
+      onPrimaryAction={() => {
         router.push("/");
       }}
-      onClickProceed={() => {
+      secondaryActionLabel="Track My Request"
+      onSecondaryAction={() => {
         router.push("/transaction/RA-0000000");
       }}
     />

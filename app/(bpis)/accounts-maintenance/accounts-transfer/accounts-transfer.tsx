@@ -10,15 +10,17 @@ import {
   Text,
   Textarea,
 } from "@chakra-ui/react";
-import { Box, PrimaryMdButton, PrimaryMdFlexButton } from "st-peter-ui";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
+import { Box, PrimaryMdFlexButton } from "st-peter-ui";
 import { LuArrowRightLeft, LuFilter, LuUsers } from "react-icons/lu";
 import { TbTransferIn, TbTransferOut } from "react-icons/tb";
 
-import Page from "@/claude components/layout/page/Page";
-import { LookupField } from "@/components/common/reusable-lookup/LookUpField";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import {
+  FloatingLabelSelect,
+  InfoCardAccordion,
+  LookupField,
+  Page,
+  useMessageDialog,
+} from "osp-ui-kit";
 
 import { TransferType, TrxMonth } from "../data/transaction-month";
 import TransferAccountList from "./account-transfer-list";

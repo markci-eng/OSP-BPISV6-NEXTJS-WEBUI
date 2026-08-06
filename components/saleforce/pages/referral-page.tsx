@@ -9,6 +9,7 @@ import {
   Image,
   Input,
   InputGroup,
+  Skeleton,
 } from "@chakra-ui/react";
 import {
   Body,
@@ -34,14 +35,14 @@ import {
 } from "react-icons/fa6";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
-import Card from "@/components/cards/Card";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
+import { DataTable } from "osp-ui-kit";
 import {
-  REFERRAL_HISTORY,
   REFERRAL_LINK,
   REFERRAL_QR_URL,
   ReferralHistoryItem,
 } from "../data/referral.mock";
+import { useReferralHistory } from "../hooks/useReferralHistory";
+import { Card, ErrorStateCard } from "osp-ui-kit";
 
 const shareTargets = [
   { label: "Facebook", icon: FaFacebook, color: "#1877F2" },
@@ -55,6 +56,12 @@ const shareTargets = [
 export default function ReferralPage() {
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
+  const {
+    data: referralHistory,
+    isLoading: isHistoryLoading,
+    error: historyError,
+    refetch: refetchHistory,
+  } = useReferralHistory();
 
   const handleCopy = async () => {
     try {
@@ -119,12 +126,7 @@ export default function ReferralPage() {
       <Card.Root title="QR Code">
         <Card.MainContent>
           <Flex direction="column" align="center" gap={4} py={2}>
-            <Box
-              p={3}
-              borderWidth={1}
-              borderColor="gray.200"
-              borderRadius="md"
-            >
+            <Box p={3} borderWidth={1} borderColor="gray.200" borderRadius="md">
               <Image
                 src={REFERRAL_QR_URL}
                 alt="Referral QR Code"
@@ -222,20 +224,29 @@ export default function ReferralPage() {
 
       <Card.Root title="Referral History">
         <Card.MainContent>
-          <DataTable
-            columns={columns}
-            data={REFERRAL_HISTORY}
-            features={{
-              search: false,
-              filtering: false,
-              sorting: false,
-              pagination: true,
-              selection: false,
-              draggable: false,
-              columnToggle: true,
-              detailSidebar: false,
-            }}
-          />
+          {isHistoryLoading ? (
+            <Flex direction="column" gap={2}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} h="36px" borderRadius="md" />
+              ))}
+            </Flex>
+          ) : historyError ? (
+            <ErrorStateCard onRetry={refetchHistory} />
+          ) : (
+            <DataTable
+              columns={columns}
+              data={referralHistory}
+              features={{
+                search: true,
+                filtering: true,
+                sorting: true,
+                pagination: true,
+                selection: false,
+                columnToggle: true,
+                detailSidebar: false,
+              }}
+            />
+          )}
         </Card.MainContent>
       </Card.Root>
     </Flex>

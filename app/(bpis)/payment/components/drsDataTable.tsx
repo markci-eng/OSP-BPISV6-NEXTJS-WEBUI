@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 
 import { DrsRowData, PaymentRecord } from "../data/payment.types";
 import { DrsFunction } from "../utils/drsFunction";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
+import { DataTable } from "osp-ui-kit";
 
 type DrsDataTableProps = {
   payments: PaymentRecord[];
@@ -77,11 +77,10 @@ export default function DrsDataTable({
         onRowClick={onRowClick}
         headerContent={headerContent}
         features={{
-          search: false,
-          sorting: false,
-          draggable: false,
+          search: true,
+          sorting: true,
           selection: false,
-          filtering: false,
+          filtering: true,
           columnToggle: true,
         }}
         // headerContent={

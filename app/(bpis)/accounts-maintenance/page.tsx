@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Flex, SimpleGrid, Text } from "@chakra-ui/react";
+import { DASHBOARD_ACCENT_COLORS } from "@/lib/theme/dashboard-colors";
 import {
   LuClipboardList,
   LuWaves,
@@ -12,7 +13,7 @@ import {
   LuArrowRight,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 import { mcprData } from "@/app/(bpis)/accounts-maintenance/mcpr/mcpr-list";
 import { floatingAccountsData } from "@/app/(bpis)/accounts-maintenance/floating-accounts/floating-list";
 import { accountListData } from "@/app/(bpis)/accounts-maintenance/accounts-transfer/account-transfer-list";
@@ -40,28 +41,28 @@ const actions: ActionCard[] = [
     description: "Review the Monthly Collection Performance Report accounts.",
     href: "/accounts-maintenance/mcpr",
     Icon: LuClipboardList,
-    color: "#1976D2",
+    color: DASHBOARD_ACCENT_COLORS.info,
   },
   {
     title: "Next Month Loading",
     description: "Load and schedule accounts due for the coming month.",
     href: "/accounts-maintenance/next-month-loading",
     Icon: LuCalendarPlus,
-    color: "#1B9E57",
+    color: DASHBOARD_ACCENT_COLORS.positive,
   },
   {
     title: "Floating Accounts",
     description: "Resolve unmatched payments and floating account balances.",
     href: "/accounts-maintenance/floating-accounts",
     Icon: LuWaves,
-    color: "#F57C00",
+    color: DASHBOARD_ACCENT_COLORS.warning,
   },
   {
     title: "Transfer of Accounts",
     description: "Move accounts between agents or branches.",
     href: "/accounts-maintenance/accounts-transfer",
     Icon: LuArrowLeftRight,
-    color: "#8E24AA",
+    color: DASHBOARD_ACCENT_COLORS.purple,
   },
 ];
 
@@ -184,19 +185,19 @@ export default function AccountsMaintenanceLandingPage() {
         label: "MCPR Accounts",
         value: mcprData.length,
         Icon: LuClipboardList,
-        color: "#1976D2",
+        color: DASHBOARD_ACCENT_COLORS.info,
       },
       {
         label: "Floating Accounts",
         value: floatingAccountsData.length,
         Icon: LuWaves,
-        color: "#F57C00",
+        color: DASHBOARD_ACCENT_COLORS.warning,
       },
       {
         label: "For Transfer",
         value: accountListData.length,
         Icon: LuArrowLeftRight,
-        color: "#8E24AA",
+        color: DASHBOARD_ACCENT_COLORS.purple,
       },
       {
         label: "Pending Transfers",

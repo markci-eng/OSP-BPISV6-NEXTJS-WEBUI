@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 620" width="800" height="620" role="img" aria-label="Sample bank statement">
+  <rect width="800" height="620" fill="#ffffff"/>
+  <rect x="0" y="0" width="800" height="86" fill="#12354f"/>
+  <text x="40" y="42" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#9fc2da" letter-spacing="2.4">SAMPLE BANK</text>
+  <text x="40" y="70" font-family="Segoe UI, system-ui, sans-serif" font-size="22" font-weight="700" fill="#ffffff">Account Statement</text>
+
+  <text x="40" y="132" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">ACCOUNT NAME</text>
+  <text x="40" y="156" font-family="Segoe UI, system-ui, sans-serif" font-size="16" font-weight="600" fill="#1a202c">ROSARIO VILLANUEVA</text>
+
+  <text x="420" y="132" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">ACCOUNT NUMBER</text>
+  <text x="420" y="156" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#1a202c">1-000-000-000-000</text>
+
+  <text x="40" y="196" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">BRANCH</text>
+  <text x="40" y="220" font-family="Segoe UI, system-ui, sans-serif" font-size="15" fill="#1a202c">TACLOBAN NORTH</text>
+
+  <text x="420" y="196" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">STATEMENT PERIOD</text>
+  <text x="420" y="220" font-family="Segoe UI, system-ui, sans-serif" font-size="15" fill="#1a202c">01 Jan 2026 – 31 Jan 2026</text>
+
+  <rect x="40" y="256" width="720" height="1" fill="#e2e8f0"/>
+
+  <rect x="40" y="272" width="720" height="34" fill="#f1f5f9"/>
+  <text x="56" y="294" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#4a5568">DATE</text>
+  <text x="200" y="294" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#4a5568">DESCRIPTION</text>
+  <text x="660" y="294" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#4a5568">AMOUNT</text>
+
+  <g font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#2d3748">
+    <text x="56" y="336">05 Jan 2026</text><text x="200" y="336">Fund transfer credit</text><text x="660" y="336">12,500.00</text>
+    <text x="56" y="374">12 Jan 2026</text><text x="200" y="374">Withdrawal</text><text x="660" y="374">2,000.00</text>
+    <text x="56" y="412">22 Jan 2026</text><text x="200" y="412">Fund transfer credit</text><text x="660" y="412">8,750.00</text>
+  </g>
+  <rect x="40" y="352" width="720" height="1" fill="#edf2f7"/>
+  <rect x="40" y="390" width="720" height="1" fill="#edf2f7"/>
+  <rect x="40" y="428" width="720" height="1" fill="#edf2f7"/>
+
+  <text x="560" y="474" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#a0aec0" letter-spacing="1.4">ENDING BALANCE</text>
+  <text x="660" y="500" font-family="Segoe UI, system-ui, sans-serif" font-size="20" font-weight="700" fill="#1a202c">19,250.00</text>
+
+  <text x="400" y="566" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#cbd5e0" letter-spacing="3">SAMPLE — MOCK DATA</text>
+  <text x="400" y="588" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#cbd5e0">Not a real bank statement</text>
+</svg>

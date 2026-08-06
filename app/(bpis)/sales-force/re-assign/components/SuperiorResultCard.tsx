@@ -4,12 +4,14 @@ import {
   getSubordinates,
   SalesAgent,
 } from "@/components/common/agent-lookup/agent-lookup.type";
-import { Avatar, Badge, Box, Flex, HStack, Text } from "@chakra-ui/react";
+import { Badge, Box, Flex, HStack, Text } from "@chakra-ui/react";
+import { BrandedAvatar } from "osp-ui-kit";
 import React from "react";
 import { LuBuilding2, LuCheck, LuMapPin, LuUsers } from "react-icons/lu";
 import { SOFT_SHADOW } from "../constants";
 import { fullName, initials } from "../utils";
 import { MetaItem, RankBadge, StatusBadge } from "./shared";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
 
 /* Labeled column used by the desktop result-card layout to spread agent
    details evenly across the row instead of clustering them on the left. */
@@ -69,6 +71,7 @@ export const SuperiorResultCard = ({
       px={2.5}
       py={1}
       flexShrink={0}
+      color={"white"}
     >
       <LuCheck size={12} />
       <Text ml={1} fontSize="11px" fontWeight="700">
@@ -120,9 +123,11 @@ export const SuperiorResultCard = ({
         py={3}
         minW={0}
       >
-        <Avatar.Root colorPalette={"gray"} size="md" flexShrink={0}>
-          <Avatar.Fallback>{initials(agent)}</Avatar.Fallback>
-        </Avatar.Root>
+        <BrandedAvatar
+          name={fullName(agent)}
+          imageUrl={mockAvatarUrl(agent.id)}
+          ringed
+        />
 
         <Box flex={1} minW={0}>
           <HStack gap={2} minW={0}>
@@ -170,9 +175,11 @@ export const SuperiorResultCard = ({
       >
         {/* Identity */}
         <HStack gap={3} flex="1.4" minW={0}>
-          <Avatar.Root colorPalette={"gray"} size="md" flexShrink={0}>
-            <Avatar.Fallback>{initials(agent)}</Avatar.Fallback>
-          </Avatar.Root>
+          <BrandedAvatar
+            name={fullName(agent)}
+            imageUrl={mockAvatarUrl(agent.id)}
+            ringed
+          />
           <Box minW={0}>
             <HStack gap={2} minW={0}>
               <Text fontWeight="700" fontSize="sm" color="gray.900" truncate>

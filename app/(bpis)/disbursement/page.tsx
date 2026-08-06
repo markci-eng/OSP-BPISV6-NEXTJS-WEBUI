@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Flex, SimpleGrid, Text } from "@chakra-ui/react";
+import { DASHBOARD_ACCENT_COLORS } from "@/lib/theme/dashboard-colors";
 import {
   LuUsers,
   LuFileText,
@@ -13,7 +14,7 @@ import {
   LuArrowRight,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 import { employeeLookup } from "@/components/common/employee-lookup/data/employee-lookup";
 import { drsItems, tableItems } from "@/app/(bpis)/payment/data/paymentDetails";
 
@@ -40,14 +41,14 @@ const actions: ActionCard[] = [
     description: "Release commission and traveling expense disbursements.",
     href: "/disbursement/comte",
     Icon: LuHandCoins,
-    color: "#1B9E57",
+    color: DASHBOARD_ACCENT_COLORS.positive,
   },
   {
     title: "Revolving Fund Expense",
     description: "Process and liquidate revolving fund expense releases.",
     href: "/disbursement/rfexpense",
     Icon: LuWallet,
-    color: "#1976D2",
+    color: DASHBOARD_ACCENT_COLORS.info,
   },
 ];
 
@@ -170,25 +171,25 @@ export default function DisbursementLandingPage() {
         label: "Payees",
         value: employeeLookup.length,
         Icon: LuUsers,
-        color: "#1976D2",
+        color: DASHBOARD_ACCENT_COLORS.info,
       },
       {
         label: "Remittance Slips",
         value: drsItems.length,
         Icon: LuFileText,
-        color: "#8E24AA",
+        color: DASHBOARD_ACCENT_COLORS.purple,
       },
       {
         label: "Validated Slips",
         value: validatedSlips,
         Icon: LuCircleCheck,
-        color: "#1B9E57",
+        color: DASHBOARD_ACCENT_COLORS.positive,
       },
       {
         label: "For Release",
         value: tableItems.length,
         Icon: LuBanknote,
-        color: "#F57C00",
+        color: DASHBOARD_ACCENT_COLORS.warning,
       },
     ];
   }, []);

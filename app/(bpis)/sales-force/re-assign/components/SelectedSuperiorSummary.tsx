@@ -5,7 +5,8 @@ import {
   getSubordinates,
   SalesAgent,
 } from "@/components/common/agent-lookup/agent-lookup.type";
-import { Avatar, Badge, Box, Flex, HStack, Text } from "@chakra-ui/react";
+import { Badge, Box, Flex, HStack, Text } from "@chakra-ui/react";
+import { BrandedAvatar } from "osp-ui-kit";
 import {
   LuBuilding2,
   LuCheck,
@@ -15,6 +16,7 @@ import {
 } from "react-icons/lu";
 import { fullName, initials } from "../utils";
 import { MetaItem } from "./shared";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
 
 /* ─── Selected superior summary ──────────────────────────────────────────── */
 
@@ -38,9 +40,7 @@ export const SelectedSuperiorSummary = ({
     >
       <Flex align="center" justify="space-between" gap={3}>
         <HStack gap={3} minW={0}>
-          <Avatar.Root colorPalette="gray" size="lg" flexShrink={0}>
-            <Avatar.Fallback>{initials(superior)}</Avatar.Fallback>
-          </Avatar.Root>
+          <BrandedAvatar name={fullName(superior)} imageUrl={mockAvatarUrl(superior.id)} ringed />
           <Box minW={0}>
             <Text fontWeight="700" fontSize="md" color="gray.900" truncate>
               {fullName(superior)}

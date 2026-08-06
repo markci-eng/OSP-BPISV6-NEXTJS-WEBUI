@@ -1,267 +1,238 @@
-const CACHE_NAME = "PWA-CRUD-V1";
-const DB_NAME = "PWA-CRUD-DB";
-const DB_VERSION = 1;
-const DB_STORE_NAME = "PWA-CRUD-STORE";
+/**
+ * One St. Peter — Life Plan Operations · Service Worker
+ * =====================================================
+ *
+ * Entry point and request router. All real work lives in the modules below,
+ * loaded with `importScripts` (the browser revalidates imported worker scripts
+ * on every update check, so they can never go stale):
+ *
+ *   sw/config.js         constants + client broadcast helper
+ *   sw/idb-kv.js         persistent metadata store (the cache pointer)
+ *   sw/cache-manager.js  atomic, versioned shell caches
+ *   sw/update-checker.js deployment detection + background update
+ *   sw/strategies.js     runtime caching strategies
+ *
+ * ## Lifecycle
+ *
+ *   install   → download + commit the current deployment, then skipWaiting()
+ *   activate  → clients.claim(), prune retired caches, re-check for updates
+ *   fetch     → route by request type (see `routeRequest` below)
+ *   message   → handle commands from the page
+ *
+ * ## Why updates do not depend on this file changing
+ *
+ * A conventional worker only updates when its own bytes change, which forces a
+ * hand-edited `CACHE_NAME` on every release. Here the *running* worker polls
+ * `/sw-manifest.json` — regenerated on each build — and swaps the shell cache
+ * itself. This file can stay byte-identical across a hundred deployments.
+ */
 
-let requestQueueSyncing = false;
-let requestQueueProcessed = false;
+// @ts-nocheck — worker scope: `self` is a ServiceWorkerGlobalScope carrying the
+// helpers attached by the modules below, which the editor's DOM lib cannot model.
+/* eslint-disable no-undef */
 
-async function cacheCoreAssets() {
-  const cache = await caches.open(CACHE_NAME);
-  return await cache.addAll(["/", "/profile"]);
-}
+importScripts(
+  "/sw/config.js",
+  "/sw/idb-kv.js",
+  "/sw/cache-manager.js",
+  "/sw/update-checker.js",
+  "/sw/strategies.js",
+);
+
+const { MESSAGES, COMMANDS, MANIFEST_URL, NETWORK_ONLY_PREFIXES } =
+  self.SW_CONFIG;
+
+/* -------------------------------------------------------------------------- */
+/* Install                                                                    */
+/* -------------------------------------------------------------------------- */
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(cacheCoreAssets());
-  self.skipWaiting();
+  event.waitUntil(
+    (async () => {
+      try {
+        // Downloads the whole shell and commits it atomically. On a fresh
+        // install this is what makes the app usable offline.
+        await self.swUpdater.checkForUpdate({ force: true });
+      } catch (error) {
+        // Deliberately non-fatal. Because the live cache is chosen by a
+        // pointer rather than by this worker's identity, an installation whose
+        // precache failed still serves the previously cached build correctly,
+        // and the checker will retry on the next activation or navigation.
+        console.error("[sw] install precache failed (non-fatal):", error);
+      }
+
+      await self.skipWaiting();
+    })(),
+  );
 });
 
-async function clearOldCaches() {
-  const cacheNames = await caches.keys();
-  return await Promise.all(
-    cacheNames
-      .filter((name) => name !== CACHE_NAME)
-      .map((name_1) => caches.delete(name_1)),
-  );
-}
+/* -------------------------------------------------------------------------- */
+/* Activate                                                                   */
+/* -------------------------------------------------------------------------- */
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(clearOldCaches());
-  self.clients.claim();
+  event.waitUntil(
+    (async () => {
+      await self.clients.claim();
+
+      // Removes shell caches that are neither live nor inside the retention
+      // window. Runs after the pointer is settled, never before.
+      await self.swCache.pruneCaches();
+
+      // Covers the case where the worker script itself was redeployed: the new
+      // worker may still be pointing at an older shell revision.
+      self.swUpdater.checkForUpdate({ force: true }).catch(() => {});
+    })(),
+  );
 });
 
-function openDb() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      db.createObjectStore(DB_STORE_NAME, { keyPath: "url" });
-    };
-  });
+/* -------------------------------------------------------------------------- */
+/* Fetch routing                                                              */
+/* -------------------------------------------------------------------------- */
+
+const IMAGE_EXTENSIONS = /\.(?:png|jpe?g|gif|webp|avif|svg|ico|bmp)$/i;
+const STATIC_EXTENSIONS = /\.(?:js|mjs|css|woff2?|ttf|otf|eot)$/i;
+
+/** Debounces the navigation-triggered update check to one per minute. */
+let lastNavigationCheck = 0;
+
+function scheduleUpdateCheck() {
+  const now = Date.now();
+  if (now - lastNavigationCheck < 60_000) return;
+  lastNavigationCheck = now;
+  self.swUpdater.checkForUpdate().catch(() => {});
 }
 
-async function addData(url, jsonData) {
-  const db = await openDb();
-  const transaction = db.transaction(DB_STORE_NAME, "readwrite");
-  const store = transaction.objectStore(DB_STORE_NAME);
+/**
+ * Picks a strategy for a request, or returns `null` to let the browser handle
+ * it untouched.
+ */
+function routeRequest(request, url) {
+  // --- Never intercepted -------------------------------------------------
+  //
+  // Non-GET, cross-origin, and Range requests are passed straight through.
+  // Intercepting them buys nothing and risks breaking uploads, third-party
+  // endpoints and media seeking.
+  if (request.method !== "GET") return null;
+  if (url.origin !== self.location.origin) return null;
+  if (request.headers.has("range")) return null;
 
-  const data = {
-    url,
-    response: JSON.stringify(jsonData),
-  };
+  // Worker infrastructure must always be read live, never from a cache.
+  if (url.pathname === MANIFEST_URL) return null;
+  if (url.pathname === "/service-worker.js") return null;
+  if (url.pathname.startsWith("/sw/")) return null;
 
-  const request = store.put(data);
-  await new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function getData(url) {
-  try {
-    const db = await openDb();
-    const transaction = db.transaction(DB_STORE_NAME, "readonly");
-    const store = transaction.objectStore(DB_STORE_NAME);
-
-    const request = store.get(url);
-
-    const result = await new Promise((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
-
-    if (result && result.response) {
-      return JSON.parse(result.response);
-    }
-
-    return null;
-  } catch (error) {
-    console.error("Error retrieving from IndexedDB:", error);
+  // Authenticated API traffic. Responses are never written to the Cache API.
+  // A future offline write-queue / IndexedDB sync layer hooks in here.
+  if (NETWORK_ONLY_PREFIXES.some((prefix) => url.pathname.startsWith(prefix))) {
     return null;
   }
+
+  // React Server Component payloads for client-side navigation. These are
+  // route-specific and session-specific; a hard navigation (handled below)
+  // is the correct offline path for them.
+  if (request.headers.get("RSC") === "1") return null;
+  if (url.searchParams.has("_rsc")) return null;
+
+  // --- Strategies --------------------------------------------------------
+
+  // HTML documents: network first, cached copy as the offline fallback.
+  if (request.mode === "navigate") {
+    scheduleUpdateCheck();
+    return self.swStrategies.networkFirst;
+  }
+
+  // Images (including Next's optimizer output): stale while revalidate.
+  if (
+    request.destination === "image" ||
+    url.pathname.startsWith("/_next/image") ||
+    IMAGE_EXTENSIONS.test(url.pathname)
+  ) {
+    return self.swStrategies.staleWhileRevalidate;
+  }
+
+  // Build output, fonts and styles: cache first against the versioned shell.
+  if (
+    url.pathname.startsWith("/_next/static/") ||
+    STATIC_EXTENSIONS.test(url.pathname) ||
+    ["script", "style", "font", "worker"].includes(request.destination)
+  ) {
+    return self.swStrategies.cacheFirst;
+  }
+
+  // Anything precached but not matched above (manifest.json, icons, …).
+  return async (req) =>
+    (await self.swCache.matchShell(req)) ?? self.swStrategies.networkOnly(req);
 }
-
-async function cacheFirstStrategy(request) {
-  try {
-    const cache = await caches.open(CACHE_NAME);
-    const cachedResponse = await cache.match(request);
-
-    if (cachedResponse) {
-      return cachedResponse;
-    }
-
-    const networkResponse = await fetch(request);
-    const responseClone = networkResponse.clone();
-    await cache.put(request, responseClone);
-    return networkResponse;
-  } catch (error) {
-    console.error("Cache first strategy failed:", error);
-    return caches.match("/offline");
-  }
-}
-
-async function networkFirstStrategy(request) {
-  const clonedRequest = request.clone();
-  let requestData;
-  const requestBody = await clonedRequest.text();
-
-  console.log("_response_", request);
-  try {
-    if (!requestQueueProcessed) {
-      if (!requestQueueSyncing) {
-        await processRequestQueue();
-      }
-      console.log("User is online, processing task queue");
-      requestQueueProcessed = true;
-    }
-    const networkResponse = await fetch(request);
-
-    if (networkResponse.ok) {
-      const responseClone = networkResponse.clone();
-      const responseData = await responseClone.json();
-      await addData(request.url, responseData);
-      return networkResponse;
-    }
-
-    throw new Error("Network response was not ok");
-  } catch (error) {
-    console.error("Network first strategy failed:", error);
-
-    // Fallback to cached data if available
-    requestQueueProcessed = false; // Reset the flag to allow re-processing when back online
-    const cachedResponse = await getData(request.url);
-
-    if (cachedResponse) {
-      console.log("Using cached response:", cachedResponse);
-
-      if (request.method === "POST") {
-        requestData = JSON.parse(requestBody);
-        requestData.id = Date.now().toString();
-        cachedResponse.push(requestData);
-        await addData(request.url, cachedResponse);
-        enqueueRequest({
-          url: request.url,
-          method: "POST",
-          body: JSON.stringify(requestData),
-        });
-        return new Response(JSON.stringify(requestData), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      } else if (request.method === "PUT") {
-        requestData = JSON.parse(requestBody);
-        const index = cachedResponse.findIndex(
-          (item) => item.id === requestData.id,
-        );
-        if (index !== -1) {
-          cachedResponse[index] = requestData;
-          await addData(request.url, cachedResponse);
-          enqueueRequest({
-            url: request.url,
-            method: "PUT",
-            body: JSON.stringify(requestData),
-          });
-          return new Response(JSON.stringify(requestData), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      } else if (request.method === "DELETE") {
-        requestData = JSON.parse(requestBody);
-        const filteredResponse = cachedResponse.filter(
-          (item) => item.id !== requestData.id,
-        );
-        await addData(request.url, filteredResponse);
-        enqueueRequest({
-          url: request.url,
-          method: "DELETE",
-          body: JSON.stringify(requestData),
-        });
-        return new Response(JSON.stringify(requestData), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      console.log("Returning cached response:", cachedResponse);
-      return new Response(JSON.stringify(cachedResponse), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    // Return empty response if no cache is available
-    return new Response("[]", { status: 200 });
-  }
-}
-
-async function dynamicCaching(request) {
-  const cache = await caches.open(CACHE_NAME);
-
-  try {
-    const response = await fetch(request);
-    const responseClone = response.clone();
-    await cache.put(request, responseClone);
-    return response;
-  } catch (error) {
-    console.error("Dynamic caching failed:", error);
-    console.log("Dynamic caching for:", request.url);
-    console.log("Request method:", request);
-    return caches.match(request);
-  }
-}
-
-const enqueueRequest = async (request) => {
-  const queue = (await getData("request-queue")) || [];
-  queue.push(request);
-  console.log("Enqueued request:", request);
-  await addData("request-queue", queue);
-};
-
-const processRequestQueue = async () => {
-  requestQueueSyncing = true;
-  const queue = (await getData("request-queue")) || [];
-
-  while (queue.length > 0) {
-    const task = queue[0];
-    console.log("Processing task:", task);
-    try {
-      await fetch(task.url, {
-        method: task.method,
-        headers: { "Content-Type": "application/json" },
-        body: task.body,
-      });
-      queue.shift();
-      await addData("request-queue", queue);
-      console.log("Processed task:", task);
-    } catch (error) {
-      console.error("Failed to process task:", task, error);
-      break;
-    }
-  }
-  requestQueueSyncing = false;
-};
-
-self.addEventListener("online", async () => {
-  console.log("Service worker detected online event");
-  if (!requestQueueProcessed) {
-    console.log("User is online, processing task queue");
-    await processRequestQueue();
-    requestQueueProcessed = true; // Set the flag to true so it doesn't run again
-  }
-});
 
 self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const url = new URL(event.request.url);
+  const strategy = routeRequest(event.request, url);
+  if (!strategy) return;
 
-  if (url.pathname.startsWith("/api/")) {
-    event.respondWith(networkFirstStrategy(request));
-  } else if (event.request.mode === "navigate") {
-    event.respondWith(cacheFirstStrategy(request));
-  } else {
-    event.respondWith(dynamicCaching(request));
+  event.respondWith(
+    Promise.resolve(strategy(event.request)).catch(async (error) => {
+      console.warn("[sw] request failed:", url.pathname, error?.message);
+
+      // A failed document request must land on the friendly offline page
+      // rather than the browser's error screen.
+      if (event.request.mode === "navigate") {
+        return self.swStrategies.offlineFallback();
+      }
+
+      return new Response("", { status: 504, statusText: "Offline" });
+    }),
+  );
+});
+
+/* -------------------------------------------------------------------------- */
+/* Client messages                                                            */
+/* -------------------------------------------------------------------------- */
+
+self.addEventListener("message", (event) => {
+  const type = event.data?.type;
+  if (!type) return;
+
+  switch (type) {
+    // Sent by the page on load, on regaining connectivity, and on demand.
+    case COMMANDS.CHECK_FOR_UPDATE:
+      event.waitUntil(
+        self.swUpdater
+          .checkForUpdate({ force: Boolean(event.data.force) })
+          .catch(() => {}),
+      );
+      break;
+
+    case COMMANDS.GET_STATUS:
+      event.waitUntil(
+        (async () => {
+          const status = await self.swUpdater.getStatus();
+          const target = event.source;
+          if (target) target.postMessage({ type: MESSAGES.STATUS, ...status });
+        })(),
+      );
+      break;
+
+    // Sent when a *worker script* update is waiting (as opposed to a shell
+    // update, which this worker applies on its own).
+    case COMMANDS.SKIP_WAITING:
+      self.skipWaiting();
+      break;
+
+    default:
+      break;
+  }
+});
+
+/* -------------------------------------------------------------------------- */
+/* Background triggers                                                        */
+/* -------------------------------------------------------------------------- */
+
+// Fired in browsers that support it (Chrome/Edge, installed PWAs). The page
+// also drives checks on its own `online` event, so this is an optimisation
+// rather than a dependency.
+self.addEventListener("periodicsync", (event) => {
+  if (event.tag === "osp-update-check") {
+    event.waitUntil(self.swUpdater.checkForUpdate({ force: true }).catch(() => {}));
   }
 });

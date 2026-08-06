@@ -5,14 +5,11 @@ import { Box, Button, Icon, Table, Text } from "@chakra-ui/react";
 import { Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Payment } from "./types";
+import { formatCurrency } from "@/lib/format/currency";
 
 interface PaymentTableProps {
   payments: Payment[];
   onRemove: (id: string) => void;
-}
-
-function formatCurrency(n: number) {
-  return `₱${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const MotionTr = motion.create("tr");

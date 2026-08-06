@@ -1,5 +1,5 @@
-import { OSPBadge } from "@/components/common/badge/badge";
-import InfoItem from "@/components/common/info-item/info-item";
+import { OSPBadge } from "osp-ui-kit";
+import { InfoItem } from "osp-ui-kit";
 import {
   Avatar,
   Box,

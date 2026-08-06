@@ -1,6 +1,5 @@
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { Grid, Box, Strong } from "@chakra-ui/react";
-import SectionTitle from "@/components/texts/SectionTitle";
+import { Grid, Box } from "@chakra-ui/react";
+import { FloatingLabelInput, SectionTitle } from "osp-ui-kit";
 
 interface AgentAddressFormProps {
   lotNumber?: string;

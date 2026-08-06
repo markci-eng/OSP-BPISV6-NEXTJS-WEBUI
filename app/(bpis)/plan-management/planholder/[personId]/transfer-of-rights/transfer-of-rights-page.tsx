@@ -6,11 +6,8 @@ import { NewPlanHolderInfoForm } from "./new-ph-form";
 import { LuFileText, LuUserRound } from "react-icons/lu";
 import TFReviewApplicationPage from "./tf-review-application-page";
 import { FaFileShield } from "react-icons/fa6";
-import Page from "@/claude components/layout/page/Page";
-import { UploadedFile } from "@/components/document-uploader/DragAndDrop";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import FormSteps from "@/claude components/FormSteps";
-import { Box } from "@chakra-ui/react";
+import { FormStepper, Page, UploadedFile } from "osp-ui-kit";
+import { useMessageDialog } from "osp-ui-kit";
 
 export function TransferOfRightsPage() {
   const [checkedPlans, setCheckedPlans] = useState<CheckedPlan[]>([]);
@@ -75,7 +72,7 @@ export function TransferOfRightsPage() {
       description="Transfer your plan to loved ones."
     >
       <Page.MainContent>
-        <FormSteps
+        <FormStepper
           stepsData={stepsData}
           title={""}
           description={""}

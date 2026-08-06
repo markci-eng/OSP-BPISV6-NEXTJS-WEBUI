@@ -1,14 +1,13 @@
 import { Box } from "@chakra-ui/react";
 import { useState } from "react";
-import type { CheckedPlanType } from "@/data/plan-management/change-of-mode/change-mode.types";
+import type { CheckedPlanType } from "@/app/(bpis)/data/plan-management/change-of-mode/change-mode.types";
 import { ChangeModeForm } from "./change-mode-form";
-import { PHPlans } from "@/data/plan-management/change-of-mode/data";
+import { PHPlans } from "@/app/(bpis)/data/plan-management/change-of-mode/data";
 import { ChangeModeSummaryPage } from "./change-mode-summary";
 import { FaFileAlt } from "react-icons/fa";
 import { FaFileShield } from "react-icons/fa6";
-import Page from "@/claude components/layout/page/Page";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import FormSteps from "@/claude components/FormSteps";
+import { FormStepper, Page } from "osp-ui-kit";
+import { useMessageDialog } from "osp-ui-kit";
 
 export function ChangeModePage({
   onSuccess,
@@ -81,7 +80,7 @@ export function ChangeModePage({
       description="Switch your payment mode anytime."
     >
       <Page.MainContent>
-        <FormSteps
+        <FormStepper
           stepsData={stepsData}
           title=""
           description=""

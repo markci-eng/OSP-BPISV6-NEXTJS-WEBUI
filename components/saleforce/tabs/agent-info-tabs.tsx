@@ -1,12 +1,12 @@
 import React from "react";
 import { Tabs, Grid, Flex, Strong, Separator, Box } from "@chakra-ui/react";
 import { LuUser, LuNotebook } from "react-icons/lu";
-import { InfoItem } from "@splpi/summary";
 import {
   getAgentNameById,
   getPositionDesc,
   SalesAgent,
 } from "../../common/agent-lookup/agent-lookup.type";
+import { InfoItem } from "osp-ui-kit";
 
 interface AgentInfoTabsProps {
   agent?: SalesAgent;

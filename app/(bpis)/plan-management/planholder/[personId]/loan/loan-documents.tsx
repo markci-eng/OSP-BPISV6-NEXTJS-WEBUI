@@ -1,18 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import DocumentUploader, {
-  UploadedFile,
-} from "@/components/document-uploader/DragAndDrop";
 import { Badge, Box, HStack, Separator, Text, VStack } from "@chakra-ui/react";
 import {
   LuCircleCheck,
   LuClipboardList,
   LuTriangleAlert,
 } from "react-icons/lu";
-
-import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
-import InfoCard from "@/claude components/info-card/info-card";
+import { DocumentUploader, InputCardAccordion, UploadedFile } from "osp-ui-kit";
 
 export const REQUIRED_DOCUMENTS = [
   {

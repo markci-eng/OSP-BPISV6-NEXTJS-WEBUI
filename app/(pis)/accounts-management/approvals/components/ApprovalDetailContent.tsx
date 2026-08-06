@@ -18,13 +18,11 @@ import {
   Clock,
   FileText,
   MessageSquare,
-  Printer,
   X,
   XCircle,
 } from "lucide-react";
 
 import type { ApprovalConfig } from "../config/approval-config";
-import { DRSPrintModal } from "./DRSPrintModal";
 
 type ApprovalDetailContentProps = {
   row: any;
@@ -212,11 +210,9 @@ export function ApprovalDetailContent({
   onDeny,
 }: ApprovalDetailContentProps) {
   const [remarks, setRemarks] = React.useState("");
-  const [drsPrintOpen, setDrsPrintOpen] = React.useState(false);
 
   const status = getApprovalStatus(row);
   const isPending = status === "Pending";
-  const isDRSApproval = config.detailLayout === "drs-print";
 
   const primaryField = config.detailFields[0];
   const primaryValue = primaryField
@@ -284,19 +280,6 @@ export function ApprovalDetailContent({
             );
           })}
         </Box>
-
-        {isDRSApproval && (
-          <Box mt={4} pt={4} borderTopWidth="1px" borderColor="border.muted">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDrsPrintOpen(true)}
-            >
-              <Printer size={14} />
-              View / Print DRS
-            </Button>
-          </Box>
-        )}
       </SectionCard>
 
       <SectionCard title="Remarks" icon={<MessageSquare size={13} />}>
@@ -365,14 +348,6 @@ export function ApprovalDetailContent({
             This request has been {String(status).toLowerCase()}.
           </Text>
         </Box>
-      )}
-
-      {isDRSApproval && (
-        <DRSPrintModal
-          open={drsPrintOpen}
-          onClose={() => setDrsPrintOpen(false)}
-          row={row}
-        />
       )}
     </VStack>
   );

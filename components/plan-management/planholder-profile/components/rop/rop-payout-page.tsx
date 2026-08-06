@@ -33,19 +33,20 @@ import {
 import { PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
 import { z } from "zod";
 
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import DocumentUploader from "@/components/document-uploader/DragAndDrop";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
-import Page from "@/claude components/layout/page/Page";
+import {
+  DocumentUploader,
+  FloatingLabelInput,
+  FloatingLabelSelect,
+  FormStepper,
+  useMessageDialog,
+} from "osp-ui-kit";
+import { StaticCard, Page } from "osp-ui-kit";
 import {
   Tab,
   type TabItem,
-} from "@/components/new-planholder-profile/components/tab/tab";
-import { Card } from "@/claude components/card-accordion/card";
-import FormSteps from "@/claude components/FormSteps";
-import InfoCard from "@/claude components/info-card/info-card";
-import SuccessMessage from "@/claude components/pages/success-message";
+} from "@/components/plan-management/planholder-profile/components/tab/tab";
+import InfoCard from "@/components/info-card/info-card";
+import SuccessMessage from "@/components/feedback/success-message";
 
 // ---- Types ----
 interface RopRecord {
@@ -315,7 +316,7 @@ function PayoutChannelStep({
 }) {
   const existingPage = (
     <Box py={3}>
-      <Card
+      <StaticCard
         activeIcon={<LuBanknote />}
         title={`${EXISTING_PAYOUT.channel} Payout`}
         subtitle="Active Registered Channel"
@@ -341,7 +342,7 @@ function PayoutChannelStep({
           <DocumentBox label="Government-issued ID" />
           <DocumentBox label="Specimen Signature" />
         </Grid>
-      </Card>
+      </StaticCard>
     </Box>
   );
 
@@ -815,7 +816,7 @@ export function RopPayoutPage({
         description="Register payout & review application."
       >
         <Page.MainContent>
-          <FormSteps
+          <FormStepper
             stepsData={stepsData}
             title=""
             description=""

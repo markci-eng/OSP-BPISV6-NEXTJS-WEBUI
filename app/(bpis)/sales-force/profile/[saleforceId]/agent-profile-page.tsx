@@ -1,7 +1,7 @@
 "use client";
 
 import { Box } from "@chakra-ui/react";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { useMessageDialog } from "osp-ui-kit";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
 import { AgentDetails } from "@/components/saleforce/pages/agent-plan-details";
 import AgentDetailsMobile from "@/components/saleforce/pages/agent-plan-details-mobile";

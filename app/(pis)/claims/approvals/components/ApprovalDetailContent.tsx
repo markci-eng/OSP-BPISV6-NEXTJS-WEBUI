@@ -290,6 +290,7 @@ export function ApprovalDetailContent({
             <Button
               variant="outline"
               size="sm"
+              borderRadius="full"
               onClick={() => setDrsPrintOpen(true)}
             >
               <Printer size={14} />
@@ -336,6 +337,7 @@ export function ApprovalDetailContent({
               flex="1"
               variant="outline"
               colorPalette="red"
+              borderRadius="full"
               onClick={() => onDeny?.(row, remarks)}
             >
               <X size={15} />
@@ -345,6 +347,7 @@ export function ApprovalDetailContent({
             <Button
               flex="1"
               colorPalette="blue"
+              borderRadius="full"
               onClick={() => onApprove?.(row, remarks)}
             >
               <Check size={15} />

@@ -1,5 +1,5 @@
 "use client";
-import { SuccessPage } from "@splpi/operations";
+import { SuccessPage } from "osp-ui-kit";
 import { useParams, useRouter } from "next/navigation";
 
 const page = () => {
@@ -8,7 +8,6 @@ const page = () => {
 
   return (
     <SuccessPage
-      variant="application"
       title="Movement Request Submitted"
       description="The agent movement request has been submitted and is subject to approval. A confirmation email has also been sent, and you can view or track this anytime in your account."
       transactionId="MV-0000000"
@@ -20,10 +19,12 @@ const page = () => {
         minute: "2-digit",
         hour12: true,
       })}
-      onClickHome={() => {
+      primaryActionLabel="Go back to Home"
+      onPrimaryAction={() => {
         router.push(`/sales-force/profile/${params.saleforceId}`);
       }}
-      onClickProceed={() => {
+      secondaryActionLabel="Track My Request"
+      onSecondaryAction={() => {
         router.push("/transaction/MV-0000000");
       }}
     />

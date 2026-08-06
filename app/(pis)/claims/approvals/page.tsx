@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { Box, HStack, IconButton, Menu, Portal, Text } from "@chakra-ui/react";
 import { ChevronDown, Filter, SlidersHorizontal } from "lucide-react";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 import { ApprovalsTable } from "./components/ApprovalsTable";
-import type { ApprovalView } from "@/data/approvals/types";
+import type { ApprovalView } from "@/app/(bpis)/data/approvals/types";
 
 const APPROVAL_TYPES: { label: string; value: ApprovalView }[] = [
   { label: "Reassignment of Documents", value: "reassignment-doc" },

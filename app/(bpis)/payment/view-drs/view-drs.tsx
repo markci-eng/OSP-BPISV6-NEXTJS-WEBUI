@@ -22,8 +22,11 @@ import {
   SecondaryMdFlexButton,
 } from "st-peter-ui";
 
-import { drsItems, samplePayments } from "../data/paymentDetails";
 import { DepositHdr } from "../data/payment.types";
+import { useDrsList } from "../hooks/useDrsList";
+import { useDeleteDrs } from "../hooks/useDeleteDrs";
+import { useSamplePayments } from "../hooks/useSamplePayments";
+import { DrsListDetailSkeleton } from "../components/DrsListDetailSkeleton";
 import {
   LuTrash,
   LuChevronRight,
@@ -38,17 +41,17 @@ import {
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import DrsDataTable from "../components/drsDataTable";
-
-import {
-  LookupColumn,
-  LookupField,
-} from "@/components/common/reusable-lookup/LookUpField";
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import Page from "@/claude components/layout/page/Page";
-import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
-import { OSPBadge } from "@/components/common/badge/badge";
+import {
+  EmptyStateCard,
+  ErrorStateCard,
+  LookupColumn,
+  LookupField,
+  OSPBadge,
+  Page,
+  useMessageDialog,
+} from "osp-ui-kit";
 import { MetaCard } from "../viewvalidated-deposit/viewDeposit";
 
 const STATUS_STYLES: Record<
@@ -90,11 +93,14 @@ const formatSlipDate = (value?: string) => {
 type MobileView = "list" | "detail";
 
 export default function ViewDrs() {
+  const { data: samplePayments } = useSamplePayments();
   const { totals } = DrsFunction(samplePayments);
   const router = useRouter();
 
+  const { data: items, isLoading, error, refetch } = useDrsList();
+  const { deleteDrs: deleteDrsMutation } = useDeleteDrs();
+
   const [selectedId, setSelectedId] = useState<string>("");
-  const [items, setItems] = useState(drsItems);
   const [mobileView, setMobileView] = useState<MobileView>("list");
 
   const sortedDrsItems = useMemo(
@@ -134,7 +140,7 @@ export default function ViewDrs() {
     });
     if (!confirmed) return;
 
-    setItems((prev) => prev.filter((x) => x.id !== item.id));
+    await deleteDrsMutation(item.id);
     if (selectedId === item.id) {
       setSelectedId("");
       if (isMobile) setMobileView("list");
@@ -168,7 +174,7 @@ export default function ViewDrs() {
   const handleEncodeDeposit = () => {
     const selected = items.find((x) => x.id === selectedId);
     if (!selected) return;
-    const firstCreated = drsItems[0];
+    const firstCreated = items[0];
     if (selected.id !== firstCreated?.id) {
       toast.error("Please encode the first created DRS");
       return;
@@ -630,6 +636,34 @@ export default function ViewDrs() {
       )}
     </Flex>
   );
+
+  if (isLoading) {
+    return (
+      <Page.Root
+        title="Digital Remittance Slip"
+        description="Manage your digital remittance slip"
+        headerButton="menu"
+      >
+        <Page.MainContent h="full" minH={0}>
+          <DrsListDetailSkeleton />
+        </Page.MainContent>
+      </Page.Root>
+    );
+  }
+
+  if (error) {
+    return (
+      <Page.Root
+        title="Digital Remittance Slip"
+        description="Manage your digital remittance slip"
+        headerButton="menu"
+      >
+        <Page.MainContent>
+          <ErrorStateCard onRetry={refetch} />
+        </Page.MainContent>
+      </Page.Root>
+    );
+  }
 
   return (
     <Page.Root

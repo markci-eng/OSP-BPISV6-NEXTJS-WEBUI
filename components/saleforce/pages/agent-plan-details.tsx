@@ -7,7 +7,6 @@ import {
   Grid,
   GridItem,
   Show,
-  Text,
   useBreakpointValue,
 } from "@chakra-ui/react";
 import {
@@ -33,95 +32,40 @@ import {
   getSubordinates,
   SalesAgent,
 } from "../../common/agent-lookup/agent-lookup.type";
-import MenuButton, {
-  MenuItemButton,
-} from "@/claude components/buttons/MenuButton";
+import MenuButton, { MenuItemButton } from "@/components/primitives/MenuButton";
 import { useRouter } from "next/navigation";
 import TeamMemberDrawer from "../drawers/team-member-drawer";
-import { PendingRequests } from "@/components/new-planholder-profile/sections/pending-requests";
+import { PendingRequests } from "@/components/plan-management/planholder-profile/sections/pending-requests";
 import AgentReassignForm from "../forms/agent-reassign-form";
 import AgentMovementForm from "../forms/agent-movement-form";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
 import AgentPersonalInfoCard from "../cards/AgentPersonalInfoCard";
 import AgentEmploymentInfoCard from "../cards/AgentEmploymentInfoCard";
-import Page from "@/claude components/layout/page/Page";
-import { PlanholderAddressCard } from "@/components/new-planholder-profile/sections/address-info";
+import {
+  InfoCardAccordion,
+  MetricCard,
+  Page,
+  ProfileHeaderCard,
+} from "osp-ui-kit";
+import { PlanholderAddressCard } from "@/components/plan-management/planholder-profile/sections/address-info";
 import ReferralPage from "./referral-page";
 import AgentContactInfoCard from "../cards/AgentContactInfoCard";
 import { SecondarySmButton } from "st-peter-ui";
-import ProfileHeaderCard from "@/components/cards/ProfileHeaderCard";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
 import ActionButtons, {
   ActionButtonItem,
-} from "@/claude components/buttons/ActionButtons";
+} from "@/components/primitives/ActionButtons";
 import MCPRList, {
   mcprData,
 } from "@/app/(bpis)/accounts-maintenance/mcpr/mcpr-list";
 import { SuperiorResultCard } from "@/app/(bpis)/sales-force/re-assign/components/SuperiorResultCard";
-import { MOCK_AGENT_REQUESTS } from "@/data/saleforce/agent-requests";
+import { MOCK_AGENT_REQUESTS } from "@/app/(bpis)/data/saleforce/agent-requests";
 
 const peso = (value: number) =>
   `₱ ${value.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
-
-function MCPRStatCard({
-  icon,
-  label,
-  value,
-  accent,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  accent: string;
-}) {
-  return (
-    <Flex
-      align="center"
-      gap={3}
-      p={4}
-      rounded="lg"
-      borderWidth="1px"
-      borderColor="border.muted"
-      bg="bg"
-    >
-      <Flex
-        align="center"
-        justify="center"
-        boxSize={10}
-        rounded="lg"
-        bg={`${accent}.50`}
-        color={`${accent}.600`}
-        flexShrink={0}
-      >
-        {icon}
-      </Flex>
-      <Box minW={0}>
-        <Text
-          fontSize="xs"
-          fontWeight="semibold"
-          color="fg.muted"
-          textTransform="uppercase"
-          letterSpacing="wider"
-          truncate
-        >
-          {label}
-        </Text>
-        <Text
-          fontSize="xl"
-          fontWeight="bold"
-          color="fg"
-          lineHeight="1.2"
-          fontVariantNumeric="tabular-nums"
-        >
-          {value}
-        </Text>
-      </Box>
-    </Flex>
-  );
-}
 
 export function AgentDetails(params: {
   selectedAgent: SalesAgent;
@@ -284,6 +228,25 @@ export function AgentDetails(params: {
       icon: LuTrendingUpDown,
       onClick: () => router.push(`${profileBase}/movement`),
     },
+  ];
+
+  // Secondary actions — kept in the overflow quick-actions sheet
+  const overflowActions = [
+    {
+      label: "Edit",
+      icon: LuUserPen,
+      onClick: () => router.push(`${profileBase}/edit`),
+    },
+    {
+      label: "Re-Organize",
+      icon: LuReplace,
+      onClick: () => router.push(`${profileBase}/re-organize`),
+    },
+    {
+      label: "Movement",
+      icon: LuTrendingUpDown,
+      onClick: () => router.push(`${profileBase}/movement`),
+    },
     {
       label: "Referral",
       icon: LuShare2,
@@ -310,6 +273,9 @@ export function AgentDetails(params: {
                 {action.label}
               </SecondarySmButton>
             ))}
+            {overflowActions.length > 0 && (
+              <ActionButtons buttons={overflowActions} />
+            )}
           </Flex>
         </Page.ToolContent>
       )}
@@ -341,6 +307,7 @@ export function AgentDetails(params: {
                   <ProfileHeaderCard
                     name={selectedAgent.name}
                     personId={selectedAgent.id}
+                    avatarUrl={mockAvatarUrl(selectedAgent.id)}
                     homeAddress={[
                       selectedAgent.address?.unit,
                       selectedAgent.address?.street,
@@ -448,31 +415,31 @@ export function AgentDetails(params: {
                       gap={3}
                       mb={4}
                     >
-                      <MCPRStatCard
+                      <MetricCard
                         icon={<LuUsers size={20} />}
                         label="No. of Accounts"
                         value={noOfAccounts.toLocaleString()}
                         accent="blue"
                       />
-                      <MCPRStatCard
+                      <MetricCard
                         icon={<LuTarget size={20} />}
                         label="Comm. Quota"
                         value={peso(commQuota)}
                         accent="purple"
                       />
-                      <MCPRStatCard
+                      <MetricCard
                         icon={<LuTarget size={20} />}
                         label="Non-Comm. Quota"
                         value={peso(ncommQuota)}
                         accent="teal"
                       />
-                      <MCPRStatCard
+                      <MetricCard
                         icon={<LuHandCoins size={20} />}
                         label="Comm. Collection"
                         value={peso(commCollection)}
                         accent="green"
                       />
-                      <MCPRStatCard
+                      <MetricCard
                         icon={<LuHandCoins size={20} />}
                         label="Non-Comm. Collection"
                         value={peso(ncommCollection)}

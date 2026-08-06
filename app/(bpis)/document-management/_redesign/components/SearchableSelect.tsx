@@ -15,11 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { Check, ChevronDown, Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-
-import {
-  QuickBottomSheet,
-  type QuickBottomSheetOption,
-} from "@/claude components/drawer/quick-bottom-sheet";
+import { QuickBottomSheet, QuickBottomSheetOption } from "osp-ui-kit";
 
 export type SearchableSelectOption = {
   value: string;
@@ -81,12 +77,20 @@ const Trigger = React.forwardRef<
         cursor="pointer"
         transition="border-color .15s, box-shadow .15s"
         boxShadow={open ? "0 0 0 1px var(--chakra-colors-primary)" : undefined}
-        _hover={{ borderColor: open ? "var(--chakra-colors-primary)" : "border.emphasized" }}
+        _hover={{
+          borderColor: open
+            ? "var(--chakra-colors-primary)"
+            : "border.emphasized",
+        }}
         {...rest}
       >
         <Flex align="center" gap={2} minW={0}>
           {current?.leading}
-          <Text fontSize="sm" color={current?.value ? "fg" : "fg.muted"} truncate>
+          <Text
+            fontSize="sm"
+            color={current?.value ? "fg" : "fg.muted"}
+            truncate
+          >
             {current?.label ?? ""}
           </Text>
         </Flex>
@@ -140,12 +144,19 @@ function OptionRow({
       borderRadius="md"
       cursor="pointer"
       bg={active ? "var(--chakra-colors-primary-disabled)/50" : "transparent"}
-      _hover={{ bg: active ? "var(--chakra-colors-primary-disabled)/50" : "bg.muted" }}
+      _hover={{
+        bg: active ? "var(--chakra-colors-primary-disabled)/50" : "bg.muted",
+      }}
       onClick={onSelect}
     >
       {option.leading}
       <Box flex="1" minW={0}>
-        <Text fontSize="sm" fontWeight={active ? "600" : "medium"} color="fg" truncate>
+        <Text
+          fontSize="sm"
+          fontWeight={active ? "600" : "medium"}
+          color="fg"
+          truncate
+        >
           {option.label}
         </Text>
         {option.description && (
@@ -212,7 +223,12 @@ export default function SearchableSelect({
 
     return (
       <>
-        <Trigger open={open} label={label} current={display} onClick={() => setOpen(true)} />
+        <Trigger
+          open={open}
+          label={label}
+          current={display}
+          onClick={() => setOpen(true)}
+        />
         <QuickBottomSheet
           open={open}
           onOpenChange={setOpen}
@@ -257,7 +273,12 @@ export default function SearchableSelect({
               <Box maxH="264px" overflowY="auto">
                 <VStack gap={0.5} align="stretch">
                   {filtered.length === 0 ? (
-                    <Text fontSize="sm" color="fg.muted" textAlign="center" py={5}>
+                    <Text
+                      fontSize="sm"
+                      color="fg.muted"
+                      textAlign="center"
+                      py={5}
+                    >
                       No matches
                     </Text>
                   ) : (

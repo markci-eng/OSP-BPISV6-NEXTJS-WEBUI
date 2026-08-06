@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Flex, SimpleGrid, Text } from "@chakra-ui/react";
+import { DASHBOARD_ACCENT_COLORS } from "@/lib/theme/dashboard-colors";
 import {
   LuUsers,
   LuUserCheck,
@@ -13,7 +14,7 @@ import {
   LuArrowRight,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
 
 /* ── Section landing hub for Plan Management ── */
@@ -39,21 +40,21 @@ const actions: ActionCard[] = [
     description: "Encode a new LPA and enroll a planholder.",
     href: "/plan-management/new",
     Icon: LuFilePlus2,
-    color: "#1B9E57",
+    color: DASHBOARD_ACCENT_COLORS.positive,
   },
   {
     title: "Planholder Profile",
     description: "Search planholders and manage plans, loans, and claims.",
     href: "/plan-management/planholder",
     Icon: LuUsers,
-    color: "#1976D2",
+    color: DASHBOARD_ACCENT_COLORS.info,
   },
   {
     title: "Change of Mode",
     description: "Update a plan's payment frequency and installment mode.",
     href: "/plan-management/change-of-mode",
     Icon: LuRepeat,
-    color: "#8E24AA",
+    color: DASHBOARD_ACCENT_COLORS.purple,
   },
 ];
 
@@ -183,15 +184,15 @@ export default function PlanManagementLandingPage() {
         label: "Total Planholders",
         value: total,
         Icon: LuUsers,
-        color: "#1976D2",
+        color: DASHBOARD_ACCENT_COLORS.info,
       },
-      { label: "Active", value: active, Icon: LuUserCheck, color: "#1B9E57" },
-      { label: "Lapsed", value: lapsed, Icon: LuClock, color: "#F57C00" },
+      { label: "Active", value: active, Icon: LuUserCheck, color: DASHBOARD_ACCENT_COLORS.positive },
+      { label: "Lapsed", value: lapsed, Icon: LuClock, color: DASHBOARD_ACCENT_COLORS.warning },
       {
         label: "Fully Paid",
         value: fullyPaid,
         Icon: LuCircleCheck,
-        color: "#8E24AA",
+        color: DASHBOARD_ACCENT_COLORS.purple,
       },
     ];
   }, []);

@@ -1,6 +1,6 @@
 import { Flex, Separator, Strong, Tabs } from "@chakra-ui/react";
+import { FloatingLabelInput } from "osp-ui-kit";
 import { LuHouse, LuNotebook, LuUser } from "react-icons/lu";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 
 const AgentEditFormMobile = () => {
   return (

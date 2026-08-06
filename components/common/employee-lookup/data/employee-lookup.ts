@@ -1,4 +1,4 @@
-import { EmployeeLookupType } from "../employee-lookup.type";
+import { EmployeeLookupType } from "osp-ui-kit";
 
 export const employeeLookup: EmployeeLookupType[] = [
   {

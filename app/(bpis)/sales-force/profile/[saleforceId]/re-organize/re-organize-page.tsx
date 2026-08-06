@@ -1,7 +1,7 @@
 "use client";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
 import { AgentReassignForm } from "@/components/saleforce/forms/agent-reassign-form";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 import { useRouter } from "next/navigation";
 
 export default function ReOrganizePage({ agent }: { agent: SalesAgent }) {

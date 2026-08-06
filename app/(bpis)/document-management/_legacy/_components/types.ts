@@ -1,11 +1,11 @@
-import { Employee } from "@/data/doc-management/employeeSelector";
-import { Documents } from "@/data/doc-management/documenttype";
+import { Employee } from "@/app/(bpis)/data/doc-management/employeeSelector";
+import { Documents } from "@/app/(bpis)/data/doc-management/documenttype";
 
 export type AssignedDocRow = Documents & {
   controlNo: string;
   employeeName: string;
   remainingQtyNum: number;
-  assignedStatus: "Assigned" | "Unassigned" | "Unknown Employee";
+  assignedStatus: "Assigned" | "Unassigned" | "Unknown Employee" | "Blocked";
   expiryDateNum: string;
   branch?: string;
 };

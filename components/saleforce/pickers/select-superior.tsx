@@ -6,7 +6,7 @@ import {
   SalesAgent,
 } from "../../common/agent-lookup/agent-lookup.type";
 import { createListCollection } from "@chakra-ui/react";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
+import { FloatingLabelSelect } from "osp-ui-kit";
 
 const SelectSuperiorInput = (params: {
   currentAgent: SalesAgent | null;

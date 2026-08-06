@@ -16,7 +16,7 @@ import { LuChevronLeft, LuChevronRight, LuSearch, LuX } from "react-icons/lu";
 import { Small } from "st-peter-ui";
 import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
 import { useEffect, useState } from "react";
-import { PlanholderLookup } from "./planholder-lookup.type";
+import type { PlanholderLookup } from "@/components/plan-management/planholders/tables/planholder-list-table";
 
 export function SearchPlanholderDialog({
   selectedLpa = null,

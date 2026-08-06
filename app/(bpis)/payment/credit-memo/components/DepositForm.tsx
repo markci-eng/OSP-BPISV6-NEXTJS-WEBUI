@@ -4,9 +4,8 @@ import { useState } from "react";
 import { createListCollection } from "@chakra-ui/react";
 import { Flex, Grid } from "@chakra-ui/react";
 import { PrimaryMdFlexButton } from "st-peter-ui";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { Deposit } from "./types";
+import { FloatingLabelInput, FloatingLabelSelect } from "osp-ui-kit";
 
 const DEPOSIT_TYPES = ["Cash", "Check", "Wire Transfer", "Online"];
 const BANKS = ["BDO", "BPI", "Metrobank", "Landbank", "PNB"];

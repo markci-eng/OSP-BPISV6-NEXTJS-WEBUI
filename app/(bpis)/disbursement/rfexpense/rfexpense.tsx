@@ -1,10 +1,14 @@
 "use client";
 
 import { AccountName } from "@/app/(bpis)/payment/data/paymentDetails";
-import { Card } from "@/claude components/card-accordion/card";
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import Page from "@/claude components/layout/page/Page";
+import {
+  StaticCard,
+  DataTable,
+  FloatingLabelInput,
+  FloatingLabelSelect,
+  InfoCardAccordion,
+  Page,
+} from "osp-ui-kit";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import {
   Box,
@@ -18,8 +22,6 @@ import { BsPrinter } from "react-icons/bs";
 import { FaMoneyBillWave, FaWallet } from "react-icons/fa6";
 import { LuPencilLine } from "react-icons/lu";
 import { PrimaryMdFlexButton } from "st-peter-ui";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 
 export default function RFexpense() {
   const expense = 25000;
@@ -35,7 +37,7 @@ export default function RFexpense() {
         {/* SUMMARY CARDS */}
         <Page.Row>
           <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-            <Card
+            <StaticCard
               activeIcon={<FaMoneyBillWave size={18} />}
               title="Current Expense"
               subtitle="Total expenses recorded"
@@ -50,9 +52,9 @@ export default function RFexpense() {
                   ₱ {expense.toLocaleString()}
                 </Text>
               </Flex>
-            </Card>
+            </StaticCard>
 
-            <Card
+            <StaticCard
               activeIcon={<FaWallet size={18} />}
               title="Current Fund Balance"
               subtitle="Remaining available fund"
@@ -67,7 +69,7 @@ export default function RFexpense() {
                   ₱ {fundBalance.toLocaleString()}
                 </Text>
               </Flex>
-            </Card>
+            </StaticCard>
           </SimpleGrid>
         </Page.Row>
 
@@ -116,10 +118,9 @@ export default function RFexpense() {
             data={[]}
             features={{
               search: true,
-              sorting: false,
-              draggable: false,
+              sorting: true,
               selection: false,
-              filtering: false,
+              filtering: true,
               columnToggle: true,
             }}
             headerActions={

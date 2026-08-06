@@ -54,10 +54,13 @@ async function hmacSign(data: string): Promise<string> {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 }
 
-export async function createSession(email: string): Promise<string> {
+export async function createSession(
+  email: string,
+  role: string = getRole(email),
+): Promise<string> {
   const payload: SessionPayload = {
     email,
-    role: getRole(email),
+    role,
     exp: Math.floor(Date.now() / 1000) + MAX_AGE,
   };
   const json = base64urlEncode(JSON.stringify(payload));

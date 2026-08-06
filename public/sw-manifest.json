@@ -1,0 +1,902 @@
+{
+  "buildId": "ahQJImfvqBtkLOLNLGAmq",
+  "revision": "7e00d12aa8302807",
+  "generatedAt": "2026-08-04T01:14:10.699Z",
+  "totalBytes": 9087706,
+  "assets": [
+    {
+      "url": "/_next/static/ahQJImfvqBtkLOLNLGAmq/_buildManifest.js",
+      "hash": "9476e0afd3f9da68",
+      "size": 219,
+      "required": true
+    },
+    {
+      "url": "/_next/static/ahQJImfvqBtkLOLNLGAmq/_clientMiddlewareManifest.json",
+      "hash": "5d25ee47954e3699",
+      "size": 439,
+      "required": true
+    },
+    {
+      "url": "/_next/static/ahQJImfvqBtkLOLNLGAmq/_ssgManifest.js",
+      "hash": "678f6ce2cb80b1fe",
+      "size": 80,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/00706510fb79a18b.js",
+      "hash": "d8202b368f73bf02",
+      "size": 423,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/03c4912ad7665f22.js",
+      "hash": "064b604c12a17e12",
+      "size": 948,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/03e033fbe7651128.js",
+      "hash": "5cdc83de50b1516b",
+      "size": 224739,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/0599cb1b08a71070.js",
+      "hash": "5f48dcc7cb2879e0",
+      "size": 371501,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/08889fdfe307cf23.js",
+      "hash": "158248a4dcb71253",
+      "size": 687,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/09a3f551fa77c447.js",
+      "hash": "7ab16b5b798e5686",
+      "size": 948,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/0aebcf07f0309b2d.js",
+      "hash": "991ff434f4705c23",
+      "size": 56080,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/0ba7bfb0a4154d2a.js",
+      "hash": "27114d439eabd611",
+      "size": 371501,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/11377962da11f9c7.js",
+      "hash": "b33506824df26c88",
+      "size": 41627,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/11ad818b21f56db6.js",
+      "hash": "c9e03930e1d1e34e",
+      "size": 111754,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/17b4f8c34b5dbd86.js",
+      "hash": "7dd4a92b7dc9bda4",
+      "size": 10834,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/1a9f6a54f5053602.js",
+      "hash": "dba05be4d0e85f5b",
+      "size": 6869,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/1cec4deeab8abb24.js",
+      "hash": "a4b04961f65d8d72",
+      "size": 679,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/20d2faa76854562f.js",
+      "hash": "97f4cfe647e00dca",
+      "size": 27639,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/218303ca0d3729cc.js",
+      "hash": "56f11f0fc0895968",
+      "size": 23533,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/28a0d942f0426bd7.js",
+      "hash": "4c5da671d6a1c233",
+      "size": 41360,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/29b1ab9f904de2af.js",
+      "hash": "d5461b63ae85a1fd",
+      "size": 57158,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/2e2b7fcd5438c46a.js",
+      "hash": "b4cce7e2f3ddf70f",
+      "size": 21574,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/2ef6e36ce120ef55.js",
+      "hash": "847e27ab5447bb49",
+      "size": 960,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/31c00eb376b2ee9f.js",
+      "hash": "4285da357fe03b40",
+      "size": 24419,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/3326361ef377ee1e.js",
+      "hash": "76bffa50271628dd",
+      "size": 204035,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/36301aea2dd51401.js",
+      "hash": "ee3515278ef8a6c8",
+      "size": 429,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/371cb6e7158c8483.js",
+      "hash": "e8dbbd5f7cbc5956",
+      "size": 12625,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/386f2b28545ee1c5.js",
+      "hash": "fd4ac836eec60c61",
+      "size": 32916,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/3ecdd0bdbf6591e5.js",
+      "hash": "0ce03aeb585cec34",
+      "size": 14617,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/44b87571cee3f2ad.js",
+      "hash": "eaa818506bf45914",
+      "size": 61819,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/44eb5ca05a38dac9.js",
+      "hash": "959ba27039ef64e2",
+      "size": 50196,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/4506ae85ed8bebcb.js",
+      "hash": "7a47b5813dda7ee9",
+      "size": 426,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/48d347672f09b926.js",
+      "hash": "3fb485c2ad88d725",
+      "size": 8409,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/4da8cb908b0e20b6.js",
+      "hash": "5e1979b6e5183c35",
+      "size": 14481,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/4dbb3af7d0ccae4b.js",
+      "hash": "04d905cfdc674f7b",
+      "size": 27487,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/513022336c8edc26.js",
+      "hash": "37480f51dc66b4fa",
+      "size": 870,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/516a3006698ffed3.js",
+      "hash": "d0b079f79c47f1de",
+      "size": 25340,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/56f0dec61b951b45.js",
+      "hash": "5e7da579ee71a972",
+      "size": 61787,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/5728309594f11655.js",
+      "hash": "a97b143f11e000aa",
+      "size": 64073,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/576d1d1ee313060e.js",
+      "hash": "d50a0fb3c00acc11",
+      "size": 419,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/5924890d5f312722.js",
+      "hash": "4980582d00d213e0",
+      "size": 878,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/5d420d97975eccac.js",
+      "hash": "5d81e7718cece109",
+      "size": 111593,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/5f23626c9e3d0baa.js",
+      "hash": "686ecfdf2e90f323",
+      "size": 5464,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/63e0d5b73d228cde.js",
+      "hash": "7826926350ca9536",
+      "size": 19459,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/64f4da670363a089.js",
+      "hash": "04c0f4c8bbc50293",
+      "size": 15105,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/665250e4bae164d2.js",
+      "hash": "93cdfe0a2ed45a92",
+      "size": 44003,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/685b381c6d757545.css",
+      "hash": "826ed6dadb8d2b7b",
+      "size": 11592,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/68ed38a06e032b8e.js",
+      "hash": "644b21278a4e89c0",
+      "size": 15155,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/691d640dd1298ee5.js",
+      "hash": "bb4b5e4f2cc66355",
+      "size": 1350,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/694379e935186694.js",
+      "hash": "8f504f48866d6c02",
+      "size": 13091,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/6ac87613b4dc7fd0.js",
+      "hash": "fc54817f5d497bb4",
+      "size": 3862,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/73e29807ef0b333a.js",
+      "hash": "a039db1783bc7d9b",
+      "size": 822,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/73e3194f06db260e.js",
+      "hash": "c480f0d21695a982",
+      "size": 30772,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/752d9405dd85e778.js",
+      "hash": "8dfb2e6ebe96f774",
+      "size": 751,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/76d867b0cdb9baf7.js",
+      "hash": "e356713b929fc1ca",
+      "size": 416576,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/78b0857f51e7076a.js",
+      "hash": "f938294acc895b27",
+      "size": 591472,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/7c570a8b764bf2a4.js",
+      "hash": "2faaa3200ad5eab1",
+      "size": 696,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/7e7102325b3242ef.js",
+      "hash": "32a4146f4636d3d7",
+      "size": 917,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/7e78130430bb6357.js",
+      "hash": "79f6c51387b29322",
+      "size": 640,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/7fb7c50d0d037d13.css",
+      "hash": "e93d0d0294b9b45d",
+      "size": 9038,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/81029033ce65a89a.js",
+      "hash": "709fcfc23c97d621",
+      "size": 27991,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/866f1656834ef8f4.js",
+      "hash": "48e21499e82e1e24",
+      "size": 442,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/86dfe7229ac256dc.js",
+      "hash": "47f48bc2f44e2c7f",
+      "size": 947,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/88872e36f5f66b00.js",
+      "hash": "ac2cd24d0e578f91",
+      "size": 7238,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/88fdf10a605cc047.js",
+      "hash": "0a0cae9c7b7ea779",
+      "size": 264701,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/8a2479b92f2b812b.js",
+      "hash": "da193dce6fb1983a",
+      "size": 13158,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/8b6c9d54cac58d37.js",
+      "hash": "a93a2b4bc8db50fd",
+      "size": 11309,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/8db3748a432c9458.js",
+      "hash": "4e572ea9909b1894",
+      "size": 6930,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/90cde39795c7dc56.js",
+      "hash": "96175f9ae25372d2",
+      "size": 53225,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/92af08b8ebc5731a.js",
+      "hash": "c3c7225c9ecec0bf",
+      "size": 4113,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/95c304521a56579a.js",
+      "hash": "0c47d91b9fbcc9b2",
+      "size": 15340,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/963b248a8b8f1f20.js",
+      "hash": "50cf6a8bf13778b1",
+      "size": 14362,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/98ccd4f07b8da45d.js",
+      "hash": "99dd102ab1f6d69c",
+      "size": 29160,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/9d1b6422c251b1e3.js",
+      "hash": "5707e420c9c96cd5",
+      "size": 32603,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/9eb4a630ee5e03f2.js",
+      "hash": "4740659de2d2b4e5",
+      "size": 579,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/9fc193e4af8120bf.js",
+      "hash": "ded83ca08942762a",
+      "size": 946,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/a23694ce81504d19.js",
+      "hash": "4094f706361c17cf",
+      "size": 16396,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/a31160dad3bb3955.js",
+      "hash": "c7333aa468aa049e",
+      "size": 71152,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/a37858d079cff6ec.js",
+      "hash": "d7498bffb738449e",
+      "size": 17731,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/a65ad80ff5557192.js",
+      "hash": "0814e71d07a1d9d8",
+      "size": 6042,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/a69ffad7e8e1cc1a.js",
+      "hash": "8fa42b57b0a46478",
+      "size": 12794,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/a6cdf1cf2cb97181.js",
+      "hash": "f4d3fbb1379c0e95",
+      "size": 642,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/a6dad97d9634a72d.js",
+      "hash": "0973c1d64c88adc8",
+      "size": 112594,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/ad7dd9388532b5cc.js",
+      "hash": "0bfb8cf0616deec1",
+      "size": 17417,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/b2014d0f1aa72ac5.js",
+      "hash": "b48436f7ca6a0891",
+      "size": 36927,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/b5b8f38d7ca063a7.js",
+      "hash": "b28e3ef75daa7c78",
+      "size": 29468,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/b70957049d260c35.js",
+      "hash": "e867a854a9480eb1",
+      "size": 12625,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/b70f1ef686e31885.js",
+      "hash": "969f745cbc9ff5ce",
+      "size": 63434,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/b764c8e444b90e2f.js",
+      "hash": "41cf57d2999b2f9d",
+      "size": 46482,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/b7e0926700196398.js",
+      "hash": "ca9e5efec32505e8",
+      "size": 46002,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/bdf7088a0bf13931.js",
+      "hash": "73078be862bda175",
+      "size": 948,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/c3e3c0a0d8a6afb7.js",
+      "hash": "10068f4f1cba4d9a",
+      "size": 439,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/c5c742871e88fb93.js",
+      "hash": "86388559e5122d40",
+      "size": 110677,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/c81c3566f36407e8.js",
+      "hash": "d2bf1ce746403fdb",
+      "size": 44003,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/c96f77d24a5ab8a5.js",
+      "hash": "119e1a091f091263",
+      "size": 35624,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/cb35e0620f57de98.js",
+      "hash": "8080509459da32ff",
+      "size": 777,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/cc758e069b767e03.js",
+      "hash": "ba837cea4e5029ac",
+      "size": 287556,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/ce2352958bfb8b1f.js",
+      "hash": "11c5309622e3fc8f",
+      "size": 962,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/ce2ade3041d5acc7.js",
+      "hash": "09ebe4c8d8d2d5a8",
+      "size": 704,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/d22ae067b08a95ec.js",
+      "hash": "654b9730baafd414",
+      "size": 17638,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/d5375e2a380ab6e2.js",
+      "hash": "3d7662e56787a034",
+      "size": 838,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/d598f1f652e2d146.js",
+      "hash": "18941e61a48f2cfc",
+      "size": 33369,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/d96012bcfc98706a.js",
+      "hash": "514e0e3c4b197331",
+      "size": 283,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/db49bae63dd67781.js",
+      "hash": "ea93d350ef8bc06c",
+      "size": 505,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/df8ac6d583bca755.js",
+      "hash": "91dd45fdd72b42fe",
+      "size": 36361,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/e13c57eee1bac99a.js",
+      "hash": "40ec0a69e61c8228",
+      "size": 431,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/e47516cb27349c40.js",
+      "hash": "22b9dcff524fe681",
+      "size": 3397,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/e4f039ad8d588653.js",
+      "hash": "d1a2325c0ab3b59f",
+      "size": 691,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/e90cc2bae66bda12.js",
+      "hash": "dca35b217827abab",
+      "size": 23436,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/ea5bd7f367ff23cf.js",
+      "hash": "c622a567529fcce4",
+      "size": 1096,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/f0ef397df1b38b90.js",
+      "hash": "8d5a0c943a8c5679",
+      "size": 9797,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/f1479f2c4f70e946.js",
+      "hash": "e25850f1e896e5f0",
+      "size": 66221,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/f24863c5f5386bd7.js",
+      "hash": "9702374ba242a36c",
+      "size": 1256369,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/f8e2a1a82b6bd004.js",
+      "hash": "31cf95a775335d20",
+      "size": 1529,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/fa37a05943289ef0.js",
+      "hash": "190ab1c919854ccd",
+      "size": 32666,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/fd5c74e8abf01199.js",
+      "hash": "a877728eb83d4d53",
+      "size": 732,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/turbopack-7eb6b14ee1f6480d.js",
+      "hash": "4372f7ff476ec0f1",
+      "size": 10269,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/4fa387ec64143e14-s.3b336396.woff2",
+      "hash": "75b3bedbebc35f34",
+      "size": 12872,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/53b9e256198e5412-s.853d50a3.woff2",
+      "hash": "f689f638f29fff46",
+      "size": 7968,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/5ce348bf30bf5439-s.56c1f21e.woff2",
+      "hash": "e27f657e38d52887",
+      "size": 6204,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/6306c77e7c8268e4-s.e3369375.woff2",
+      "hash": "d67e4a94ba498635",
+      "size": 5892,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/7178b3e590c64307-s.55554cd0.woff2",
+      "hash": "58a6b173d5ca1dec",
+      "size": 16540,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/797e433ab948586e-s.p.29207c2f.woff2",
+      "hash": "5f3d6ad60f29d6cb",
+      "size": 23108,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/7d817b4c03b0c5f1-s.a40b9a8b.woff2",
+      "hash": "16e1d48b6dd29eb2",
+      "size": 7728,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/8a480f0b521d4e75-s.ea323500.woff2",
+      "hash": "6129fc8571c3e0cb",
+      "size": 14900,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/bbc41e54d2fcbd21-s.fe42ddf4.woff2",
+      "hash": "745994b5cd950ec2",
+      "size": 14712,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2",
+      "hash": "9b6f5ff45b278c74",
+      "size": 29288,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/fef07dbb0973bf53-s.518e079e.woff2",
+      "hash": "b7a545bbb08256bd",
+      "size": 7252,
+      "required": true
+    },
+    {
+      "url": "/_next/static/media/icon.2ec9276f.png",
+      "hash": "8f388c8d67925857",
+      "size": 257190,
+      "required": true
+    },
+    {
+      "url": "/file.svg",
+      "hash": "2b67812c325c199a",
+      "size": 391,
+      "required": false
+    },
+    {
+      "url": "/globe.svg",
+      "hash": "b614b9bf18392595",
+      "size": 1035,
+      "required": false
+    },
+    {
+      "url": "/images/hoabout.jpg",
+      "hash": "e9e3ed7ce39cfb09",
+      "size": 313524,
+      "required": false
+    },
+    {
+      "url": "/images/logo/icon-512.png",
+      "hash": "49ea287edc8525ad",
+      "size": 42910,
+      "required": false
+    },
+    {
+      "url": "/images/logo/icon-520.png",
+      "hash": "b40e7de5756cec15",
+      "size": 43065,
+      "required": false
+    },
+    {
+      "url": "/images/logo/icon-gold.png",
+      "hash": "edecdf8cd8ef6b9c",
+      "size": 145057,
+      "required": false
+    },
+    {
+      "url": "/images/logo/icon.png",
+      "hash": "8f388c8d67925857",
+      "size": 257190,
+      "required": false
+    },
+    {
+      "url": "/images/logo/St.%20Peter%20Miter%20Logo.png",
+      "hash": "799e68465aef7aec",
+      "size": 326411,
+      "required": false
+    },
+    {
+      "url": "/images/osp-chakra-reusable-components/createaccount.jpg",
+      "hash": "f63b740976a3ea05",
+      "size": 174622,
+      "required": false
+    },
+    {
+      "url": "/images/osp-chakra-reusable-components/icons8-google-48.png",
+      "hash": "37db90d131ba107c",
+      "size": 1247,
+      "required": false
+    },
+    {
+      "url": "/images/osp-chakra-reusable-components/icons8-meta-48.png",
+      "hash": "a5ee5709d81512a7",
+      "size": 890,
+      "required": false
+    },
+    {
+      "url": "/images/osp-chakra-reusable-components/icons8-x-48.png",
+      "hash": "3033da7e3aa16de7",
+      "size": 822,
+      "required": false
+    },
+    {
+      "url": "/images/osp-chakra-reusable-components/login.webp",
+      "hash": "95514bf773f6c731",
+      "size": 51512,
+      "required": false
+    },
+    {
+      "url": "/images/osp-chakra-reusable-components/stpeter-logo.png",
+      "hash": "16346a5e0a59ab40",
+      "size": 25376,
+      "required": false
+    },
+    {
+      "url": "/images/QR_Ph_Logo.png",
+      "hash": "8cb7b9028aa01260",
+      "size": 27302,
+      "required": false
+    },
+    {
+      "url": "/manifest.json",
+      "hash": "37684af2613b3926",
+      "size": 702,
+      "required": true
+    },
+    {
+      "url": "/next.svg",
+      "hash": "55995dfad6ecb494",
+      "size": 1375,
+      "required": false
+    },
+    {
+      "url": "/offline.html",
+      "hash": "b764a774240a5ab8",
+      "size": 4663,
+      "required": true
+    },
+    {
+      "url": "/pdf.worker.min.mjs",
+      "hash": "5885a6fc9702a33f",
+      "size": 1046241,
+      "required": false
+    },
+    {
+      "url": "/vercel.svg",
+      "hash": "f081337b2fee635b",
+      "size": 128,
+      "required": false
+    },
+    {
+      "url": "/window.svg",
+      "hash": "644768c4aaeb4767",
+      "size": 385,
+      "required": false
+    }
+  ]
+}

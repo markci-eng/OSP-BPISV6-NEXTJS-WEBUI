@@ -77,6 +77,15 @@ export function isKnownRole(role: string | null | undefined): role is UserRole {
   return !!role && Object.prototype.hasOwnProperty.call(ROLE_ROUTES, role);
 }
 
+/** Human-readable label for the roles that render a role greeting. */
+export function getRoleLabel(role: string | null): string {
+  if (role === "branch") return "Branch";
+  if (role === "bm") return "Branch Manager";
+  if (role === "stl") return "Sales Team Leader";
+  if (role === "sales-agent") return "Sales Agent";
+  return "";
+}
+
 /** Home route for a role, or the login page when the role is unknown. */
 export function homeRouteForRole(role: string | null | undefined): string {
   return isKnownRole(role) ? ROLE_HOME[role] : "/login";

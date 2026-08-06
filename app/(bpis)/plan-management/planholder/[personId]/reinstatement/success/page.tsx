@@ -1,23 +1,23 @@
 "use client";
-import { Box } from "@chakra-ui/react";
-import React from "react";
-import { SuccessPage } from "@splpi/operations";
+
+import { SuccessPage } from "osp-ui-kit";
 import { useRouter } from "next/navigation";
 
 const page = () => {
   const router = useRouter();
   return (
     <SuccessPage
-      variant="application"
       title="Application Submitted"
       description=" A confirmation email has also been sent, and you can view or track this anytime in your account."
       transactionId="RI-NS234567"
-      totalAmount="₱3,000.00"
       dateTime="Nov 25, 2025, 2:30 PM"
-      onClickHome={() => {
+      additionalDetails={[{ label: "Total Amount:", value: "₱3,000.00" }]}
+      primaryActionLabel="Go back to Home"
+      onPrimaryAction={() => {
         router.push("/");
       }}
-      onClickProceed={() => {
+      secondaryActionLabel="Track My Request"
+      onSecondaryAction={() => {
         router.push("/transaction/RI-NS234567");
       }}
     />

@@ -1,8 +1,5 @@
 "use client";
 
-import { DrawerSections } from "@/components/approval-component/ApprovalDrawer";
-import { ApprovalPage } from "@/components/approval-component/ApprovalConfig";
-import ApprovalTest from "@/components/approval-component/ApprovalTest";
 import { Box } from "st-peter-ui";
 
 const ApprovalsPage = () => {
@@ -38,7 +35,7 @@ const ApprovalsPage = () => {
         }}
       /> */}
 
-      <ApprovalTest />
+      {/* <ApprovalTest /> */}
     </Box>
   );
 };

@@ -3,17 +3,18 @@
 import React from "react";
 import { Box, createListCollection, Flex, Grid, Text } from "@chakra-ui/react";
 import { LuCalendar, LuUpload, LuUser } from "react-icons/lu";
-
-import SingleFileUpload from "@/components/inputs/single-file-upload";
 import { PlanholderInfoType } from "@/components/plan-management/planholders/planholders.types";
-import { Card } from "@/claude components/card-accordion/card";
-import InfoCard from "@/claude components/info-card/info-card";
-import { RowItem } from "@/claude components/info-card/row-item";
-import InfoItem from "@/components/common/info-item/info-item";
+import InfoCard from "@/components/info-card/info-card";
+import { RowItem } from "@/components/info-card/row-item";
 
 import { ClaimInfoState } from "./claims.types";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
+import {
+  StaticCard,
+  FloatingLabelInput,
+  FloatingLabelSelect,
+  InfoItem,
+  SingleFileUpload,
+} from "osp-ui-kit";
 
 interface DocReqLabel {
   label: string;
@@ -151,7 +152,7 @@ const ClaimInfoForm = ({
 
       <Flex flexDir="column" gap={4} mt={5}>
         {/* Planholder Detail */}
-        <Card
+        <StaticCard
           activeIcon={<LuUser />}
           title="Planholder Detail"
           subtitle={planholder?.lpaNumber ?? ""}
@@ -169,7 +170,7 @@ const ClaimInfoForm = ({
                         year: "numeric",
                         month: "long",
                         day: "numeric",
-                      }
+                      },
                     )
                   : "—",
               },
@@ -201,10 +202,10 @@ const ClaimInfoForm = ({
               </>
             );
           })()}
-        </Card>
+        </StaticCard>
 
         {/* Incident Details */}
-        <Card
+        <StaticCard
           activeIcon={<LuCalendar />}
           title="Incident Details"
           subtitle="Provide the details of the incident for this claim"
@@ -242,10 +243,10 @@ const ClaimInfoForm = ({
               ))}
             </FloatingLabelSelect>
           </Grid>
-        </Card>
+        </StaticCard>
 
         {/* Required Documents */}
-        <Card
+        <StaticCard
           activeIcon={<LuUpload />}
           title="Required Documents"
           subtitle="Upload one document per item — PDF, PNG or JPG up to 20 MB"
@@ -266,7 +267,7 @@ const ClaimInfoForm = ({
             </Text>{" "}
             are required.
           </Text>
-        </Card>
+        </StaticCard>
       </Flex>
     </Box>
   );

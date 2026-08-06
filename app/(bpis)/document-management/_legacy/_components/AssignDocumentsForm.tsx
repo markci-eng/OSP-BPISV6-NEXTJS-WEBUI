@@ -9,11 +9,13 @@ import {
   Flex,
   Grid,
 } from "@chakra-ui/react";
-import { DocumentType } from "@/data/doc-management/documenttype";
-import { Employee } from "@/data/doc-management/employeeSelector";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
+import { DocumentType } from "@/app/(bpis)/data/doc-management/documenttype";
+import { Employee } from "@/app/(bpis)/data/doc-management/employeeSelector";
+import {
+  FloatingLabelInput,
+  FloatingLabelSelect,
+  useMessageDialog,
+} from "osp-ui-kit";
 
 const springTransition = {
   type: "spring" as const,

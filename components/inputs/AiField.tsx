@@ -18,10 +18,9 @@
 
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { LuSparkles, LuTriangleAlert, LuCheck } from "react-icons/lu";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { useField } from "../../app/(bpis)/sales-force/new/application/application-context";
 import type { FieldKey } from "../../app/(bpis)/sales-force/new/application/types";
+import { FloatingLabelInput, FloatingLabelSelect } from "osp-ui-kit";
 
 const PRIMARY = "var(--chakra-colors-primary)";
 const PRIMARY_SOFT = "var(--chakra-colors-primary-disabled)";
@@ -36,7 +35,7 @@ interface AiFieldOption {
 interface AiFieldProps {
   fieldKey: FieldKey;
   label: string;
-  type?: "text" | "email" | "number" | "tel" | "date" | "select";
+  type?: "text" | "email" | "number" | "tel" | "date" | "select" | "mobile";
   options?: AiFieldOption[];
 }
 

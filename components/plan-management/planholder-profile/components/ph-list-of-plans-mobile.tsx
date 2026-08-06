@@ -23,7 +23,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { LuArrowDown, LuFile, LuSearch, LuUsersRound } from "react-icons/lu";
-import { OSPBadge } from "@/components/common/badge/badge";
+import { OSPBadge } from "osp-ui-kit";
 import { FaRegFileAlt, FaTrash, FaUser } from "react-icons/fa";
 import { FiFileText } from "react-icons/fi";
 import { HiOutlinePencilAlt, HiRefresh } from "react-icons/hi";
@@ -39,7 +39,7 @@ import {
   Checkbox,
 } from "st-peter-ui";
 import { StatementOfAccount } from "./ph-statement-of-account";
-import InfoItem from "@/components/common/info-item/info-item";
+import { InfoItem } from "osp-ui-kit";
 import { IconType } from "react-icons";
 import { GiMartyrMemorial } from "react-icons/gi";
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";

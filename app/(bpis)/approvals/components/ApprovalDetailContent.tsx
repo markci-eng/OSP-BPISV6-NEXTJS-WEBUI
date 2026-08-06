@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  Badge,
   Box,
   Button,
   Flex,
@@ -24,6 +23,7 @@ import {
 } from "lucide-react";
 
 import type { ApprovalConfig } from "../config/approval-config";
+import { ApprovalStatusBadge } from "@/components/feedback/ApprovalStatusBadge";
 import { DRSPrintModal } from "./DRSPrintModal";
 
 type ApprovalDetailContentProps = {
@@ -129,8 +129,15 @@ function DetailItem({
           transform="translateY(2px)"
         />
 
-        {/* VALUE */}
-        <Text fontWeight="medium" textAlign="right" whiteSpace="nowrap">
+        {/* VALUE — rendered as a div (not the default <p>) because `value` can
+            be a block element like <ApprovalStatusBadge>, and a <div> inside a
+            <p> is invalid HTML and triggers a hydration error. */}
+        <Text
+          as="div"
+          fontWeight="medium"
+          textAlign="right"
+          whiteSpace="nowrap"
+        >
           {value ?? "-"}
         </Text>
       </Flex>
@@ -165,45 +172,24 @@ function DetailItem({
 
 const STATUS_META = {
   Approved: {
-    colorPalette: "green",
     color: "green.600",
     bg: "green.50",
     borderColor: "green.200",
     icon: CheckCircle2,
   },
   Denied: {
-    colorPalette: "red",
     color: "red.600",
     bg: "red.50",
     borderColor: "red.200",
     icon: XCircle,
   },
   Pending: {
-    colorPalette: "yellow",
     color: "yellow.700",
     bg: "yellow.50",
     borderColor: "yellow.200",
     icon: Clock,
   },
 };
-
-function StatusBadge({ status }: { status: string }) {
-  const meta =
-    STATUS_META[status as keyof typeof STATUS_META] ?? STATUS_META.Pending;
-  const Icon = meta.icon;
-
-  return (
-    <Badge
-      colorPalette={meta.colorPalette}
-      variant="subtle"
-      gap={1}
-      flexShrink={0}
-    >
-      <Icon size={11} />
-      {status}
-    </Badge>
-  );
-}
 
 export function ApprovalDetailContent({
   row,
@@ -254,7 +240,7 @@ export function ApprovalDetailContent({
               {primaryValue}
             </Text>
           </Box>
-          <StatusBadge status={status} />
+          <ApprovalStatusBadge status={status} icon={<statusMeta.icon size={11} />} />
         </HStack>
       </Box>
 
@@ -275,7 +261,10 @@ export function ApprovalDetailContent({
                 mandatory={field.mandatory}
                 value={
                   isStatusField ? (
-                    <StatusBadge status={status} />
+                    <ApprovalStatusBadge
+                      status={status}
+                      icon={<statusMeta.icon size={11} />}
+                    />
                   ) : (
                     renderDetailValue(row, field.key)
                   )

@@ -5,7 +5,7 @@ import { Box } from "@chakra-ui/react";
 import {
   LookupColumn,
   LookupField,
-} from "../../common/reusable-lookup/LookUpField";
+} from "osp-ui-kit";
 import {
   getPosibleSuperior,
   getPositionDesc,

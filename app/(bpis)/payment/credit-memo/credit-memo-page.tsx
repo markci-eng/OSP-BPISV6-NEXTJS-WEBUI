@@ -25,17 +25,17 @@ import {
   Planholder,
   getDepositStatus,
 } from "./components/types";
-import DocumentUploader from "@/components/document-uploader/DragAndDrop";
-import Page from "@/claude components/layout/page/Page";
-import Card from "@/components/cards/Card";
 import {
-  LookupField,
+  Card,
+  DocumentUploader,
   LookupColumn,
-} from "@/components/common/reusable-lookup/LookUpField";
+  LookupField,
+  Page,
+  SectionTitle,
+  useMessageDialog,
+} from "osp-ui-kit";
 import { PrimaryMdFlexButton } from "st-peter-ui";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import SectionTitle from "@/components/texts/SectionTitle";
+import { FloatingLabelInput } from "osp-ui-kit";
 
 const PAY_CLASSES = ["Monthly", "Quarterly", "Semi-Annual", "Annual"] as const;
 
@@ -219,7 +219,7 @@ export default function CreditMemoPage() {
     <Page.Root
       headerButton="menu"
       title="Credit Memo"
-      subtitle="CMDM Module · Special Remittances"
+      // subtitle="CMDM Module · Special Remittances"
       description="Process credit memo transactions."
     >
       <Page.ToolContent>
@@ -335,7 +335,9 @@ export default function CreditMemoPage() {
                     <FloatingLabelInput
                       label="Amount"
                       type="number"
-                      value={paymentForm.amount ? String(paymentForm.amount) : ""}
+                      value={
+                        paymentForm.amount ? String(paymentForm.amount) : ""
+                      }
                       onChange={(e) =>
                         setPaymentForm((f) => ({
                           ...f,
@@ -370,7 +372,9 @@ export default function CreditMemoPage() {
                     <FloatingLabelInput
                       label="Charges (Optional)"
                       type="number"
-                      value={paymentForm.charges ? String(paymentForm.charges) : ""}
+                      value={
+                        paymentForm.charges ? String(paymentForm.charges) : ""
+                      }
                       onChange={(e) =>
                         setPaymentForm((f) => ({
                           ...f,

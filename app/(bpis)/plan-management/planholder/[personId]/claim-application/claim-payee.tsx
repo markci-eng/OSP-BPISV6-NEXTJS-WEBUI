@@ -13,15 +13,12 @@ import {
   Span,
   createListCollection,
 } from "@chakra-ui/react";
-import { SecondaryLgFlexButton } from "st-peter-ui";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
-
-import FormTitle from "@/components/texts/FormTitle";
-import SectionTitle from "@/components/texts/SectionTitle";
-import InfoCard from "@/claude components/info-card/info-card";
+import { H4, SecondaryLgFlexButton } from "st-peter-ui";
+import { FloatingLabelSelect, SectionTitle } from "osp-ui-kit";
+import { InfoCard } from "osp-ui-kit";
 
 import { PayeeInfo, blankPayee, composePayeeName } from "./claims.types";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { FloatingLabelInput } from "osp-ui-kit";
 
 const SOFT_PAYEE_LIMIT = 3;
 
@@ -116,9 +113,7 @@ const ClaimsPayeeForm = ({ payees, onPayeesChange }: ClaimsPayeeFormProps) => {
                     gap={{ base: 0, md: 2 }}
                     textAlign="start"
                   >
-                    <FormTitle
-                      label={hasName ? name : `Claimant ${index + 1}`}
-                    />
+                    <H4>{hasName ? name : `Claimant ${index + 1}`}</H4>
                     {payee.relToPh ? (
                       <Badge size="sm" colorPalette="blue" variant="subtle">
                         {payee.relToPh}

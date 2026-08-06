@@ -2,13 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { StPeterProvider } from "st-peter-ui";
 import { Toaster } from "sonner";
-import { MessageDialogProvider } from "@/components/common/message-box/message-box-provider";
 import { RenderPage } from "./render-page";
 import RootLayoutClient from "./root-layout-client";
-import { NavigationLoadingOverlay } from "@/components/common/loading-overlay/navigation-loading-overlay";
-import { DemoAuthProvider } from "@/components/ui/demo-auth";
 import { cookies } from "next/headers";
 import { USER_COOKIE } from "@/lib/session";
+import { DemoAuthProvider, MessageDialogProvider } from "osp-ui-kit";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -61,7 +59,7 @@ export default async function RootLayout({
                 <RenderPage userRole={userRole}>{children}</RenderPage>
                 {/* <AppLayout>{children}</AppLayout> */}
                 <Toaster position="top-right" richColors />
-                <NavigationLoadingOverlay />
+                {/* <NavigationLoadingOverlay /> */}
               </MessageDialogProvider>
             </DemoAuthProvider>
           </StPeterProvider>

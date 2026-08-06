@@ -1,7 +1,7 @@
 "use client";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
 import { ChangeModePage } from "@/components/plan-management/planholder-profile/components/change-of-mode/change-mode-page";
 import { useRouter } from "next/navigation";
+import { useMessageDialog } from "osp-ui-kit";
 
 export default function Page() {
   const router = useRouter();

@@ -8,7 +8,7 @@ import {
   SalesAgent,
   SalesAgentAddress,
   salesAgents,
-} from "@/data/saleforce/sales-agent-data";
+} from "@/app/(bpis)/data/saleforce/sales-agent-data";
 
 export type { Position, SalesAgent, SalesAgentAddress };
 export { refPosition };

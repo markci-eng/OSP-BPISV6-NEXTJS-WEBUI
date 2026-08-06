@@ -12,13 +12,12 @@ import {
   createListCollection,
 } from "@chakra-ui/react";
 import { AlertTriangle, Ban } from "lucide-react";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 
 import { type DocumentRecord, fmt, getAgent, seriesLabel } from "../data";
 import { BLOCK_REASONS } from "../meta";
 import { AgentAvatar, CalcBox, RadioCard } from "./atoms";
 import { WorkflowModal } from "./WorkflowModal";
+import { FloatingLabelInput, FloatingLabelSelect } from "osp-ui-kit";
 
 export type BlockResult = {
   method: "entire" | "portion";
@@ -68,10 +67,19 @@ export default function BlockModal({ open, onClose, doc, onConfirm }: Props) {
     e2 = Number(pEnd);
   }
   const blocked =
-    method === "portion" ? (Number.isFinite(s2) && Number.isFinite(e2) ? e2 - s2 + 1 : 0) : doc.remaining;
+    method === "portion"
+      ? Number.isFinite(s2) && Number.isFinite(e2)
+        ? e2 - s2 + 1
+        : 0
+      : doc.remaining;
   const portionValid =
     method !== "portion" ||
-    (pStart !== "" && pEnd !== "" && s2 >= doc.s && e2 <= doc.e && s2 <= e2 && blocked <= doc.remaining);
+    (pStart !== "" &&
+      pEnd !== "" &&
+      s2 >= doc.s &&
+      e2 <= doc.e &&
+      s2 <= e2 &&
+      blocked <= doc.remaining);
   const valid = !!reason && portionValid && blocked > 0;
 
   const footer = (
@@ -85,7 +93,9 @@ export default function BlockModal({ open, onClose, doc, onConfirm }: Props) {
       <Button
         colorPalette="red"
         disabled={!valid}
-        onClick={() => onConfirm({ method, s: s2, e: e2, blocked, reason, remarks })}
+        onClick={() =>
+          onConfirm({ method, s: s2, e: e2, blocked, reason, remarks })
+        }
       >
         <Ban size={16} /> Confirm Block
       </Button>
@@ -115,16 +125,28 @@ export default function BlockModal({ open, onClose, doc, onConfirm }: Props) {
           <AlertTriangle size={18} />
         </Box>
         <Text fontSize="xs" color="orange.fg" lineHeight="1.5">
-          Blocking removes the selected series from active circulation. This action is logged and
-          reflected in the table immediately.
+          Blocking removes the selected series from active circulation. This
+          action is logged and reflected in the table immediately.
         </Text>
       </HStack>
 
       <Grid templateColumns={{ base: "1fr", sm: "1fr 1fr" }} gap={3} mb={5}>
-        <HStack gap={3} p={3} borderWidth="1px" borderColor="border.muted" borderRadius="xl">
+        <HStack
+          gap={3}
+          p={3}
+          borderWidth="1px"
+          borderColor="border.muted"
+          borderRadius="xl"
+        >
           <AgentAvatar agent={cur} size={36} />
           <Box>
-            <Text fontSize="10px" color="fg.muted" fontWeight="600" textTransform="uppercase" letterSpacing="0.03em">
+            <Text
+              fontSize="10px"
+              color="fg.muted"
+              fontWeight="600"
+              textTransform="uppercase"
+              letterSpacing="0.03em"
+            >
               Current Assignment
             </Text>
             <Text fontSize="sm" fontWeight="600" color="fg">
@@ -135,8 +157,19 @@ export default function BlockModal({ open, onClose, doc, onConfirm }: Props) {
             </Text>
           </Box>
         </HStack>
-        <Box p={3} borderWidth="1px" borderColor="border.muted" borderRadius="xl">
-          <Text fontSize="10px" color="fg.muted" fontWeight="600" textTransform="uppercase" letterSpacing="0.03em">
+        <Box
+          p={3}
+          borderWidth="1px"
+          borderColor="border.muted"
+          borderRadius="xl"
+        >
+          <Text
+            fontSize="10px"
+            color="fg.muted"
+            fontWeight="600"
+            textTransform="uppercase"
+            letterSpacing="0.03em"
+          >
             Remaining Qty
           </Text>
           <Text fontSize="xl" fontWeight="700" fontFamily="mono" color="fg">
@@ -167,30 +200,51 @@ export default function BlockModal({ open, onClose, doc, onConfirm }: Props) {
             label="Series Start"
             placeholder={String(doc.s)}
             value={pStart}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPStart(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setPStart(e.target.value)
+            }
           />
           <FloatingLabelInput
             type="number"
             label="Series End"
             placeholder={String(doc.e)}
             value={pEnd}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPEnd(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setPEnd(e.target.value)
+            }
           />
         </Grid>
       )}
 
-      {method === "portion" && pStart !== "" && pEnd !== "" && !portionValid && (
-        <HStack fontSize="xs" color="red.600" fontWeight="medium" mt={2.5} gap={1.5}>
-          <AlertTriangle size={15} />
-          <Text>
-            Portion must be within {doc.s}–{doc.e} and not exceed remaining.
-          </Text>
-        </HStack>
-      )}
+      {method === "portion" &&
+        pStart !== "" &&
+        pEnd !== "" &&
+        !portionValid && (
+          <HStack
+            fontSize="xs"
+            color="red.600"
+            fontWeight="medium"
+            mt={2.5}
+            gap={1.5}
+          >
+            <AlertTriangle size={15} />
+            <Text>
+              Portion must be within {doc.s}–{doc.e} and not exceed remaining.
+            </Text>
+          </HStack>
+        )}
 
       <Grid templateColumns="1fr 1fr" gap={2.5} my={4}>
-        <CalcBox label="Blocked Quantity" value={valid ? fmt(blocked) : "—"} tone="red.600" />
-        <CalcBox label="Remaining Active" value={valid ? fmt(doc.remaining - blocked) : fmt(doc.remaining)} tone="green.600" />
+        <CalcBox
+          label="Blocked Quantity"
+          value={valid ? fmt(blocked) : "—"}
+          tone="red.600"
+        />
+        <CalcBox
+          label="Remaining Active"
+          value={valid ? fmt(doc.remaining - blocked) : fmt(doc.remaining)}
+          tone="green.600"
+        />
       </Grid>
 
       <Box mb={4}>

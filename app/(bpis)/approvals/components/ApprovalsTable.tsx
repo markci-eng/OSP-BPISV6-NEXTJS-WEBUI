@@ -10,31 +10,32 @@ import {
   Text,
 } from "@chakra-ui/react";
 import {
-  Check,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  Clock,
-  Files,
-  X,
-  XCircle,
-} from "lucide-react";
+  LuCircleCheck,
+  LuChevronLeft,
+  LuChevronRight,
+  LuClock,
+  LuFiles,
+  LuCircleX,
+} from "react-icons/lu";
+// osp-ui-kit RowAction/BulkAction typing requires lucide-react's LucideIcon,
+// so action icons come from lucide-react (not react-icons/lu's IconType).
+import { Check, X } from "lucide-react";
 import { toast } from "sonner";
-
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import type {
-  BulkAction,
-  RowAction,
-} from "@/components/common/reusable-tableV2/types";
-
 import { approvalConfig } from "../config/approval-config";
 import { ApprovalDetailContent } from "./ApprovalDetailContent";
-import type { ApprovalView } from "@/data/approvals/types";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-
-function getApprovalStatus(row: any) {
-  return row.drs?.status ?? row.status;
-}
+import { ApprovalsTableSkeleton } from "./ApprovalsTableSkeleton";
+import { useApprovals } from "../hooks/useApprovals";
+import { useApprovalMutations } from "../hooks/useApprovalMutations";
+import type { ApprovalView } from "@/app/(bpis)/data/approvals/types";
+import { getApprovalStatus } from "@/app/(bpis)/data/approvals/types";
+import {
+  BulkAction,
+  DataTable,
+  EmptyStateCard,
+  ErrorStateCard,
+  RowAction,
+  useMessageDialog,
+} from "osp-ui-kit";
 
 export function ApprovalsTable({
   view,
@@ -47,16 +48,8 @@ export function ApprovalsTable({
 
   const config = approvalConfig[view];
 
-  const [dataByView, setDataByView] = React.useState<
-    Record<ApprovalView, any[]>
-  >(() => ({
-    "reassignment-doc": approvalConfig["reassignment-doc"].data,
-    drs: approvalConfig.drs.data,
-    "movement-employees": approvalConfig["movement-employees"].data,
-    "reassignment-sa2": approvalConfig["reassignment-sa2"].data,
-  }));
-
-  const data = dataByView[view];
+  const { data, isLoading, error, refetch } = useApprovals(view);
+  const { approve, deny } = useApprovalMutations(view);
 
   const [statusFilter, setStatusFilterState] =
     React.useState<string>("Pending");
@@ -103,24 +96,6 @@ export function ApprovalsTable({
     });
   }, [data, statusFilter]);
 
-  function updateApprovalStatus(row: any, status: "Approved" | "Denied") {
-    if (row.drs) {
-      return {
-        ...row,
-        status,
-        drs: {
-          ...row.drs,
-          status,
-        },
-      };
-    }
-
-    return {
-      ...row,
-      status,
-    };
-  }
-
   const handleApprove = React.useCallback(
     async (row: any) => {
       const confirmed = await messageBox({
@@ -132,20 +107,10 @@ export function ApprovalsTable({
 
       if (!confirmed) return;
 
-      const rowId = config.getRowId(row, 0);
-
-      setDataByView((prev) => ({
-        ...prev,
-        [view]: prev[view].map((item, index) =>
-          config.getRowId(item, index) === rowId
-            ? updateApprovalStatus(item, "Approved")
-            : item,
-        ),
-      }));
-
+      await approve([config.getRowId(row, 0)]);
       toast.success("Request approved");
     },
-    [config, messageBox, view],
+    [approve, config, messageBox],
   );
 
   const handleReject = React.useCallback(
@@ -159,20 +124,10 @@ export function ApprovalsTable({
 
       if (!confirmed) return;
 
-      const rowId = config.getRowId(row, 0);
-
-      setDataByView((prev) => ({
-        ...prev,
-        [view]: prev[view].map((item, index) =>
-          config.getRowId(item, index) === rowId
-            ? updateApprovalStatus(item, "Denied")
-            : item,
-        ),
-      }));
-
+      await deny([config.getRowId(row, 0)]);
       toast.error("Request denied");
     },
-    [config, messageBox, view],
+    [config, deny, messageBox],
   );
 
   const handleBulkApprove = React.useCallback(
@@ -186,22 +141,11 @@ export function ApprovalsTable({
 
       if (!confirmed) return;
 
-      const selectedIds = new Set(
-        rows.map((row, index) => config.getRowId(row, index)),
-      );
-
-      setDataByView((prev) => ({
-        ...prev,
-        [view]: prev[view].map((item, index) =>
-          selectedIds.has(config.getRowId(item, index))
-            ? updateApprovalStatus(item, "Approved")
-            : item,
-        ),
-      }));
-
+      const rowIds = rows.map((row, index) => config.getRowId(row, index));
+      await approve(rowIds);
       toast.success(`Approved ${rows.length} request(s)`);
     },
-    [config, messageBox, view],
+    [approve, config, messageBox],
   );
 
   const handleBulkDeny = React.useCallback(
@@ -215,22 +159,11 @@ export function ApprovalsTable({
 
       if (!confirmed) return;
 
-      const selectedIds = new Set(
-        rows.map((row, index) => config.getRowId(row, index)),
-      );
-
-      setDataByView((prev) => ({
-        ...prev,
-        [view]: prev[view].map((item, index) =>
-          selectedIds.has(config.getRowId(item, index))
-            ? updateApprovalStatus(item, "Denied")
-            : item,
-        ),
-      }));
-
+      const rowIds = rows.map((row, index) => config.getRowId(row, index));
+      await deny(rowIds);
       toast.error(`Denied ${rows.length} request(s)`);
     },
-    [config, messageBox, view],
+    [config, deny, messageBox],
   );
 
   const rowActions = React.useMemo<RowAction<any>[]>(
@@ -292,7 +225,7 @@ export function ApprovalsTable({
         value: summary.total,
         filter: "All",
         sub: "All requests",
-        icon: Files,
+        icon: LuFiles,
         accent: "blue",
       },
       {
@@ -300,7 +233,7 @@ export function ApprovalsTable({
         value: summary.pending,
         filter: "Pending",
         sub: "Awaiting review",
-        icon: Clock,
+        icon: LuClock,
         accent: "orange",
       },
       {
@@ -308,15 +241,15 @@ export function ApprovalsTable({
         value: summary.approved,
         filter: "Approved",
         sub: "Completed",
-        icon: CheckCircle,
+        icon: LuCircleCheck,
         accent: "green",
       },
       {
-        label: "Rejected",
+        label: "Denied",
         value: summary.denied,
         filter: "Denied",
         sub: "Denied",
-        icon: XCircle,
+        icon: LuCircleX,
         accent: "red",
       },
     ],
@@ -333,7 +266,6 @@ export function ApprovalsTable({
         borderColor={isActive ? `${card.accent}.500` : `${card.accent}.200`}
         borderRadius="xl"
         p={4}
-        mt={2}
         boxShadow={isActive ? "lg" : "xs"}
         cursor="pointer"
         // h="full"
@@ -363,7 +295,7 @@ export function ApprovalsTable({
             color="white"
             border="2px solid"
             borderColor="white"
-            display="flex"
+            display={{ base: "none", md: "flex" }}
             alignItems="center"
             justifyContent="center"
             fontSize="11px"
@@ -412,6 +344,14 @@ export function ApprovalsTable({
     );
   };
 
+  if (isLoading) {
+    return <ApprovalsTableSkeleton />;
+  }
+
+  if (error) {
+    return <ErrorStateCard onRetry={refetch} />;
+  }
+
   return (
     <Flex direction="column" gap={4}>
       {/* Desktop: 4-column grid */}
@@ -424,58 +364,62 @@ export function ApprovalsTable({
       {/* Mobile: carousel (only mounted on mobile so its page events can't
           leak into statusFilter on desktop) */}
       {isMobile && (
-        <Box>
-          <Carousel.Root
-            slideCount={cards.length}
-            page={carouselIdx}
-            onPageChange={(details: { page: number }) => {
-              // The carousel emits an initial onPageChange(0) on mount (even while
-              // hidden on desktop), which would clobber the Pending default. Skip
-              // that first firing and only react to real page changes afterward.
-              if (!carouselReady.current) {
-                carouselReady.current = true;
-                return;
-              }
-              setCarouselIdx(details.page);
-              setStatusFilter(cards[details.page].filter);
-            }}
-          >
-            <Carousel.ItemGroup>
-              {cards.map((card, i) => (
-                <Carousel.Item key={card.label} index={i}>
-                  {renderCardContent(card, i)}
-                </Carousel.Item>
-              ))}
-            </Carousel.ItemGroup>
+        <Carousel.Root
+          slideCount={cards.length}
+          page={carouselIdx}
+          onPageChange={(details: { page: number }) => {
+            // The carousel emits an initial onPageChange(0) on mount (even while
+            // hidden on desktop), which would clobber the Pending default. Skip
+            // that first firing and only react to real page changes afterward.
+            if (!carouselReady.current) {
+              carouselReady.current = true;
+              return;
+            }
+            setCarouselIdx(details.page);
+            setStatusFilter(cards[details.page].filter);
+          }}
+        >
+          <Carousel.ItemGroup>
+            {cards.map((card, i) => (
+              <Carousel.Item key={card.label} index={i} pt={1}>
+                {renderCardContent(card, i)}
+              </Carousel.Item>
+            ))}
+          </Carousel.ItemGroup>
 
-            <Carousel.Control justifyContent="center" gap="4">
-              <Carousel.PrevTrigger asChild>
-                <IconButton size="xs" variant="ghost" aria-label="Previous">
-                  <ChevronLeft size={16} />
-                </IconButton>
-              </Carousel.PrevTrigger>
+          <Carousel.Control justifyContent="center" gap="4">
+            <Carousel.PrevTrigger asChild>
+              <IconButton size="xs" variant="ghost" aria-label="Previous">
+                <LuChevronLeft size={16} />
+              </IconButton>
+            </Carousel.PrevTrigger>
 
-              <Carousel.Indicators />
+            <Carousel.Indicators />
 
-              <Carousel.NextTrigger asChild>
-                <IconButton size="xs" variant="ghost" aria-label="Next">
-                  <ChevronRight size={16} />
-                </IconButton>
-              </Carousel.NextTrigger>
-            </Carousel.Control>
-          </Carousel.Root>
-        </Box>
+            <Carousel.NextTrigger asChild>
+              <IconButton size="xs" variant="ghost" aria-label="Next">
+                <LuChevronRight size={16} />
+              </IconButton>
+            </Carousel.NextTrigger>
+          </Carousel.Control>
+        </Carousel.Root>
       )}
 
       <DataTable<any>
         key={view}
-        title={config.title}
-        description={config.description}
+        // title={config.title}
+        // description={config.description}
         data={filteredData}
         columns={config.columns}
         getRowId={config.getRowId}
         rowActions={rowActions}
         bulkActions={bulkActions}
+        emptyState={
+          <EmptyStateCard
+            title="No requests found"
+            description="There are no approval requests matching this filter."
+          />
+        }
         renderDetail={(row) => (
           <ApprovalDetailContent
             row={row}
@@ -492,11 +436,10 @@ export function ApprovalsTable({
           search: true,
           filtering: true,
           sorting: true,
-          pagination: true,
           columnToggle: true,
-          selection: true,
-          draggable: false,
+          selection: statusFilter === "Pending",
           detailSidebar: true,
+          showToolbarPagination: true,
         }}
         mobileConfig={{
           viewMode: "accordion",

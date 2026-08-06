@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { Grid, GridItem } from "@chakra-ui/react";
-import { Box, PrimaryMdButton, PrimaryMdFlexButton } from "st-peter-ui";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
+import { Box, PrimaryMdFlexButton } from "st-peter-ui";
 import { LuFilter, LuUserCheck } from "react-icons/lu";
 
-import Page from "@/claude components/layout/page/Page";
-import { LookupField } from "@/components/common/reusable-lookup/LookUpField";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import {
+  FloatingLabelSelect,
+  InfoCardAccordion,
+  LookupField,
+  Page,
+  useMessageDialog,
+} from "osp-ui-kit";
 
 import { STLList, TrxMonth } from "../data/transaction-month";
 import {

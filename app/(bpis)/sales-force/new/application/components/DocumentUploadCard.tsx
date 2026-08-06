@@ -25,9 +25,9 @@ import {
   LuSparkles,
 } from "react-icons/lu";
 import { toast } from "sonner";
-import { Card } from "@/claude components/card-accordion/card";
 import type { DocumentTypeConfig } from "../types";
 import { useApplication } from "../application-context";
+import { StaticCard } from "osp-ui-kit";
 
 const PRIMARY = "var(--chakra-colors-primary)";
 const PRIMARY_SOFT = "var(--chakra-colors-primary-disabled)";
@@ -479,7 +479,7 @@ export function DocumentUploadCard({ config }: { config: DocumentTypeConfig }) {
   );
   const isMobile = useBreakpointValue({ base: true, lg: false });
   return (
-    <Card
+    <StaticCard
       activeIcon={<Icon size={18} />}
       title={config.label}
       subtitle={config.description}
@@ -537,6 +537,6 @@ export function DocumentUploadCard({ config }: { config: DocumentTypeConfig }) {
           e.target.value = "";
         }}
       />
-    </Card>
+    </StaticCard>
   );
 }

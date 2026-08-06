@@ -8,22 +8,10 @@ import {
 } from "@chakra-ui/react";
 import { ImOffice } from "react-icons/im";
 import { Body } from "st-peter-ui";
-import { OSPBadge } from "@/components/common/badge/badge";
+import { OSPBadge } from "osp-ui-kit";
 import { FaHome } from "react-icons/fa";
 import { PlanholderAddressType } from "../planholder-profile-page";
-
-interface Address {
-  id: string;
-  addressType: string;
-  addressNo: string;
-  street: string;
-  barangay: string;
-  district: string;
-  city: string;
-  province: string;
-  zipCode: string;
-  isMailAddress?: boolean;
-}
+import type { Address } from "@/components/plan-management/address.types";
 
 export function AddressCard({
   id,

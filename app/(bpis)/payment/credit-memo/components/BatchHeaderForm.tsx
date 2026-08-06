@@ -2,10 +2,8 @@
 
 import { Badge, Box, Grid } from "@chakra-ui/react";
 import { createListCollection } from "@chakra-ui/react";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { BatchInfo, CREDIT_MEMO_TYPES, getDepositStatus } from "./types";
-import Card from "@/components/cards/Card";
+import { Card, FloatingLabelInput, FloatingLabelSelect } from "osp-ui-kit";
 
 const SUBTYPES = ["Standard", "Special", "Emergency", "Adjustment"];
 
@@ -90,7 +88,9 @@ export function BatchHeaderForm({ batch, onChange }: BatchHeaderFormProps) {
           <FloatingLabelInput
             label="Description"
             value={batch.description}
-            onChange={(e) => onChange({ ...batch, description: e.target.value })}
+            onChange={(e) =>
+              onChange({ ...batch, description: e.target.value })
+            }
           />
         </Grid>
         {typeConfig && (

@@ -10,6 +10,7 @@ import {
   Grid,
   GridItem,
   HStack,
+  IconButton,
   Portal,
   Separator,
   Text,
@@ -22,8 +23,13 @@ import {
   PrimaryMdFlexButton,
   SaveButton,
 } from "st-peter-ui";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
+import {
+  BottomQuickActions,
+  FloatingLabelInput,
+  QuickBottomSheet,
+  SectionTitle,
+} from "osp-ui-kit";
+import { FloatingLabelSelect } from "osp-ui-kit";
 import { SlipUpload } from "../components/SlipUpload";
 
 import {
@@ -35,30 +41,34 @@ import {
 
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  LookupColumn,
-  LookupField,
-} from "@/components/common/reusable-lookup/LookUpField";
 
 import { PaymentRecord } from "../data/payment.types";
-import { Employee } from "@/data/doc-management/employeeSelector";
-import { EMPLOYEES } from "@/data/doc-management/documenttype";
+import { Employee } from "@/app/(bpis)/data/doc-management/employeeSelector";
+import { EMPLOYEES } from "@/app/(bpis)/data/doc-management/documenttype";
 import { PlanholderLookupItem } from "@/app/(bpis)/Model/Types/global.types";
 import { planholderLookup } from "@/app/(bpis)/Model/function/lookupFunction";
 import { computePayments } from "../utils/paymentComputation";
-
-import SectionTitle from "@/components/texts/SectionTitle";
-import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import { TblLoanHdrData } from "@/app/(bpis)/Model/Data/rawData";
-import { RowAction } from "@/components/common/reusable-tableV2/types";
-import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
-import { LuUser, LuHash, LuMapPin, LuCalendar } from "react-icons/lu";
-import { RowItem } from "@/claude components/info-card/row-item";
-import { BottomQuickActions } from "@/claude components/drawer/bottom-quick-actions";
-import { QuickBottomSheet } from "@/claude components/drawer/quick-bottom-sheet";
+import {
+  LuUser,
+  LuHash,
+  LuMapPin,
+  LuCalendar,
+  LuMinus,
+  LuPlus,
+} from "react-icons/lu";
+import { RowItem } from "osp-ui-kit";
 import { ShieldCheck, Banknote } from "lucide-react";
-import InfoItem from "@/components/common/info-item/info-item";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
+import {
+  BrandedAvatar,
+  DataTable,
+  EmptyStateCard,
+  InputCardAccordion,
+  LookupColumn,
+  LookupField,
+  RowAction,
+} from "osp-ui-kit";
 
 type Props = {
   payments: PaymentRecord[];
@@ -469,9 +479,15 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
             >
               <Flex justify="space-between" align="start" mb={3}>
                 <Flex align="center" gap={2}>
-                  <Box p={2} borderRadius="full" bg="gray.100">
-                    <LuUser size={18} />
-                  </Box>
+                  <BrandedAvatar
+                    name={
+                      selectPlanholder.FirstName +
+                      " " +
+                      selectPlanholder.LastName
+                    }
+                    imageUrl={mockAvatarUrl(selectPlanholder.Person.PersonID)}
+                    ringed
+                  />
                   <Box>
                     <Text fontWeight="bold" fontSize="md" lineHeight="1.2">
                       {`${selectPlanholder.LastName} ${selectPlanholder.FirstName} ${selectPlanholder.MiddleName}`}
@@ -498,19 +514,6 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                     }
                     shadow="sm"
                   />
-                  <Badge
-                    colorPalette={
-                      selectPlanholder.EntryType == "PH" ? "green" : "blue"
-                    }
-                    variant="subtle"
-                    px={2}
-                    py={1}
-                    fontSize="0.75rem"
-                  >
-                    {selectPlanholder.EntryType == "PH"
-                      ? "Plan Holder"
-                      : "Loan"}
-                  </Badge>
                 </Flex>
               </Flex>
               <Grid
@@ -593,9 +596,15 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
               <Flex align="center" gap={3}>
                 {/* Name + ID */}
                 <Flex align="center" gap={2} flex="1" minW="0">
-                  <Box p={1.5} borderRadius="full" bg="gray.100" flexShrink={0}>
-                    <LuUser size={14} />
-                  </Box>
+                  <BrandedAvatar
+                    name={
+                      selectPlanholder.FirstName +
+                      " " +
+                      selectPlanholder.LastName
+                    }
+                    imageUrl={mockAvatarUrl(selectPlanholder.Person.PersonID)}
+                    ringed
+                  />
                   <Box minW="0">
                     <Text
                       fontWeight="semibold"
@@ -694,20 +703,6 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                     </Flex>
                   </>
                 )}
-
-                <Badge
-                  colorPalette={
-                    selectPlanholder.EntryType == "PH" ? "green" : "blue"
-                  }
-                  variant="subtle"
-                  fontSize="xs"
-                  px={2}
-                  py={0.5}
-                  ml="auto"
-                  flexShrink={0}
-                >
-                  {selectPlanholder.EntryType == "PH" ? "Plan Holder" : "Loan"}
-                </Badge>
               </Flex>
             </Box>
           </>
@@ -817,13 +812,13 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                   name="siext"
                 />
 
-                <HStack>
-                  <Button
+                <HStack gap={1}>
+                  <IconButton
                     onClick={handleDecrease}
                     display={selectPlanholder?.EntryType == "PH" ? "" : "none"}
                   >
-                    -
-                  </Button>
+                    <LuMinus />
+                  </IconButton>
                   <FloatingLabelInput
                     key={installmentAmount}
                     label="Amount"
@@ -833,12 +828,12 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
                       setInstallmentAmount(Number(e.currentTarget.value) || 0)
                     }
                   />
-                  <Button
+                  <IconButton
                     onClick={handleIncrease}
                     display={selectPlanholder?.EntryType == "PH" ? "" : "none"}
                   >
-                    +
-                  </Button>
+                    <LuPlus />
+                  </IconButton>
                 </HStack>
 
                 <FloatingLabelInput
@@ -1139,11 +1134,10 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
           columns={tableColumns}
           title="Encoded Payment(s)"
           features={{
-            search: false,
-            sorting: false,
-            draggable: false,
+            search: true,
+            sorting: true,
             selection: false,
-            filtering: false,
+            filtering: true,
             columnToggle: true,
           }}
           headerButton={{
@@ -1181,7 +1175,16 @@ export function EncodePaymentPage({ payments, setPayments }: Props) {
             <Dialog.Content borderRadius={{ base: 0, md: undefined }}>
               <Dialog.Body>
                 <Box py={8}>
-                  <DataTable columns={[]} data={[]} title="Cancelled SI" />
+                  <DataTable
+                    columns={[]}
+                    data={[]}
+                    title="Cancelled SI"
+                    features={{
+                      sorting: true,
+                      filtering: true,
+                      search: true,
+                    }}
+                  />
                 </Box>
               </Dialog.Body>
               <Dialog.Footer>

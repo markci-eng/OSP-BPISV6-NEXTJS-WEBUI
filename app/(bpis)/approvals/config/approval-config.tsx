@@ -8,7 +8,7 @@ import {
   type SA2Reassignment,
   type EmployeeMovement,
   mapDRSToDepositAndPayments,
-} from "@/data/approvals/types";
+} from "@/app/(bpis)/data/approvals/types";
 
 import {
   REASSIGNMENT_DATA,
@@ -18,11 +18,11 @@ import {
   depositHdrList,
   drsList,
   paymentList,
-} from "@/data/approvals/data";
-import { reassignmentColumns } from "@/data/approvals/columns/reassignment-columns";
-import { movementColumns } from "@/data/approvals/columns/movement-columns";
-import { sa2Columns } from "@/data/approvals/columns/sa2-columns";
-import { drsColumns } from "@/data/approvals/columns/drs-columns";
+} from "@/app/(bpis)/data/approvals/data";
+import { reassignmentColumns } from "@/app/(bpis)/data/approvals/columns/reassignment-columns";
+import { movementColumns } from "@/app/(bpis)/data/approvals/columns/movement-columns";
+import { sa2Columns } from "@/app/(bpis)/data/approvals/columns/sa2-columns";
+import { drsColumns } from "@/app/(bpis)/data/approvals/columns/drs-columns";
 
 const DRS_DATA = mapDRSToDepositAndPayments(
   drsList,

@@ -3,8 +3,7 @@ import {
   SalesAgent,
   getPositionDesc,
 } from "@/components/common/agent-lookup/agent-lookup.type";
-import Page from "@/claude components/layout/page/Page";
-import Card from "@/components/cards/Card";
+import { Card, Page } from "osp-ui-kit";
 import { Flex, Box, Separator, Strong } from "@chakra-ui/react";
 import { Body, PrimaryMdButton, Small } from "st-peter-ui";
 import { LuPrinter, LuIdCard } from "react-icons/lu";

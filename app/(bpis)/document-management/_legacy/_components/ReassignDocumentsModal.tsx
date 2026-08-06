@@ -3,15 +3,15 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { Button, Flex, createListCollection } from "@chakra-ui/react";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
-import { EMPLOYEES } from "@/data/doc-management/documenttype";
+import { EMPLOYEES } from "@/app/(bpis)/data/doc-management/documenttype";
 import type { AssignedDocRow, ReassignDocumentPayload } from "./types";
 import {
+  FloatingLabelInput,
+  FloatingLabelSelect,
   ModalForm,
   ModalFormField,
-} from "@/components/common/modal-form/modal-form";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+  useMessageDialog,
+} from "osp-ui-kit";
 
 const springTransition = {
   type: "spring" as const,

@@ -22,22 +22,22 @@ import { FaFileShield } from "react-icons/fa6";
 import {
   LuChevronDown,
   LuChevronRight,
-  LuMinus,
-  LuPencil,
   LuSearch,
   LuShieldCheck,
 } from "react-icons/lu";
 import { Checkbox, H4, PrimaryMdButton, Small } from "st-peter-ui";
 import { z } from "zod";
-
-import { OSPBadge } from "@/components/common/badge/badge";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { DataTable } from "@/components/common/reusable-tableV2/DataTable";
-import Page from "@/claude components/layout/page/Page";
-import { Card } from "@/claude components/card-accordion/card";
-import FormSteps from "@/claude components/FormSteps";
-import InfoCard from "@/claude components/info-card/info-card";
-import { RowItem } from "@/claude components/info-card/row-item";
+import {
+  StaticCard,
+  DataTable,
+  FieldSummaryCard,
+  FormStepper,
+  OSPBadge,
+  Page,
+  useMessageDialog,
+} from "osp-ui-kit";
+import InfoCard from "@/components/info-card/info-card";
+import { RowItem } from "@/components/info-card/row-item";
 
 // ---- Types ----
 interface RopRecord {
@@ -276,13 +276,12 @@ function RopSelectPlanStep({
           columns={columns}
           getRowId={(row) => row.lpaNo}
           features={{
-            sorting: false,
-            filtering: false,
+            sorting: true,
+            filtering: true,
             search: true,
             pagination: false,
             columnToggle: true,
             selection: false,
-            draggable: false,
             detailSidebar: false,
           }}
           mobileConfig={{
@@ -377,7 +376,7 @@ function RopSelectPlanStep({
         </Text>
 
         {searchExpanded && (
-          <Card
+          <StaticCard
             activeIcon={<LuSearch />}
             title="Search ROP Application"
             subtitle="Enter planholder details to look up a plan"
@@ -451,192 +450,12 @@ function RopSelectPlanStep({
                 </GridItem>
               </Grid>
             </Box>
-          </Card>
+          </StaticCard>
         )}
       </Box>
     </Box>
   );
 }
-
-// ---- Summary building blocks (agent-summary styling) ----
-interface SummaryField {
-  label: string;
-  value?: string | null;
-}
-
-const isEmpty = (value?: string | null) => {
-  if (value == null) return true;
-  const trimmed = value.trim();
-  return trimmed === "" || trimmed.toUpperCase() === "N/A";
-};
-
-const EditButton = ({ onClick }: { onClick: () => void }) => (
-  <Flex
-    as="button"
-    align="center"
-    gap={1.5}
-    px={3}
-    py={1.5}
-    borderRadius="lg"
-    borderWidth="1px"
-    borderColor="gray.200"
-    bg="white"
-    color="gray.700"
-    fontSize="sm"
-    fontWeight="medium"
-    cursor="pointer"
-    transition="all 0.15s ease"
-    _hover={{ bg: "gray.50", borderColor: "gray.300", color: "gray.900" }}
-    flexShrink={0}
-    onClick={onClick}
-  >
-    <Box as={LuPencil} boxSize="13px" />
-    Edit
-  </Flex>
-);
-
-const FieldCell = ({ field }: { field: SummaryField }) => {
-  const empty = isEmpty(field.value);
-  return (
-    <Flex
-      fontSize="sm"
-      py={{ base: 1.5, md: 0 }}
-      // Mobile: RowItem-style row (label · dashed leader · value).
-      // Desktop: stacked label above value.
-      direction={{ base: "row", md: "column" }}
-      align={{ base: "center", md: "stretch" }}
-      gap={{ base: 0, md: 0.5 }}
-      minW={0}
-    >
-      {/* LABEL */}
-      <Text
-        color="gray.500"
-        whiteSpace="nowrap"
-        fontSize={{ base: "sm", md: "xs" }}
-        fontWeight={{ base: "normal", md: "medium" }}
-        letterSpacing={{ md: "0.01em" }}
-      >
-        {field.label}
-      </Text>
-
-      {/* DASHED LEADER — mobile only */}
-      <Box
-        display={{ base: "block", md: "none" }}
-        flex="1"
-        mx={3}
-        borderBottom="1px dashed"
-        borderColor="gray.300"
-        transform="translateY(2px)"
-      />
-
-      {/* VALUE */}
-      {empty ? (
-        <Flex align="center" gap={1} color="gray.400" flexShrink={0}>
-          <Box as={LuMinus} boxSize="13px" />
-          <Text fontStyle="italic" whiteSpace="nowrap">
-            Not provided
-          </Text>
-        </Flex>
-      ) : (
-        <Text
-          fontWeight="semibold"
-          color="gray.900"
-          textAlign={{ base: "right", md: "left" }}
-          whiteSpace={{ base: "nowrap", md: "normal" }}
-          lineHeight={{ md: "1.35" }}
-          flexShrink={0}
-        >
-          {field.value}
-        </Text>
-      )}
-    </Flex>
-  );
-};
-
-const RopSummaryCard = ({
-  title,
-  subtitle,
-  icon,
-  fields,
-  onEdit,
-}: {
-  title: string;
-  subtitle: string;
-  icon: IconType;
-  fields: SummaryField[];
-  onEdit?: () => void;
-}) => (
-  <Box
-    bg="white"
-    borderWidth="1px"
-    borderColor="gray.200"
-    borderRadius="2xl"
-    shadow="xs"
-    overflow="hidden"
-  >
-    {/* Header */}
-    <Flex
-      align="flex-start"
-      justify="space-between"
-      gap={3}
-      flexWrap="wrap"
-      px={{ base: 4, md: 5 }}
-      py={4}
-    >
-      <Flex align="center" gap={3} minW={0} flex="1 1 auto">
-        <Flex
-          align="center"
-          justify="center"
-          boxSize={9}
-          borderRadius="lg"
-          bg="gray.100"
-          color="gray.700"
-          flexShrink={0}
-        >
-          <Box as={icon} boxSize="18px" />
-        </Flex>
-        <Box minW={0}>
-          <Text
-            fontSize="md"
-            fontWeight="semibold"
-            color="gray.900"
-            lineHeight="1.2"
-          >
-            {title}
-          </Text>
-          <Text fontSize="xs" color="gray.500">
-            {subtitle}
-          </Text>
-        </Box>
-      </Flex>
-
-      {onEdit && (
-        <Flex align="center" gap={2} flexShrink={0}>
-          <EditButton onClick={onEdit} />
-        </Flex>
-      )}
-    </Flex>
-
-    {/* Definition grid */}
-    <Box
-      px={{ base: 4, md: 5 }}
-      py={4}
-      borderTopWidth="1px"
-      borderColor="gray.100"
-      bg="white"
-    >
-      <SimpleGrid
-        columns={{ base: 1, md: 4 }}
-        columnGap={6}
-        rowGap={{ base: 0.5, md: 4 }}
-      >
-        {fields.map((field) => (
-          <FieldCell key={field.label} field={field} />
-        ))}
-      </SimpleGrid>
-    </Box>
-  </Box>
-);
 
 // ---- Step 2: Review summary ----
 function RopSummaryStep({
@@ -655,7 +474,7 @@ function RopSummaryStep({
 
       <Flex direction="column" gap={4} mt={5}>
         {records.map((record) => (
-          <RopSummaryCard
+          <FieldSummaryCard
             key={record.lpaNo}
             icon={LuShieldCheck}
             title={getFullName(record)}
@@ -745,7 +564,7 @@ export function RopPage({ onProceed }: { onProceed: () => void }) {
       description="Apply for a premium refund."
     >
       <Page.MainContent>
-        <FormSteps
+        <FormStepper
           stepsData={stepsData}
           title=""
           description=""

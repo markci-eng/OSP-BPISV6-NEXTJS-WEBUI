@@ -46,7 +46,7 @@ export function DRSPrintModal({ open, onClose, row }: DRSPrintModalProps) {
                 <Dialog.Title>DRS Print Preview</Dialog.Title>
 
                 <Flex align="center" gap={2}>
-                  <Button size="sm" onClick={handlePrint}>
+                  <Button size="sm" borderRadius="full" onClick={handlePrint}>
                     <Printer size={16} />
                     Print
                   </Button>

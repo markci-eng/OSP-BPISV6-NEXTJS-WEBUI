@@ -4,9 +4,7 @@
 import React from "react";
 import { Body, PrimaryMdButton, PrimaryMdFlexButton, Small } from "st-peter-ui";
 import { CellContext, ColumnDef } from "@tanstack/react-table";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import {
-  Badge,
   Box,
   Button,
   Flex,
@@ -18,8 +16,7 @@ import {
   Text,
   Wrap,
 } from "@chakra-ui/react";
-import Page from "@/claude components/layout/page/Page";
-import Card from "@/components/cards/Card";
+import { Card, DataTable, OSPBadge, Page } from "osp-ui-kit";
 
 interface AgentPrintingData {
   id: string;
@@ -191,15 +188,15 @@ const SaleforcePrintingPage = () => {
                 <Card.MainContent>
                   <Flex flexDir="column" gap={3} px={1}>
                     <Wrap gap={2}>
-                      <Badge colorPalette="blue" size="lg">
+                      <OSPBadge type="info" size="lg">
                         Total: {total}
-                      </Badge>
-                      <Badge colorPalette="orange" size="lg">
+                      </OSPBadge>
+                      <OSPBadge type="warning" size="lg">
                         Pending: {pendingCount}
-                      </Badge>
-                      <Badge colorPalette="green" size="lg">
+                      </OSPBadge>
+                      <OSPBadge type="success" size="lg">
                         Printed: {printedCount}
-                      </Badge>
+                      </OSPBadge>
                     </Wrap>
                     <Progress.Root value={progressValue} size="sm">
                       <Progress.Track>
@@ -257,7 +254,6 @@ const SaleforcePrintingPage = () => {
                     pagination: true,
                     columnToggle: true,
                     selection: false,
-                    draggable: false,
                     detailSidebar: false,
                   }}
                   mobileConfig={{
@@ -309,9 +305,9 @@ const SaleforcePrintingPage = () => {
 const statusCell = (info: CellContext<AgentPrintingData, unknown>) => {
   const value = info.getValue<AgentPrintingData["status"]>();
   return (
-    <Badge colorPalette={value === "Printed" ? "green" : "orange"}>
+    <OSPBadge type={value === "Printed" ? "success" : "warning"}>
       {value}
-    </Badge>
+    </OSPBadge>
   );
 };
 

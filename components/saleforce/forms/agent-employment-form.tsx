@@ -1,11 +1,6 @@
-import React from "react";
-import { Grid, Separator, Strong } from "@chakra-ui/react";
-import { Box, H4, Small } from "st-peter-ui";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { Grid, Separator } from "@chakra-ui/react";
 import { Text, Flex } from "@chakra-ui/react";
-import Card from "@/components/cards/Card";
-import FormTitle from "@/components/texts/FormTitle";
-import Caption from "@/components/texts/Caption";
+import { Card, FloatingLabelInput, FormTitle } from "osp-ui-kit";
 
 interface AgentEmploymentFormProps {
   employer: string;
@@ -34,7 +29,9 @@ const AgentEmploymentForm = (props: AgentEmploymentFormProps) => {
       <Card.MainContent>
         <Flex flexDir={"column"} gap={1}>
           <FormTitle label="Employment Information" />
-          <Caption>Please fill out the following employment details.</Caption>
+          <Text fontSize="xs" color="gray.500" lineHeight="1.5">
+            Please fill out the following employment details.
+          </Text>
         </Flex>
         <Separator my={2} />
         <Grid

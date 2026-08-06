@@ -1,17 +1,26 @@
 "use client";
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import {
-  SideBarItemsBM,
-  SideBarItemsSTL,
-  SideBarItemsBranch,
-  SideBarItemsEKolekta,
-  SideBarItemsClaims,
-  SideBarItemsAMD,
-} from "@/components/layout/data/sidebar-items";
-import { Notifications } from "@/components/layout/data/notifications";
-import { AppLayout } from "@/claude components/layout/app-layout";
 import { NotifyInstall } from "@splpi/estore-shared-components";
+import { AppLayout } from "osp-ui-kit";
+import { OspNavigationProvider } from "@/components/navigation/osp-nav-provider";
+import {
+  SideBarItemsAMD,
+  SideBarItemsBM,
+  SideBarItemsBranch,
+  SideBarItemsClaims,
+  SideBarItemsEKolekta,
+  SideBarItemsSTL,
+} from "@/components/data/sidebar-items";
+import { Notifications } from "@/components/data/notifications";
+
+const ROLE_SIDEBAR_ITEMS: Record<string, typeof SideBarItemsBranch> = {
+  branch: SideBarItemsBranch,
+  claims: SideBarItemsClaims,
+  amd: SideBarItemsAMD,
+  bm: SideBarItemsBM,
+  stl: SideBarItemsSTL,
+};
 
 export function RenderPage({
   children,
@@ -30,28 +39,20 @@ export function RenderPage({
     );
 
   const navItems =
-    userRole === "branch"
-      ? SideBarItemsBranch
-      : userRole === "claims"
-        ? SideBarItemsClaims
-        : userRole === "amd"
-          ? SideBarItemsAMD
-          : userRole === "bm"
-            ? SideBarItemsBM
-            : userRole === "stl"
-              ? SideBarItemsSTL
-              : SideBarItemsEKolekta;
+    (userRole && ROLE_SIDEBAR_ITEMS[userRole]) || SideBarItemsEKolekta;
 
   return (
     <NotifyInstall appName={"One St. Peter: Life Plan"}>
-      <AppLayout
-        navItems={navItems}
-        notifications={Notifications}
-        appName={userRole === "sales-agent" ? "eKolekta" : "One St. Peter"}
-        appSubtitle="Life Plan Operations"
-      >
-        {children}
-      </AppLayout>
+      <OspNavigationProvider>
+        <AppLayout
+          navItems={navItems}
+          notifications={Notifications}
+          appName={userRole === "sales-agent" ? "eKolekta" : "One St. Peter"}
+          appSubtitle="Life Plan Operations"
+        >
+          {children}
+        </AppLayout>
+      </OspNavigationProvider>
     </NotifyInstall>
   );
 }

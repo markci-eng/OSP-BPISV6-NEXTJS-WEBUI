@@ -28,6 +28,7 @@ const PLANHOLDER_INFO = {
   lastName: "DELA CRUZ",
   firstName: "JUAN",
   middleName: "GO",
+  suffix: "",
   dateOfBirth: "09/11/1912",
   gender: "MALE",
   civilStatus: "WIDOWED",
@@ -363,6 +364,7 @@ export default function TFReviewApplicationPage({
             required: true,
           },
           { label: "Middle Name", value: PLANHOLDER_INFO.middleName },
+          { label: "Suffix", value: PLANHOLDER_INFO.suffix },
           {
             label: "Date of Birth",
             value: PLANHOLDER_INFO.dateOfBirth,

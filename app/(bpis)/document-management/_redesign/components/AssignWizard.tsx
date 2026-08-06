@@ -13,8 +13,6 @@ import {
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import FormSteps from "@/claude components/FormSteps";
 
 import {
   AGENTS,
@@ -29,6 +27,7 @@ import {
 import { DOC_TYPES, TYPE_META } from "../meta";
 import { AgentAvatar, CalcBox, RadioCard, ReviewRow, TypeBadge } from "./atoms";
 import { WorkflowModal } from "./WorkflowModal";
+import { FloatingLabelInput, FormStepper } from "osp-ui-kit";
 
 type Props = {
   open: boolean;
@@ -563,7 +562,7 @@ export default function AssignWizard({
       subtitle="Assign accountable documents to an agent"
       maxW="820px"
     >
-      <FormSteps
+      <FormStepper
         stepsData={stepsData}
         title=""
         description=""

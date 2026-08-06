@@ -5,16 +5,8 @@ import {
   getPositionDesc,
   SalesAgent,
 } from "@/components/common/agent-lookup/agent-lookup.type";
-import { Card } from "@/claude components/card-accordion/card";
-import {
-  Avatar,
-  Badge,
-  Box,
-  Flex,
-  HStack,
-  SimpleGrid,
-  Text,
-} from "@chakra-ui/react";
+import { Badge, Box, Flex, HStack, SimpleGrid, Text } from "@chakra-ui/react";
+import { BrandedAvatar } from "osp-ui-kit";
 import {
   LuLayoutDashboard,
   LuTriangleAlert,
@@ -23,6 +15,8 @@ import {
 } from "react-icons/lu";
 import { fullName, initials } from "../utils";
 import { StatusBadge } from "./shared";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
+import { StaticCard } from "osp-ui-kit";
 
 /* ─── Review & Confirm ───────────────────────────────────────────────────── */
 
@@ -37,9 +31,11 @@ const ReviewRow = ({ agent }: { agent: SalesAgent }) => (
     borderColor="gray.100"
     bg="gray.50"
   >
-    <Avatar.Root colorPalette={"gray"} size="sm" flexShrink={0}>
-      <Avatar.Fallback>{initials(agent)}</Avatar.Fallback>
-    </Avatar.Root>
+    <BrandedAvatar
+      name={fullName(agent)}
+      imageUrl={mockAvatarUrl(agent.id)}
+      ringed
+    />
     <Box flex={1} minW={0}>
       <Text fontSize="13px" fontWeight="600" color="gray.900" truncate>
         {fullName(agent)}
@@ -101,7 +97,7 @@ export const ReviewPanel = ({
     </Flex>
 
     {/* Selected agents list */}
-    <Card
+    <StaticCard
       activeIcon={<LuUsers size={16} />}
       title="Selected Agents"
       subtitle={`${agents.length} agent${agents.length === 1 ? "" : "s"} will be moved`}
@@ -129,6 +125,6 @@ export const ReviewPanel = ({
           <ReviewRow key={a.id} agent={a} />
         ))}
       </SimpleGrid>
-    </Card>
+    </StaticCard>
   </Flex>
 );

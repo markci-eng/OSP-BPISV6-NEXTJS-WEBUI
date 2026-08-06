@@ -17,15 +17,9 @@ import {
   documents,
   type Documents,
   EMPLOYEES,
-} from "@/data/doc-management/documenttype";
+} from "@/app/(bpis)/data/doc-management/documenttype";
 
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import {
-  type BulkAction,
-  multiSelectFilter,
-  type RowAction,
-} from "@/components/common/reusable-tableV2/types";
-import { Employee } from "@/data/doc-management/employeeSelector";
+import { Employee } from "@/app/(bpis)/data/doc-management/employeeSelector";
 import BlockDocumentModal from "./BlockDocumentsModal";
 import ReassignDocumentModal from "./ReassignDocumentsModal";
 import {
@@ -36,7 +30,17 @@ import {
 import AssignDocumentsForm, {
   AssignDocumentPayload,
 } from "./AssignDocumentsForm";
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+import { expState, fmt, isActiveStatus } from "../data";
+import { ExpiryText, ProgressMeter, StatusChip } from "./atoms";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
+import {
+  BrandedAvatar,
+  BulkAction,
+  DataTable,
+  InfoCardAccordion,
+  multiSelectFilter,
+  RowAction,
+} from "osp-ui-kit";
 
 function createEmployeeMap(employees: Employee[]) {
   return new Map(employees.map((employee) => [employee.id, employee]));
@@ -76,6 +80,11 @@ function buildAssignedDocumentRows(
 
 const assignedDocumentColumns: ColumnDef<AssignedDocRow>[] = [
   {
+    accessorKey: "controlNo",
+    header: "Control No.",
+    meta: { responsivePriority: 6, width: "130px" },
+  },
+  {
     accessorKey: "documentType",
     header: "Document Type",
     filterFn: multiSelectFilter,
@@ -90,12 +99,8 @@ const assignedDocumentColumns: ColumnDef<AssignedDocRow>[] = [
   {
     accessorKey: "assignedStatus",
     header: "Status",
-    filterFn: multiSelectFilter,
-    meta: {
-      filterVariant: "multiSelect",
-      width: "90px",
-      minWidth: "90px",
-    },
+    meta: { responsivePriority: 4, width: "150px" },
+    cell: ({ getValue }) => <StatusChip status={getValue<string>()} />,
   },
   {
     accessorKey: "employeeName",
@@ -108,36 +113,45 @@ const assignedDocumentColumns: ColumnDef<AssignedDocRow>[] = [
   {
     accessorKey: "remainingQtyNum",
     header: "Remaining",
-    enableColumnFilter: false,
     meta: {
       responsivePriority: 2,
       alwaysVisible: true,
       numeric: true,
-      width: "96px",
-      minWidth: "88px",
+      width: "150px",
     },
-    cell: ({ getValue }) => {
-      const value = getValue<number>();
-      const color = value <= 0 ? "red" : value <= 5 ? "orange" : "green";
-      const variant = value <= 0 ? "outline" : "surface";
-      const bgColor = variant === "outline" ? "transparent" : `${color}.100`;
-
-      return (
-        <Badge color={color} variant={variant} bgColor={bgColor} size="sm">
-          {value}
-        </Badge>
-      );
-    },
+    cell: ({ row }) => (
+      <VStack align="stretch" gap={1.5} minW="120px">
+        <HStack align="baseline" gap={1}>
+          <Text fontSize="sm" fontWeight="700" fontFamily="mono" color="fg">
+            {fmt(row.original.remainingQtyNum)}
+          </Text>
+          <Text fontSize="xs" color="fg.muted">
+            / {fmt(Number(row.original.qtyInUnit))}
+          </Text>
+        </HStack>
+        <ProgressMeter
+          remaining={row.original.remainingQtyNum}
+          total={Number(row.original.qtyInUnit)}
+          active={isActiveStatus(row.original.assignedStatus)}
+        />
+      </VStack>
+    ),
   },
   {
     accessorKey: "expiryDate",
     header: "Expiry",
-    enableColumnFilter: false,
-    meta: {
-      width: "90px",
-      minWidth: "90px",
-    },
+    meta: { responsivePriority: 8, width: "140px" },
+    cell: ({ getValue }) => <ExpiryText date={getValue<string>()} />,
   },
+  // {
+  //   accessorKey: "expiryDate",
+  //   header: "Expiry",
+  //   enableColumnFilter: false,
+  //   meta: {
+  //     width: "90px",
+  //     minWidth: "90px",
+  //   },
+  // },
 ];
 
 const ASSIGNED_STATUS_META = {
@@ -159,6 +173,12 @@ const ASSIGNED_STATUS_META = {
     bg: "orange.50",
     borderColor: "orange.200",
   },
+  Blocked: {
+    colorPalette: "red",
+    color: "red.600",
+    bg: "red.50",
+    borderColor: "red.200",
+  },
 } as const;
 
 function AssignedDocStatusBadge({ status }: { status: string }) {
@@ -169,6 +189,109 @@ function AssignedDocStatusBadge({ status }: { status: string }) {
     <Badge colorPalette={meta.colorPalette} variant="subtle" flexShrink={0}>
       {status}
     </Badge>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  tone = "fg",
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <VStack
+      align="start"
+      gap={0.5}
+      px={5}
+      py={1}
+      borderLeftWidth="1px"
+      borderColor="border.muted"
+    >
+      <Text
+        fontSize="xl"
+        fontWeight="700"
+        fontFamily="mono"
+        color={tone}
+        lineHeight="1.1"
+      >
+        {value}
+      </Text>
+      <Text fontSize="xs" color="fg.muted" fontWeight="medium">
+        {label}
+      </Text>
+    </VStack>
+  );
+}
+
+function DocumentStatsRow({
+  employee,
+  rows,
+}: {
+  employee: Employee | null;
+  rows: AssignedDocRow[];
+}) {
+  const totalRemaining = rows.reduce((sum, r) => sum + r.remainingQtyNum, 0);
+  const nearExpiry = rows.filter(
+    (r) => expState(r.expiryDate) === "near",
+  ).length;
+  const blocked = rows.filter((r) => r.assignedStatus === "Blocked").length;
+
+  return (
+    <Box
+      bg="bg.panel"
+      borderWidth="1px"
+      borderColor="border.muted"
+      borderRadius="xl"
+      px={5}
+      py={3}
+      mb={4}
+      shadow="xs"
+    >
+      <HStack gap={5} flexWrap="wrap" align="center">
+        {employee && (
+          <HStack gap={3.5} pr={2}>
+            <BrandedAvatar
+              name={employee.name}
+              imageUrl={mockAvatarUrl(employee.id)}
+              ringed
+            />
+            <Box>
+              <Text fontSize="sm" fontWeight="700" color="fg">
+                {employee.name}
+              </Text>
+              <HStack fontSize="xs" color="fg.muted" gap={2}>
+                <Text fontFamily="mono">{employee.id}</Text>
+                <Box
+                  w="3px"
+                  h="3px"
+                  borderRadius="full"
+                  bg="border.emphasized"
+                />
+                <Text>{employee.branch}</Text>
+              </HStack>
+            </Box>
+          </HStack>
+        )}
+
+        <HStack gap={0} flexWrap="wrap" rowGap={3} ml="auto">
+          <Stat label="Assigned Docs" value={fmt(rows.length)} />
+          <Stat label="Remaining Qty" value={fmt(totalRemaining)} />
+          <Stat
+            label="Near Expiry"
+            value={fmt(nearExpiry)}
+            tone={nearExpiry > 0 ? "orange.600" : "fg"}
+          />
+          <Stat
+            label="Blocked"
+            value={fmt(blocked)}
+            tone={blocked > 0 ? "red.600" : "fg"}
+          />
+        </HStack>
+      </HStack>
+    </Box>
   );
 }
 
@@ -410,6 +533,14 @@ export default function DocumentTable({
 
   const handleBlockSubmit = React.useCallback(
     (payload: BlockDocumentPayload) => {
+      setData((prev) =>
+        prev.map((item) =>
+          item.documentCode === payload.documentCode
+            ? { ...item, assignedStatus: "Blocked" }
+            : item,
+        ),
+      );
+
       toast.success(
         `Blocked ${payload.documentCode} (${payload.documentStart}-${payload.documentEnd})`,
       );
@@ -514,6 +645,7 @@ export default function DocumentTable({
         </Box>
       )}
       <Box maxW="full">
+        <DocumentStatsRow employee={employee} rows={tableData} />
         <DataTable<AssignedDocRow>
           columns={assignedDocumentColumns}
           title="Assigned Documents"
@@ -522,7 +654,6 @@ export default function DocumentTable({
           size="sm"
           rowActions={rowActions}
           bulkActions={bulkActions}
-          onReorder={setData}
           features={{
             search: true,
             filtering: true,
@@ -530,7 +661,6 @@ export default function DocumentTable({
             pagination: true,
             columnToggle: true,
             selection: false,
-            draggable: false,
             detailSidebar: true,
           }}
           renderDetail={(row) => <AssignedDocumentDetail row={row} />}

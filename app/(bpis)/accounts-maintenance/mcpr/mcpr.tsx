@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 import { Grid, GridItem } from "@chakra-ui/react";
 import { PrimaryMdButton, PrimaryMdFlexButton } from "st-peter-ui";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { LuUsers } from "react-icons/lu";
 
-import Page from "@/claude components/layout/page/Page";
 import {
-  LookupField,
+  FloatingLabelSelect,
+  InfoCardAccordion,
   LookupColumn,
-} from "@/components/common/reusable-lookup/LookUpField";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
+  LookupField,
+  Page,
+  useMessageDialog,
+} from "osp-ui-kit";
 
 import { TrxMonth } from "../data/transaction-month";
 import {

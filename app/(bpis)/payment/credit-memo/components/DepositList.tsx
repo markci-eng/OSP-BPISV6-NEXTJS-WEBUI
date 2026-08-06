@@ -13,16 +13,13 @@ import {
 import { Trash2, Building2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Deposit } from "./types";
+import { formatCurrency } from "@/lib/format/currency";
 
 interface DepositListProps {
   deposits: Deposit[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   onRemove: (id: string) => void;
-}
-
-function formatCurrency(n: number) {
-  return `₱${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const MotionBox = motion.create(Box);

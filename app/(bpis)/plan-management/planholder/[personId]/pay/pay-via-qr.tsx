@@ -10,9 +10,8 @@ import {
   STANDARD_SHADOWS,
   STANDARD_SPACING,
 } from "@/lib/theme/standard-design-tokens";
-import Page from "@/claude components/layout/page/Page";
-import { useDemoAuth } from "@/components/ui/demo-auth";
-import QrScreen from "@/components/common/qr-screen/qr-screen";
+import { Page, QrScreen } from "osp-ui-kit";
+import { useDemoAuth } from "osp-ui-kit";
 
 type PayViaQrProps = {
   personId: string;
@@ -95,10 +94,10 @@ export default function PayViaQr({
     [lpaNumber, personId, computedAmount],
   );
 
-    const { login } = useDemoAuth();
-    useEffect(() => {
-      login();
-    }, [login]);
+  const { login } = useDemoAuth();
+  useEffect(() => {
+    login();
+  }, [login]);
 
   if (screen === "loading" || screen === "success") {
     return (
@@ -119,10 +118,18 @@ export default function PayViaQr({
                     style={{ animation: "payQrSpin 0.8s linear infinite" }}
                   />
                   <VStack gap="4px">
-                    <Text fontSize="18px" fontWeight="800" color={BRAND_COLORS.neutralText}>
+                    <Text
+                      fontSize="18px"
+                      fontWeight="800"
+                      color={BRAND_COLORS.neutralText}
+                    >
                       Generating QR
                     </Text>
-                    <Text fontSize="14px" color={BRAND_COLORS.grey} fontWeight="500">
+                    <Text
+                      fontSize="14px"
+                      color={BRAND_COLORS.grey}
+                      fontWeight="500"
+                    >
                       Securely preparing your payment code…
                     </Text>
                   </VStack>
@@ -147,10 +154,18 @@ export default function PayViaQr({
                     </Flex>
                   </Flex>
                   <VStack gap="4px">
-                    <Text fontSize="18px" fontWeight="800" color={BRAND_COLORS.neutralText}>
+                    <Text
+                      fontSize="18px"
+                      fontWeight="800"
+                      color={BRAND_COLORS.neutralText}
+                    >
                       QR Ready
                     </Text>
-                    <Text fontSize="14px" color={BRAND_COLORS.grey} fontWeight="500">
+                    <Text
+                      fontSize="14px"
+                      color={BRAND_COLORS.grey}
+                      fontWeight="500"
+                    >
                       Your payment code has been generated.
                     </Text>
                   </VStack>
@@ -179,15 +194,12 @@ export default function PayViaQr({
   }
 
   return (
-    <Page.Root
-      title="Pay via QR"
-      description=""
-    >
+    <Page.Root title="Pay via QR" description="">
       <Page.MainContent maxW="560px" mx="auto">
         <Page.Row>
           <VStack align="stretch" gap={STANDARD_SPACING.xs}>
             <Text
-            mt={5}
+              mt={5}
               fontSize="11px"
               fontWeight="700"
               letterSpacing="0.06em"
@@ -208,8 +220,14 @@ export default function PayViaQr({
               borderRadius={STANDARD_RADIUS.xl}
               p={STANDARD_SPACING.sm}
               borderWidth="2px"
-              borderColor={option === "due" ? BRAND_COLORS.primaryGreen : BRAND_COLORS.neutralBorder}
-              bg={option === "due" ? BRAND_COLORS.successBg : BRAND_COLORS.white}
+              borderColor={
+                option === "due"
+                  ? BRAND_COLORS.primaryGreen
+                  : BRAND_COLORS.neutralBorder
+              }
+              bg={
+                option === "due" ? BRAND_COLORS.successBg : BRAND_COLORS.white
+              }
               boxShadow={STANDARD_SHADOWS.level1}
               transition="all 0.15s ease"
               _active={{ transform: "scale(0.99)" }}
@@ -220,27 +238,48 @@ export default function PayViaQr({
                 mt="2px"
                 borderRadius={STANDARD_RADIUS.full}
                 borderWidth="2px"
-                borderColor={option === "due" ? BRAND_COLORS.primaryGreen : "#CBD5E1"}
-                bg={option === "due" ? BRAND_COLORS.primaryGreen : BRAND_COLORS.white}
+                borderColor={
+                  option === "due" ? BRAND_COLORS.primaryGreen : "#CBD5E1"
+                }
+                bg={
+                  option === "due"
+                    ? BRAND_COLORS.primaryGreen
+                    : BRAND_COLORS.white
+                }
                 align="center"
                 justify="center"
               >
-                {option === "due" && <LuCheck size={13} color="#fff" strokeWidth={3.5} />}
+                {option === "due" && (
+                  <LuCheck size={13} color="#fff" strokeWidth={3.5} />
+                )}
               </Flex>
               <Box flex="1" minW={0}>
-                <Text fontSize="12.5px" fontWeight="700" color={BRAND_COLORS.grey}>
+                <Text
+                  fontSize="12.5px"
+                  fontWeight="700"
+                  color={BRAND_COLORS.grey}
+                >
                   Amount Due
                 </Text>
                 <Text
                   fontSize="22px"
                   fontWeight="800"
                   letterSpacing="-0.02em"
-                  color={option === "due" ? BRAND_COLORS.primaryGreen : BRAND_COLORS.neutralText}
+                  color={
+                    option === "due"
+                      ? BRAND_COLORS.primaryGreen
+                      : BRAND_COLORS.neutralText
+                  }
                   mt="2px"
                 >
                   {peso(dueAmount)}
                 </Text>
-                <Text fontSize="11.5px" color={BRAND_COLORS.grey} fontWeight="600" mt="2px">
+                <Text
+                  fontSize="11.5px"
+                  color={BRAND_COLORS.grey}
+                  fontWeight="600"
+                  mt="2px"
+                >
                   Due on {dueDateLabel} · {mode} billing amount
                 </Text>
               </Box>
@@ -257,8 +296,14 @@ export default function PayViaQr({
               borderRadius={STANDARD_RADIUS.xl}
               p={STANDARD_SPACING.sm}
               borderWidth="2px"
-              borderColor={option === "full" ? BRAND_COLORS.primaryGreen : BRAND_COLORS.neutralBorder}
-              bg={option === "full" ? BRAND_COLORS.successBg : BRAND_COLORS.white}
+              borderColor={
+                option === "full"
+                  ? BRAND_COLORS.primaryGreen
+                  : BRAND_COLORS.neutralBorder
+              }
+              bg={
+                option === "full" ? BRAND_COLORS.successBg : BRAND_COLORS.white
+              }
               boxShadow={STANDARD_SHADOWS.level1}
               transition="all 0.15s ease"
               _active={{ transform: "scale(0.99)" }}
@@ -269,27 +314,48 @@ export default function PayViaQr({
                 mt="2px"
                 borderRadius={STANDARD_RADIUS.full}
                 borderWidth="2px"
-                borderColor={option === "full" ? BRAND_COLORS.primaryGreen : "#CBD5E1"}
-                bg={option === "full" ? BRAND_COLORS.primaryGreen : BRAND_COLORS.white}
+                borderColor={
+                  option === "full" ? BRAND_COLORS.primaryGreen : "#CBD5E1"
+                }
+                bg={
+                  option === "full"
+                    ? BRAND_COLORS.primaryGreen
+                    : BRAND_COLORS.white
+                }
                 align="center"
                 justify="center"
               >
-                {option === "full" && <LuCheck size={13} color="#fff" strokeWidth={3.5} />}
+                {option === "full" && (
+                  <LuCheck size={13} color="#fff" strokeWidth={3.5} />
+                )}
               </Flex>
               <Box flex="1" minW={0}>
-                <Text fontSize="12.5px" fontWeight="700" color={BRAND_COLORS.grey}>
+                <Text
+                  fontSize="12.5px"
+                  fontWeight="700"
+                  color={BRAND_COLORS.grey}
+                >
                   Remaining Balance
                 </Text>
                 <Text
                   fontSize="22px"
                   fontWeight="800"
                   letterSpacing="-0.02em"
-                  color={option === "full" ? BRAND_COLORS.primaryGreen : BRAND_COLORS.neutralText}
+                  color={
+                    option === "full"
+                      ? BRAND_COLORS.primaryGreen
+                      : BRAND_COLORS.neutralText
+                  }
                   mt="2px"
                 >
                   {peso(fullAmount)}
                 </Text>
-                <Text fontSize="11.5px" color={BRAND_COLORS.grey} fontWeight="500" mt="2px">
+                <Text
+                  fontSize="11.5px"
+                  color={BRAND_COLORS.grey}
+                  fontWeight="500"
+                  mt="2px"
+                >
                   Pay off the remaining balance of the {planDescription} plan
                 </Text>
               </Box>
@@ -309,10 +375,19 @@ export default function PayViaQr({
             overflow="hidden"
           >
             <Box p={STANDARD_SPACING.sm}>
-              <Text fontSize="14.5px" fontWeight="800" color={BRAND_COLORS.neutralText}>
+              <Text
+                fontSize="14.5px"
+                fontWeight="800"
+                color={BRAND_COLORS.neutralText}
+              >
                 Number of Installments
               </Text>
-              <Text fontSize="12px" color={BRAND_COLORS.grey} fontWeight="500" mt="3px">
+              <Text
+                fontSize="12px"
+                color={BRAND_COLORS.grey}
+                fontWeight="500"
+                mt="3px"
+              >
                 Choose how many installments to cover.
               </Text>
 
@@ -327,10 +402,18 @@ export default function PayViaQr({
                   cursor={multiplier <= 1 ? "not-allowed" : "pointer"}
                   aria-disabled={multiplier <= 1}
                   borderWidth="1.6px"
-                  borderColor={multiplier <= 1 ? BRAND_COLORS.mutedBg : BRAND_COLORS.primaryGreen}
+                  borderColor={
+                    multiplier <= 1
+                      ? BRAND_COLORS.mutedBg
+                      : BRAND_COLORS.primaryGreen
+                  }
                   bg={BRAND_COLORS.white}
-                  color={multiplier <= 1 ? "#CBD5E1" : BRAND_COLORS.primaryGreen}
-                  _active={{ transform: multiplier <= 1 ? undefined : "scale(0.94)" }}
+                  color={
+                    multiplier <= 1 ? "#CBD5E1" : BRAND_COLORS.primaryGreen
+                  }
+                  _active={{
+                    transform: multiplier <= 1 ? undefined : "scale(0.94)",
+                  }}
                   onClick={() => multiplier > 1 && step(-1)}
                 >
                   <LuMinus size={20} />
@@ -346,7 +429,11 @@ export default function PayViaQr({
                   align="center"
                   justify="center"
                 >
-                  <Text fontSize="24px" fontWeight="800" color={BRAND_COLORS.neutralText}>
+                  <Text
+                    fontSize="24px"
+                    fontWeight="800"
+                    color={BRAND_COLORS.neutralText}
+                  >
                     {multiplier}
                   </Text>
                 </Flex>
@@ -360,18 +447,35 @@ export default function PayViaQr({
                   justify="center"
                   cursor={multiplier >= maxMult ? "not-allowed" : "pointer"}
                   aria-disabled={multiplier >= maxMult}
-                  bg={multiplier >= maxMult ? "#A7D9B8" : BRAND_COLORS.primaryGreen}
+                  bg={
+                    multiplier >= maxMult
+                      ? "#A7D9B8"
+                      : BRAND_COLORS.primaryGreen
+                  }
                   color="#fff"
-                  boxShadow={multiplier >= maxMult ? undefined : STANDARD_SHADOWS.level2}
-                  _active={{ transform: multiplier >= maxMult ? undefined : "scale(0.94)" }}
+                  boxShadow={
+                    multiplier >= maxMult ? undefined : STANDARD_SHADOWS.level2
+                  }
+                  _active={{
+                    transform:
+                      multiplier >= maxMult ? undefined : "scale(0.94)",
+                  }}
                   onClick={() => multiplier < maxMult && step(1)}
                 >
                   <LuPlus size={20} />
                 </Flex>
               </HStack>
 
-              <Text fontSize="11.5px" color={BRAND_COLORS.grey} fontWeight="500" mt="9px" textAlign="center">
-                Maximum {maxMult} {maxMult === 1 ? "installment" : "installments"} available for this option
+              <Text
+                fontSize="11.5px"
+                color={BRAND_COLORS.grey}
+                fontWeight="500"
+                mt="9px"
+                textAlign="center"
+              >
+                Maximum {maxMult}{" "}
+                {maxMult === 1 ? "installment" : "installments"} available for
+                this option
               </Text>
             </Box>
 
@@ -381,7 +485,12 @@ export default function PayViaQr({
               position="relative"
               overflow="hidden"
             >
-              <Flex align="center" justify="space-between" gap={STANDARD_SPACING.sm} position="relative">
+              <Flex
+                align="center"
+                justify="space-between"
+                gap={STANDARD_SPACING.sm}
+                position="relative"
+              >
                 <Text
                   fontSize="12px"
                   fontWeight="700"
@@ -391,11 +500,15 @@ export default function PayViaQr({
                 >
                   Amount to Generate QR
                 </Text>
-                <Text fontSize="26px" fontWeight="800" color="#fff" letterSpacing="-0.02em">
+                <Text
+                  fontSize="26px"
+                  fontWeight="800"
+                  color="#fff"
+                  letterSpacing="-0.02em"
+                >
                   {peso(computedAmount)}
                 </Text>
               </Flex>
-              
             </Box>
           </VStack>
         </Page.Row>

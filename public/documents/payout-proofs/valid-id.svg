@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 480" width="760" height="480" role="img" aria-label="Sample valid ID">
+  <rect width="760" height="480" rx="20" fill="#eef2f7"/>
+  <rect x="16" y="16" width="728" height="448" rx="14" fill="#ffffff" stroke="#d7e0ea"/>
+  <rect x="16" y="16" width="728" height="74" rx="14" fill="#2f6f4e"/>
+  <rect x="16" y="70" width="728" height="20" fill="#2f6f4e"/>
+  <text x="44" y="46" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#bcd9c8" letter-spacing="2.4">SAMPLE ISSUING AUTHORITY</text>
+  <text x="44" y="72" font-family="Segoe UI, system-ui, sans-serif" font-size="20" font-weight="700" fill="#ffffff">Identification Card</text>
+
+  <rect x="44" y="122" width="160" height="190" rx="10" fill="#e9eef4" stroke="#d7e0ea"/>
+  <circle cx="124" cy="192" r="38" fill="#cbd5e0"/>
+  <path d="M124 240c-38 0-64 24-70 50h140c-6-26-32-50-70-50z" fill="#cbd5e0"/>
+  <text x="124" y="336" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0">PHOTO</text>
+
+  <text x="240" y="140" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">FULL NAME</text>
+  <text x="240" y="166" font-family="Segoe UI, system-ui, sans-serif" font-size="19" font-weight="700" fill="#1a202c">ROSARIO VILLANUEVA</text>
+
+  <text x="240" y="208" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">DATE OF BIRTH</text>
+  <text x="240" y="232" font-family="Segoe UI, system-ui, sans-serif" font-size="16" fill="#1a202c">01 January 1965</text>
+
+  <text x="500" y="208" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">ID NUMBER</text>
+  <text x="500" y="232" font-family="ui-monospace, Menlo, monospace" font-size="16" fill="#1a202c">0000-0000-0000</text>
+
+  <text x="240" y="274" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">ADDRESS</text>
+  <text x="240" y="298" font-family="Segoe UI, system-ui, sans-serif" font-size="15" fill="#1a202c">P. BURGOS ST, SAN ROQUE, TANAUAN</text>
+
+  <text x="240" y="352" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">SIGNATURE</text>
+  <path d="M244 388c18-16 30 8 44-4s16-20 30-8 22 16 38 2 26 6 40-6" stroke="#4a5568" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <rect x="240" y="400" width="220" height="1" fill="#cbd5e0"/>
+
+  <text x="560" y="396" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#cbd5e0" letter-spacing="2.5">SAMPLE — MOCK DATA</text>
+  <text x="560" y="416" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="10" fill="#cbd5e0">Not a real identification document</text>
+</svg>

@@ -1,10 +1,7 @@
-import React from "react";
 import { DrsTotals } from "../data/payment.types";
-import { Box, Flex, Grid, Separator, Text } from "@chakra-ui/react";
-import { InfoItem } from "@splpi/summary";
-import { H3, H4 } from "st-peter-ui";
-import Card from "@/components/cards/Card";
-import { RowItem } from "@/claude components/info-card/row-item";
+import { Box, Grid, Separator, Text } from "@chakra-ui/react";
+import { RowItem } from "@/components/info-card/row-item";
+import { Card } from "osp-ui-kit";
 
 interface TotalSummaryCardProps {
   totals: DrsTotals;

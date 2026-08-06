@@ -2,49 +2,37 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import {
-  type ApprovalView,
-  type ReassignmentRequest,
-  type SA2Reassignment,
-  type EmployeeMovement,
-  mapDRSToDepositAndPayments,
-} from "@/data/approvals/types";
+import type {
+  COFPApproval,
+  CSVApproval,
+  CreditMemoApproval,
+  DebitMemoApproval,
+  PlanTerminationApproval,
+  ROPApproval,
+  ReinstatementApproval,
+  ApprovalView,
+  TransferOfRightsApproval,
+} from "../data/types";
 
 import {
-  REASSIGNMENT_DATA,
-  SA2_DATA,
-  MOVEMENT_DATA,
-  depositDtlList,
-  depositHdrList,
-  drsList,
-  paymentList,
-} from "@/data/approvals/data";
-import { reassignmentColumns } from "@/data/approvals/columns/reassignment-columns";
-import { movementColumns } from "@/data/approvals/columns/movement-columns";
-import { sa2Columns } from "@/data/approvals/columns/sa2-columns";
-import { drsColumns } from "@/data/approvals/columns/drs-columns";
+  ROP_DATA,
+  REINSTATEMENT_DATA,
+  TRANSFER_OF_RIGHTS_DATA,
+  PLAN_TERMINATION_DATA,
+  CSV_DATA,
+  COFP_DATA,
+  CREDIT_MEMO_DATA,
+  DEBIT_MEMO_DATA,
+} from "../data/data";
 
-const DRS_DATA = mapDRSToDepositAndPayments(
-  drsList,
-  depositHdrList,
-  depositDtlList,
-  paymentList,
-).map((row) => ({
-  ...row,
-
-  referenceNo: row.drs?.referenceNo ?? "",
-  status: row.drs?.status ?? "",
-  requestDate: row.drs?.createdAt ?? "",
-  requester: row.deposit?.deposit?.DepositedBy ?? "",
-
-  depositedBy: row.deposit?.deposit?.DepositedBy ?? "",
-  depositDateTime: row.deposit?.deposit?.DepositDateTime ?? "",
-  bankCode: row.deposit?.deposit?.BankCode ?? "",
-  bankBranch: row.deposit?.deposit?.BankBranch ?? "",
-  accountNo: row.deposit?.deposit?.AccountNo ?? "",
-  amount: Number(row.deposit?.deposit?.Amount ?? 0),
-  siCount: row.deposit?.details?.length ?? 0,
-}));
+import { ropColumns } from "../data/columns/rop-columns";
+import { reinstatementColumns } from "../data/columns/reinstatement-columns";
+import { transferOfRightsColumns } from "../data/columns/transfer-of-rights-columns";
+import { planTerminationColumns } from "../data/columns/plan-termination-columns";
+import { csvColumns } from "../data/columns/csv-columns";
+import { cofpColumns } from "../data/columns/cofp-columns";
+import { creditMemoColumns } from "../data/columns/credit-memo-columns";
+import { debitMemoColumns } from "../data/columns/debit-memo-columns";
 
 export type ApprovalConfig = {
   title: string;
@@ -52,42 +40,42 @@ export type ApprovalConfig = {
   data: any[];
   columns: ColumnDef<any, any>[];
   getRowId: (row: any, index: number) => string;
-  detailLayout?: "fields" | "drs-print";
+  detailLayout?: "fields";
 
   detailFields: ApprovalFieldConfig[];
   mobile: ApprovalMobileConfig;
 };
 
 export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
-  "reassignment-doc": {
-    title: "Reassignment of Documents",
-    description: "Review document reassignment requests.",
-    data: REASSIGNMENT_DATA,
-    columns: reassignmentColumns as ColumnDef<any, any>[],
-    getRowId: (row: ReassignmentRequest) => row.salesForceId,
+  rop: {
+    title: "Return Of Premium",
+    description: "Review Return of Premium requests.",
+    data: ROP_DATA,
+    columns: ropColumns as ColumnDef<any, any>[],
+    getRowId: (row: ROPApproval) => row.id,
 
     detailFields: [
-      { key: "salesForceId", label: "SalesForce ID" },
-      { key: "document", label: "Document" },
-      { key: "series", label: "Series" },
-      { key: "from", label: "From" },
-      { key: "to", label: "To" },
+      { key: "lpaNo", label: "LPA No." },
+      { key: "planholderName", label: "Planholder" },
+      { key: "planType", label: "Plan Type" },
+      { key: "ropDate", label: "ROP Date" },
+      { key: "totalAmount", label: "Total Amount" },
       { key: "requestDate", label: "Request Date", mandatory: true },
       { key: "requester", label: "Requester", mandatory: true },
       { key: "status", label: "Status", mandatory: true },
     ],
 
     mobile: {
-      primaryField: "salesForceId",
-      secondaryField: "document",
+      primaryField: "lpaNo",
+      secondaryField: "planholderName",
       badgeField: "status",
-      visibleFields: ["series", "from", "to", "requestDate", "requester"],
+      visibleFields: ["planType", "ropDate", "totalAmount", "requestDate"],
       labelMap: {
-        salesForceId: "SalesForce ID",
-        document: "Document",
-        series: "Series",
-        from: "From",
-        to: "To",
+        lpaNo: "LPA No.",
+        planholderName: "Planholder",
+        planType: "Plan Type",
+        ropDate: "ROP Date",
+        totalAmount: "Total Amount",
         requestDate: "Request Date",
         requester: "Requester",
         status: "Status",
@@ -95,93 +83,232 @@ export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
     },
   },
 
-  drs: {
-    title: "DRS Approval",
-    description: "Review deposit report summaries.",
-    data: DRS_DATA,
-    columns: drsColumns as ColumnDef<any, any>[],
-    getRowId: (row: any, index: number) =>
-      row.drs?.id ?? row.id ?? String(index),
-    detailLayout: "drs-print",
+  reinstatement: {
+    title: "Reinstatement",
+    description: "Review plan reinstatement requests.",
+    data: REINSTATEMENT_DATA,
+    columns: reinstatementColumns as ColumnDef<any, any>[],
+    getRowId: (row: ReinstatementApproval) => row.id,
+
     detailFields: [
-      { key: "drs.referenceNo", label: "Reference No." },
-      { key: "deposit.deposit.DepositedBy", label: "Deposited By" },
-      { key: "deposit.deposit.DepositDateTime", label: "Deposit Date" },
-      { key: "deposit.deposit.BankCode", label: "Bank Code" },
-      { key: "deposit.deposit.BankBranch", label: "Bank Branch" },
-      { key: "deposit.deposit.AccountNo", label: "Account No." },
-      { key: "deposit.deposit.Amount", label: "Amount" },
-      { key: "drs.createdAt", label: "Request Date", mandatory: true },
-      {
-        key: "deposit.deposit.DepositedBy",
-        label: "Requester",
-        mandatory: true,
-      },
-      { key: "drs.status", label: "Status", mandatory: true },
+      { key: "lpaNo", label: "LPA No." },
+      { key: "planholderName", label: "Planholder" },
+      { key: "planType", label: "Plan Type" },
+      { key: "mop", label: "Mode of Payment" },
+      { key: "balance", label: "Balance" },
+      { key: "reinstatementFee", label: "Reinstatement Fee" },
+      { key: "dueDate", label: "Due Date" },
+      { key: "requestDate", label: "Request Date", mandatory: true },
+      { key: "requester", label: "Requester", mandatory: true },
+      { key: "status", label: "Status", mandatory: true },
     ],
 
     mobile: {
-      primaryField: "referenceNo",
-      secondaryField: "depositedBy",
+      primaryField: "lpaNo",
+      secondaryField: "planholderName",
+      badgeField: "status",
+      visibleFields: ["planType", "mop", "balance", "reinstatementFee"],
+      labelMap: {
+        lpaNo: "LPA No.",
+        planholderName: "Planholder",
+        planType: "Plan Type",
+        mop: "Mode of Payment",
+        balance: "Balance",
+        reinstatementFee: "Reinstatement Fee",
+        dueDate: "Due Date",
+        requestDate: "Request Date",
+        requester: "Requester",
+        status: "Status",
+      },
+    },
+  },
+
+  "transfer-of-rights": {
+    title: "Transfer Of Rights",
+    description: "Review transfer of rights requests.",
+    data: TRANSFER_OF_RIGHTS_DATA,
+    columns: transferOfRightsColumns as ColumnDef<any, any>[],
+    getRowId: (row: TransferOfRightsApproval) => row.id,
+
+    detailFields: [
+      { key: "lpaNo", label: "LPA No." },
+      { key: "planType", label: "Plan Type" },
+      { key: "fromPlanholder", label: "From" },
+      { key: "toPlanholder", label: "To" },
+      { key: "balance", label: "Balance" },
+      { key: "installmentAmount", label: "Installment Amount" },
+      { key: "requestDate", label: "Request Date", mandatory: true },
+      { key: "requester", label: "Requester", mandatory: true },
+      { key: "status", label: "Status", mandatory: true },
+    ],
+
+    mobile: {
+      primaryField: "fromPlanholder",
+      secondaryField: "toPlanholder",
+      badgeField: "status",
+      visibleFields: ["lpaNo", "planType", "balance", "installmentAmount"],
+      labelMap: {
+        lpaNo: "LPA No.",
+        planType: "Plan Type",
+        fromPlanholder: "From",
+        toPlanholder: "To",
+        balance: "Balance",
+        installmentAmount: "Installment Amount",
+        requestDate: "Request Date",
+        requester: "Requester",
+        status: "Status",
+      },
+    },
+  },
+
+  "plan-termination": {
+    title: "Plan Termination",
+    description: "Review plan termination requests.",
+    data: PLAN_TERMINATION_DATA,
+    columns: planTerminationColumns as ColumnDef<any, any>[],
+    getRowId: (row: PlanTerminationApproval) => row.id,
+
+    detailFields: [
+      { key: "lpaNo", label: "LPA No." },
+      { key: "planholderName", label: "Planholder" },
+      { key: "planType", label: "Plan Type" },
+      { key: "terminationReason", label: "Reason" },
+      { key: "refundAmount", label: "Refund Amount" },
+      { key: "terminationDate", label: "Termination Date" },
+      { key: "requestDate", label: "Request Date", mandatory: true },
+      { key: "requester", label: "Requester", mandatory: true },
+      { key: "status", label: "Status", mandatory: true },
+    ],
+
+    mobile: {
+      primaryField: "lpaNo",
+      secondaryField: "planholderName",
       badgeField: "status",
       visibleFields: [
-        "depositDateTime",
-        "bankCode",
-        "amount",
-        "siCount",
-        "status",
+        "planType",
+        "terminationReason",
+        "refundAmount",
+        "terminationDate",
       ],
       labelMap: {
-        referenceNo: "Reference No.",
-        depositedBy: "Deposited By",
-        depositDateTime: "Deposit Date",
-        bankCode: "Bank Code",
-        bankBranch: "Bank Branch",
-        accountNo: "Account No.",
+        lpaNo: "LPA No.",
+        planholderName: "Planholder",
+        planType: "Plan Type",
+        terminationReason: "Reason",
+        refundAmount: "Refund Amount",
+        terminationDate: "Termination Date",
+        requestDate: "Request Date",
+        requester: "Requester",
+        status: "Status",
+      },
+    },
+  },
+
+  csv: {
+    title: "Cash Surrender Value (CSV)",
+    description: "Review cash surrender value requests.",
+    data: CSV_DATA,
+    columns: csvColumns as ColumnDef<any, any>[],
+    getRowId: (row: CSVApproval) => row.id,
+
+    detailFields: [
+      { key: "lpaNo", label: "LPA No." },
+      { key: "planholderName", label: "Planholder" },
+      { key: "planType", label: "Plan Type" },
+      { key: "surrenderValue", label: "Surrender Value" },
+      { key: "surrenderDate", label: "Surrender Date" },
+      { key: "reason", label: "Reason" },
+      { key: "requestDate", label: "Request Date", mandatory: true },
+      { key: "requester", label: "Requester", mandatory: true },
+      { key: "status", label: "Status", mandatory: true },
+    ],
+
+    mobile: {
+      primaryField: "lpaNo",
+      secondaryField: "planholderName",
+      badgeField: "status",
+      visibleFields: ["planType", "surrenderValue", "surrenderDate", "reason"],
+      labelMap: {
+        lpaNo: "LPA No.",
+        planholderName: "Planholder",
+        planType: "Plan Type",
+        surrenderValue: "Surrender Value",
+        surrenderDate: "Surrender Date",
+        reason: "Reason",
+        requestDate: "Request Date",
+        requester: "Requester",
+        status: "Status",
+      },
+    },
+  },
+
+  cofp: {
+    title: "Certificate Of Full Payment (COFP)",
+    description: "Review certificate of full payment requests.",
+    data: COFP_DATA,
+    columns: cofpColumns as ColumnDef<any, any>[],
+    getRowId: (row: COFPApproval) => row.id,
+
+    detailFields: [
+      { key: "lpaNo", label: "LPA No." },
+      { key: "planholderName", label: "Planholder" },
+      { key: "planType", label: "Plan Type" },
+      { key: "cfpNumber", label: "COFP Number" },
+      { key: "cfpDate", label: "COFP Date" },
+      { key: "totalAmountPaid", label: "Total Amount Paid" },
+      { key: "requestDate", label: "Request Date", mandatory: true },
+      { key: "requester", label: "Requester", mandatory: true },
+      { key: "status", label: "Status", mandatory: true },
+    ],
+
+    mobile: {
+      primaryField: "lpaNo",
+      secondaryField: "planholderName",
+      badgeField: "status",
+      visibleFields: ["planType", "cfpNumber", "cfpDate", "totalAmountPaid"],
+      labelMap: {
+        lpaNo: "LPA No.",
+        planholderName: "Planholder",
+        planType: "Plan Type",
+        cfpNumber: "COFP Number",
+        cfpDate: "COFP Date",
+        totalAmountPaid: "Total Amount Paid",
+        requestDate: "Request Date",
+        requester: "Requester",
+        status: "Status",
+      },
+    },
+  },
+
+  "credit-memo": {
+    title: "Credit Memo",
+    description: "Review credit memo requests.",
+    data: CREDIT_MEMO_DATA,
+    columns: creditMemoColumns as ColumnDef<any, any>[],
+    getRowId: (row: CreditMemoApproval) => row.id,
+
+    detailFields: [
+      { key: "memoNo", label: "Memo No." },
+      { key: "planholderName", label: "Planholder" },
+      { key: "creditMemoType", label: "Type" },
+      { key: "amount", label: "Amount" },
+      { key: "remarks", label: "Remarks" },
+      { key: "requestDate", label: "Request Date", mandatory: true },
+      { key: "requester", label: "Requester", mandatory: true },
+      { key: "status", label: "Status", mandatory: true },
+    ],
+
+    mobile: {
+      primaryField: "memoNo",
+      secondaryField: "planholderName",
+      badgeField: "status",
+      visibleFields: ["creditMemoType", "amount", "remarks"],
+      labelMap: {
+        memoNo: "Memo No.",
+        planholderName: "Planholder",
+        creditMemoType: "Type",
         amount: "Amount",
-        siCount: "SI Count",
-        status: "Status",
-      },
-    },
-  },
-
-  "movement-employees": {
-    title: "Movement of Employees",
-    description: "Review employee movement requests.",
-    data: MOVEMENT_DATA,
-    columns: movementColumns as ColumnDef<any, any>[],
-    getRowId: (row: EmployeeMovement) => row.id,
-
-    detailFields: [
-      { key: "id", label: "Request ID" },
-      { key: "employee", label: "Employee" },
-      { key: "currentPosition", label: "Current Position" },
-      { key: "newPosition", label: "New Position" },
-      { key: "movementType", label: "Movement Type" },
-      { key: "date", label: "Effective Date" },
-      { key: "requestDate", label: "Request Date", mandatory: true },
-      { key: "requester", label: "Requester", mandatory: true },
-      { key: "status", label: "Status", mandatory: true },
-    ],
-
-    mobile: {
-      primaryField: "employee",
-      secondaryField: "movementType",
-      badgeField: "status",
-      visibleFields: [
-        "currentPosition",
-        "newPosition",
-        "date",
-        "requestDate",
-        "requester",
-      ],
-      labelMap: {
-        id: "Request ID",
-        employee: "Employee",
-        currentPosition: "Current Position",
-        newPosition: "New Position",
-        movementType: "Movement Type",
-        date: "Effective Date",
+        remarks: "Remarks",
         requestDate: "Request Date",
         requester: "Requester",
         status: "Status",
@@ -189,43 +316,35 @@ export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
     },
   },
 
-  "reassignment-sa2": {
-    title: "Reassignment of SA2",
-    description: "Review SA2 reassignment requests.",
-    data: SA2_DATA,
-    columns: sa2Columns as ColumnDef<any, any>[],
-    getRowId: (row: SA2Reassignment) => row.id,
+  "debit-memo": {
+    title: "Debit Memo",
+    description: "Review debit memo requests.",
+    data: DEBIT_MEMO_DATA,
+    columns: debitMemoColumns as ColumnDef<any, any>[],
+    getRowId: (row: DebitMemoApproval) => row.id,
 
     detailFields: [
-      { key: "id", label: "Request ID" },
-      { key: "employee", label: "Employee" },
-      { key: "fromManager", label: "From Manager" },
-      { key: "toManager", label: "To Manager" },
-      { key: "branch", label: "Branch" },
-      { key: "date", label: "Effective Date" },
+      { key: "memoNo", label: "Memo No." },
+      { key: "planholderName", label: "Planholder" },
+      { key: "debitMemoType", label: "Type" },
+      { key: "amount", label: "Amount" },
+      { key: "remarks", label: "Remarks" },
       { key: "requestDate", label: "Request Date", mandatory: true },
       { key: "requester", label: "Requester", mandatory: true },
       { key: "status", label: "Status", mandatory: true },
     ],
 
     mobile: {
-      primaryField: "employee",
-      secondaryField: "branch",
+      primaryField: "memoNo",
+      secondaryField: "planholderName",
       badgeField: "status",
-      visibleFields: [
-        "fromManager",
-        "toManager",
-        "date",
-        "requestDate",
-        "requester",
-      ],
+      visibleFields: ["debitMemoType", "amount", "remarks"],
       labelMap: {
-        id: "Request ID",
-        employee: "Employee",
-        fromManager: "From Manager",
-        toManager: "To Manager",
-        branch: "Branch",
-        date: "Effective Date",
+        memoNo: "Memo No.",
+        planholderName: "Planholder",
+        debitMemoType: "Type",
+        amount: "Amount",
+        remarks: "Remarks",
         requestDate: "Request Date",
         requester: "Requester",
         status: "Status",

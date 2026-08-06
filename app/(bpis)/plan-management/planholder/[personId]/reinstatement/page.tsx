@@ -3,7 +3,7 @@ import { ReinstatementPage } from "@/components/plan-management/reinstatement-pa
 import { Box } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { Breadcrumb } from "st-peter-ui";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { useMessageDialog } from "osp-ui-kit";
 
 export default function Reinstatement() {
   const router = useRouter();

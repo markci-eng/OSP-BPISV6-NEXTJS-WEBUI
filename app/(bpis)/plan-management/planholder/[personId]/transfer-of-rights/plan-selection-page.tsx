@@ -10,18 +10,9 @@ import {
   Table,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { CheckedPlan } from "./transfer-of-rights.types";
-import { PlanDetailType } from "@/components/plan-management/planholders/planholders.types";
-import { TanstackDataTable } from "@/components/reusable-table/TanstackDataTable";
-import { ColumnDef } from "@tanstack/react-table";
-import { OSPBadge } from "@/components/common/badge/badge";
-import { planholderLookup } from "../../../data/planholder-lookup";
-import {
-  PlanholderListTable,
-  PlanholderLookup,
-} from "@/components/plan-management/planholders/tables/planholder-list-table";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { PlanholderLookup } from "@/components/plan-management/planholders/tables/planholder-list-table";
+import { FloatingLabelInput, FloatingLabelSelect } from "osp-ui-kit";
 
 const lpaNumbers = createListCollection({
   items: [

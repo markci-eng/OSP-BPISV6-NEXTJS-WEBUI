@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 760" width="420" height="760" role="img" aria-label="Sample e-wallet account screenshot">
+  <rect width="420" height="760" rx="28" fill="#f4f6fa"/>
+  <rect x="10" y="10" width="400" height="740" rx="22" fill="#ffffff"/>
+  <rect x="10" y="10" width="400" height="120" rx="22" fill="#0a6ed1"/>
+  <rect x="10" y="100" width="400" height="30" fill="#0a6ed1"/>
+  <text x="34" y="58" font-family="Segoe UI, system-ui, sans-serif" font-size="13" fill="#cfe3f7" letter-spacing="2">E-WALLET</text>
+  <text x="34" y="92" font-family="Segoe UI, system-ui, sans-serif" font-size="24" font-weight="700" fill="#ffffff">My Account</text>
+
+  <circle cx="60" cy="186" r="26" fill="#e3ecf7"/>
+  <text x="60" y="194" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="18" font-weight="700" fill="#0a6ed1">RV</text>
+  <text x="100" y="180" font-family="Segoe UI, system-ui, sans-serif" font-size="17" font-weight="700" fill="#1a202c">ROSARIO VILLANUEVA</text>
+  <text x="100" y="202" font-family="Segoe UI, system-ui, sans-serif" font-size="14" fill="#718096">+63 917 000 0000</text>
+
+  <rect x="34" y="240" width="352" height="1" fill="#e2e8f0"/>
+
+  <text x="34" y="276" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">ACCOUNT NUMBER</text>
+  <text x="34" y="302" font-family="ui-monospace, Menlo, monospace" font-size="18" fill="#1a202c">0917 000 0000</text>
+
+  <text x="34" y="346" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">ACCOUNT NAME</text>
+  <text x="34" y="372" font-family="Segoe UI, system-ui, sans-serif" font-size="16" fill="#1a202c">ROSARIO VILLANUEVA</text>
+
+  <text x="34" y="416" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">STATUS</text>
+  <rect x="34" y="430" width="96" height="26" rx="13" fill="#e6f4ea"/>
+  <text x="82" y="448" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="12" font-weight="700" fill="#1e7d43">VERIFIED</text>
+
+  <rect x="34" y="496" width="352" height="120" rx="14" fill="#f7fafc" stroke="#e2e8f0"/>
+  <text x="54" y="530" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#a0aec0" letter-spacing="1.4">AVAILABLE BALANCE</text>
+  <text x="54" y="568" font-family="Segoe UI, system-ui, sans-serif" font-size="28" font-weight="700" fill="#1a202c">PHP 0.00</text>
+  <text x="54" y="594" font-family="Segoe UI, system-ui, sans-serif" font-size="12" fill="#a0aec0">Screenshot submitted by requester</text>
+
+  <text x="210" y="700" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="13" font-weight="700" fill="#cbd5e0" letter-spacing="3">SAMPLE — MOCK DATA</text>
+  <text x="210" y="722" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#cbd5e0">Not a real account record</text>
+</svg>

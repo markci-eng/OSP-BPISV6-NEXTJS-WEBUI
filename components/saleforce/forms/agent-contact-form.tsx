@@ -1,6 +1,5 @@
-import SectionTitle from "@/components/texts/SectionTitle";
-import { Grid, Box, Separator, Text, Strong } from "@chakra-ui/react";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { Grid, Box } from "@chakra-ui/react";
+import { FloatingLabelInput, SectionTitle } from "osp-ui-kit";
 
 interface AgentContactFormProps {
   email: string;

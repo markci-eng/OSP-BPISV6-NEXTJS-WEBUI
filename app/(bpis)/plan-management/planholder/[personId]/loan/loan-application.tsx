@@ -19,13 +19,15 @@ import {
 } from "react-icons/lu";
 
 import { PlanholderInfoType } from "@/components/plan-management/planholders/planholders.types";
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
-import InfoCard from "@/claude components/info-card/info-card";
-import { RowItem } from "@/claude components/info-card/row-item";
+import InfoCard from "@/components/info-card/info-card";
+import { RowItem } from "@/components/info-card/row-item";
 import { LoanRecord } from "./loan-select-plan";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { TertiarySmButton } from "st-peter-ui";
+import {
+  FloatingLabelInput,
+  FloatingLabelSelect,
+  InfoCardAccordion,
+} from "osp-ui-kit";
 
 export interface LoanAddressInfo {
   number: string;
@@ -300,7 +302,7 @@ const LoanInfoForm = ({
           onToggle={() => toggleSection("personal")}
         >
           <Grid
-            templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+            templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }}
             gap={3}
             mt={2}
           >
@@ -396,7 +398,7 @@ const LoanInfoForm = ({
           <Text fontWeight="bold" fontSize="sm" mt={2} mb={1}>
             Present Address
           </Text>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
             <FloatingLabelInput
               label="Address Number"
               value={presentAddress.number}
@@ -498,7 +500,7 @@ const LoanInfoForm = ({
           <Text fontWeight="bold" fontSize="sm" mt={3} mb={1}>
             Permanent Address
           </Text>
-          <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+          <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
             <FloatingLabelInput
               key={`permanent-number-${isSameAddress}`}
               label="Address Number"

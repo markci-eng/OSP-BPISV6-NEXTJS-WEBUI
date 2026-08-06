@@ -28,13 +28,15 @@ import {
   X,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
 
 import { AGENTS } from "../data";
 import { DOC_TYPES, STATUS_META, statusPalette, typePalette } from "../meta";
 import { type Filters, EMPTY_FILTERS, hasActiveFilters } from "../types";
 import { AgentAvatar } from "./atoms";
-import SearchableSelect, { type SearchableSelectOption } from "./SearchableSelect";
+import SearchableSelect, {
+  type SearchableSelectOption,
+} from "./SearchableSelect";
+import { FloatingLabelInput } from "osp-ui-kit";
 
 const MotionBox = motion(Box);
 
@@ -46,7 +48,15 @@ type Props = {
 
 /** Small solid dot used to preview a type/status palette in the option row. */
 function Dot({ palette }: { palette: string }) {
-  return <Box w="9px" h="9px" borderRadius="full" bg={`${palette}.500`} flexShrink={0} />;
+  return (
+    <Box
+      w="9px"
+      h="9px"
+      borderRadius="full"
+      bg={`${palette}.500`}
+      flexShrink={0}
+    />
+  );
 }
 
 const agentOptions: SearchableSelectOption[] = [
@@ -170,18 +180,25 @@ export default function FilterToolbar({ applied, onApply, onReset }: Props) {
   );
 
   const advancedGrid = (
-    <Grid templateColumns={{ base: "1fr 1fr", md: "repeat(4, minmax(0, 200px))" }} gap={3}>
+    <Grid
+      templateColumns={{ base: "1fr 1fr", md: "repeat(4, minmax(0, 200px))" }}
+      gap={3}
+    >
       <FloatingLabelInput
         type="date"
         label="Expiry from"
         value={draft.expFrom}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => patch({ expFrom: e.target.value })}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          patch({ expFrom: e.target.value })
+        }
       />
       <FloatingLabelInput
         type="date"
         label="Expiry to"
         value={draft.expTo}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => patch({ expTo: e.target.value })}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          patch({ expTo: e.target.value })
+        }
       />
       <FloatingLabelInput
         type="number"
@@ -189,7 +206,9 @@ export default function FilterToolbar({ applied, onApply, onReset }: Props) {
         label="Remaining min"
         placeholder="0"
         value={draft.remMin}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => patch({ remMin: e.target.value })}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          patch({ remMin: e.target.value })
+        }
       />
       <FloatingLabelInput
         type="number"
@@ -197,7 +216,9 @@ export default function FilterToolbar({ applied, onApply, onReset }: Props) {
         label="Remaining max"
         placeholder="Any"
         value={draft.remMax}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => patch({ remMax: e.target.value })}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          patch({ remMax: e.target.value })
+        }
       />
     </Grid>
   );
@@ -290,10 +311,21 @@ export default function FilterToolbar({ applied, onApply, onReset }: Props) {
                 >
                   {/* Grab handle */}
                   <Box pt={3} pb={1} display="flex" justifyContent="center">
-                    <Box w="38px" h="4px" bg="border.emphasized" borderRadius="full" />
+                    <Box
+                      w="38px"
+                      h="4px"
+                      bg="border.emphasized"
+                      borderRadius="full"
+                    />
                   </Box>
 
-                  <Flex align="center" justify="space-between" px={5} pt={2} pb={3}>
+                  <Flex
+                    align="center"
+                    justify="space-between"
+                    px={5}
+                    pt={2}
+                    pb={3}
+                  >
                     <Text fontSize="lg" fontWeight="700" color="fg">
                       Filters
                     </Text>
@@ -383,7 +415,9 @@ export default function FilterToolbar({ applied, onApply, onReset }: Props) {
                 boxShadow: "0 0 0 1px var(--chakra-colors-primary)",
               }}
               value={draft.q}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => patch({ q: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                patch({ q: e.target.value })
+              }
             />
           </InputGroup>
 

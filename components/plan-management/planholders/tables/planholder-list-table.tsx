@@ -9,8 +9,8 @@ import {
   BulkAction,
   multiSelectFilter,
   RowAction,
-} from "@/components/common/reusable-tableV2/types";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
+} from "osp-ui-kit";
+import { DataTable } from "osp-ui-kit";
 
 export interface PlanholderLookup {
   id: number;
@@ -210,7 +210,6 @@ export function PlanholderListTable({
             pagination: true, // Enable pagination
             columnToggle: true, // Allow showing/hiding columns
             selection: false, // Enable row selection
-            draggable: false, // Disable drag-and-drop for now (can be enabled if needed)
             detailSidebar: false, // Enable detail sidebar on row click
           }}
           /* IMPORTANT:

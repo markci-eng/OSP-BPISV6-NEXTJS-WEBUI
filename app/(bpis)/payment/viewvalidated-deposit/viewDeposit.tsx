@@ -23,7 +23,6 @@ import {
   LuChevronLeft,
   LuChevronRight,
   LuFileText,
-  LuLandmark,
   LuLayoutList,
   LuTrash,
   LuUsers,
@@ -32,30 +31,29 @@ import {
 import {
   Body,
   CancelSolidButton,
-  DeleteOutlineButton,
-  DeleteSolidButton,
   PrimaryMdButton,
   SaveButton,
-  SecondaryMdButton,
 } from "st-peter-ui";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { depositHDR, samplePayments } from "../data/paymentDetails";
 import { useEffect, useMemo, useState } from "react";
-
-import {
-  LookupColumn,
-  LookupField,
-} from "@/components/common/reusable-lookup/LookUpField";
-import { Employee } from "@/data/doc-management/employeeSelector";
-import { EMPLOYEES } from "@/data/doc-management/documenttype";
+import { useDepositList } from "../hooks/useDepositList";
+import { useSamplePayments } from "../hooks/useSamplePayments";
+import { DrsListDetailSkeleton } from "../components/DrsListDetailSkeleton";
+import { Employee } from "@/app/(bpis)/data/doc-management/employeeSelector";
+import { EMPLOYEES } from "@/app/(bpis)/data/doc-management/documenttype";
 import DrsDataTable from "../components/drsDataTable";
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
-import Page from "@/claude components/layout/page/Page";
-import { EmptyStateCard } from "@/components/cards/EmptyStateCard";
-import { OSPBadge } from "@/components/common/badge/badge";
+import {
+  EmptyStateCard,
+  ErrorStateCard,
+  FloatingLabelInput,
+  LookupColumn,
+  LookupField,
+  OSPBadge,
+  Page,
+} from "osp-ui-kit";
 import { DepositHdr } from "../data/payment.types";
-import { RowItem } from "@/claude components/info-card/row-item";
+import { RowItem } from "@/components/info-card/row-item";
 import { SlipUpload, SlipUploadStatus } from "../components/SlipUpload";
 import { toast } from "sonner";
 
@@ -86,7 +84,7 @@ const STATUS_STYLES: Record<
 
 type MobileView = "list" | "detail";
 
-const getStatus = (item: (typeof depositHDR)[number]) =>
+const getStatus = (item: DepositHdr) =>
   item.Status ?? (item.isApproved ? "Validated" : "Pending");
 
 export const MetaCard = ({
@@ -121,6 +119,8 @@ export const MetaCard = ({
 );
 
 export default function ViewDeposit() {
+  const { data: depositHDR, isLoading, error, refetch } = useDepositList();
+  const { data: samplePayments } = useSamplePayments();
   const { totals } = DrsFunction(samplePayments);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>("list");
@@ -128,7 +128,7 @@ export default function ViewDeposit() {
 
   const sortedDrsItems = useMemo(
     () => [...depositHDR].sort((a, b) => Number(b.id) - Number(a.id)),
-    [],
+    [depositHDR],
   );
 
   const selectedItem = useMemo(
@@ -775,6 +775,34 @@ export default function ViewDeposit() {
       )}
     </Flex>
   );
+
+  if (isLoading) {
+    return (
+      <Page.Root
+        title="View Validated Deposit"
+        description="Review your validated deposit"
+        headerButton="menu"
+      >
+        <Page.MainContent h="full" minH={0}>
+          <DrsListDetailSkeleton />
+        </Page.MainContent>
+      </Page.Root>
+    );
+  }
+
+  if (error) {
+    return (
+      <Page.Root
+        title="View Validated Deposit"
+        description="Review your validated deposit"
+        headerButton="menu"
+      >
+        <Page.MainContent>
+          <ErrorStateCard onRetry={refetch} />
+        </Page.MainContent>
+      </Page.Root>
+    );
+  }
 
   return (
     <Page.Root

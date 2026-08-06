@@ -3,15 +3,17 @@
 import { useState } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { PrimaryMdFlexButton } from "st-peter-ui";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 import { LuCalendar, LuCircleCheck, LuLoader } from "react-icons/lu";
 
-import Page from "@/claude components/layout/page/Page";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import { PremiumCircularProgress } from "@/components/common/progressbar/dynamic-progress-bar";
-import { useProgressController } from "@/components/common/progressbar/progress-bar-controller";
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
-import InfoCard from "@/claude components/info-card/info-card";
+import {
+  FloatingLabelSelect,
+  InfoCardAccordion,
+  Page,
+  PremiumCircularProgress,
+  useMessageDialog,
+  useProgressController,
+} from "osp-ui-kit";
+import InfoCard from "@/components/info-card/info-card";
 
 import { TrxMonth } from "../data/transaction-month";
 

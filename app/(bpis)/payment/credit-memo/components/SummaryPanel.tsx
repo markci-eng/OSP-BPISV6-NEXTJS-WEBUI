@@ -2,7 +2,8 @@
 
 import { Badge, Box, Button, HStack, Text, VStack } from "@chakra-ui/react";
 import { PrimaryMdFlexButton } from "st-peter-ui";
-import Card from "@/components/cards/Card";
+import { formatCurrency } from "@/lib/format/currency";
+import { Card } from "osp-ui-kit";
 
 interface SummaryPanelProps {
   totalDeposits: number;
@@ -10,13 +11,6 @@ interface SummaryPanelProps {
   onSubmit: () => void;
   onSave: () => void;
   onReset: () => void;
-}
-
-function formatCurrency(n: number) {
-  return `₱${n.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
 }
 
 function SummaryRow({

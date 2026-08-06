@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Badge,
   Box,
   Flex,
   HStack,
@@ -13,6 +14,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   LuArrowLeftRight,
+  LuBuilding2,
   LuCheck,
   LuChevronRight,
   LuClipboardList,
@@ -26,14 +28,16 @@ import {
 } from "react-icons/lu";
 import { CheckCircle2, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-
-import FormSteps from "@/claude components/FormSteps";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-
-import { OSPBadge } from "@/components/common/badge/badge";
+import {
+  BrandedAvatar,
+  EmployeeLookupType,
+  FormStepper,
+  OSPBadge,
+  Page,
+  useMessageDialog,
+} from "osp-ui-kit";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
 import { employeeLookup } from "@/components/common/employee-lookup/data/employee-lookup";
-import type { EmployeeLookupType } from "@/components/common/employee-lookup/employee-lookup.type";
-import Page from "@/claude components/layout/page/Page";
 
 import { DepositHdr } from "@/app/(bpis)/payment/data/payment.types";
 import { drsItems, tableItems } from "@/app/(bpis)/payment/data/paymentDetails";
@@ -544,21 +548,17 @@ export default function Disbursement() {
                 as="button"
                 w="full"
                 textAlign="left"
-                p={3.5}
-                bg={isSelected ? "green.50" : "white"}
-                borderRadius="2xl"
-                border="1.5px solid"
-                borderColor={
-                  isSelected ? "var(--chakra-colors-primary)" : "gray.200"
-                }
-                boxShadow={
-                  isSelected
-                    ? "0 0 0 3px var(--chakra-colors-primary-disabled)"
-                    : "0 1px 2px rgba(20,33,48,.05)"
-                }
+                borderRadius="12px"
+                borderWidth="1.5px"
+                borderColor={isSelected ? "gray.400" : "gray.200"}
+                bg={isSelected ? "gray.50" : "white"}
                 cursor="pointer"
-                transition="all .12s"
-                _active={{ transform: "scale(.955)" }}
+                transition="all .15s ease"
+                _hover={{
+                  borderColor: isSelected ? "gray.400" : "gray.300",
+                  boxShadow: "0 1px 2px rgba(20,33,48,.05)",
+                }}
+                _active={{ transform: "scale(.98)" }}
                 onClick={() => {
                   if (!isSelected) {
                     setSelectedEmployee(e);
@@ -568,35 +568,51 @@ export default function Disbursement() {
                   setMobileQuery("");
                 }}
               >
-                <HStack gap={3} align="center">
-                  <Box
-                    p={2}
-                    borderRadius="full"
-                    bg={
-                      isSelected ? "var(--chakra-colors-primary)" : "gray.100"
-                    }
-                    color={isSelected ? "white" : "gray.600"}
-                    transition="all .12s"
-                  >
-                    <LuUser size={18} />
+                <HStack gap={3} align="center" px={3.5} py={3}>
+                  <BrandedAvatar
+                    name={`${e.firstName} ${e.lastName}`}
+                    imageUrl={mockAvatarUrl(e.salesForceID)}
+                    ringed
+                  />
+
+                  <Box flex={1} minW={0}>
+                    <HStack gap={2} minW={0}>
+                      <Text
+                        fontWeight="700"
+                        fontSize="sm"
+                        color="gray.900"
+                        truncate
+                      >
+                        {e.lastName}, {e.firstName}
+                      </Text>
+                      <Badge
+                        colorPalette="gray"
+                        variant="surface"
+                        borderRadius="full"
+                        px={2.5}
+                        py={0.5}
+                        fontSize="11px"
+                        fontWeight="600"
+                        flexShrink={0}
+                      >
+                        {e.positionCode}
+                      </Badge>
+                    </HStack>
+                    <HStack gap={3} mt={0.5} minW={0}>
+                      <Text fontSize="xs" color="gray.500" flexShrink={0}>
+                        {e.salesForceID}
+                      </Text>
+                      <HStack gap={1} color="gray.500" minW={0}>
+                        <Box flexShrink={0} display="flex">
+                          <LuBuilding2 size={12} />
+                        </Box>
+                        <Text fontSize="xs" truncate>
+                          {e.branch}
+                        </Text>
+                      </HStack>
+                    </HStack>
                   </Box>
-                  <VStack align="start" gap={0} flex={1} minW={0}>
-                    <Text
-                      fontSize="15px"
-                      fontWeight={600}
-                      letterSpacing="-.01em"
-                      lineClamp={1}
-                      color={isSelected ? "green.800" : "gray.900"}
-                    >
-                      {e.lastName}, {e.firstName}
-                    </Text>
-                    <Text fontSize="xs" color="gray.500" lineClamp={1}>
-                      {e.salesForceID} · {e.positionCode}
-                    </Text>
-                    <Text fontSize="xs" color="gray.400" lineClamp={1}>
-                      {e.branch}
-                    </Text>
-                  </VStack>
+
                   <MobileRadio checked={isSelected} />
                 </HStack>
               </Box>
@@ -1645,10 +1661,10 @@ export default function Disbursement() {
           {submitted ? (
             successScreen
           ) : (
-            <FormSteps
+            <FormStepper
               stepsData={mobileSteps}
-              title="Disbursement"
-              description="Commission & expense release"
+              title=""
+              description=""
               currentStep={mobileStep}
               setCurrentStep={(step) => {
                 setMobileStep(step);

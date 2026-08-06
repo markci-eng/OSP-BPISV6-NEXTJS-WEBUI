@@ -1,11 +1,11 @@
 "use client";
 
-import { Box, Flex, Grid } from "@chakra-ui/react";
+import { Box, Flex, Grid, Text } from "@chakra-ui/react";
 import { Body, PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
 import { LuArrowRight, LuTriangleAlert } from "react-icons/lu";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { SectionTitle, useMessageDialog } from "osp-ui-kit";
 import {
   getAgentById,
   getPositionDesc,
@@ -13,11 +13,8 @@ import {
 } from "../../common/agent-lookup/agent-lookup.type";
 import SuperiorLookup from "../pickers/superior-lookup";
 import RequestSubmittedDialog from "../dialogs/request-submitted-dialog";
-import Card from "@/components/cards/Card";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
-import FormTitle from "@/components/texts/FormTitle";
-import Caption from "@/components/texts/Caption";
-import SectionTitle from "@/components/texts/SectionTitle";
+import { Card } from "osp-ui-kit";
 
 interface AgentReassignFormProps {
   selectedAgent: SalesAgent;
@@ -93,10 +90,10 @@ export function AgentReassignForm({
                 <Flex flexDir="column">
                   <SectionTitle>Select New Superior</SectionTitle>
 
-                  <Caption>
+                  <Text fontSize="xs" color="gray.500" lineHeight="1.5">
                     Search and pick a superior who ranks one level above this
                     agent.
-                  </Caption>
+                  </Text>
                 </Flex>
 
                 <SuperiorLookup

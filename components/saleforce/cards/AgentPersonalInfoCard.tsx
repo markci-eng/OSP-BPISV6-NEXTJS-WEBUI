@@ -1,9 +1,8 @@
-import { InfoCardAccordion } from "@/claude components/card-accordion/info-card-accordion";
-import { RowItem } from "@/claude components/info-card/row-item";
+import { RowItem } from "@/components/info-card/row-item";
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
-import InfoItem from "@/components/common/info-item/info-item";
 import { Box, Flex, Grid, Separator, Strong } from "@chakra-ui/react";
 import { LuUser } from "react-icons/lu";
+import { InfoCardAccordion, InfoItem } from "osp-ui-kit";
 
 interface AgentPersonalInfoCardProps {
   agent: SalesAgent | undefined | null;

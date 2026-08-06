@@ -1,5 +1,5 @@
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import { multiSelectFilter } from "@/components/common/reusable-tableV2/types";
+import { DataTable } from "osp-ui-kit";
+import { multiSelectFilter } from "osp-ui-kit";
 import { Box, Strong } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Small } from "st-peter-ui";
@@ -112,13 +112,12 @@ export function PhPaymentRecordTable({
           size="sm" // table size default: md
           defaultPageSize={10}
           features={{
-            search: false, // Enable global search
-            filtering: false, // Enable column filters
-            sorting: false, // Enable sorting
+            search: true, // Enable global search
+            filtering: true, // Enable column filters
+            sorting: true, // Enable sorting
             pagination: true, // Enable pagination
             columnToggle: true, // Allow showing/hiding columns
             selection: false, // Enable row selection
-            draggable: false, // Disable drag-and-drop for now (can be enabled if needed)
             detailSidebar: false, // Enable detail sidebar on row click
           }}
           /* IMPORTANT:

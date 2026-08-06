@@ -4,12 +4,14 @@ import {
   getPositionDesc,
   SalesAgent,
 } from "@/components/common/agent-lookup/agent-lookup.type";
-import { Avatar, Badge, Box, Flex, HStack, Text } from "@chakra-ui/react";
+import { Badge, Box, Flex, HStack, Text } from "@chakra-ui/react";
+import { BrandedAvatar } from "osp-ui-kit";
 import React from "react";
 import { LuBuilding2, LuMapPin, LuUserCheck, LuUsers } from "react-icons/lu";
 import { CARD_RADIUS, SOFT_SHADOW } from "../constants";
 import { fullName, initials } from "../utils";
 import { RankBadge } from "./shared";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
 
 /* Uppercase column head, matching the result-card column labels. */
 const ColumnLabel = ({ children }: { children: React.ReactNode }) => (
@@ -143,9 +145,7 @@ export const DestinationBanner = ({
       {/* Identity */}
       <HStack gap={3} flex="1.4" minW={0}>
         {superior ? (
-          <Avatar.Root colorPalette="gray" size="md" flexShrink={0}>
-            <Avatar.Fallback>{initials(superior)}</Avatar.Fallback>
-          </Avatar.Root>
+          <BrandedAvatar name={fullName(superior)} imageUrl={mockAvatarUrl(superior.id)} ringed />
         ) : (
           <Flex
             align="center"

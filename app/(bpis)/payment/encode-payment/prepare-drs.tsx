@@ -4,6 +4,7 @@ import {
   Box,
   Flex,
   Badge,
+  Text,
   Dialog,
   Portal,
   CloseButton,
@@ -21,11 +22,11 @@ import { DrsFunction } from "../utils/drsFunction";
 
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { BsPrinter } from "react-icons/bs";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
+import { LuBuilding2, LuWallet } from "react-icons/lu";
 import { ColumnDef } from "@tanstack/react-table";
 import { TblLoanHdrData } from "@/app/(bpis)/Model/Data/rawData";
-import { Card } from "@/claude components/card-accordion/card";
-import { RowItem } from "@/claude components/info-card/row-item";
+import { RowItem } from "@/components/info-card/row-item";
+import { StaticCard, DataTable } from "osp-ui-kit";
 
 type Props = {
   payments: PaymentRecord[];
@@ -218,7 +219,7 @@ export default function PrepareDRS({ payments }: Props) {
 
   return (
     <Box mx="auto">
-      <Card
+      <StaticCard
         activeIcon={<BsPrinter />}
         title="Digital Remittance"
         subtitle={drsNo}
@@ -238,33 +239,108 @@ export default function PrepareDRS({ payments }: Props) {
             columns={drsColumns}
             data={drsRows}
             features={{
-              search: false,
-              sorting: false,
-              draggable: false,
+              search: true,
+              sorting: true,
               selection: false,
-              filtering: false,
+              filtering: true,
               columnToggle: true,
             }}
             headerContent={
               <Flex
                 justify="space-between"
-                align="flex-start"
+                align={{ base: "flex-start", md: "center" }}
                 w="full"
                 gap={4}
                 wrap="wrap"
               >
-                <Box>
-                  <Body>REMITTANCE (HEAD OFFICE)</Body>
-                  <Body mt={1} fontWeight="bold">
-                    KIRK PATRICK OLIVAR
-                  </Body>
-                </Box>
-                <Box textAlign={{ base: "left", md: "right" }}>
-                  <Body fontSize="sm">
-                    Payment Type <Badge colorPalette="green">CASH</Badge>
-                  </Body>
-                  <Body fontWeight="bold">{drsNo}</Body>
-                </Box>
+                <Flex align="center" gap={3} minW={0}>
+                  <Flex
+                    align="center"
+                    justify="center"
+                    boxSize="36px"
+                    borderRadius="full"
+                    flexShrink={0}
+                    bg="gray.100"
+                    color="gray.500"
+                  >
+                    <LuBuilding2 size={16} />
+                  </Flex>
+                  <Box minW={0}>
+                    <Text
+                      fontSize="10px"
+                      fontWeight="700"
+                      letterSpacing="0.06em"
+                      textTransform="uppercase"
+                      color="gray.500"
+                    >
+                      Remittance (Head Office)
+                    </Text>
+                    <Body
+                      mt={0.5}
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color="gray.900"
+                      truncate
+                    >
+                      KIRK PATRICK OLIVAR
+                    </Body>
+                  </Box>
+                </Flex>
+
+                <Flex align="center" gap={4}>
+                  <Box textAlign={{ base: "left", md: "right" }}>
+                    <Text
+                      fontSize="10px"
+                      fontWeight="700"
+                      letterSpacing="0.06em"
+                      textTransform="uppercase"
+                      color="gray.500"
+                    >
+                      Payment Type
+                    </Text>
+                    <Badge
+                      mt={0.5}
+                      colorPalette="green"
+                      variant="solid"
+                      borderRadius="full"
+                      px={2.5}
+                      py={1}
+                    >
+                      <LuWallet size={11} />
+                      <Text as="span" ml={1} fontSize="xs" fontWeight="700">
+                        CASH
+                      </Text>
+                    </Badge>
+                  </Box>
+
+                  <Box
+                    w="1px"
+                    alignSelf="stretch"
+                    bg="gray.200"
+                    display={{ base: "none", md: "block" }}
+                  />
+
+                  <Box textAlign={{ base: "left", md: "right" }}>
+                    <Text
+                      fontSize="10px"
+                      fontWeight="700"
+                      letterSpacing="0.06em"
+                      textTransform="uppercase"
+                      color="gray.500"
+                    >
+                      DRS No.
+                    </Text>
+                    <Body
+                      mt={0.5}
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color="gray.900"
+                      fontFamily="mono"
+                    >
+                      {drsNo}
+                    </Body>
+                  </Box>
+                </Flex>
               </Flex>
             }
             summaryRows={[
@@ -358,7 +434,7 @@ export default function PrepareDRS({ payments }: Props) {
             </Dialog.Positioner>
           </Portal>
         </Dialog.Root>
-      </Card>
+      </StaticCard>
     </Box>
   );
 }

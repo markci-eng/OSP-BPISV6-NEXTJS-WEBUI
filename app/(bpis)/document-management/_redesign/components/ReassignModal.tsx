@@ -11,12 +11,17 @@ import {
   createListCollection,
 } from "@chakra-ui/react";
 import { AlertTriangle, ArrowRightLeft } from "lucide-react";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
 
-import { AGENTS, type DocumentRecord, fmt, getAgent, seriesLabel } from "../data";
+import {
+  AGENTS,
+  type DocumentRecord,
+  fmt,
+  getAgent,
+  seriesLabel,
+} from "../data";
 import { AgentAvatar, CalcBox, RadioCard, SeriesBar } from "./atoms";
 import { WorkflowModal } from "./WorkflowModal";
+import { FloatingLabelSelect, FloatingLabelInput } from "osp-ui-kit";
 
 export type ReassignResult = {
   newAgentId: string;
@@ -33,7 +38,12 @@ type Props = {
   onConfirm: (result: ReassignResult) => void;
 };
 
-export default function ReassignModal({ open, onClose, doc, onConfirm }: Props) {
+export default function ReassignModal({
+  open,
+  onClose,
+  doc,
+  onConfirm,
+}: Props) {
   const [newAgentId, setNewAgentId] = React.useState("");
   const [method, setMethod] = React.useState<"entire" | "partial">("entire");
   const [pStart, setPStart] = React.useState("");
@@ -71,10 +81,19 @@ export default function ReassignModal({ open, onClose, doc, onConfirm }: Props) 
     e2 = Number(pEnd);
   }
   const moved =
-    method === "partial" ? (Number.isFinite(s2) && Number.isFinite(e2) ? e2 - s2 + 1 : 0) : doc.remaining;
+    method === "partial"
+      ? Number.isFinite(s2) && Number.isFinite(e2)
+        ? e2 - s2 + 1
+        : 0
+      : doc.remaining;
   const partialValid =
     method !== "partial" ||
-    (pStart !== "" && pEnd !== "" && s2 >= doc.s && e2 <= doc.e && s2 <= e2 && moved <= doc.remaining);
+    (pStart !== "" &&
+      pEnd !== "" &&
+      s2 >= doc.s &&
+      e2 <= doc.e &&
+      s2 <= e2 &&
+      moved <= doc.remaining);
   const valid = !!newAgentId && partialValid && moved > 0;
 
   const footer = (
@@ -85,7 +104,10 @@ export default function ReassignModal({ open, onClose, doc, onConfirm }: Props) 
       <Button variant="ghost" onClick={onClose}>
         Cancel
       </Button>
-      <Button disabled={!valid} onClick={() => onConfirm({ newAgentId, method, s: s2, e: e2, moved })}>
+      <Button
+        disabled={!valid}
+        onClick={() => onConfirm({ newAgentId, method, s: s2, e: e2, moved })}
+      >
         <ArrowRightLeft size={16} /> Confirm Reassignment
       </Button>
     </>
@@ -172,28 +194,48 @@ export default function ReassignModal({ open, onClose, doc, onConfirm }: Props) 
             label="Series Start"
             placeholder={String(doc.s)}
             value={pStart}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPStart(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setPStart(e.target.value)
+            }
           />
           <FloatingLabelInput
             type="number"
             label="Series End"
             placeholder={String(doc.e)}
             value={pEnd}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPEnd(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setPEnd(e.target.value)
+            }
           />
         </Grid>
       )}
 
-      {method === "partial" && pStart !== "" && pEnd !== "" && !partialValid && (
-        <HStack fontSize="xs" color="red.600" fontWeight="medium" mt={2.5} gap={1.5}>
-          <AlertTriangle size={15} />
-          <Text>
-            Portion must be within {doc.s}–{doc.e} and not exceed remaining.
-          </Text>
-        </HStack>
-      )}
+      {method === "partial" &&
+        pStart !== "" &&
+        pEnd !== "" &&
+        !partialValid && (
+          <HStack
+            fontSize="xs"
+            color="red.600"
+            fontWeight="medium"
+            mt={2.5}
+            gap={1.5}
+          >
+            <AlertTriangle size={15} />
+            <Text>
+              Portion must be within {doc.s}–{doc.e} and not exceed remaining.
+            </Text>
+          </HStack>
+        )}
 
-      <Box mt={5} p={4} bg="bg.subtle" borderWidth="1px" borderColor="border.muted" borderRadius="xl">
+      <Box
+        mt={5}
+        p={4}
+        bg="bg.subtle"
+        borderWidth="1px"
+        borderColor="border.muted"
+        borderRadius="xl"
+      >
         <Text
           fontSize="xs"
           fontWeight="700"
@@ -204,7 +246,14 @@ export default function ReassignModal({ open, onClose, doc, onConfirm }: Props) 
         >
           Series Preview
         </Text>
-        <SeriesBar label="Current assignment" s={doc.s} e={doc.e} domainS={doc.s} domainE={doc.e} muted />
+        <SeriesBar
+          label="Current assignment"
+          s={doc.s}
+          e={doc.e}
+          domainS={doc.s}
+          domainE={doc.e}
+          muted
+        />
         {valid && (
           <SeriesBar
             label={`Reassigned to ${nu ? nu.name : "new agent"}`}
@@ -215,10 +264,18 @@ export default function ReassignModal({ open, onClose, doc, onConfirm }: Props) 
           />
         )}
         <Grid templateColumns="1fr 1fr 1fr" gap={2.5} mt={3.5}>
-          <CalcBox label="Reassigning" value={valid ? fmt(moved) : "—"} tone="colorPalette.fg" />
+          <CalcBox
+            label="Reassigning"
+            value={valid ? fmt(moved) : "—"}
+            tone="colorPalette.fg"
+          />
           <CalcBox
             label={`Remains with ${cur.name.split(" ")[0]}`}
-            value={valid ? fmt(method === "entire" ? 0 : doc.remaining - moved) : fmt(doc.remaining)}
+            value={
+              valid
+                ? fmt(method === "entire" ? 0 : doc.remaining - moved)
+                : fmt(doc.remaining)
+            }
             tone="fg.muted"
           />
           <CalcBox label="New agent total" value={valid ? fmt(moved) : "—"} />
@@ -231,10 +288,22 @@ export default function ReassignModal({ open, onClose, doc, onConfirm }: Props) 
 function MiniKV({ label, value }: { label: string; value: string }) {
   return (
     <Box>
-      <Text fontSize="10px" color="fg.muted" fontWeight="600" textTransform="uppercase" letterSpacing="0.03em">
+      <Text
+        fontSize="10px"
+        color="fg.muted"
+        fontWeight="600"
+        textTransform="uppercase"
+        letterSpacing="0.03em"
+      >
         {label}
       </Text>
-      <Text fontSize="sm" color="fg" fontWeight="600" fontFamily="mono" mt={0.5}>
+      <Text
+        fontSize="sm"
+        color="fg"
+        fontWeight="600"
+        fontFamily="mono"
+        mt={0.5}
+      >
         {value}
       </Text>
     </Box>

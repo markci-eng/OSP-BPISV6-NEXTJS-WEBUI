@@ -1,13 +1,5 @@
-import DocumentUploader, {
-  UploadedFile,
-} from "@/components/document-uploader/DragAndDrop";
-import {
-  Badge,
-  Box,
-  HStack,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Badge, Box, HStack, Text, VStack } from "@chakra-ui/react";
+import { UploadedFile, DocumentUploader } from "osp-ui-kit";
 import {
   LuCircleCheck,
   LuClipboardList,
@@ -18,12 +10,14 @@ import {
 const REQUIRED_DOCUMENTS = [
   {
     label: "Transfer of Rights Application Form",
-    description: "Duly accomplished and signed by the current planholder (Assignor).",
+    description:
+      "Duly accomplished and signed by the current planholder (Assignor).",
     required: true,
   },
   {
     label: "Absolute Deed of Assignment",
-    description: "Notarized deed of assignment executed by both the Assignor and Assignee.",
+    description:
+      "Notarized deed of assignment executed by both the Assignor and Assignee.",
     required: true,
   },
   {
@@ -86,25 +80,43 @@ export function TransferDocumentsPage({
             <Box color="blue.500">
               <LuInfo size={16} />
             </Box>
-            <Text fontWeight="semibold" fontSize="sm" color="blue.700" _dark={{ color: "blue.300" }}>
+            <Text
+              fontWeight="semibold"
+              fontSize="sm"
+              color="blue.700"
+              _dark={{ color: "blue.300" }}
+            >
               Before You Upload
             </Text>
           </HStack>
           <VStack align="start" gap={1}>
             <Text fontSize="xs" color="blue.700" _dark={{ color: "blue.300" }}>
-              Please prepare clear, legible scanned copies or photos of all required documents listed
-              below. Ensure all pages are complete and signatures are visible.
+              Please prepare clear, legible scanned copies or photos of all
+              required documents listed below. Ensure all pages are complete and
+              signatures are visible.
             </Text>
             <Text fontSize="xs" color="blue.700" _dark={{ color: "blue.300" }}>
-              Accepted formats: <strong>PDF, JPG, PNG, DOC, DOCX</strong> &mdash; max{" "}
-              <strong>20 MB</strong> per file.
+              Accepted formats: <strong>PDF, JPG, PNG, DOC, DOCX</strong>{" "}
+              &mdash; max <strong>20 MB</strong> per file.
             </Text>
           </VStack>
         </Box>
 
         {/* Required Documents Checklist */}
-        <Box borderWidth="1px" borderColor="border" rounded="xl" overflow="hidden">
-          <HStack px={4} py={3} bg="bg.subtle" gap={2} borderBottomWidth="1px" borderColor="border">
+        <Box
+          borderWidth="1px"
+          borderColor="border"
+          rounded="xl"
+          overflow="hidden"
+        >
+          <HStack
+            px={4}
+            py={3}
+            bg="bg.subtle"
+            gap={2}
+            borderBottomWidth="1px"
+            borderColor="border"
+          >
             <Box color="fg.muted">
               <LuClipboardList size={16} />
             </Box>
@@ -160,9 +172,14 @@ export function TransferDocumentsPage({
           <Box color="orange.500" flexShrink={0} mt="1px">
             <LuTriangleAlert size={16} />
           </Box>
-          <Text fontSize="xs" color="orange.700" _dark={{ color: "orange.300" }}>
-            Incomplete or illegible documents may delay the processing of your Transfer of Rights
-            application. Your Branch personnel will review all uploaded files before proceeding.
+          <Text
+            fontSize="xs"
+            color="orange.700"
+            _dark={{ color: "orange.300" }}
+          >
+            Incomplete or illegible documents may delay the processing of your
+            Transfer of Rights application. Your Branch personnel will review
+            all uploaded files before proceeding.
           </Text>
         </HStack>
 

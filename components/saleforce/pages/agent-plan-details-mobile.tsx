@@ -13,20 +13,18 @@ import {
   LuShare2,
 } from "react-icons/lu";
 import AgentInfoTabsMobile from "../tabs/agent-info-tabs-mobile";
-import {
-  PendingRequests,
-} from "@/components/new-planholder-profile/sections/pending-requests";
-import DataTable from "../../common/reusable-tableV2/DataTable";
+import { PendingRequests } from "@/components/plan-management/planholder-profile/sections/pending-requests";
+import { DataTable } from "osp-ui-kit";
 import TeamMemberDrawer from "../drawers/team-member-drawer";
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import ProfileHeaderCard from "@/components/cards/ProfileHeaderCard";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
 import ActionButtons, {
   ActionButtonItem,
-} from "@/claude components/buttons/ActionButtons";
-import Page from "@/claude components/layout/page/Page";
+} from "@/components/primitives/ActionButtons";
+import { Page, ProfileHeaderCard } from "osp-ui-kit";
 import { useRouter } from "next/navigation";
-import { MOCK_AGENT_REQUESTS } from "@/data/saleforce/agent-requests";
+import { MOCK_AGENT_REQUESTS } from "@/app/(bpis)/data/saleforce/agent-requests";
 
 const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
   const { selectedAgent } = params;
@@ -79,6 +77,7 @@ const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
           <ProfileHeaderCard
             name={selectedAgent.name}
             personId={selectedAgent.id}
+            avatarUrl={mockAvatarUrl(selectedAgent.id)}
             homeAddress={[
               selectedAgent.address?.unit,
               selectedAgent.address?.street,
@@ -106,12 +105,11 @@ const AgentDetailsMobile = (params: { selectedAgent: SalesAgent }) => {
                 setTeamDrawerOpen(true);
               }}
               features={{
-                search: false,
-                filtering: false,
-                sorting: false,
+                search: true,
+                filtering: true,
+                sorting: true,
                 pagination: true,
                 selection: false,
-                draggable: false,
                 columnToggle: true,
                 detailSidebar: false,
               }}

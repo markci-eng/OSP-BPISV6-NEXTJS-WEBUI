@@ -1,6 +1,6 @@
 "use client";
 import ReferralPage from "@/components/saleforce/pages/referral-page";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 
 export default function ReferrallPage() {
   return (

@@ -3,11 +3,12 @@ import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Checkbox, H4, Small } from "st-peter-ui";
 import { LuChevronRight } from "react-icons/lu";
-import { DataTable } from "@/components/common/reusable-tableV2/DataTable";
-import { RowItem } from "@/components/info-card/row-item";
-import { OSPBadge } from "@/components/common/badge/badge";
-import type { CheckedPlanType, PlanDetails } from "@/data/plan-management/change-of-mode/change-mode.types";
+import type {
+  CheckedPlanType,
+  PlanDetails,
+} from "@/app/(bpis)/data/plan-management/change-of-mode/change-mode.types";
 import { PlanDetailsDialog } from "./plan-details-dialog";
+import { DataTable, OSPBadge, RowItem } from "osp-ui-kit";
 
 export function ChangeModeForm({
   activePlans,
@@ -62,10 +63,18 @@ export function ChangeModeForm({
 
   return (
     <Box py={3}>
-      <Flex justify="space-between" align="center" mb={4} gap={3} flexWrap="wrap">
+      <Flex
+        justify="space-between"
+        align="center"
+        mb={4}
+        gap={3}
+        flexWrap="wrap"
+      >
         <Box>
           <H4>Active Plans</H4>
-          <Small fontStyle="italic">Kindly select plans you want to change mode.</Small>
+          <Small fontStyle="italic">
+            Kindly select plans you want to change mode.
+          </Small>
         </Box>
       </Flex>
 
@@ -74,16 +83,17 @@ export function ChangeModeForm({
         columns={columns}
         getRowId={(row) => row.lpa_no}
         features={{
-          sorting: false,
-          filtering: false,
+          sorting: true,
+          filtering: true,
           search: true,
           pagination: false,
           columnToggle: true,
           selection: false,
-          draggable: false,
           detailSidebar: false,
         }}
-        rowActions={[{ id: "change-mode", label: "Change Mode", onClick: openDialog }]}
+        rowActions={[
+          { id: "change-mode", label: "Change Mode", onClick: openDialog },
+        ]}
         onRowClick={openDialog}
         mobileConfig={{
           viewMode: "card",
@@ -111,9 +121,20 @@ export function ChangeModeForm({
                     bg="green.500"
                   />
                 )}
-                <HStack align="flex-start" justify="space-between" gap={2} px={3} py={3}>
+                <HStack
+                  align="flex-start"
+                  justify="space-between"
+                  gap={2}
+                  px={3}
+                  py={3}
+                >
                   <Box flex="1" minW={0}>
-                    <Text fontSize="sm" fontWeight="bold" color="gray.900" letterSpacing="wide">
+                    <Text
+                      fontSize="sm"
+                      fontWeight="bold"
+                      color="gray.900"
+                      letterSpacing="wide"
+                    >
                       {row.lpa_no}
                     </Text>
                     <Text fontSize="xs" color="gray.500" mt={0.5}>
@@ -128,11 +149,18 @@ export function ChangeModeForm({
                     {isChecked && <OSPBadge type="success">Selected</OSPBadge>}
                   </HStack>
                 </HStack>
-                <Box borderTopWidth="1px" borderColor="gray.100" px={3} py={2.5}>
+                <Box
+                  borderTopWidth="1px"
+                  borderColor="gray.100"
+                  px={3}
+                  py={2.5}
+                >
                   <RowItem label="Plan Code" value={row.plan_code} />
                   <RowItem label="Mode" value={row.mode} />
                   <Flex justify="space-between" align="center" mt={2}>
-                    <Text fontSize="xs" color="gray.400">Tap to select</Text>
+                    <Text fontSize="xs" color="gray.400">
+                      Tap to select
+                    </Text>
                     <LuChevronRight color="#a1a1aa" />
                   </Flex>
                 </Box>

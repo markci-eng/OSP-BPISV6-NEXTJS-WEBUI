@@ -11,9 +11,9 @@ import {
   LuShare2,
 } from "react-icons/lu";
 import { LuCalendarClock, LuCalendarRange, LuHash, LuLayers, LuUser, LuWallet } from "react-icons/lu";
-import Page from "@/claude components/layout/page/Page";
-import { DocumentInfoCard } from "@/components/common/document-info-card/DocumentInfoCard";
-import { PdfViewerState } from "@/components/common/pdf-viewer/PdfViewerStates";
+import { Page } from "osp-ui-kit";
+import { DocumentInfoCard } from "osp-ui-kit";
+import { PdfViewerState } from "osp-ui-kit/pdf-viewer";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import {
   STANDARD_RADIUS,
@@ -36,7 +36,7 @@ const ACCOUNT_STATUS_BADGE: Record<
 // viewer must never be rendered during SSR.
 const PdfViewer = dynamic(
   () =>
-    import("@/components/common/pdf-viewer/PdfViewer").then(
+    import("osp-ui-kit/pdf-viewer").then(
       (mod) => mod.PdfViewer,
     ),
   { ssr: false, loading: () => <PdfViewerState variant="loading" /> },

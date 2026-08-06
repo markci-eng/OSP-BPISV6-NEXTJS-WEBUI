@@ -1,11 +1,10 @@
 "use client";
 
-import InfoItem from "@/components/common/info-item/info-item";
 import { SearchPlanholderDialog } from "@/components/common/planholder-lookup/search-planholder-dialog";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import {
   EmptyState,
   Flex,
+  Skeleton,
   SimpleGrid,
   VStack,
   Box as ChakraBox,
@@ -13,12 +12,13 @@ import {
 import React, { useState } from "react";
 import { LuCheck, LuShoppingCart } from "react-icons/lu";
 import { Body, Box, DynamicButton, H3 } from "st-peter-ui";
-import { depositColumns, depositHDR } from "../payment/data/paymentDetails";
+import { depositColumns } from "../payment/data/paymentDetails";
+import { useDepositList } from "../payment/hooks/useDepositList";
+import { DataTable, ErrorStateCard, InfoItem } from "osp-ui-kit";
 
 export default function StlApproval() {
   const [selectedRemittance, setSelectedRemittance] = useState<any>(null);
-
-  // 🔹 Sample data (replace with real data)
+  const { data: depositHDR, isLoading, error, refetch } = useDepositList();
 
   return (
     <Box mx="auto" p={{ base: 0, md: 4 }}>
@@ -42,20 +42,32 @@ export default function StlApproval() {
 
       {/* Remittance Table */}
       <Box p={4} bg="white" boxShadow="sm" borderRadius="lg" my={4}>
-        <DataTable
-          columns={depositColumns}
-          data={depositHDR}
-          title="Remittance For Approval"
-          // 👇 If your table supports row click
-          onRowClick={(row: any) => {
-            setSelectedRemittance(row);
-          }}
-          features={{
-            selection: false,
-            draggable: false,
-            columnToggle: true,
-          }}
-        />
+        {isLoading ? (
+          <ChakraBox display="flex" flexDirection="column" gap={2}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} h="40px" borderRadius="md" />
+            ))}
+          </ChakraBox>
+        ) : error ? (
+          <ErrorStateCard onRetry={refetch} />
+        ) : (
+          <DataTable
+            columns={depositColumns}
+            data={depositHDR}
+            title="Remittance For Approval"
+            // 👇 If your table supports row click
+            onRowClick={(row: any) => {
+              setSelectedRemittance(row);
+            }}
+            features={{
+              sorting: true,
+              filtering: true,
+              search: true,
+              selection: false,
+              columnToggle: true,
+            }}
+          />
+        )}
       </Box>
 
       {/* Details Section */}
@@ -116,12 +128,11 @@ export default function StlApproval() {
                 data={[]}
                 size="sm"
                 features={{
-                  search: false,
-                  sorting: false,
+                  search: true,
+                  sorting: true,
                   columnToggle: true,
-                  draggable: false,
                   selection: false,
-                  filtering: false,
+                  filtering: true,
                 }}
               />
               <Flex mt={4} justifyContent={"end"}>

@@ -1,12 +1,14 @@
 "use client";
 
-import Card from "@/components/cards/Card";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
-import { Beneficiaries } from "@/components/new-planholder-profile/pages/beneficiaries";
-import { Box, createListCollection, Grid, Separator } from "@chakra-ui/react";
+import { Beneficiaries } from "@/components/plan-management/planholder-profile/pages/beneficiaries";
+import { Box, createListCollection, Grid } from "@chakra-ui/react";
 import { Checkbox } from "st-peter-ui";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import {
+  FloatingLabelInput,
+  FloatingLabelSelect,
+  useMessageDialog,
+} from "osp-ui-kit";
+import { Card } from "osp-ui-kit";
 
 const GenderCollection = createListCollection({
   items: [
@@ -33,12 +35,13 @@ export function NewPlanHolderInfoForm() {
       <Card.Root title={"New Plan Holder Information"}>
         <Card.MainContent>
           <Grid
-            templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+            templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }}
             gapX={4}
           >
             <FloatingLabelInput label={"Last Name"} name={""} />
             <FloatingLabelInput label={"First Name"} name={""} />
             <FloatingLabelInput label={"Middle Name"} name={""} />
+            <FloatingLabelInput label={"Suffix"} name={""} />
             <FloatingLabelInput label={"Date of Birth"} type="date" name={""} />
             <FloatingLabelSelect label={"Gender"}>
               {GenderCollection.items.map((item) => (
@@ -59,17 +62,9 @@ export function NewPlanHolderInfoForm() {
               type="number"
               name={""}
             />
-            <Checkbox
-              label="Insurable"
-              onCheckedChange={(details) => {
-                messageBox({
-                  title: "Insurable",
-                  message: details.checked ? "Checked" : "Unchecked",
-                  confirmText: "Okay",
-                  variant: "information",
-                });
-              }}
-            />
+            <Box p={3}>
+              <Checkbox label="Insurable" onCheckedChange={(details) => {}} />
+            </Box>
           </Grid>
         </Card.MainContent>
       </Card.Root>
@@ -77,7 +72,7 @@ export function NewPlanHolderInfoForm() {
       <Card.Root title={"Address Information"}>
         <Card.MainContent>
           <Grid
-            templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }}
+            templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }}
             gapX={4}
           >
             <FloatingLabelSelect label={"Province"}>

@@ -1,4 +1,4 @@
-import TrackMyRequest from "@/claude components/tracker/TrackMyRequest";
+import TrackMyRequest from "@/components/request-tracker/track-my-request";
 import { Box, Text } from "@chakra-ui/react";
 import React from "react";
 

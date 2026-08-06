@@ -1,7 +1,3 @@
-import Card from "@/components/cards/Card";
-import Caption from "@/components/texts/Caption";
-import FormTitle from "@/components/texts/FormTitle";
-import SectionTitle from "@/components/texts/SectionTitle";
 import {
   Grid,
   Box,
@@ -10,9 +6,9 @@ import {
   GridItem,
   Flex,
   VStack,
+  Text,
 } from "@chakra-ui/react";
-import { H4 } from "st-peter-ui";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import { Card, FloatingLabelInput, FormTitle, SectionTitle } from "osp-ui-kit";
 
 interface AgentPersonalInfoFormProps {
   lastName: string;
@@ -46,7 +42,9 @@ const AgentPersonalInfoForm = (props: AgentPersonalInfoFormProps) => {
     <Card.Root>
       <Card.MainContent>
         <FormTitle label="Personal Information" />
-        <Caption>Please fill out the following details.</Caption>
+        <Text fontSize="xs" color="gray.500" lineHeight="1.5">
+          Please fill out the following details.
+        </Text>
         <Separator
           my={{
             base: 3,

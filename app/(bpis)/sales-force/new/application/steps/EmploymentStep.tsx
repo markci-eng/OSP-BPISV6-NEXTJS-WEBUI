@@ -1,9 +1,9 @@
 "use client";
 
+import { AiField } from "@/components/inputs/AiField";
 import { Flex, Grid } from "@chakra-ui/react";
+import { InputCardAccordion } from "osp-ui-kit";
 import { LuBuilding2, LuCreditCard } from "react-icons/lu";
-import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
-import { AiField } from "../../../../../../components/inputs/AiField";
 
 export function EmploymentStep() {
   return (
@@ -14,7 +14,7 @@ export function EmploymentStep() {
         subtitle="Employer and position information"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
           <AiField fieldKey="employer" label="Employer" />
           <AiField fieldKey="position" label="Position" />
           <AiField fieldKey="hireDate" label="Hire Date" />
@@ -28,7 +28,7 @@ export function EmploymentStep() {
         subtitle="NBI, TIN, and SSS numbers"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
           <AiField fieldKey="nbiNumber" label="NBI Number" />
           <AiField fieldKey="tinNumber" label="TIN Number" />
           <AiField fieldKey="sssNumber" label="SSS Number" />

@@ -1,10 +1,10 @@
 "use client";
 
+import { ProfileHeaderCard } from "osp-ui-kit";
 import {
   SalesAgent,
   SalesAgentAddress,
 } from "../../common/agent-lookup/agent-lookup.type";
-import ProfileHeaderCard from "@/components/cards/ProfileHeaderCard";
 
 interface AgentProfileHeaderCardProps {
   agent?: SalesAgent;
@@ -12,7 +12,9 @@ interface AgentProfileHeaderCardProps {
 
 /** Flatten the structured agent address into a newline-delimited string
  *  that ProfileHeaderCard collapses into a single readable line. */
-const formatAgentAddress = (address?: SalesAgentAddress): string | undefined => {
+const formatAgentAddress = (
+  address?: SalesAgentAddress,
+): string | undefined => {
   if (!address) return undefined;
   const line = [
     address.unit,

@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Flex, SimpleGrid, Text } from "@chakra-ui/react";
+import { DASHBOARD_ACCENT_COLORS } from "@/lib/theme/dashboard-colors";
 import {
   LuUsers,
   LuUserCheck,
@@ -14,8 +15,8 @@ import {
   LuArrowRight,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
-import Page from "@/claude components/layout/page/Page";
-import { salesAgents } from "@/data/saleforce/sales-agent-data";
+import { Page } from "osp-ui-kit";
+import { salesAgents } from "@/app/(bpis)/data/saleforce/sales-agent-data";
 
 /* ── Section landing hub for Sales Agent Management ── */
 
@@ -42,28 +43,28 @@ const actions: ActionCard[] = [
     description: "Search and view agent profiles, movements, and referrals.",
     href: "/sales-force/profile",
     Icon: LuUsers,
-    color: "#1976D2",
+    color: DASHBOARD_ACCENT_COLORS.info,
   },
   {
     title: "Re-Organization",
     description: "Reassign agents to a new superior and restructure teams.",
     href: "/sales-force/re-assign",
     Icon: LuNetwork,
-    color: "#8E24AA",
+    color: DASHBOARD_ACCENT_COLORS.purple,
   },
   {
     title: "Add New Sales Agent",
     description: "Register a new sales agent and complete their onboarding.",
     href: "/sales-force/new",
     Icon: LuUserPlus,
-    color: "#1B9E57",
+    color: DASHBOARD_ACCENT_COLORS.positive,
   },
   {
     title: "Contract and SFID Renewal",
     description: "Print agent contracts and renew SFID cards.",
     href: "/sales-force/sale-force-printing",
     Icon: LuPrinter,
-    color: "#F57C00",
+    color: DASHBOARD_ACCENT_COLORS.warning,
   },
 ];
 
@@ -187,24 +188,24 @@ export default function SalesForceLandingPage() {
     const fieldAgents = total - managers;
 
     return [
-      { label: "Total Agents", value: total, Icon: LuUsers, color: "#1976D2" },
+      { label: "Total Agents", value: total, Icon: LuUsers, color: DASHBOARD_ACCENT_COLORS.info },
       {
         label: "Active",
         value: active,
         Icon: LuUserCheck,
-        color: "#1B9E57",
+        color: DASHBOARD_ACCENT_COLORS.positive,
       },
       {
         label: "Managers",
         value: managers,
         Icon: LuBriefcase,
-        color: "#8E24AA",
+        color: DASHBOARD_ACCENT_COLORS.purple,
       },
       {
         label: "Field Agents",
         value: fieldAgents,
         Icon: LuUser,
-        color: "#F57C00",
+        color: DASHBOARD_ACCENT_COLORS.warning,
       },
     ];
   }, []);

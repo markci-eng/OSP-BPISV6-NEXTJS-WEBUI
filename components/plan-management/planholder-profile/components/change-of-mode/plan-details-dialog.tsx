@@ -17,10 +17,10 @@ import { RowItem } from "@/components/info-card/row-item";
 import type {
   CheckedPlanType,
   PlanDetails,
-} from "@/data/plan-management/change-of-mode/change-mode.types";
-import { PlanTypes } from "@/data/plan-management/change-of-mode/data";
+} from "@/app/(bpis)/data/plan-management/change-of-mode/change-mode.types";
+import { PlanTypes } from "@/app/(bpis)/data/plan-management/change-of-mode/data";
 import { useEffect, useMemo, useState } from "react";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { useMessageDialog } from "osp-ui-kit";
 
 const MODES = ["Monthly", "Quarterly", "Semi-Annual", "Annual"] as const;
 
@@ -237,8 +237,7 @@ export function PlanDetailsDialog({
                   backgroundColor: "dangerDisabled",
                   color: "danger",
                   _checked: {
-                    backgroundColor:
-                      "var(--chakra-colors-primary-disabled)/50",
+                    backgroundColor: "var(--chakra-colors-primary-disabled)/50",
                     borderColor: "var(--chakra-colors-primary)",
                     borderWidth: "1px",
                     color: "var(--chakra-colors-primary-hover)",
@@ -296,10 +295,7 @@ export function PlanDetailsDialog({
           label="Amount Paid"
           value={formatMoney(plan.total_amount_paid)}
         />
-        <RowItem
-          label="Remaining Inst."
-          value={String(plan.installment_no)}
-        />
+        <RowItem label="Remaining Inst." value={String(plan.installment_no)} />
         <RowItem label="Balance" value={formatMoney(plan.balance)} />
         <RowItem
           label="Inst. Amount"

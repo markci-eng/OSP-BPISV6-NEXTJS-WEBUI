@@ -2,11 +2,11 @@
 
 import { Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import Page from "@/claude components/layout/page/Page";
-import { PdfViewerState } from "@/components/common/pdf-viewer/PdfViewerStates";
+import { Page } from "osp-ui-kit";
+import { PdfViewerState } from "osp-ui-kit/pdf-viewer";
 import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
 import { PlanDetailsData } from "@/app/(bpis)/plan-management/data/plan-details.data";
-import { getPlanStatement } from "@/components/new-planholder-profile/data/plan-statement";
+import { getPlanStatement } from "@/components/plan-management/planholder-profile/data/plan-statement";
 import { findSoaRecordByPersonId } from "./soa.data";
 import { SoaDocument } from "./soa-document";
 

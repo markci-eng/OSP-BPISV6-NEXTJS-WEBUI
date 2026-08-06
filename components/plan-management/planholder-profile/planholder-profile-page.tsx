@@ -41,22 +41,16 @@ import {
   SaveButton,
 } from "st-peter-ui";
 import { PlanholderHamburgerModules } from "./components/planholder-hamburger-modules";
-import { PlanholderInfoCard } from "./components/planholder-info";
-import {
-  AddressCard,
-  PlanholderAddressCard,
-} from "./components/planholder-address";
-import InfoItem from "@/components/common/info-item/info-item";
+import { PlanholderInfoCard } from "@/components/common/cards/planholder-info-card";
+import { PlanholderAddressCard } from "./components/planholder-address";
 import { ProgressCard } from "../planholders/cards/pending-request-card";
 import { PhListOfPlans } from "./components/ph-list-of-plans";
 import { PhListOfPlansMobile } from "./components/ph-list-of-plans-mobile";
 import { useState } from "react";
-import LookUp from "@/components/common/reusable-lookup/dynamic-lookup";
-import { PlanholderLookup } from "@/components/common/planholder-lookup/planholder-lookup";
 import { useRouter } from "next/navigation";
 import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
-import RequestHistoryDrawer from "@/components/drawers/request-history-drawer";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import RequestHistoryDrawer from "@/components/common/drawers/request-history-drawer";
+import { FloatingLabelInput, InfoItem, PlanholderLookup } from "osp-ui-kit";
 
 export interface PlanholderInfoType {
   personId: string;
@@ -598,6 +592,7 @@ export function PlanholderProfilePage({
         {!isMobile && (
           <Flex gap={3}>
             <PlanholderLookup
+              dataSource={planholderLookup}
               onSelectChange={(e) =>
                 router.push(`/plan-management/planholder/${e?.lpaNumber}`)
               }
@@ -628,9 +623,10 @@ export function PlanholderProfilePage({
       {isMobile && (
         <Box mt={4}>
           <PlanholderLookup
+            dataSource={planholderLookup}
             value={
               planholderLookup.find(
-                (p) => p.lpaNumber === props?.plans?.[0].lpaNumber,
+                (p) => p.lpaNumber === props?.plans?.[0]?.lpaNumber,
               ) ?? undefined
             }
             onSelectChange={(e) =>

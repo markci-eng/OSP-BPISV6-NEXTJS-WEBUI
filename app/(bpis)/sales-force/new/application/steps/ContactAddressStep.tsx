@@ -2,8 +2,8 @@
 
 import { Flex, Grid } from "@chakra-ui/react";
 import { LuPhone, LuMapPin } from "react-icons/lu";
-import { InputCardAccordion } from "@/claude components/card-accordion/input-card-accordion";
 import { AiField } from "../../../../../../components/inputs/AiField";
+import { InputCardAccordion } from "osp-ui-kit";
 
 export function ContactAddressStep() {
   return (
@@ -14,9 +14,13 @@ export function ContactAddressStep() {
         subtitle="Email and phone numbers"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
           <AiField fieldKey="email" label="Email" type="email" />
-          <AiField fieldKey="mobileNumber" label="Mobile Number" type="tel" />
+          <AiField
+            fieldKey="mobileNumber"
+            label="Mobile Number"
+            type="mobile"
+          />
           <AiField
             fieldKey="landlineNumber"
             label="Landline Number"
@@ -31,7 +35,7 @@ export function ContactAddressStep() {
         subtitle="Residential address details"
         defaultOpen
       >
-        <Grid templateColumns={{ base: "1fr", md: "repeat(2, 1fr)" }} gap={3}>
+        <Grid templateColumns={{ base: "1fr", md: "repeat(4, 1fr)" }} gap={3}>
           <AiField fieldKey="street" label="Street" />
           <AiField fieldKey="barangay" label="Barangay" />
           <AiField fieldKey="district" label="District" />

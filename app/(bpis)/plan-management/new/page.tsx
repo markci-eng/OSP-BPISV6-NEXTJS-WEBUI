@@ -12,8 +12,8 @@ import {
 } from "@chakra-ui/react";
 import { toast } from "sonner";
 import { Body, CancelButton, H3, NextButton } from "st-peter-ui";
-import Page from "@/claude components/layout/page/Page";
-import InfoCard from "@/claude components/info-card/info-card";
+import { Page } from "osp-ui-kit";
+import InfoCard from "@/components/info-card/info-card";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { SharedLifePlanApplication } from "@splpi/estore-shared-components";
 import {

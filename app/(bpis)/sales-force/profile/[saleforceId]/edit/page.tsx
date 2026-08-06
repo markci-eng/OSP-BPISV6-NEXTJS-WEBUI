@@ -1,6 +1,6 @@
 "use client";
 import AgentEditForm from "@/components/saleforce/forms/agent-edit-form";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 import { Box } from "@chakra-ui/react";
 import { useParams, useRouter } from "next/navigation";
 

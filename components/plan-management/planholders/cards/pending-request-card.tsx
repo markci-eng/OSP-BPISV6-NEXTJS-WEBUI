@@ -1,4 +1,4 @@
-import { OSPBadge } from "@/components/common/badge/badge";
+import { OSPBadge } from "osp-ui-kit";
 import {
   AbsoluteCenter,
   Box,

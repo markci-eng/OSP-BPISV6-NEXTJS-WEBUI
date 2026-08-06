@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Page from "@/claude components/layout/page/Page";
-import SectionTitle from "@/components/texts/SectionTitle";
-import LabelText from "@/components/texts/LabelText";
+import { LabelText, Page, SectionTitle } from "osp-ui-kit";
 import {
   Avatar,
   Box,
@@ -29,7 +27,7 @@ import {
   LuWifiOff,
 } from "react-icons/lu";
 import { RiQrCodeLine } from "react-icons/ri";
-import { OSPBadge } from "@/components/common/badge/badge";
+import { OSPBadge } from "osp-ui-kit";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 

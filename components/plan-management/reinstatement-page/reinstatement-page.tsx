@@ -1,123 +1,52 @@
 import {
   Box,
   CheckboxCard,
-  CheckboxCheckedChangeDetails,
-  Container,
   createListCollection,
-  Flex,
   Grid,
-  Heading,
-  HStack,
-  Separator,
-  SimpleGrid,
   Span,
-  Stack,
-  Steps,
-  Strong,
-  VStack,
+  Text,
 } from "@chakra-ui/react";
-import type { CheckedPlan } from "@/data/plan-management/reinstate-plans/reinstatement.types";
-import {
-  Body,
-  Checkbox,
-  H3,
-  NextButton,
-  PreviousButton,
-  PrimaryLgFlexButton,
-  PrimaryMdFlexButton,
-  PrimarySmButton,
-  SaveButton,
-  SelectButton,
-  Small,
-  UnselectSolidButton,
-} from "st-peter-ui";
-import { FloatingLabelSelect } from "@/components/inputs/floating-label-select";
-import { useState } from "react";
-import { ReinstatementForm } from "./reinstatement-form";
-import { lapsedPlans } from "@/data/plan-management/reinstate-plans/data";
-import { ReinstatementSummaryPage } from "./ri-summary";
-import PaymentPage from "./payment";
-import { FormSteps } from "osp.cis.nextjs.components";
-import { FaCcMastercard, FaFileShield, FaLock } from "react-icons/fa6";
-import { FaFileAlt, FaFileUpload } from "react-icons/fa";
-import DocumentUploader from "@/components/document-uploader/DragAndDrop";
-import { MdFileUpload } from "react-icons/md";
+import { PrimaryMdFlexButton } from "st-peter-ui";
 import { useRouter } from "next/navigation";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
-import SingleFileUpload from "@/components/inputs/single-file-upload";
-import Page from "@/claude components/layout/page/Page";
-import { FloatingLabelInput } from "@/components/inputs/floating-label-input";
+import {
+  StaticCard,
+  FloatingLabelInput,
+  FloatingLabelSelect,
+  SingleFileUpload,
+  useMessageDialog,
+} from "osp-ui-kit";
+import { Page } from "osp-ui-kit";
+import { LuFileText, LuInfo, LuUpload } from "react-icons/lu";
+import { PlanDetailsData } from "@/app/(bpis)/plan-management/data/plan-details.data";
 
 const steps = ["Select Lapsed Plan", "Review Reinstatement", "Payment"];
 
+const peso = (amount: number) =>
+  "₱ " + amount.toLocaleString(undefined, { minimumFractionDigits: 2 });
+
 export function ReinstatementPage({
-  onSuccess,
   successLink,
-  withPayment = true,
 }: {
   onSuccess: (transactionId: string, transactionAmount: number) => void;
   successLink: string;
   withPayment?: boolean;
 }) {
-  const [checkedPlans, setCheckedPlans] = useState<CheckedPlan[]>([]);
   const requestId = "";
 
   const router = useRouter();
   const { messageBox } = useMessageDialog();
 
-  const stepsData = [
-    {
-      title: "Select Lapsed Plan",
-      icon: FaFileAlt,
-      content: (
-        <ReinstatementForm
-          lapsedPlans={lapsedPlans}
-          onCheckedPlansChange={(selected) => setCheckedPlans(selected)}
-        />
-      ),
-      validateBeforeNext: () => {
-        if (checkedPlans.length === 0) {
-          messageBox({
-            title: "No Plan Selected",
-            message: "Please select at least one plan to reinstate.",
-            confirmText: "Okay",
-            variant: "warning",
-          });
-          return false;
-        }
-        return true;
-      },
-    },
-    {
-      title: "Upload Documents",
-      icon: FaFileUpload,
-      content: (
-        <Box mt={5}>
-          <DocumentUploader />
-        </Box>
-      ),
-    },
+  // The lapsed plan being reinstated.
+  const plan = PlanDetailsData[0];
 
-    ...(withPayment
-      ? [
-          {
-            title: "Review Reinstatement",
-            icon: FaFileShield,
-            content: (
-              <ReinstatementSummaryPage
-                selectedPlans={checkedPlans}
-                onSubmit={() => {}}
-                onBack={() => {}}
-              />
-            ),
-          },
-          {
-            title: "Payment",
-            icon: FaCcMastercard,
-            content: <PaymentPage successLink={successLink + requestId} />,
-          },
-        ]
-      : []),
+  const planTiles = [
+    { label: "LPA Number", value: plan.lpaNumber },
+    { label: "Plan", value: plan.planDescription },
+    { label: "Plan Code", value: plan.planCode },
+    {
+      label: "Effectivity Date",
+      value: plan.effectivityDate.toLocaleDateString(),
+    },
   ];
 
   const riTypes = createListCollection({
@@ -131,23 +60,48 @@ export function ReinstatementPage({
   });
 
   return (
-    // <FormSteps
-    //   stepsData={stepsData}
-    //   title={"Reinstatement Application"}
-    //   description={
-    //     "Quickly bring your plan back on track by reactivating a lapsed plan."
-    //   }
-    // />
     <Page.Root
       title={"Reinstatement Application"}
       description="Quickly bring your plan back on track by reactivating a lapsed plan."
     >
       <Page.MainContent>
-        <Box bg={"white"} my={1} p={5} boxShadow={"sm"} borderRadius={"lg"}>
-          <Strong color={"var(--chakra-colors-primary)"}>
-            Basic Information
-          </Strong>
-          <Separator my={3} />
+        <StaticCard
+          activeIcon={<LuFileText />}
+          title="Plan Details"
+          subtitle="Details of the lapsed plan being reinstated."
+        >
+          <Grid
+            templateColumns={{
+              base: "1fr",
+              sm: "repeat(2, 1fr)",
+              lg: "repeat(auto-fit, minmax(200px, 1fr))",
+            }}
+            gap={3}
+          >
+            {planTiles.map((tile) => (
+              <Box
+                key={tile.label}
+                p={4}
+                borderWidth="1px"
+                borderColor="gray.200"
+                borderRadius="lg"
+                bg="gray.50"
+              >
+                <Text fontSize="xs" color="gray.500" mb={1}>
+                  {tile.label}
+                </Text>
+                <Text fontSize="sm" fontWeight="semibold" color="gray.800">
+                  {tile.value}
+                </Text>
+              </Box>
+            ))}
+          </Grid>
+        </StaticCard>
+        <StaticCard
+          activeIcon={<LuInfo />}
+          title="Basic Information"
+          subtitle="Provide the reinstatement type and contact details."
+        >
           <Grid
             templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }}
             gapX={5}
@@ -159,14 +113,14 @@ export function ReinstatementPage({
                 </option>
               ))}
             </FloatingLabelSelect>
-            <FloatingLabelInput label="Contact Number" type="number" required />
+            <FloatingLabelInput label="Contact Number" type="mobile" required />
           </Grid>
-        </Box>
-        <Box my={1} bg={"white"} p={5} boxShadow={"sm"} borderRadius={"lg"}>
-          <Strong color={"var(--chakra-colors-primary)"}>
-            Upload Required Documents
-          </Strong>
-          <Separator my={3} />
+        </StaticCard>
+        <StaticCard
+          activeIcon={<LuUpload />}
+          title="Upload Required Documents"
+          subtitle="Attach the required supporting documents."
+        >
           <Grid templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} gap={5}>
             <SingleFileUpload
               label={"Reinstatement Form"}
@@ -189,7 +143,7 @@ export function ReinstatementPage({
               required={true}
             />
           </Grid>
-        </Box>
+        </StaticCard>
         <CheckboxCard.Root
           bg={"white"}
           my={1}

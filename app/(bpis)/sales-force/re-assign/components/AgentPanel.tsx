@@ -1,13 +1,11 @@
 "use client";
 
-import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
-import { Card } from "@/claude components/card-accordion/card";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
 import { Badge, Flex, Text } from "@chakra-ui/react";
 import { LuArrowRight, LuUsers, LuUsersRound } from "react-icons/lu";
 import { agentColumns, agentMobileConfig } from "../data/agent-columns";
 import { fullName } from "../utils";
 import { EmptyState } from "./shared";
+import { StaticCard, DataTable, SalesAgent } from "osp-ui-kit";
 
 /* ─── Agent selection panel ──────────────────────────────────────────────── */
 
@@ -23,7 +21,7 @@ export const AgentPanel = ({
   onSelectionChange: (rows: SalesAgent[]) => void;
 }) => {
   return (
-    <Card
+    <StaticCard
       activeIcon={<LuUsers size={16} />}
       title="Select Agents"
       subtitle={
@@ -93,13 +91,12 @@ export const AgentPanel = ({
               pagination: true,
               columnToggle: true,
               selection: true,
-              draggable: false,
               detailSidebar: false,
             }}
             mobileConfig={agentMobileConfig}
           />
         </Flex>
       )}
-    </Card>
+    </StaticCard>
   );
 };

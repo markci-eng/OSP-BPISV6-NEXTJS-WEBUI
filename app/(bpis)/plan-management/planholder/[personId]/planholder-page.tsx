@@ -1,11 +1,17 @@
 "use client";
 
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { useMessageDialog } from "osp-ui-kit";
 import PlanholderProfilePage, {
   PlanholderPageProps,
-} from "@/components/new-planholder-profile/planholder-page";
+} from "@/components/plan-management/planholder-profile/planholder-page";
 
-export function PlanholderPage({ props }: { props: PlanholderPageProps }) {
+export function PlanholderPage({
+  props,
+  selectedLpaNumber,
+}: {
+  props: PlanholderPageProps;
+  selectedLpaNumber?: string;
+}) {
   const { messageBox } = useMessageDialog();
 
   props.actionFunctions = {
@@ -20,5 +26,7 @@ export function PlanholderPage({ props }: { props: PlanholderPageProps }) {
     },
   };
 
-  return <PlanholderProfilePage props={props} />;
+  return (
+    <PlanholderProfilePage props={props} selectedLpaNumber={selectedLpaNumber} />
+  );
 }

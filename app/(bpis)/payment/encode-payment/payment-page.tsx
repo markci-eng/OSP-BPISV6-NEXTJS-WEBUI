@@ -4,9 +4,7 @@ import { useState } from "react";
 
 import { toast } from "sonner";
 import { PaymentRecord } from "../data/payment.types";
-import Page from "@/claude components/layout/page/Page";
-import FormSteps from "@/claude components/FormSteps";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import { FormStepper, Page, useMessageDialog } from "osp-ui-kit";
 import { useRouter } from "next/navigation";
 
 import { MdOutlinePayment } from "react-icons/md";
@@ -71,7 +69,7 @@ export default function PaymentPage() {
       headerButton="menu"
     >
       <Page.MainContent>
-        <FormSteps
+        <FormStepper
           stepsData={steps}
           title=""
           description=""

@@ -1,21 +1,26 @@
 "use client";
 
-import { EMPLOYEES } from "@/data/doc-management/documenttype";
-import { Employee } from "@/data/doc-management/employeeSelector";
-import { Box, Flex, Grid, Text } from "@chakra-ui/react";
-import { User } from "lucide-react";
+import {
+  documents,
+  EMPLOYEES,
+} from "@/app/(bpis)/data/doc-management/documenttype";
+import { Employee } from "@/app/(bpis)/data/doc-management/employeeSelector";
+import { Badge, Box, Flex, Grid, Text } from "@chakra-ui/react";
+import { AlertTriangle, Ban, User } from "lucide-react";
 import React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  LookupColumn,
-  LookupField,
-} from "@/components/common/reusable-lookup/LookUpField";
 import { AnimatePresence, motion } from "framer-motion";
 import DocumentTable from "./_components/DocumentTable";
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
-import Page from "@/claude components/layout/page/Page";
-import LabelText from "@/components/texts/LabelText";
+import {
+  BrandedAvatar,
+  DataTable,
+  LookupColumn,
+  LookupField,
+  Page,
+} from "osp-ui-kit";
 import { MetaCard } from "../../payment/viewvalidated-deposit/viewDeposit";
+import { expState, fmt } from "./data";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
 
 const employeeColumns: LookupColumn<Employee>[] = [
   { key: "id", header: "Employee ID" },
@@ -23,7 +28,55 @@ const employeeColumns: LookupColumn<Employee>[] = [
   { key: "branch", header: "Branch" },
 ];
 
-const employeeTableColumns: ColumnDef<Employee>[] = [
+type EmployeeWithStats = Employee & {
+  assignedDocs: number;
+  remainingQty: number;
+  nearExpiry: number;
+  blocked: number;
+};
+
+function buildEmployeeDocStats() {
+  const map = new Map<
+    string,
+    Pick<
+      EmployeeWithStats,
+      "assignedDocs" | "remainingQty" | "nearExpiry" | "blocked"
+    >
+  >();
+
+  for (const doc of documents) {
+    if (!doc.salesForceId) continue;
+
+    const stats = map.get(doc.salesForceId) ?? {
+      assignedDocs: 0,
+      remainingQty: 0,
+      nearExpiry: 0,
+      blocked: 0,
+    };
+
+    stats.assignedDocs += 1;
+    stats.remainingQty += Number(doc.remainingQty || 0);
+    if (expState(doc.expiryDate) === "near") stats.nearExpiry += 1;
+
+    map.set(doc.salesForceId, stats);
+  }
+
+  return map;
+}
+
+const employeeDocStats = buildEmployeeDocStats();
+
+const EMPLOYEES_WITH_STATS: EmployeeWithStats[] = EMPLOYEES.map((emp) => ({
+  ...emp,
+  ...(employeeDocStats.get(emp.id) ?? {
+    assignedDocs: 0,
+    remainingQty: 0,
+    nearExpiry: 0,
+    blocked: 0,
+  }),
+}));
+
+const employeeTableColumns: ColumnDef<EmployeeWithStats>[] = [
   {
     id: "employee",
     header: "Employee",
@@ -32,16 +85,11 @@ const employeeTableColumns: ColumnDef<Employee>[] = [
       const emp = row.original;
       return (
         <Flex align="center" gap={3}>
-          <Box
-            p={2}
-            borderRadius="full"
-            bg="gray.100"
-            color="gray.600"
-            flexShrink={0}
-            _dark={{ bg: "gray.800", color: "gray.300" }}
-          >
-            <User size={16} />
-          </Box>
+          <BrandedAvatar
+            name={emp.name}
+            imageUrl={mockAvatarUrl(emp.id)}
+            ringed
+          />
           <Box>
             <Text fontWeight="semibold" fontSize="sm" lineHeight="1.3">
               {emp.name}
@@ -62,6 +110,96 @@ const employeeTableColumns: ColumnDef<Employee>[] = [
         {String(info.getValue())}
       </Text>
     ),
+  },
+  {
+    accessorKey: "assignedDocs",
+    header: "Assigned Docs",
+    meta: { numeric: true },
+    cell: (info) => (
+      <Text
+        fontSize="sm"
+        fontWeight="700"
+        fontFamily="mono"
+        color="fg"
+        textAlign="right"
+      >
+        {fmt(info.getValue<number>())}
+      </Text>
+    ),
+  },
+  {
+    accessorKey: "remainingQty",
+    header: "Remaining Qty",
+    meta: { numeric: true },
+    cell: (info) => (
+      <Text
+        fontSize="sm"
+        fontWeight="700"
+        fontFamily="mono"
+        color="fg"
+        textAlign="right"
+      >
+        {fmt(info.getValue<number>())}
+      </Text>
+    ),
+  },
+  {
+    accessorKey: "nearExpiry",
+    header: "Near Expiry",
+    meta: { numeric: true },
+    cell: (info) => {
+      const value = info.getValue<number>();
+      if (value === 0) {
+        return (
+          <Text fontSize="sm" color="gray.300" textAlign="right">
+            —
+          </Text>
+        );
+      }
+      return (
+        <Flex justify="flex-end">
+          <Badge
+            variant="subtle"
+            colorPalette="orange"
+            borderRadius="full"
+            px={2.5}
+            gap={1}
+          >
+            <AlertTriangle size={11} />
+            {fmt(value)}
+          </Badge>
+        </Flex>
+      );
+    },
+  },
+  {
+    accessorKey: "blocked",
+    header: "Blocked",
+    meta: { numeric: true },
+    cell: (info) => {
+      const value = info.getValue<number>();
+      if (value === 0) {
+        return (
+          <Text fontSize="sm" color="gray.300" textAlign="right">
+            —
+          </Text>
+        );
+      }
+      return (
+        <Flex justify="flex-end">
+          <Badge
+            variant="subtle"
+            colorPalette="red"
+            borderRadius="full"
+            px={2.5}
+            gap={1}
+          >
+            <Ban size={11} />
+            {fmt(value)}
+          </Badge>
+        </Flex>
+      );
+    },
   },
 ];
 
@@ -88,6 +226,7 @@ const DocumentManagement = () => {
           w={{ base: "full", md: "320px", lg: "360px" }}
           ml={{ base: 0, md: "auto" }}
           flexShrink={0}
+          display={selectedEmployee ? "block" : "none"}
         >
           <LookupField<Employee>
             label=""
@@ -144,21 +283,21 @@ const DocumentManagement = () => {
 
         {!selectedEmployee && (
           <Box w="full">
-            <DataTable<Employee>
+            <DataTable<EmployeeWithStats>
+              title="Select an Employee"
               columns={employeeTableColumns}
-              data={EMPLOYEES}
+              data={EMPLOYEES_WITH_STATS}
               getRowId={(row) => row.id}
               onRowClick={(row) => setSelectedEmployee(row)}
               size="md"
               emptyState="No employees found."
               features={{
-                search: false,
-                filtering: false,
+                search: true,
+                filtering: true,
                 sorting: true,
                 pagination: true,
                 columnToggle: true,
                 selection: false,
-                draggable: false,
                 detailSidebar: false,
               }}
               mobileConfig={{
@@ -166,8 +305,17 @@ const DocumentManagement = () => {
                 primaryField: "name",
                 titleTransform: "none",
                 secondaryField: "id",
-                labelMap: { id: "Employee ID" },
-                visibleFields: ["branch"],
+                labelMap: {
+                  id: "Employee ID",
+                  assignedDocs: "Assigned Docs",
+                  remainingQty: "Remaining Qty",
+                  nearExpiry: "Near Expiry",
+                  blocked: "Blocked",
+                },
+                visibleFields: ["branch", "assignedDocs"],
+                valueFormatter: {
+                  remainingQty: (value) => fmt(Number(value) || 0),
+                },
               }}
             />
           </Box>

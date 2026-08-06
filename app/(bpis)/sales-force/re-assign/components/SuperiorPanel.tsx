@@ -1,10 +1,10 @@
 "use client";
 
 import { SalesAgent } from "@/components/common/agent-lookup/agent-lookup.type";
-import { Card } from "@/claude components/card-accordion/card";
 import {
   Badge,
   Box,
+  Card,
   Flex,
   HStack,
   IconButton,
@@ -26,6 +26,7 @@ import { matchesSuperior } from "../utils";
 import { EmptyState } from "./shared";
 import { SelectedSuperiorSummary } from "./SelectedSuperiorSummary";
 import { SuperiorResultCard } from "./SuperiorResultCard";
+import { StaticCard } from "osp-ui-kit";
 
 /* ─── Superior selection panel ───────────────────────────────────────────── */
 
@@ -49,7 +50,7 @@ export const SuperiorPanel = ({
   );
 
   return (
-    <Card
+    <StaticCard
       activeIcon={<LuUserRoundCheck size={16} />}
       title="Select Receiving Superior"
       subtitle="The person who will receive the transferred agents"
@@ -155,7 +156,7 @@ export const SuperiorPanel = ({
           <VStack
             align="stretch"
             gap={2}
-            maxH={{ base: "none", lg: "460px" }}
+            // maxH={{ base: "none", lg: "460px" }}
             overflowY={{ base: "visible", lg: "auto" }}
             pr={{ lg: 1 }}
           >
@@ -177,6 +178,6 @@ export const SuperiorPanel = ({
           </VStack>
         </Flex>
       )}
-    </Card>
+    </StaticCard>
   );
 };

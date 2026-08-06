@@ -11,10 +11,10 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { LuPrinter } from "react-icons/lu";
-import Page from "@/claude components/layout/page/Page";
+import { Page } from "osp-ui-kit";
 import type { PlanholderLookup } from "@/components/plan-management/planholders/tables/planholder-list-table";
 import type { PlanDetailType } from "@/components/plan-management/planholders/planholders.types";
-import type { PlanStatement } from "@/components/new-planholder-profile/data/plan-statement";
+import type { PlanStatement } from "@/components/plan-management/planholder-profile/data/plan-statement";
 
 function formatPeso(amount: number) {
   return "₱ " + amount.toLocaleString("en-PH");

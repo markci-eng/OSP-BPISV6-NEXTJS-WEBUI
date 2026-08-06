@@ -2,18 +2,17 @@
 
 import { Text } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
-import { TanstackDataTable } from "@/components/reusable-table/TanstackDataTable";
 
 type MCPR = {
   LPANo: string;
   PlanholderName: string;
   PlanCode: string;
-  InstAmt : number;
-  DueDate:  Date;
+  InstAmt: number;
+  DueDate: Date;
   InstallmentNo: number;
   Aging: number;
   CommQ30: number;
-  QNCom:number;
+  QNCom: number;
   SIAmount: number;
   MobileNo: string;
 };
@@ -350,7 +349,7 @@ const columns: ColumnDef<MCPR>[] = [
     enableColumnFilter: true,
     cell: (info) => <Text>{info.getValue<string>()}</Text>,
   },
-];  
+];
 
 // export default function MCPRDataTable() {
 //   return (

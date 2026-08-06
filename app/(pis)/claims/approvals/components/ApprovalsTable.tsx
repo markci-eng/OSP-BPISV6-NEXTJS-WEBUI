@@ -21,16 +21,16 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import DataTable from "@/components/common/reusable-tableV2/DataTable";
+import { DataTable } from "osp-ui-kit";
 import type {
   BulkAction,
   RowAction,
-} from "@/components/common/reusable-tableV2/types";
+} from "osp-ui-kit";
 
 import { approvalConfig } from "../config/approval-config";
 import { ApprovalDetailContent } from "./ApprovalDetailContent";
-import type { ApprovalView } from "@/data/approvals/types";
-import { useMessageDialog } from "@/components/common/message-box/message-box-provider";
+import type { ApprovalView } from "@/app/(bpis)/data/approvals/types";
+import { useMessageDialog } from "osp-ui-kit";
 
 function getApprovalStatus(row: any) {
   return row.drs?.status ?? row.status;
@@ -60,6 +60,19 @@ export function ApprovalsTable({
 
   const [statusFilter, setStatusFilter] = React.useState<string>("Pending");
   const [carouselIdx, setCarouselIdx] = React.useState(1);
+  const carouselReady = React.useRef(false);
+
+  // Only mount the mobile carousel on mobile viewports. When hidden with
+  // `display: none` on desktop it can't measure its slides and re-emits
+  // onPageChange(0), which would clobber the Pending default with "All".
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const mq = window.matchMedia("(max-width: 47.99em)"); // below Chakra `md`
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   React.useEffect(() => {
     setStatusFilter("Pending");
@@ -298,14 +311,16 @@ export function ApprovalsTable({
     const isActive = statusFilter === card.filter;
     return (
       <Box
+        position="relative"
         bg={isActive ? `${card.accent}.100` : `${card.accent}.50`}
-        border="1px solid"
-        borderColor={isActive ? `${card.accent}.400` : `${card.accent}.200`}
+        border="2px solid"
+        borderColor={isActive ? `${card.accent}.500` : `${card.accent}.200`}
         borderRadius="xl"
         p={4}
-        boxShadow="xs"
+        mt={2}
+        boxShadow={isActive ? "lg" : "xs"}
         cursor="pointer"
-        h="full"
+        transform={isActive ? "translateY(-2px)" : "none"}
         onClick={() => {
           setStatusFilter(card.filter);
           setCarouselIdx(i);
@@ -316,24 +331,48 @@ export function ApprovalsTable({
           borderColor: `${card.accent}.400`,
         }}
       >
+        {isActive && (
+          <Box
+            position="absolute"
+            top={-2}
+            right={-2}
+            zIndex={2}
+            w="22px"
+            h="22px"
+            borderRadius="full"
+            bg={`${card.accent}.500`}
+            color="white"
+            border="2px solid"
+            borderColor="white"
+            display={{ base: "none", md: "flex" }}
+            alignItems="center"
+            justifyContent="center"
+            fontSize="11px"
+            fontWeight="800"
+            boxShadow="sm"
+          >
+            ✓
+          </Box>
+        )}
         <Flex justify="space-between" align="flex-start">
           <Box>
             <Text
               fontSize="10px"
-              fontWeight="700"
+              fontWeight={isActive ? "800" : "700"}
               letterSpacing="0.08em"
               textTransform="uppercase"
-              color={`${card.accent}.500`}
+              color={isActive ? `${card.accent}.600` : `${card.accent}.500`}
               mb={1}
             >
               {card.label}
             </Text>
             <Text
-              fontSize="2xl"
+              fontSize={isActive ? "4xl" : "2xl"}
               fontWeight="bold"
               color={isActive ? `${card.accent}.700` : `${card.accent}.600`}
               lineHeight="1"
               mb={1}
+              transition="font-size 0.15s ease"
             >
               {card.value}
             </Text>
@@ -363,41 +402,51 @@ export function ApprovalsTable({
         ))}
       </SimpleGrid>
 
-      {/* Mobile: carousel */}
-      <Box display={{ base: "block", md: "none" }}>
-        <Carousel.Root
-          slideCount={cards.length}
-          page={carouselIdx}
-          onPageChange={(details: { page: number }) => {
-            setCarouselIdx(details.page);
-            setStatusFilter(cards[details.page].filter);
-          }}
-        >
-          <Carousel.ItemGroup>
-            {cards.map((card, i) => (
-              <Carousel.Item key={card.label} index={i}>
-                {renderCardContent(card, i)}
-              </Carousel.Item>
-            ))}
-          </Carousel.ItemGroup>
+      {/* Mobile: carousel (only mounted on mobile so its page events can't
+          leak into statusFilter on desktop) */}
+      {isMobile && (
+        <Box>
+          <Carousel.Root
+            slideCount={cards.length}
+            page={carouselIdx}
+            onPageChange={(details: { page: number }) => {
+              // The carousel emits an initial onPageChange(0) on mount (even while
+              // hidden on desktop), which would clobber the Pending default. Skip
+              // that first firing and only react to real page changes afterward.
+              if (!carouselReady.current) {
+                carouselReady.current = true;
+                return;
+              }
+              setCarouselIdx(details.page);
+              setStatusFilter(cards[details.page].filter);
+            }}
+          >
+            <Carousel.ItemGroup>
+              {cards.map((card, i) => (
+                <Carousel.Item key={card.label} index={i}>
+                  {renderCardContent(card, i)}
+                </Carousel.Item>
+              ))}
+            </Carousel.ItemGroup>
 
-          <Carousel.Control justifyContent="center" gap="4">
-            <Carousel.PrevTrigger asChild>
-              <IconButton size="xs" variant="ghost" aria-label="Previous">
-                <ChevronLeft size={16} />
-              </IconButton>
-            </Carousel.PrevTrigger>
+            <Carousel.Control justifyContent="center" gap="4">
+              <Carousel.PrevTrigger asChild>
+                <IconButton size="xs" variant="ghost" aria-label="Previous">
+                  <ChevronLeft size={16} />
+                </IconButton>
+              </Carousel.PrevTrigger>
 
-            <Carousel.Indicators />
+              <Carousel.Indicators />
 
-            <Carousel.NextTrigger asChild>
-              <IconButton size="xs" variant="ghost" aria-label="Next">
-                <ChevronRight size={16} />
-              </IconButton>
-            </Carousel.NextTrigger>
-          </Carousel.Control>
-        </Carousel.Root>
-      </Box>
+              <Carousel.NextTrigger asChild>
+                <IconButton size="xs" variant="ghost" aria-label="Next">
+                  <ChevronRight size={16} />
+                </IconButton>
+              </Carousel.NextTrigger>
+            </Carousel.Control>
+          </Carousel.Root>
+        </Box>
+      )}
 
       <DataTable<any>
         key={view}
@@ -429,7 +478,6 @@ export function ApprovalsTable({
           pagination: true,
           columnToggle: true,
           selection: true,
-          draggable: false,
           detailSidebar: true,
         }}
         mobileConfig={{
