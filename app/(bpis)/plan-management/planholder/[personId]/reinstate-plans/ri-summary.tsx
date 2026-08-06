@@ -2,8 +2,6 @@
 import SummaryBox from "@/components/common/text/SummaryBox";
 import SummaryForm from "@/components/common/text/SummaryForm";
 import { Box } from "@chakra-ui/react";
-import { GrandSummary, SummaryItems, SummarySection } from "@splpi/summary";
-import { LuClipboardCheck } from "react-icons/lu";
 
 interface CheckedPlan {
   lpaNo: string;

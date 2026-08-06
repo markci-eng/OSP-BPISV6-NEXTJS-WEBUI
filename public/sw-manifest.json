@@ -1,27 +1,9 @@
 {
-  "buildId": "bdIzYC6D5xgKmRRero0Zt",
-  "revision": "770f646cf7bf7ed8",
-  "generatedAt": "2026-08-06T09:59:13.164Z",
-  "totalBytes": 10519459,
+  "buildId": "qmJ2FDW7HXXnxUIsUjJR3",
+  "revision": "9b7412542cb4058e",
+  "generatedAt": "2026-08-06T23:39:21.292Z",
+  "totalBytes": 10082717,
   "assets": [
-    {
-      "url": "/_next/static/bdIzYC6D5xgKmRRero0Zt/_buildManifest.js",
-      "hash": "9476e0afd3f9da68",
-      "size": 219,
-      "required": true
-    },
-    {
-      "url": "/_next/static/bdIzYC6D5xgKmRRero0Zt/_clientMiddlewareManifest.json",
-      "hash": "5d25ee47954e3699",
-      "size": 439,
-      "required": true
-    },
-    {
-      "url": "/_next/static/bdIzYC6D5xgKmRRero0Zt/_ssgManifest.js",
-      "hash": "678f6ce2cb80b1fe",
-      "size": 80,
-      "required": true
-    },
     {
       "url": "/_next/static/chunks/03e033fbe7651128.js",
       "hash": "5cdc83de50b1516b",
@@ -53,12 +35,6 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/0aa81d49736aad4f.js",
-      "hash": "ec7df6923a413232",
-      "size": 427544,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/0ba7bfb0a4154d2a.js",
       "hash": "27114d439eabd611",
       "size": 371501,
@@ -74,12 +50,6 @@
       "url": "/_next/static/chunks/0c8ac665d22a82ca.js",
       "hash": "95ee86fd669e50e9",
       "size": 59444,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/0cae84f8fdcd4732.js",
-      "hash": "3345ecd83e2d2eee",
-      "size": 537336,
       "required": true
     },
     {
@@ -125,12 +95,6 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/2309ef72cd5c57c3.js",
-      "hash": "8df687bf0229e908",
-      "size": 53252,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/23b7fef5171efad8.js",
       "hash": "d57cf0ac547233b0",
       "size": 27054,
@@ -158,6 +122,12 @@
       "url": "/_next/static/chunks/2e2b7fcd5438c46a.js",
       "hash": "b4cce7e2f3ddf70f",
       "size": 21574,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/2f5b2d27f7bdabbc.js",
+      "hash": "dd03d40d6e73d298",
+      "size": 1201498,
       "required": true
     },
     {
@@ -206,18 +176,6 @@
       "url": "/_next/static/chunks/398da2f3c5001f33.js",
       "hash": "ec846599e84c3403",
       "size": 14900,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/3e1d26598a671068.js",
-      "hash": "e75799a598a9cb17",
-      "size": 67460,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/3f118505334c88a0.css",
-      "hash": "889e58211a133598",
-      "size": 5256,
       "required": true
     },
     {
@@ -272,12 +230,6 @@
       "url": "/_next/static/chunks/54665f2e7ae589d6.js",
       "hash": "bf865c0f258c9d51",
       "size": 29091,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/58d796c485af9e8f.js",
-      "hash": "f54d73ff6d199612",
-      "size": 388,
       "required": true
     },
     {
@@ -365,6 +317,12 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/73130e08a3eec0de.js",
+      "hash": "f4052c2d40b5817d",
+      "size": 597722,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/73e29807ef0b333a.js",
       "hash": "a039db1783bc7d9b",
       "size": 822,
@@ -392,6 +350,12 @@
       "url": "/_next/static/chunks/7564cb03536e16fd.js",
       "hash": "0e85e4b7f923fd6d",
       "size": 17638,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/7828511ac45fb673.js",
+      "hash": "c0ac4e832fcb5587",
+      "size": 54022,
       "required": true
     },
     {
@@ -476,6 +440,12 @@
       "url": "/_next/static/chunks/866f1656834ef8f4.js",
       "hash": "48e21499e82e1e24",
       "size": 442,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/87d804a0e784e299.js",
+      "hash": "92fff84466d834f2",
+      "size": 65954,
       "required": true
     },
     {
@@ -611,21 +581,15 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/b38ef4d15a81cc1d.js",
-      "hash": "021faedda55a8d5b",
-      "size": 73883,
+      "url": "/_next/static/chunks/b2521a3be937ab67.js",
+      "hash": "252d8fd7aa2531f2",
+      "size": 110689,
       "required": true
     },
     {
       "url": "/_next/static/chunks/b3ebeebc16f6d9c9.js",
       "hash": "753d18dbbf41fc28",
       "size": 23509,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/b54709c56bd924e9.js",
-      "hash": "ac859ffd1db10808",
-      "size": 152023,
       "required": true
     },
     {
@@ -701,12 +665,6 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/ccdb499996423481.js",
-      "hash": "166f70582a96ac6f",
-      "size": 38182,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/ce2ade3041d5acc7.js",
       "hash": "09ebe4c8d8d2d5a8",
       "size": 704,
@@ -779,21 +737,15 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/e4612dbaecfc84fe.js",
-      "hash": "006823b33dd7eb95",
-      "size": 1049289,
+      "url": "/_next/static/chunks/e37a3f72875099e6.js",
+      "hash": "ffd9391e7de69d22",
+      "size": 704,
       "required": true
     },
     {
       "url": "/_next/static/chunks/e4f039ad8d588653.js",
       "hash": "d1a2325c0ab3b59f",
       "size": 691,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/e8c1f03ee4fdb5b6.js",
-      "hash": "bdf44b31208e28fb",
-      "size": 62718,
       "required": true
     },
     {
@@ -944,6 +896,24 @@
       "url": "/_next/static/media/icon.2ec9276f.png",
       "hash": "8f388c8d67925857",
       "size": 257190,
+      "required": true
+    },
+    {
+      "url": "/_next/static/qmJ2FDW7HXXnxUIsUjJR3/_buildManifest.js",
+      "hash": "9476e0afd3f9da68",
+      "size": 219,
+      "required": true
+    },
+    {
+      "url": "/_next/static/qmJ2FDW7HXXnxUIsUjJR3/_clientMiddlewareManifest.json",
+      "hash": "5d25ee47954e3699",
+      "size": 439,
+      "required": true
+    },
+    {
+      "url": "/_next/static/qmJ2FDW7HXXnxUIsUjJR3/_ssgManifest.js",
+      "hash": "678f6ce2cb80b1fe",
+      "size": 80,
       "required": true
     },
     {

@@ -1,12 +1,11 @@
 import { Box, Flex, Grid, Separator, Text } from "@chakra-ui/react";
-import { InfoItem } from "@splpi/summary";
 import { IconType } from "react-icons";
-import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
-import { FaRegCalendarDays, FaRegClock } from "react-icons/fa6";
+import { FaRegClock } from "react-icons/fa6";
 import { FiDollarSign, FiLayers, FiTrendingDown } from "react-icons/fi";
 import { LuHash } from "react-icons/lu";
 import { MdOutlinePayment } from "react-icons/md";
 import { PaymentRecordTable } from "../tables/payment-records-table";
+import { InfoItem } from "osp-ui-kit";
 
 export interface StatementOfAccountProps {
   lpaNumber: string;

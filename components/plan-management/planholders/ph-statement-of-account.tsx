@@ -1,13 +1,12 @@
 import { Box, Flex, Grid } from "@chakra-ui/react";
-import { InfoItem } from "@splpi/summary";
-import { IconBaseProps, IconType } from "react-icons";
+import { IconType } from "react-icons";
 import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
 import { FaRegCalendarDays, FaRegClock } from "react-icons/fa6";
 import { FiDollarSign, FiLayers, FiTrendingDown } from "react-icons/fi";
-import { LuCalendar, LuHash } from "react-icons/lu";
+import { LuHash } from "react-icons/lu";
 import { MdOutlinePayment } from "react-icons/md";
-import { PlanholderListTable } from "./tables/planholder-list-table";
 import { PhPaymentRecordTable } from "./tables/ph-payment-records-table";
+import { InfoItem } from "osp-ui-kit";
 
 export function StatementOfAccount() {
   return (
