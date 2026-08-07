@@ -22,7 +22,6 @@ import {
   LuSend,
   LuTrash2,
 } from "react-icons/lu";
-import { toast } from "sonner";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { RowItem } from "@/components/info-card/row-item";
 import { BottomQuickActions, useMessageDialog } from "osp-ui-kit";
@@ -32,6 +31,7 @@ import {
   TertiarySmButton,
 } from "st-peter-ui";
 import { SectionTitle } from "../../components/section-title";
+import { ClaimsToaster, toaster } from "../../components/toaster";
 import { type ClaimPayee } from "../../claims-data";
 import { DrawerPageHeader } from "./DrawerPageHeader";
 import { PlanholderPayeeEditDrawer } from "./PlanholderPayeeEditDrawer";
@@ -174,7 +174,7 @@ export function PlanholderPayeeDrawer({
     // No backend yet — acknowledge and adopt the draft as the new baseline.
     setSavedRemarks(remarks);
     setRemarksOpen(false);
-    toast.success("Remarks saved.");
+    toaster.create({ type: "success", title: "Remarks saved." });
   };
 
   // Route the top action tiles. Only Edit and Verify are wired for now.
@@ -200,7 +200,9 @@ export function PlanholderPayeeDrawer({
       cancelText: "Cancel",
     });
     if (confirmed) {
-      toast.success(`Payee verified as ${label}.`, {
+      toaster.create({
+        type: "success",
+        title: `Payee verified as ${label}.`,
         description:
           result === "invalid"
             ? "Payout channel set to Check; account number withheld."
@@ -247,6 +249,11 @@ export function PlanholderPayeeDrawer({
 
   return (
     <>
+      {/* Chakra's toaster only draws what is pushed to it while it is mounted,
+        so it is mounted here beside the drawer that pushes — the two cannot be
+        separated and leave a `toaster.create` call quietly doing nothing. */}
+      <ClaimsToaster />
+
       <Drawer.Root
         open={open}
         onOpenChange={(e) => {

@@ -147,6 +147,28 @@ function ProcessedClaimCard({
 const SECTION_TITLE = "Claim Queues";
 
 /**
+ * Space kept clear under the section on a phone, so the bottom navigation does
+ * not cover the end of the queue.
+ *
+ * There are already two reserves in play and neither is this one. The page
+ * reserves 96px under ALL of its content, which stops the page ending beneath
+ * the navigation; `BOTTOM_RESERVE` in the table sizes a deck page so its cards
+ * fit above it. Both are about where things come to rest — and between them the
+ * last card still ends up under the bar, because the deck is sized from the
+ * section's own top and a phone cannot always scroll it that far.
+ *
+ * So this is scroll room rather than layout: room to bring the end of the queue
+ * up clear of the navigation, which the reserve below the page cannot give
+ * because the deck is taller than the space that reserve leaves. A card's
+ * height, which is the most that can be hidden.
+ *
+ * `env()` adds the home-indicator inset on the phones that have one, and
+ * resolves to 0 everywhere else. Below `lg` only — that is where the navigation
+ * is rendered, so above it this would be a strip of nothing to scroll past.
+ */
+const NAV_CLEARANCE = "calc(96px + env(safe-area-inset-bottom, 0px))";
+
+/**
  * The type filter every queue opens on, on every device.
  *
  * Special claims are the ones with a clock on them, and that is true wherever
@@ -316,6 +338,10 @@ export function ClaimQueuesSection({
       minH={{ lg: 0 }}
       display={{ lg: "flex" }}
       flexDirection="column"
+      // See NAV_CLEARANCE. Padding rather than margin: the section is the last
+      // thing in its grid column, and a bottom margin there would be collapsed
+      // away by the row rather than adding anything to scroll.
+      pb={{ base: NAV_CLEARANCE, lg: 0 }}
     >
       {/* The title is fixed; the line under it is the live count for whichever
           queue is open, which is the one thing the tabs do not already say. */}
