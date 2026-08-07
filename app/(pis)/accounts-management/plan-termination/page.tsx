@@ -21,6 +21,7 @@ import {
 import { PLAN_TERMINATION_REQUESTS } from "./data/data";
 import type { PlanTerminationStatus } from "./data/types";
 import { planTerminationColumns } from "./components/plan-termination-columns";
+import { BackToTop } from "../components/back-to-top";
 import { DataTable, Page } from "osp-ui-kit";
 
 type StatusFilter = PlanTerminationStatus | "All";
@@ -206,6 +207,8 @@ export default function PlanTerminationPage() {
       headerButton="menu"
     >
       <Page.MainContent>
+        <BackToTop />
+
         {/* ── Summary cards ── */}
         {/* Desktop: 4-column grid */}
         <SimpleGrid columns={4} gap={3} display={{ base: "none", md: "grid" }}>

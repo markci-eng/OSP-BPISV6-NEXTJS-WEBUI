@@ -10,7 +10,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useBreakpointValue } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 
 
@@ -29,6 +29,7 @@ import {
   useMessageDialog,
 } from "osp-ui-kit";
 import type { LookupColumn } from "osp-ui-kit";
+import { BackToTop } from "../../components/back-to-top";
 import { planholderLookup } from "../data/planholder-lookup";
 import type { PlanholderLookup } from "@/components/plan-management/planholders/tables/planholder-list-table";
 import { PendingRequests, RequestProps } from "@/components/plan-management/planholder-profile/sections/pending-requests";
@@ -258,6 +259,8 @@ export default function PisPlanholderProfilePage({
         )}
       </Page.ToolContent>
       <Page.MainContent>
+        <BackToTop />
+
         {/* Mobile — lookup sits above the profile header card, and stays
             reachable in the empty state so there is always a way to pick a
             planholder */}
@@ -445,6 +448,7 @@ export default function PisPlanholderProfilePage({
             />
           </Box>
         </Box>
+
       </Page.MainContent>
     </Page.Root>
   );

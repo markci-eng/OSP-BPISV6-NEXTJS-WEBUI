@@ -28,6 +28,7 @@ import { SecondarySmButton } from "st-peter-ui";
 import { CSV_REQUESTS } from "./data/data";
 import type { CsvRequest, CsvStatus } from "./data/types";
 import { csvColumns } from "./components/csv-columns";
+import { BackToTop } from "../components/back-to-top";
 import { BranchFilterMenu } from "../components/branch-filter-menu";
 import ActionButtons, {
   type ActionButtonItem,
@@ -143,6 +144,17 @@ export default function CsvPage() {
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 47.99em)"); // below Chakra `md`
     const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // Below `lg` the kit hides its pager, so paging there would strand every row
+  // past the first page. Wider than the carousel's `md` check on purpose.
+  const [isCompact, setIsCompact] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 63.99em)"); // below Chakra `lg`
+    const update = () => setIsCompact(mq.matches);
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
@@ -342,6 +354,8 @@ export default function CsvPage() {
       </Page.ToolContent>
 
       <Page.MainContent>
+        <BackToTop />
+
         {/* ── Filter row — branch on the left, actions pushed to the right ── */}
         <Flex align="center" gap={3} w="full">
           <BranchFilterMenu
@@ -428,6 +442,10 @@ export default function CsvPage() {
 
         {/* ── List ── */}
         <DataTable
+          // Keyed on the breakpoint too: TanStack caches its pagination row
+          // model on first build, so turning paging off later would otherwise
+          // leave the page cap in place.
+          key={`${branch}-${status}-${isCompact ? "all" : "paged"}`}
           title="CSV Requests"
           description={
             recordsReady
@@ -453,8 +471,8 @@ export default function CsvPage() {
             // The kit's page controls are desktop-only, so on mobile the
             // accordion lists the whole selection instead of hiding rows
             // behind arrows the user can't reach.
-            pagination: !isMobile,
-            showToolbarPagination: !isMobile && filteredData.length > PAGE_SIZE,
+            pagination: !isCompact,
+            showToolbarPagination: !isCompact && filteredData.length > PAGE_SIZE,
             columnToggle: true,
             selection: false,
             detailSidebar: false,
