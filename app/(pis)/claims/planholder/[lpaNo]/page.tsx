@@ -30,6 +30,7 @@ import { PlanholderBeneficiaries } from "../components/PlanholderBeneficiaries";
 import { PlanholderOtherPlans } from "../components/PlanholderOtherPlans";
 import { PlanholderActionsMenu } from "../components/PlanholderActionsMenu";
 import { PlanholderPlanActions } from "../components/PlanholderPlanActions";
+import { PlanholderQuickSearch } from "../../components/planholder-quick-search";
 
 /**
  * How long the swap's placeholder is held, in milliseconds.
@@ -320,6 +321,37 @@ export default function ClaimsPlanholderPage() {
                   maxH={{ xl: "calc(100vh - 88px)" }}
                   overflow={{ xl: "hidden" }}
                 >
+                  {/* The way to ANOTHER plan holder, above the actions for this
+                      one — the same field the dashboard carries, so the search
+                      is in the same place on both of the pages a processor
+                      lives in.
+
+                      `order: 2` puts it ahead of the actions at `xl`, where the
+                      rail is a flex column. Below that it is not rendered at
+                      all, so it takes no part in the stacked order: the phone
+                      gets a field of its own design later, and this one would
+                      be the wrong shape full-width.
+
+                      It takes its OWN height — the field's, and nothing more.
+                      It used to be stretched to the profile card's, so that the
+                      rail's second row started level with the plan details
+                      opposite, and the cost was a search bar several times the
+                      height of a search bar with the plan's actions pushed to
+                      the bottom of it. The field is a field; the actions follow
+                      it immediately.
+
+                      No top margin: both columns start at the grid's top edge,
+                      and a margin here would offset one of them by itself —
+                      which is what keeps this level with the top of the profile
+                      card beside it. */}
+                  <Box
+                    order={2}
+                    display={{ base: "none", xl: "block" }}
+                    flexShrink={0}
+                  >
+                    <PlanholderQuickSearch compact />
+                  </Box>
+
                   {/* The plan's actions, at the top of the work column. On a
                       desktop only: they were a "More" pill in the Claim
                       Requests heading, which hid three operations behind a tap

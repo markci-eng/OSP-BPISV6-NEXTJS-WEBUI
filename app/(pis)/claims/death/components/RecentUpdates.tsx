@@ -11,12 +11,11 @@ import {
   useBreakpointValue,
   VStack,
 } from "@chakra-ui/react";
-import { LuChevronRight } from "react-icons/lu";
+import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { ScrollFade } from "../../components/scroll-fade";
 import { SectionTitle } from "../../components/section-title";
 import { paginate } from "../../components/swipe-carousel";
-import { SwipeDeck } from "../../components/swipe-deck";
+import { SwipeDeck, SwipeDots } from "../../components/swipe-deck";
 import { useFittedPageSize } from "../../components/use-fitted-page-size";
 import { RecentUpdatesDrawer } from "./RecentUpdatesDrawer";
 import {
@@ -52,16 +51,19 @@ const MIN_PAGES = 2;
 const BOTTOM_RESERVE = 88;
 
 /**
- * Shortest the rail's scrolling list may be squeezed to.
+ * How many updates the rail shows at once.
  *
- * In the rail the feed takes whatever height the tiles above it leave, and a flex
- * child with `min-height: 0` will go to nothing rather than overflow — so on a
- * window short enough, the section would be a heading with a sliver of list under
- * it. This is the point at which it stops giving way and the CARD scrolls
- * instead: about two cards, the same floor the phone's deck keeps for the same
- * reason.
+ * A COUNT, not a height, and that is the whole difference: the rail is sticky,
+ * so its height is what it costs the processor for as long as they are on the
+ * page. Sized to the viewport it would take a third of a tall screen and hold
+ * it there. Four cards is a glance — enough to be worth looking at, few enough
+ * that the column beside the work stays quiet.
+ *
+ * Divides {@link RECENT_UPDATES_COUNT} exactly, so no update is stranded in a
+ * part-page: twelve updates, three pages, and the rest of the history is behind
+ * "Show all".
  */
-const RAIL_MIN_HEIGHT = "180px";
+const RAIL_PAGE_SIZE = 4;
 
 /**
  * Status colour for each phase the feed can show, drawn as a card's left border.
@@ -180,6 +182,11 @@ export function RecentUpdates() {
   const router = useRouter();
   const [showAll, setShowAll] = useState(false);
 
+  // Which page of the rail's carousel is showing. The phone's deck keeps its
+  // own position internally; this is the pointer-driven one.
+  const [railPage, setRailPage] = useState(0);
+
+
   /**
    * Whether the feed is in the dashboard's side rail rather than stacked down a
    * page — which is the same question as "is this being driven by a pointer".
@@ -225,22 +232,22 @@ export function RecentUpdates() {
     pageSize,
   );
 
+  // The rail's own pages — a fixed count, not a measured one. Clamped on read
+  // rather than in an effect: `railPages` is derived from a constant so it will
+  // not change under the state, and a clamp here cannot render an empty page.
+  const railPages = paginate(recentClaimUpdates, RAIL_PAGE_SIZE);
+  const railIndex = Math.min(railPage, railPages.length - 1);
+  const railItems = railPages[railIndex] ?? [];
+
   const openPlanholder = (update: ClaimUpdate) =>
     router.push(`/claims/planholder/${encodeURIComponent(update.lpaNo)}`);
 
   return (
-    // In the rail this section is the part of the card that FLEXES: the tiles
-    // above it keep their own height, this takes whatever is left, and the list
-    // inside scrolls within that. Every box between the card and the list needs
-    // a height and a `min-height: 0` for that to hold — break the chain anywhere
-    // and the list grows to fit its twelve cards and the card scrolls instead.
-    // Stacked, none of this applies and the section is as tall as its content.
-    <Box
-      display={{ xl: "flex" }}
-      flexDirection="column"
-      flex={{ xl: 1 }}
-      minH={{ xl: 0 }}
-    >
+    // A plain box at every width now. There is nothing left here to divide a
+    // height between: the rail is no longer a fixed-height card the feed had to
+    // fill, and the feed shows a fixed number of cards rather than as many as
+    // fit. So it is as tall as four cards and its heading, and says so.
+    <Box>
       <SectionTitle
         title="Recent Updates"
         subtitle="Latest activity on your claims"
@@ -281,28 +288,20 @@ export function RecentUpdates() {
       />
 
       {isRail ? (
-        /* A desktop SCROLLS the feed; it does not swipe it — the same call the
-           claim queue makes one column over, for the same reasons. A deck is
-           built for a thumb: a wheel does nothing to it, the gesture it wants is
-           a horizontal drag, and the only way through with a pointer is to hunt
-           for the dots. So in the rail there is no deck and no paging at all.
-           Every recent update is in one list, bounded by the card, and the wheel
-           works exactly where the pointer already is.
+        /* Paged, not scrolled. The rail is sticky — it stays on screen for as
+           long as the processor is on the page — so the feed cannot be sized to
+           the viewport and cannot grow with its contents: either way it would
+           hold a third of the screen for context nobody is reading right now.
+           A fixed four, paged, costs the same room whatever the history holds.
 
-           No scrollbar either: what says there is more is the cards fading out
-           at the edge they continue past — see `ScrollFade`. */
-        <ScrollFade
-          flex={1}
-          minH={RAIL_MIN_HEIGHT}
-          // A card lifts on hover, and a scroll box clips what leaves it, so the
-          // shadow needs room either side. Pulled straight back out again with
-          // the negative margin, which keeps the cards in line with the tiles
-          // above rather than inset by four pixels from them.
-          px={1}
-          mx={-1}
-        >
+           Arrows rather than the phone's dots and swipe. A wheel does nothing to
+           a deck, the gesture it wants is a horizontal drag, and with a pointer
+           the only way through is to hunt for the dots — which is why the
+           previous version scrolled instead. Arrows are the pointer's version of
+           the same control, and they say which way and how far in one glance. */
+        <Box>
           <VStack align="stretch" gap={2}>
-            {recentClaimUpdates.map((update) => (
+            {railItems.map((update) => (
               <UpdateCard
                 key={update.id}
                 update={update}
@@ -310,7 +309,54 @@ export function RecentUpdates() {
               />
             ))}
           </VStack>
-        </ScrollFade>
+
+          {/* Only when there is somewhere to go. One page of updates needs no
+              pager, and an always-disabled pair of arrows reads as broken. */}
+          {railPages.length > 1 && (
+            <Flex align="center" justify="center" gap={2} mt={3}>
+              <IconButton
+                aria-label="Previous updates"
+                size="xs"
+                variant="ghost"
+                borderRadius="full"
+                color={BRAND_COLORS.primaryGreen}
+                _hover={{ bg: "green.50" }}
+                disabled={railIndex === 0}
+                onClick={() => setRailPage((p) => Math.max(0, p - 1))}
+              >
+                <LuChevronLeft size={16} />
+              </IconButton>
+
+              {/* The deck's own dots, not a second set drawn here: the phone
+                  and the rail are paging the same feed, and two indicators that
+                  could drift apart would be two answers to one question. The
+                  active one stretches into a pill as well as changing colour, so
+                  position survives being read at a glance. Tapping one jumps
+                  straight to that page — the arrows are for stepping. */}
+              <SwipeDots
+                count={railPages.length}
+                active={railIndex}
+                onGoTo={setRailPage}
+                pt={0}
+              />
+
+              <IconButton
+                aria-label="More recent updates"
+                size="xs"
+                variant="ghost"
+                borderRadius="full"
+                color={BRAND_COLORS.primaryGreen}
+                _hover={{ bg: "green.50" }}
+                disabled={railIndex === railPages.length - 1}
+                onClick={() =>
+                  setRailPage((p) => Math.min(railPages.length - 1, p + 1))
+                }
+              >
+                <LuChevronRight size={16} />
+              </IconButton>
+            </Flex>
+          )}
+        </Box>
       ) : (
         /* One slide per page. Swiping past the last page opens the full feed —
            the deck shows a sample, the sheet holds everything. */

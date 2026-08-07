@@ -30,6 +30,31 @@ import { TYPE_DOT, type DeathClaimFilter } from "./DeathClaimsFilter";
 interface PendingClaimsSummaryProps {
   /** Pending counts per type, plus the combined `all` total. */
   counts: Record<DeathClaimFilter, number>;
+  /**
+   * Heading, when the default does not fit where it is being used.
+   *
+   * The default names the subject in full because in the rail it sits under a
+   * page heading it could be confused with. Across the top of a column of its
+   * own there is nothing to disambiguate it from, and the short form reads
+   * better at that width.
+   */
+  title?: string;
+  /**
+   * Line under the heading. Pass `null` for none — `undefined` would be
+   * indistinguishable from "not specified" and would give back the default.
+   */
+  subtitle?: string | null;
+  /**
+   * Lay all three tiles across ONE row instead of the headline-over-two-types
+   * arrangement.
+   *
+   * For a full-width band, where three equal tiles read as three figures side
+   * by side. The stacked arrangement exists because the rail is one narrow
+   * column, where the same three would be slivers — so this also turns OFF the
+   * short-viewport carousel: that carousel is what a narrow column does when it
+   * runs out of height, and a band across a desktop is neither.
+   */
+  singleRow?: boolean;
 }
 
 /* ─── Pending stat tile ─── */
@@ -170,8 +195,13 @@ const STACKED_MIN_HEIGHT = 840;
  * the page's own title sitting directly above it — naming the subject rather than
  * the area is what separates the two.
  */
-export function PendingClaimsSummary({ counts }: PendingClaimsSummaryProps) {
-  const isShort = useIsShortViewport(STACKED_MIN_HEIGHT);
+export function PendingClaimsSummary({
+  counts,
+  title = "Pending Claims Overview",
+  subtitle = "Pending claims by nature",
+  singleRow = false,
+}: PendingClaimsSummaryProps) {
+  const isShort = useIsShortViewport(STACKED_MIN_HEIGHT) && !singleRow;
 
   const tiles: (PendingTileProps & { key: string })[] = [
     {
@@ -205,10 +235,7 @@ export function PendingClaimsSummary({ counts }: PendingClaimsSummaryProps) {
 
   return (
     <Box>
-      <SectionTitle
-        title="Pending Claims Overview"
-        subtitle="Pending claims by nature"
-      />
+      <SectionTitle title={title} subtitle={subtitle ?? undefined} />
 
       {isShort ? (
         // One tile at a time, swiped.
@@ -218,11 +245,18 @@ export function PendingClaimsSummary({ counts }: PendingClaimsSummaryProps) {
           ))}
         </SwipeDeck>
       ) : (
-        <SimpleGrid columns={2} gap={3} w="100%">
+        <SimpleGrid columns={singleRow ? 3 : 2} gap={3} w="100%">
           {tiles.map(({ key, ...tile }) => (
-            // Total leads — the headline figure, spanning both columns. The two
-            // types below break it down.
-            <Box key={key} gridColumn={key === "total" ? "span 2" : undefined}>
+            // Two columns: the total leads as the headline figure, spanning
+            // both, and the two types break it down underneath. Three: every
+            // tile is one column and the row is the whole section, so nothing
+            // spans anything.
+            <Box
+              key={key}
+              gridColumn={
+                !singleRow && key === "total" ? "span 2" : undefined
+              }
+            >
               <PendingTile {...tile} />
             </Box>
           ))}

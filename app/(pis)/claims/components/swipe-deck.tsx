@@ -130,17 +130,24 @@ function nearestSlide(track: HTMLDivElement, count: number): number {
  * active dot stretches into a pill rather than only changing colour, so position
  * survives being read at a glance or without colour.
  */
-function SwipeDots({
+export function SwipeDots({
   count,
   active,
   onGoTo,
+  pt = 3,
 }: {
   count: number;
   active: number;
   onGoTo: (index: number) => void;
+  /**
+   * Space above the dots. The default is the gap under the deck's own track;
+   * pass `0` to place them in a row that is already spaced — beside a pair of
+   * arrows, say.
+   */
+  pt?: number;
 }) {
   return (
-    <Flex justify="center" align="center" gap={1.5} pt={3}>
+    <Flex justify="center" align="center" gap={1.5} pt={pt}>
       {Array.from({ length: count }, (_, index) => (
         <Box
           key={index}

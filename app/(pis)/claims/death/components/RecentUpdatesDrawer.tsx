@@ -21,14 +21,12 @@ import {
   CloseButton,
   Drawer,
   Flex,
-  Input,
-  InputGroup,
   Portal,
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { LuSearch } from "react-icons/lu";
 import { Small } from "st-peter-ui";
+import { SearchBar } from "../../components/search-bar";
 import { toFullName, type ClaimUpdate } from "../death-claims-data";
 import { UpdateCard } from "./RecentUpdates";
 
@@ -51,9 +49,6 @@ const BATCH_SIZE = 8;
  * the first scroll hits a wall while it loads.
  */
 const INITIAL_LIMIT = BATCH_SIZE * 2;
-
-/** Matches the search input height used by the claims list toolbars. */
-const CONTROL_HEIGHT = "36px";
 
 interface RecentUpdatesDrawerProps {
   updates: ClaimUpdate[];
@@ -186,17 +181,14 @@ export function RecentUpdatesDrawer({
               borderColor="gray.100"
               flexShrink={0}
             >
-              <InputGroup w="full" startElement={<LuSearch size={15} />}>
-                <Input
-                  size="sm"
-                  h={CONTROL_HEIGHT}
-                  borderRadius="lg"
-                  bg="white"
-                  placeholder="Claim no, plan, name, remark…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </InputGroup>
+              <SearchBar
+                value={search}
+                onChange={setSearch}
+                placeholder="Claim no, plan, name, remark…"
+                label="Search updates"
+                // 36px, the height the claims toolbars share.
+                size="sm"
+              />
             </Box>
 
             <Drawer.Body overflowY="auto">

@@ -147,26 +147,22 @@ function ProcessedClaimCard({
 const SECTION_TITLE = "Claim Queues";
 
 /**
- * Space kept clear under the section on a phone, so the bottom navigation does
- * not cover the end of the queue.
+ * Tallest the section may be on a desktop — a screenful, less the page header
+ * and some air.
  *
- * There are already two reserves in play and neither is this one. The page
- * reserves 96px under ALL of its content, which stops the page ending beneath
- * the navigation; `BOTTOM_RESERVE` in the table sizes a deck page so its cards
- * fit above it. Both are about where things come to rest — and between them the
- * last card still ends up under the bar, because the deck is sized from the
- * section's own top and a phone cannot always scroll it that far.
+ * A MAXIMUM rather than a height, and the difference is the whole point: the
+ * page scrolls now, so the section is as tall as its contents and this only
+ * ever bites when those contents are taller than the screen. A short queue
+ * takes the room it needs and no more; a long one stops here and scrolls its
+ * own list, so the tabs and the search box stay put while the claims move under
+ * them. The alternative — letting it run — puts the toolbar off the top of the
+ * screen the moment a queue has thirty claims in it.
  *
- * So this is scroll room rather than layout: room to bring the end of the queue
- * up clear of the navigation, which the reserve below the page cannot give
- * because the deck is taller than the space that reserve leaves. A card's
- * height, which is the most that can be hidden.
- *
- * `env()` adds the home-indicator inset on the phones that have one, and
- * resolves to 0 everywhere else. Below `lg` only — that is where the navigation
- * is rendered, so above it this would be a strip of nothing to scroll past.
+ * The subtrahend is the page header plus padding, which is not measured; it is
+ * a round number to tune rather than a computed one, because being twenty
+ * pixels out here costs twenty pixels of list and nothing else.
  */
-const NAV_CLEARANCE = "calc(96px + env(safe-area-inset-bottom, 0px))";
+const DESKTOP_MAX_HEIGHT = "calc(100vh - 200px)";
 
 /**
  * The type filter every queue opens on, on every device.
@@ -334,14 +330,10 @@ export function ClaimQueuesSection({
     // and the table below them takes the rest — see the chain note on the page.
     <Box
       ref={sectionRef}
-      h={{ lg: "100%" }}
+      maxH={{ lg: DESKTOP_MAX_HEIGHT }}
       minH={{ lg: 0 }}
       display={{ lg: "flex" }}
       flexDirection="column"
-      // See NAV_CLEARANCE. Padding rather than margin: the section is the last
-      // thing in its grid column, and a bottom margin there would be collapsed
-      // away by the row rather than adding anything to scroll.
-      pb={{ base: NAV_CLEARANCE, lg: 0 }}
     >
       {/* The title is fixed; the line under it is the live count for whichever
           queue is open, which is the one thing the tabs do not already say. */}
@@ -374,7 +366,15 @@ export function ClaimQueuesSection({
 
       <DeathClaimsTable
         // Takes whatever the heading and tabs leave, and no more.
-        flex={{ lg: 1 }}
+        //
+        // `1 1 auto`, never `1`: the shorthand `1` means a basis of ZERO, and
+        // the section above is no longer a fixed height — it is as tall as its
+        // contents, capped. A zero-basis child contributes nothing to that
+        // measurement, so the section would size itself to the heading and the
+        // tabs alone and the list would be given no height at all. An `auto`
+        // basis makes the list count towards the section's height until the cap
+        // takes over, and only then does it start giving way.
+        flex={{ lg: "1 1 auto" }}
         minH={{ lg: 0 }}
         // The queue's data, filter and card all change together, so the table is
         // driven rather than remounted: remounting would drop the search box and

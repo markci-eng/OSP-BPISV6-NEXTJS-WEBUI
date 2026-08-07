@@ -10,15 +10,12 @@ import React, {
 import {
   Box,
   Flex,
-  Input,
-  InputGroup,
   NativeSelect,
   Skeleton,
   Text,
   useBreakpointValue,
   type BoxProps,
 } from "@chakra-ui/react";
-import { LuSearch } from "react-icons/lu";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import {
   claimIdentity,
@@ -29,6 +26,7 @@ import {
 } from "../death-claims-data";
 import { paginate } from "../../components/swipe-carousel";
 import { ScrollFade } from "../../components/scroll-fade";
+import { SearchBar } from "../../components/search-bar";
 import { SwipeDeck } from "../../components/swipe-deck";
 import { useFittedPageSize } from "../../components/use-fitted-page-size";
 import DeathClaimsFilter, {
@@ -441,32 +439,21 @@ export function DeathClaimsTable({
           the cards do not get, and the page size is measured against exactly
           that. Two rather than three even on a phone, for the same reason. */}
 
-      {/* Row 1 — search, then what to filter by. */}
+      {/* Row 1 — what to filter by, then search.
+
+          Search LAST, because its magnifier is at its own trailing edge: put
+          the field first and that icon lands in the middle of the row, between
+          the input and the dropdowns, where it reads as belonging to whichever
+          control it happens to be nearest. At the end of the row it is at the
+          end of the toolbar, which is the only place it means what it is. */}
       <Flex align="center" gap={2} mb={3} flexShrink={0}>
-        {/* `maxW` never binds on a phone, where the row is barely wider than
-            this — it is there to stop the box stretching the whole way across a
-            desktop column, which no amount of typing would ever fill. */}
-        <InputGroup
-          flex="1"
-          minW={0}
-          maxW="420px"
-          startElement={<LuSearch size={15} />}
-        >
-          <Input
-            size="sm"
-            h={CONTROL_HEIGHT}
-            borderRadius="lg"
-            bg="white"
-            placeholder="Reference, name…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </InputGroup>
-        {/* Everything that is not the search box sits at the far end.
-            `ml="auto"` rather than `justify="space-between"` on the row, so the
-            gap opens between the two groups and never inside either — the
-            dropdowns stay a pair, and the toggle stays against them. */}
-        <Flex align="center" gap={2} ml="auto" flexShrink={0}>
+        {/* Leftmost, and first of everything: the view toggle decides what the
+            whole section IS — a deck of cards or a table — where the two
+            dropdowns only decide which claims it holds. Desktop only, since a
+            phone gets cards and no toggle; see `isDesktop`. */}
+        <Flex align="center" gap={2} flexShrink={0}>
+          {isDesktop && <ClaimsViewToggle value={view} onChange={setView} />}
+
           {/* Desktop only — the pill row below collapses into this, and its own
               row goes with it. Ahead of the branch picker because it is the
               filter the queue is worked by; the branch narrows on top of it. */}
@@ -496,16 +483,31 @@ export function DeathClaimsTable({
             </NativeSelect.Field>
             <NativeSelect.Indicator />
           </NativeSelect.Root>
-
-          {/* Last, and after a wider gap: the two dropdowns decide WHICH claims
-              are listed, this decides only how they are drawn. Desktop only —
-              see `isDesktop`. */}
-          {isDesktop && (
-            <Box ml={1}>
-              <ClaimsViewToggle value={view} onChange={setView} />
-            </Box>
-          )}
         </Flex>
+
+        {/* `ml="auto"` rather than `justify="space-between"` on the row, so the
+            gap opens between the two groups and never inside either.
+
+            `maxW` never binds on a phone, where the row is barely wider than
+            this — it stops the field stretching the whole way across a desktop
+            column, which no amount of typing would ever fill.
+
+            `size="sm"` is 36px, which is CONTROL_HEIGHT: this one stands in a
+            toolbar and has to line up with the controls beside it.
+
+            No `onSearch`: the list narrows as it is typed, so there is nothing
+            behind the magnifier to run. It is drawn, not pressed. */}
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Reference, name…"
+          label="Search claims"
+          size="sm"
+          flex="1"
+          minW={0}
+          maxW="420px"
+          ml="auto"
+        />
       </Flex>
 
       {/* Row 2 — item filter (Special / Regular / All), full width. Mobile only:
@@ -526,7 +528,7 @@ export function DeathClaimsTable({
           cards changes height as it changes contents, and a table of ten rows
           does not. */}
       {showTable ? (
-        <ScrollFade flex={{ lg: 1 }} minH={{ lg: 0 }}>
+        <ScrollFade flex={{ lg: "1 1 auto" }} minH={{ lg: 0 }}>
           <DeathClaimsDataTable
             data={filtered}
             identifier={identifier}
@@ -539,7 +541,9 @@ export function DeathClaimsTable({
            of the three states below is showing. */
         <Box
           ref={frameRef}
-          flex={{ lg: 1 }}
+          // Basis `auto`, not the `1` shorthand's zero — see the note on this
+          // prop where the section passes it in. Same reason, one level down.
+          flex={{ lg: "1 1 auto" }}
           minH={{ lg: 0 }}
           display={{ lg: "flex" }}
           flexDirection="column"
@@ -591,7 +595,12 @@ export function DeathClaimsTable({
               // it be shorter than the 36 cards inside it. Nothing to measure,
               // so nothing to go stale when the window resizes or the view is
               // switched away and back.
-              flex={1}
+              //
+              // Basis `auto` rather than the `1` shorthand's zero: this is the
+              // innermost box of the chain the section's maximum height acts
+              // through, and a zero basis here would leave the whole chain
+              // measuring to nothing. See the note where that prop is passed in.
+              flex="1 1 auto"
               minH={0}
               // A card lifts on hover, and setting `overflow-y` makes the other
               // axis scroll too, so a shadow with nowhere to go would hang a

@@ -2,63 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Flex, Input, InputGroup, Text } from "@chakra-ui/react";
-import { LuChevronRight, LuSearch, LuUserSearch } from "react-icons/lu";
-import { BrandedAvatar } from "osp-ui-kit";
-import { mockAvatarUrl } from "@/lib/mock-avatar";
-import {
-  searchPlanholders,
-  type PlanholderSearchResult,
-} from "../../claims-data";
-
-/** A single hit — tap anywhere on the row to open that plan holder's profile. */
-function ResultRow({
-  result,
-  onSelect,
-}: {
-  result: PlanholderSearchResult;
-  onSelect: (lpaNo: string) => void;
-}) {
-  // `asChild` so the row is a real <button> — keyboard and screen readers get
-  // the semantics, Chakra still does the styling.
-  return (
-    <Flex
-      asChild
-      align="center"
-      gap={3}
-      w="full"
-      textAlign="left"
-      px={{ base: 3, md: 4 }}
-      py={3}
-      borderRadius="xl"
-      transition="background 0.15s ease"
-      _hover={{ bg: "gray.50" }}
-      _focusVisible={{ outline: "2px solid", outlineColor: "primary" }}
-    >
-      <button type="button" onClick={() => onSelect(result.lpaNo)}>
-        <BrandedAvatar
-          name={result.name}
-          imageUrl={mockAvatarUrl(result.personId)}
-          size="sm"
-          flexShrink={0}
-        />
-
-        <Box minW={0} flex="1">
-          <Text fontSize="sm" fontWeight="semibold" color="gray.800" truncate>
-            {result.name}
-          </Text>
-          <Text fontSize="xs" color="gray.500" truncate>
-            {result.lpaNo} · {result.planDesc}
-          </Text>
-        </Box>
-
-        <Box color="gray.400" flexShrink={0}>
-          <LuChevronRight size={16} />
-        </Box>
-      </button>
-    </Flex>
-  );
-}
+import { Box, Flex, Text } from "@chakra-ui/react";
+import { LuUserSearch } from "react-icons/lu";
+import { PlanholderResultRow } from "../../components/planholder-result-row";
+import { SearchBar } from "../../components/search-bar";
+import { searchPlanholders } from "../../claims-data";
 
 /** Centred icon + message, used for both the resting and the no-match states. */
 function SearchHint({ title, message }: { title: string; message: string }) {
@@ -103,27 +51,34 @@ export function PlanholderSearch() {
   const openProfile = (lpaNo: string) =>
     router.push(`/claims/planholder/${encodeURIComponent(lpaNo)}`);
 
+  /**
+   * Go, when there is exactly one place to go.
+   *
+   * The common case is pasting a full LPA number off a form, which matches one
+   * plan holder and nothing else — so the answer is already decided and both
+   * Enter and the magnifier just take it. With several hits there is a choice
+   * to make and the list below is where it is made; doing anything on a partial
+   * name would be guessing.
+   */
+  const submit = () => {
+    if (results.length === 1) openProfile(results[0].lpaNo);
+  };
+
   return (
     <Box>
-      <InputGroup startElement={<LuSearch size={16} />}>
-        <Input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by LPA No. or plan holder name"
-          autoComplete="off"
-          borderRadius="xl"
-          bg="white"
-          size="lg"
-          // Enter with exactly one hit goes straight there — the common case is
-          // pasting a full LPA number off a form.
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && results.length === 1) {
-              event.preventDefault();
-              openProfile(results[0].lpaNo);
-            }
-          }}
-        />
-      </InputGroup>
+      <SearchBar
+        value={query}
+        onChange={setQuery}
+        placeholder="Search by LPA No. or plan holder name"
+        label="Search plan holders"
+        onSearch={submit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            submit();
+          }
+        }}
+      />
 
       <Box mt={4}>
         {!hasQuery ? (
@@ -139,7 +94,7 @@ export function PlanholderSearch() {
         ) : (
           <Flex direction="column">
             {results.map((result) => (
-              <ResultRow
+              <PlanholderResultRow
                 key={result.lpaNo}
                 result={result}
                 onSelect={openProfile}
