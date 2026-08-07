@@ -124,6 +124,23 @@ export function searchPlanholders(
   return results;
 }
 
+/**
+ * Every plan holder on file, in the shape the search results use.
+ *
+ * For a caller that does its OWN matching over a whole set rather than asking
+ * for the matches — the kit's `LookupField`, which filters, sorts, filters by
+ * column and paginates the array it is handed. `searchPlanholders` above is the
+ * same rows, already narrowed; this is the set they are narrowed from.
+ */
+export function listPlanholders(): PlanholderSearchResult[] {
+  return db.getPlanholders().map((planholder) => ({
+    lpaNo: planholder.lpaNo,
+    personId: planholder.personId,
+    name: planholder.name ? toSurnameFirst(planholder.name) : "—",
+    planDesc: planholder.planDesc,
+  }));
+}
+
 /* ------------------------------ claim requests ------------------------------ */
 
 export interface ClaimProcessor {

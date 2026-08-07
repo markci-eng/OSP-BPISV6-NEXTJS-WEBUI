@@ -10,188 +10,111 @@
 // looks like the search is broken rather than like the feed is short. Standing
 // on its own, with its own rows, it is what it is: the same search the plan
 // holder search page runs, against the same data, arriving in the same place.
+//
+// The control itself is the kit's `LookupField` — the standard lookup, fed our
+// plan holders. It brings the parts this used to hand-roll and then some: the
+// typeahead panel under the field, "See all N results", and a full table behind
+// it with per-column sorting and filtering, paged, keyboard-navigable. What is
+// ours is the DATA and where a pick GOES.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Flex, Text } from "@chakra-ui/react";
-import { useDebounce } from "@/hooks/useDebounce";
-import { searchPlanholders } from "../claims-data";
-import { PlanholderResultRow } from "./planholder-result-row";
-import { SearchBar } from "./search-bar";
+import { Box } from "@chakra-ui/react";
+import { LookupField, type LookupColumn } from "osp-ui-kit";
+import {
+  listPlanholders,
+  type PlanholderSearchResult,
+} from "../claims-data";
+
+/**
+ * The table behind "See all results". Narrow enough to read in the modal on a
+ * phone, and in the order the paperwork gives them: the number identifies the
+ * plan, the name identifies the person, the plan is what they hold.
+ *
+ * The plan is the one column worth FILTERING on — there is a handful of plans
+ * and hundreds of holders, so the filter narrows the set; a filter on a number
+ * or a name is just the search field again.
+ */
+const COLUMNS: LookupColumn<PlanholderSearchResult>[] = [
+  { key: "lpaNo", header: "LPA No." },
+  { key: "name", header: "Plan Holder" },
+  { key: "planDesc", header: "Plan", enableColumnFilter: true },
+];
+
+/**
+ * What is matched as you type, and what the modal's own field searches.
+ *
+ * The two the paperwork gives a processor — they type whichever one they were
+ * handed and should not have to say which. `planDesc` is deliberately NOT here:
+ * typing "ST.ANNE" would return every holder of that plan, which is a filter
+ * dressed as a search, and the column filter already does it properly.
+ */
+const SEARCH_KEYS: (keyof PlanholderSearchResult & string)[] = [
+  "lpaNo",
+  "name",
+];
 
 export interface PlanholderQuickSearchProps {
-  /**
-   * How many hits to show. The default suits a narrow column — a rail full of
-   * results would bury whatever it is standing above.
-   */
-  limit?: number;
-  /** Tighter rows, for a narrow column. See {@link PlanholderResultRow}. */
-  compact?: boolean;
   placeholder?: string;
 }
 
 export function PlanholderQuickSearch({
-  limit = 6,
-  compact = false,
   placeholder,
 }: PlanholderQuickSearchProps) {
   const router = useRouter();
 
-  // Debounced at 300ms, matching the plan holder list in accounts-management —
-  // the field this one is modelled on. `query` drives the input and
-  // `debouncedQuery` drives the results, which is the whole point of the pair:
-  // the field stays immediate under the fingers while the list settles behind.
-  const [query, setQuery] = useState("");
-  const debouncedQuery = useDebounce(query, 300);
-
-  // Whether the panel is UP, which is not the same question as whether there is
-  // a query. A field left with a name still in it is a common way to leave one
-  // — the reader looked, found what they wanted or did not, and moved on — and
-  // the results have no business floating over the rail after that. So the
-  // panel is dismissed as soon as the field is left, and comes back when it is
-  // returned to.
-  const [open, setOpen] = useState(false);
-  const showResults = open && query.trim().length > 0;
-
-  const results = useMemo(
-    () => searchPlanholders(debouncedQuery, limit),
-    [debouncedQuery, limit],
-  );
-
-  // The whole control — field and panel. What is INSIDE it keeps the panel up;
-  // anything else takes it down.
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  // Dismissal is listened for on the document rather than handled as the
-  // field's own blur: a click on a result would otherwise dismiss the panel
-  // before the click landed on the row (the blur fires first), and the hit
-  // would be swallowed on the browsers that do not focus a button when it is
-  // pressed. Asking "was the thing that happened inside this control?" is the
-  // same question without that ordering problem.
-  //
-  // `pointerdown` covers the click and the tap; `focusin` covers tabbing away
-  // to something else on the page.
-  useEffect(() => {
-    if (!showResults) return;
-
-    const dismissIfOutside = (event: Event) => {
-      const target = event.target as Node | null;
-      if (target && !rootRef.current?.contains(target)) setOpen(false);
-    };
-
-    document.addEventListener("pointerdown", dismissIfOutside);
-    document.addEventListener("focusin", dismissIfOutside);
-    return () => {
-      document.removeEventListener("pointerdown", dismissIfOutside);
-      document.removeEventListener("focusin", dismissIfOutside);
-    };
-  }, [showResults]);
-
-  const openProfile = (lpaNo: string) => {
-    setOpen(false);
-    router.push(`/claims/planholder/${encodeURIComponent(lpaNo)}`);
-  };
-
-  /** One hit means the answer is already decided — see the search page. */
-  const submit = () => {
-    if (results.length === 1) openProfile(results[0].lpaNo);
-  };
+  // Read once per mount rather than on every render: the lookup filters,
+  // sorts and pages this array, and handing it a new one each time would throw
+  // that work away between keystrokes.
+  const planholders = useMemo(() => listPlanholders(), []);
 
   return (
-    // The anchor the results hang from. Everything below this component keeps
-    // its place while they are up, so it has to be the nearest positioned
-    // ancestor — the panel is measured against THIS box, not the page.
+    // The kit's field lights a 3px `primary-disabled` ring on focus and eases
+    // its border over 150ms. Both are off our own `SearchBar` — at that width
+    // the ring is a solid band of light green and reads as a second, filled box
+    // behind the field — and the two controls have to agree, so they come off
+    // here as well.
     //
-    // No height of its own: the field's height is the section's, so a caller
-    // that stacks this above something else gets the two adjacent rather than
-    // separated by whatever room was left over.
-    <Box position="relative" ref={rootRef}>
-      <SearchBar
-        value={query}
-        // Typing is the other way in, and the one that matters after Escape:
-        // the panel was dismissed with the query still in the field, and the
-        // next keystroke should bring the results back rather than leave the
-        // reader typing at nothing.
-        onChange={(next) => {
-          setQuery(next);
-          setOpen(true);
-        }}
+    // Scoped to the trigger — the lookup's own root is this wrapper's child and
+    // the field is the first thing in it. The suggestion panel is a later
+    // sibling and the modal is portalled out entirely, so neither is touched.
+    // `!important` because the kit's values arrive as a class of equal weight
+    // and this has to be the one that lands.
+    <Box
+      css={{
+        "& > div > div:first-of-type": { transitionProperty: "none !important" },
+        "& > div > div:first-of-type:focus-within": {
+          boxShadow: "none !important",
+        },
+      }}
+    >
+      <LookupField<PlanholderSearchResult>
         placeholder={placeholder ?? "Search by LPA No. or name"}
-        label="Search plan holders"
-        onSearch={submit}
-        // Bubbles up from the input inside — the whole control counts as
-        // focused, which is what returning to the field means here.
-        onFocus={() => setOpen(true)}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            submit();
-            return;
-          }
-          // Escape puts the panel away without clearing what was typed, and
-          // leaves the caret where it is — the standard way out of an open
-          // list, and the only one available without lifting a hand.
-          if (event.key === "Escape") {
-            event.preventDefault();
-            setOpen(false);
-          }
+        modalTitle="Search Plan Holders"
+        columns={COLUMNS}
+        dataSource={planholders}
+        searchKeys={SEARCH_KEYS}
+        // One line per suggestion, so the name leads and the number that
+        // confirms it follows — the order they are read in.
+        renderDisplay={(planholder) =>
+          `${planholder.name} · ${planholder.lpaNo}`
+        }
+        // Never holds a selection. A pick here is a way OUT of this page, not a
+        // value to keep in the field: the profile it opens IS the answer, and a
+        // name left sitting in the rail afterwards would claim the search is
+        // still the subject of a page that has since moved on.
+        value={null}
+        onSelect={(planholder) => {
+          if (!planholder) return;
+          router.push(
+            `/claims/planholder/${encodeURIComponent(planholder.lpaNo)}`,
+          );
         }}
-        // A notch shorter and tighter in a narrow column, where the field is
-        // one of three things stacked in a rail rather than the subject of a
-        // page. `size` and not a height: the input carries both, see SearchBar.
-        size={compact ? "sm" : "md"}
+        // The modal is the whole screen on a phone. It is a table with a search
+        // field over it, and a centred dialog would leave it scrolling inside a
+        // box inside a page.
+        mobileFullscreen
       />
-
-      {/* Nothing at rest, and nothing once the control is left. An empty query
-          has no results to show and no message worth the room — the placeholder
-          in the field has already said what this is, and a standing hint under
-          it would cost a block of the column permanently to repeat itself. */}
-      {showResults && (
-        // Floated over the section below rather than pushed into it. In the
-        // flow, every keystroke that changed the number of hits would move
-        // Recent Updates down the page under the reader's eye — and clearing
-        // the field would snap it back. Out of the flow, the column is still
-        // while the search runs.
-        //
-        // Same panel the kit's own lookup drops under its field: white, `xl`
-        // radius, hairline border, deep shadow. It has to read as sitting ABOVE
-        // the page rather than as a section of it, and the shadow is what says
-        // so.
-        <Box
-          position="absolute"
-          top="calc(100% + 6px)"
-          left={0}
-          right={0}
-          zIndex={1500}
-          bg="white"
-          borderRadius="xl"
-          border="1px solid"
-          borderColor="gray.100"
-          boxShadow="xl"
-          overflow="hidden"
-          p={1}
-        >
-          {results.length === 0 ? (
-            <Text fontSize="xs" color="gray.500" py={3} textAlign="center">
-              {/* The typed query, not the debounced one: the debounced value
-                  lags by 300ms, and quoting it back would name something the
-                  user has already finished changing. */}
-              No plan holder matches &ldquo;{query.trim()}&rdquo;.
-            </Text>
-          ) : (
-            <Flex direction="column">
-              {results.map((result) => (
-                <PlanholderResultRow
-                  key={result.lpaNo}
-                  result={result}
-                  onSelect={openProfile}
-                  compact={compact}
-                />
-              ))}
-            </Flex>
-          )}
-        </Box>
-      )}
     </Box>
   );
 }

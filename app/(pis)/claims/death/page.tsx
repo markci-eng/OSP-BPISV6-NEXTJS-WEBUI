@@ -198,11 +198,9 @@ export default function DeathClaimsPage() {
                     From `xl` only — the width at which the rail becomes a
                     column beside the work. Stacked below that it is full-width
                     and gets a design of its own, so this one stays out of the
-                    way rather than being the wrong shape in the meantime.
-                    `compact` is therefore always true: the only layout that
-                    renders it is the narrow column. */}
+                    way rather than being the wrong shape in the meantime. */}
                 <Box display={{ base: "none", xl: "block" }}>
-                  <PlanholderQuickSearch compact />
+                  <PlanholderQuickSearch />
                 </Box>
 
                 <RecentUpdates />

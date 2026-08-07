@@ -349,7 +349,7 @@ export default function ClaimsPlanholderPage() {
                     display={{ base: "none", xl: "block" }}
                     flexShrink={0}
                   >
-                    <PlanholderQuickSearch compact />
+                    <PlanholderQuickSearch />
                   </Box>
 
                   {/* The plan's actions, at the top of the work column. On a
