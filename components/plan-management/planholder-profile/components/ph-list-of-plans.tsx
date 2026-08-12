@@ -1,5 +1,11 @@
-import { OSPBadge } from "osp-ui-kit";
-import { InfoItem } from "osp-ui-kit";
+import {
+  OSPBadge,
+  InfoItem,
+  Body,
+  H4,
+  PrimaryMdButton,
+  Small,
+} from "osp-ui-kit";
 import {
   Avatar,
   Box,
@@ -31,7 +37,6 @@ import { IoMdPersonAdd } from "react-icons/io";
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";
 import { LuSearch, LuUsersRound } from "react-icons/lu";
 import { RiArrowDownSLine, RiHistoryFill } from "react-icons/ri";
-import { Body, H4, PrimaryMdButton, Small } from "st-peter-ui";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
 import { MdHealthAndSafety } from "react-icons/md";
 import { PlanDetailType } from "../planholder-profile-page";

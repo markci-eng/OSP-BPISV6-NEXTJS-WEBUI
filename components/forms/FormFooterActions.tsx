@@ -1,8 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { Flex } from "@chakra-ui/react";
-import { PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
-import { useMessageDialog } from "osp-ui-kit";
+import {
+  PrimaryMdButton,
+  SecondaryMdButton,
+  useMessageDialog,
+} from "osp-ui-kit";
 
 export function FormFooterActions({
   entityLabel,

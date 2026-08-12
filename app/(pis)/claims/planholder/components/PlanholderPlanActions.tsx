@@ -17,6 +17,18 @@ const PLAN_ACTIONS = [
 ];
 
 /**
+ * Columns for the row — three, so the plan's actions are ONE row.
+ *
+ * "Cancel Plan Termination" does not fit a third of the rail on one line and
+ * wraps to two, which stands all three buttons at the taller height. That is
+ * accepted rather than worked around: this briefly ran at two columns to keep
+ * every label on one line, and the second row it cost was worse. Height is the
+ * scarce thing in a rail that also holds the claims and the folder; a label on
+ * two lines costs 15px, a second row of buttons costs 55px.
+ */
+const PLAN_ACTION_COLUMNS = 3;
+
+/**
  * The plan's actions, as a section of their own directly above Claim Requests.
  *
  * DESKTOP only — the page renders this from `lg` up and keeps the "More" pill
@@ -42,7 +54,7 @@ export function PlanholderPlanActions({
 
   return (
     <ActionButtonRow
-      columns={3}
+      columns={PLAN_ACTION_COLUMNS}
       actions={PLAN_ACTIONS.map((action) => ({
         ...action,
         onClick: () => notWired(action.label),

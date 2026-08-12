@@ -1,8 +1,6 @@
-import { DataTable } from "osp-ui-kit";
-import { multiSelectFilter } from "osp-ui-kit";
+import { DataTable, multiSelectFilter, Small } from "osp-ui-kit";
 import { Box, Strong } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Small } from "st-peter-ui";
 import { PhPaymentType } from "../../planholder-profile-page";
 
 export function PhPaymentRecordTable({

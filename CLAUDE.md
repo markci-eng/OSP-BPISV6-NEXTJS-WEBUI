@@ -67,11 +67,13 @@ Feature-specific components live in `app/<feature>/components/` alongside their 
 ### UI Libraries
 
 - **Chakra UI v3** — Primary component system
-- **st-peter-ui** — Internal standard component library (wraps/extends Chakra)
+- **osp-ui-kit** — Internal standard component library (wraps/extends Chakra). Replaced the legacy `st-peter-ui` package; import from `osp-ui-kit` only. Note it does **not** re-export Chakra primitives such as `Box` — import those directly from `@chakra-ui/react`.
 - **@splpi/*** — Internal scoped packages for specific feature areas (dms-estore-upload, plan-management, operations, etc.)
 - **osp.cis.nextjs.components** — Another internal component library
 
-Prefer `st-peter-ui` and `@splpi/*` components over raw Chakra when they exist for a given use case.
+Prefer `osp-ui-kit` and `@splpi/*` components over raw Chakra when they exist for a given use case.
+
+`st-peter-ui` may still appear in `package-lock.json` as a transitive dependency of `new-sales-page-component`, `osp-chakra-reusable-components`, and `@splpi/estore-shared-components`. That is expected — do not import from it in application code.
 
 ### State Management
 

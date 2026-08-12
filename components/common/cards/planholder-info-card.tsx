@@ -1,6 +1,5 @@
 import { Avatar, Box, Flex, Grid, Separator } from "@chakra-ui/react";
-import { H4 } from "st-peter-ui";
-import { InfoItem, OSPBadge } from "osp-ui-kit";
+import { H4, InfoItem, OSPBadge } from "osp-ui-kit";
 
 export interface PlanholderBasicInfo {
   lastName: string | null;

@@ -20,7 +20,14 @@ import {
   PrimaryMdFlexButton,
   SecondaryMdButton,
   SecondaryMdFlexButton,
-} from "st-peter-ui";
+  EmptyStateCard,
+  ErrorStateCard,
+  LookupColumn,
+  LookupField,
+  OSPBadge,
+  Page,
+  useMessageDialog,
+} from "osp-ui-kit";
 
 import { DepositHdr } from "../data/payment.types";
 import { useDrsList } from "../hooks/useDrsList";
@@ -43,15 +50,6 @@ import { useRouter } from "next/navigation";
 import DrsDataTable from "../components/drsDataTable";
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
-import {
-  EmptyStateCard,
-  ErrorStateCard,
-  LookupColumn,
-  LookupField,
-  OSPBadge,
-  Page,
-  useMessageDialog,
-} from "osp-ui-kit";
 import { MetaCard } from "../viewvalidated-deposit/viewDeposit";
 
 const STATUS_STYLES: Record<

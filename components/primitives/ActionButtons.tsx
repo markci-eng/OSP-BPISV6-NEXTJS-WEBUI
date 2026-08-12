@@ -2,9 +2,8 @@
 
 import { Flex } from "@chakra-ui/react";
 import React, { useState } from "react";
-import { SecondarySmButton } from "st-peter-ui";
+import { SecondarySmButton, BottomQuickActions, QuickAction } from "osp-ui-kit";
 import { FaEllipsis } from "react-icons/fa6";
-import { BottomQuickActions, QuickAction } from "osp-ui-kit";
 
 export type ActionButtonItem =
   | {

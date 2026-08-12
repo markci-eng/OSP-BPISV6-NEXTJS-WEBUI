@@ -1,4 +1,4 @@
-import { OSPBadge } from "osp-ui-kit";
+import { OSPBadge, Body, Small } from "osp-ui-kit";
 import {
   AbsoluteCenter,
   Box,
@@ -7,7 +7,6 @@ import {
   Strong,
   Text,
 } from "@chakra-ui/react";
-import { Body, Small } from "st-peter-ui";
 
 interface ProgressCardProps {
   current: number;

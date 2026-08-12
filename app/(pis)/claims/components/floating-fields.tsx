@@ -36,11 +36,26 @@ export function FloatingLabelDate({
   value,
   onChange,
   onBlur,
+  readOnly = false,
 }: {
   label: React.ReactNode;
   value?: string;
   onChange?: (value: string) => void;
   onBlur?: () => void;
+  /**
+   * A date that is shown but not set here — one that came off the paperwork
+   * rather than one the user types.
+   *
+   * `readOnly` alone is not enough on a date input: the browser's own picker
+   * ignores it and will still write a new value through the calendar button.
+   * So the button is taken away and the field stops taking pointer events,
+   * which leaves nothing that can change it.
+   *
+   * It keeps the ordinary look and the ordinary date format, which is the
+   * point — a derived date should read as the same kind of value as the ones
+   * beside it, not as a sentence about a date.
+   */
+  readOnly?: boolean;
 }) {
   return (
     <Box pos="relative" w="full">
@@ -49,6 +64,12 @@ export function FloatingLabelDate({
         value={value ?? ""}
         onChange={(e) => onChange?.(e.target.value)}
         onBlur={onBlur}
+        readOnly={readOnly}
+        {...(readOnly && {
+          tabIndex: -1,
+          pointerEvents: "none",
+          css: { "&::-webkit-calendar-picker-indicator": { display: "none" } },
+        })}
       />
       <Field.Label css={floatingLabelStyles}>{label}</Field.Label>
     </Box>

@@ -7,8 +7,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { ImOffice } from "react-icons/im";
-import { Body } from "st-peter-ui";
-import { OSPBadge } from "osp-ui-kit";
+import { Body, OSPBadge } from "osp-ui-kit";
 import { FaHome } from "react-icons/fa";
 import { PlanholderAddressType } from "../planholder-profile-page";
 import type { Address } from "@/components/plan-management/address.types";

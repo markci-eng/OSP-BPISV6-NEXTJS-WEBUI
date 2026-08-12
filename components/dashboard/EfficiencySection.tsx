@@ -1,9 +1,8 @@
 "use client";
 import { Box, Flex, Grid, Separator, Text } from "@chakra-ui/react";
-import { ErrorStateCard, StaticCard } from "osp-ui-kit";
+import { ErrorStateCard, StaticCard, Small } from "osp-ui-kit";
 import { Cell, Pie, PieChart } from "recharts";
 import { LuTrendingUp, LuUsers, LuZap } from "react-icons/lu";
-import { Small } from "st-peter-ui";
 import { RowItem } from "@/components/info-card/row-item";
 import { useDashboardOverview } from "@/app/(bpis)/hooks/useDashboardOverview";
 import type { QuotaAndCollections } from "@/app/(bpis)/api/dashboard.types";

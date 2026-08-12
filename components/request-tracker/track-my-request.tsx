@@ -15,7 +15,14 @@ import {
   JourneyMeta,
   journeys,
 } from "./journeys";
-import { PrimarySmButton, SecondarySmButton } from "st-peter-ui";
+import {
+  PrimarySmButton,
+  SecondarySmButton,
+  StaticCard,
+  JourneyStep,
+  JourneyTimeline,
+  Page,
+} from "osp-ui-kit";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useColorModeValue } from "@/components/ui/color-mode";
@@ -32,7 +39,6 @@ import {
   Check,
   Route,
 } from "lucide-react";
-import { StaticCard, JourneyStep, JourneyTimeline, Page } from "osp-ui-kit";
 
 interface TrackRequestPageProps {
   requestId?: string;

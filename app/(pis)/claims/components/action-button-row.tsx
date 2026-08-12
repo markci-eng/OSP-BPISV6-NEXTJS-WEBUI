@@ -5,11 +5,15 @@
 //
 // Extracted from the plan holder profile's own plan actions so the claim's
 // actions can be the same thing: one definition, so a row of buttons above the
-// plan holder card cannot drift from a row of buttons above the claims.
+// plan holder card cannot drift from a row of buttons above the claims. That is
+// also why the colours are set on the button below rather than at either call
+// site — the plan actions and the claim's actions are the same control, and
+// there is nowhere to change one without the other.
 
 import { forwardRef } from "react";
-import { SimpleGrid } from "@chakra-ui/react";
-import { BaseButton } from "st-peter-ui";
+import { Box, SimpleGrid, Text } from "@chakra-ui/react";
+import { BaseButton } from "osp-ui-kit";
+import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 
 export interface ActionButtonRowItem {
   label: string;
@@ -46,20 +50,75 @@ export const ActionRowButton = forwardRef<
     width="100%"
     height="auto"
     minH="32px"
-    px={2}
-    py="6px"
+    // Room enough that a label wrapping to two lines is not pressed against the
+    // border on any side. `px` stays the tighter of the two on purpose: the
+    // columns are narrow and every pixel taken here is a pixel of label, which
+    // is what decides whether a third line appears.
+    px="10px"
+    py={2}
+    // `xs`, the size {@link InfoLabel} sets its LABEL at — so a button's name
+    // and a card's field name are the same size wherever they sit next to each
+    // other in the rail. Briefly `sm`, which cost 5px of row height for nothing
+    // the labels needed; height in the rail is shared with the claims and the
+    // folder — see the note on `PLAN_ACTION_COLUMNS`.
     fontSize="xs"
     // Icon over label: side by side, the icon takes a third of a column this
     // narrow away from the words.
     flexDirection="column"
-    gap="2px"
+    gap="3px"
     whiteSpace="normal"
     textAlign="center"
     lineHeight="1.25"
+    /* The row's colours, taken from the cards these buttons sit among rather
+       than from the brand.
+
+       The library's outline button is brand green, border and label both. Three
+       of them stacked in the rail under the search box, and a fourth row of them
+       over the claim's details, put the page's strongest colour on its least
+       important controls — none of these is the thing a user came to the page to
+       do, and two of the three are not even wired up yet. Green there also
+       spends the colour that ought to mean "this one": with everything green,
+       nothing is.
+
+       So they take the card's own values exactly — `gray.200` border, `gray.800`
+       label, white ground, the same three the beneficiary and plan cards use.
+
+       Set as style props rather than by asking for a different variant: the
+       library has no neutral outline, and these override the green one's own
+       colours — including on hover, which would otherwise go back to green the
+       moment the pointer landed. */
+    color="gray.800"
+    borderColor="gray.200"
+    bg="white"
+    // Hover is the one place they part company with a card: a card is not
+    // pressable and these are, so the border firms and the ground greys.
+    _hover={{ bg: "gray.50", borderColor: "gray.300", color: "gray.800" }}
+    _active={{ bg: "gray.100" }}
     {...rest}
   >
-    <Icon />
-    {label}
+    {/* The ICON is the exception, and the only brand colour left on the control:
+        the same `primaryGreen` the navigation draws its icons in, so a mark in
+        this app is green wherever it appears. It works here for the reason green
+        did not work on the border and the label — a coloured glyph identifies an
+        action at a glance without making the whole button shout.
+
+        Wrapped rather than coloured through the button: react-icons draw with
+        `currentColor`, so the icon would otherwise take the label's grey — and
+        setting the BUTTON green would take the label with it. The wrapper is
+        what lets the two differ. `display: flex` so the box is the glyph's size
+        and adds no line of its own. */}
+    <Box display="flex" color={BRAND_COLORS.primaryGreen}>
+      <Icon />
+    </Box>
+
+    <Text
+      fontSize="xs"
+      color="gray.500"
+      letterSpacing="-0.1px"
+      lineHeight="1.25"
+    >
+      {label}
+    </Text>
   </BaseButton>
 ));
 ActionRowButton.displayName = "ActionRowButton";

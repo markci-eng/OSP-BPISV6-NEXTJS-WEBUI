@@ -1,5 +1,5 @@
 import { Box } from "@chakra-ui/react";
-import { SectionTitle, Small } from "st-peter-ui";
+import { SectionTitle, Small } from "osp-ui-kit";
 
 /* ─── Section label ─── */
 export const SectionLabel = ({

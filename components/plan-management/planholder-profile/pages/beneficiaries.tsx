@@ -12,12 +12,10 @@ import { FaUser, FaTrash } from "react-icons/fa";
 import { HiOutlinePencilAlt } from "react-icons/hi";
 import { IoMdPersonAdd } from "react-icons/io";
 import { LuMapPin } from "react-icons/lu";
-import { Small } from "st-peter-ui";
-import { BrandedAvatar } from "osp-ui-kit";
+import { Small, BrandedAvatar, EmptyStateCard } from "osp-ui-kit";
 import { AddBeneficiaryDrawer } from "../drawers/add-beneficiary-drawer";
 import { EditBeneficiaryDrawer } from "../drawers/edit-beneficiary-drawer";
 import { mockAvatarUrl } from "@/lib/mock-avatar";
-import { EmptyStateCard } from "osp-ui-kit";
 
 export interface BeneficiaryProps {
   personId: string;

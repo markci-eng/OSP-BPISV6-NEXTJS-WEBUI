@@ -12,7 +12,12 @@ import {
   Text,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import { SaveButton, SelectButton, UnselectSolidButton } from "st-peter-ui";
+import {
+  SaveButton,
+  SelectButton,
+  UnselectSolidButton,
+  useMessageDialog,
+} from "osp-ui-kit";
 import { RowItem } from "@/components/info-card/row-item";
 import type {
   CheckedPlanType,
@@ -20,7 +25,6 @@ import type {
 } from "@/app/(bpis)/data/plan-management/change-of-mode/change-mode.types";
 import { PlanTypes } from "@/app/(bpis)/data/plan-management/change-of-mode/data";
 import { useEffect, useMemo, useState } from "react";
-import { useMessageDialog } from "osp-ui-kit";
 
 const MODES = ["Monthly", "Quarterly", "Semi-Annual", "Annual"] as const;
 

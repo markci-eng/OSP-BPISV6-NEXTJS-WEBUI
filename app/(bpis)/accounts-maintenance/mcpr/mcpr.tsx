@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Grid, GridItem } from "@chakra-ui/react";
-import { PrimaryMdButton, PrimaryMdFlexButton } from "st-peter-ui";
-import { LuUsers } from "react-icons/lu";
-
 import {
+  PrimaryMdButton,
+  PrimaryMdFlexButton,
   FloatingLabelSelect,
   InfoCardAccordion,
   LookupColumn,
@@ -13,6 +12,7 @@ import {
   Page,
   useMessageDialog,
 } from "osp-ui-kit";
+import { LuUsers } from "react-icons/lu";
 
 import { TrxMonth } from "../data/transaction-month";
 import {

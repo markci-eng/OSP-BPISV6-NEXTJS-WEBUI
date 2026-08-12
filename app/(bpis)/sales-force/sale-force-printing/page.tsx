@@ -2,7 +2,16 @@
 "use client";
 
 import React from "react";
-import { Body, PrimaryMdButton, PrimaryMdFlexButton, Small } from "st-peter-ui";
+import {
+  Body,
+  PrimaryMdButton,
+  PrimaryMdFlexButton,
+  Small,
+  Card,
+  DataTable,
+  OSPBadge,
+  Page,
+} from "osp-ui-kit";
 import { CellContext, ColumnDef } from "@tanstack/react-table";
 import {
   Box,
@@ -16,7 +25,6 @@ import {
   Text,
   Wrap,
 } from "@chakra-ui/react";
-import { Card, DataTable, OSPBadge, Page } from "osp-ui-kit";
 
 interface AgentPrintingData {
   id: string;

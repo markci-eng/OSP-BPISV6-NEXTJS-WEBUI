@@ -33,7 +33,14 @@ import {
   CancelSolidButton,
   PrimaryMdButton,
   SaveButton,
-} from "st-peter-ui";
+  EmptyStateCard,
+  ErrorStateCard,
+  FloatingLabelInput,
+  LookupColumn,
+  LookupField,
+  OSPBadge,
+  Page,
+} from "osp-ui-kit";
 import { useEffect, useMemo, useState } from "react";
 import { useDepositList } from "../hooks/useDepositList";
 import { useSamplePayments } from "../hooks/useSamplePayments";
@@ -43,15 +50,6 @@ import { EMPLOYEES } from "@/app/(bpis)/data/doc-management/documenttype";
 import DrsDataTable from "../components/drsDataTable";
 import DrsPaymentSummary from "../components/drsPaymentSummary";
 import { DrsFunction } from "../utils/drsFunction";
-import {
-  EmptyStateCard,
-  ErrorStateCard,
-  FloatingLabelInput,
-  LookupColumn,
-  LookupField,
-  OSPBadge,
-  Page,
-} from "osp-ui-kit";
 import { DepositHdr } from "../data/payment.types";
 import { RowItem } from "@/components/info-card/row-item";
 import { SlipUpload, SlipUploadStatus } from "../components/SlipUpload";

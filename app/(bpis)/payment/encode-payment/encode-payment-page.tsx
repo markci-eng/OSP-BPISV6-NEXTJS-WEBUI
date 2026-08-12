@@ -2,6 +2,7 @@
 
 import {
   Badge,
+  Box,
   Button,
   CloseButton,
   Collapsible,
@@ -18,18 +19,23 @@ import {
 } from "@chakra-ui/react";
 import { ChevronDown, ChevronUp, Receipt, Trash2 } from "lucide-react";
 import {
-  Box,
   CancelSolidButton,
   PrimaryMdFlexButton,
   SaveButton,
-} from "st-peter-ui";
-import {
   BottomQuickActions,
   FloatingLabelInput,
   QuickBottomSheet,
   SectionTitle,
+  FloatingLabelSelect,
+  RowItem,
+  BrandedAvatar,
+  DataTable,
+  EmptyStateCard,
+  InputCardAccordion,
+  LookupColumn,
+  LookupField,
+  RowAction,
 } from "osp-ui-kit";
-import { FloatingLabelSelect } from "osp-ui-kit";
 import { SlipUpload } from "../components/SlipUpload";
 
 import {
@@ -57,18 +63,8 @@ import {
   LuMinus,
   LuPlus,
 } from "react-icons/lu";
-import { RowItem } from "osp-ui-kit";
 import { ShieldCheck, Banknote } from "lucide-react";
 import { mockAvatarUrl } from "@/lib/mock-avatar";
-import {
-  BrandedAvatar,
-  DataTable,
-  EmptyStateCard,
-  InputCardAccordion,
-  LookupColumn,
-  LookupField,
-  RowAction,
-} from "osp-ui-kit";
 
 type Props = {
   payments: PaymentRecord[];

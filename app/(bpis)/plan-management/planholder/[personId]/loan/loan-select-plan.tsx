@@ -3,11 +3,10 @@
 import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2 } from "lucide-react";
-import { Checkbox, H4, Small } from "st-peter-ui";
+import { Checkbox, H4, Small, DataTable, OSPBadge } from "osp-ui-kit";
 import InfoCard from "@/components/info-card/info-card";
 import { RowItem } from "@/components/info-card/row-item";
 import { REQUIRED_DOCUMENTS } from "./loan-documents";
-import { DataTable, OSPBadge } from "osp-ui-kit";
 
 // ---- Types ----
 export interface LoanRecord {

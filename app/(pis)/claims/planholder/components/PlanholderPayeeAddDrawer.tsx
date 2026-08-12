@@ -7,9 +7,9 @@ import {
   Drawer,
   Field,
   Flex,
+  Grid,
   Portal,
   Select,
-  SimpleGrid,
   Switch,
   Text,
   createListCollection,
@@ -301,26 +301,71 @@ export function PlanholderPayeeAddDrawer({
               >
                 <Flex direction="column" gap={6}>
                   <Section title="Details">
-                    {/* Name in parts, the same block the beneficiary form
-                        uses: two columns from `sm` up, stacked below. */}
-                    <SimpleGrid columns={{ base: 1, sm: 2 }} gap={5}>
-                      <TextField
-                        control={control}
-                        name="lastName"
-                        label="Last Name"
-                      />
-                      <TextField
-                        control={control}
-                        name="firstName"
-                        label="First Name"
-                      />
-                      <TextField
-                        control={control}
-                        name="middleName"
-                        label="Middle Name"
-                      />
-                      <TextField control={control} name="suffix" label="Suffix" />
-                    </SimpleGrid>
+                    {/* The name in parts, in the order it is READ off a claim
+                        form: surname, given name, middle name, suffix. On a
+                        desktop that is one row, so a name is one line of the
+                        form rather than a block of four fields to work down —
+                        it is a single fact entered in four boxes, and the
+                        layout should say so.
+
+                        The suffix is a fixed track and the other three divide
+                        what is left. Almost every suffix is two or three
+                        characters — Jr, Sr, III — and an equal quarter of the
+                        row would be a box mostly empty sitting beside a surname
+                        that has to truncate to fit its own. `minmax(0, 1fr)` on
+                        the three so a long value scrolls inside its field
+                        instead of widening the track and pushing the row past
+                        the sheet.
+
+                        Measured against the CONTAINER and not the window, the
+                        same as the block on the death claim form — those two
+                        are the same row and have to break at the same widths,
+                        and there the window is actively misleading: that form
+                        hands 360px to a summary rail at `xl`, so a wider window
+                        leaves the row narrower. This sheet is the full width of
+                        the screen today and the two rulers agree; asking the
+                        container is what keeps them agreeing if it ever becomes
+                        a side sheet. */}
+                    <Box css={{ containerType: "inline-size" }}>
+                      <Grid
+                        templateColumns="minmax(0, 1fr)"
+                        css={{
+                          "@container (min-width: 400px)": {
+                            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                          },
+                          "@container (min-width: 660px)": {
+                            gridTemplateColumns:
+                              "repeat(3, minmax(0, 1fr)) 120px",
+                          },
+                        }}
+                        gap={5}
+                      >
+                        <TextField
+                          control={control}
+                          name="lastName"
+                          label="Last Name"
+                        />
+                        <TextField
+                          control={control}
+                          name="firstName"
+                          label="First Name"
+                        />
+                        {/* Optional, both of them — nothing on this form is
+                            validated as required today, and a payee with
+                            neither is an ordinary payee, not an incomplete
+                            one. */}
+                        <TextField
+                          control={control}
+                          name="middleName"
+                          label="Middle Name"
+                        />
+                        <TextField
+                          control={control}
+                          name="suffix"
+                          label="Suffix"
+                        />
+                      </Grid>
+                    </Box>
                     <TextField
                       control={control}
                       name="birthDate"

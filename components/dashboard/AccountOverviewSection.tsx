@@ -1,7 +1,7 @@
 "use client";
 import { DASHBOARD_ACCENT_COLORS, TREND_COLORS } from "@/lib/theme/dashboard-colors";
 import { Box, Carousel, Flex, SimpleGrid, Text } from "@chakra-ui/react";
-import { ErrorStateCard } from "osp-ui-kit";
+import { ErrorStateCard, BaseText, Body, Small } from "osp-ui-kit";
 import { LuArrowDown, LuArrowUp, LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import {
   RiUserFollowLine,
@@ -9,7 +9,6 @@ import {
   RiUserShared2Line,
   RiUserUnfollowLine,
 } from "react-icons/ri";
-import { BaseText, Body, Small } from "st-peter-ui";
 import { IconType } from "react-icons";
 import { useDashboardOverview } from "@/app/(bpis)/hooks/useDashboardOverview";
 import type { AccountOverview } from "@/app/(bpis)/api/dashboard.types";

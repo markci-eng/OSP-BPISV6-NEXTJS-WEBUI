@@ -11,8 +11,7 @@ import { ProgressCard } from "../cards/pending-request-card";
 import RequestHistoryDrawer, {
   RequestHistoryItem,
 } from "@/components/common/drawers/request-history-drawer";
-import { Small } from "st-peter-ui";
-import { StaticCard } from "osp-ui-kit";
+import { Small, StaticCard } from "osp-ui-kit";
 
 export interface RequestProps {
   type:

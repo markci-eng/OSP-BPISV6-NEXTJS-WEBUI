@@ -75,6 +75,13 @@ export interface CreatedDeathClaim {
   dateOfDeathISO: string;
   causeOfDeath: string;
   natureCode: "SC" | "RC";
+  /**
+   * USB claims only — the nature code for the unrendered service (CP, NA, OP,
+   * RP, SP, TC, TT, TV). Undefined for every other benefit, which has no such
+   * classification. The create form opens on "NA" (Not Applicable), so a USB
+   * claim always carries one.
+   */
+  usbType?: string;
   contestability: Contestability;
   statusLabel: ClaimPhase;
   processor: string;
@@ -87,13 +94,16 @@ export interface CreatedDeathClaim {
 /**
  * The status a new claim is suggested to take.
  *
- * Opening the header is normally the endorsement: the processor works the claim
- * and submits it, which hands it to the supervisor for approval. That is only
- * the default, though — the processor picks the status on the form (see
- * {@link SELECTABLE_CLAIM_STATUSES}), because a claim can also be parked as
- * Pending or sent down the denial route instead.
+ * Pending: opening the header starts the work, it does not finish it. The
+ * processor still has documents to gather and a computation to settle, and a
+ * claim that announced itself as For Approval the moment it was opened would
+ * be asking a supervisor to look at something nobody has worked yet.
+ *
+ * Only the default — the processor picks the status on the form (see
+ * {@link SELECTABLE_CLAIM_STATUSES}) and can endorse it on the spot when the
+ * claim really is ready, or send it down the denial route.
  */
-export const CREATED_CLAIM_STATUS: ClaimPhase = "For Approval";
+export const CREATED_CLAIM_STATUS: ClaimPhase = "Pending";
 
 /**
  * The statuses a processor may put a claim into.

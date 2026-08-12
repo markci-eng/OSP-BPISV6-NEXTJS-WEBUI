@@ -97,6 +97,9 @@ export const LeaderboardCardSkeleton = () => (
     subtitle="Ranked by new sales this month"
     h={{ xl: "full" }}
   >
+    <Flex justify="flex-end" mb={3}>
+      <Skeleton h="28px" w="150px" borderRadius="md" />
+    </Flex>
     <Flex direction="column" px={4} py={2}>
       {Array.from({ length: 6 }).map((_, i) => (
         <Flex

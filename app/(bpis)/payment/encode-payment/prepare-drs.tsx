@@ -14,7 +14,7 @@ import {
 
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
-import { Body, DynamicButton } from "st-peter-ui";
+import { Body, DynamicButton, StaticCard, DataTable } from "osp-ui-kit";
 import { DrsRowData, PaymentRecord } from "../data/payment.types";
 import { columns } from "../components/drsDataTable";
 
@@ -26,7 +26,6 @@ import { LuBuilding2, LuWallet } from "react-icons/lu";
 import { ColumnDef } from "@tanstack/react-table";
 import { TblLoanHdrData } from "@/app/(bpis)/Model/Data/rawData";
 import { RowItem } from "@/components/info-card/row-item";
-import { StaticCard, DataTable } from "osp-ui-kit";
 
 type Props = {
   payments: PaymentRecord[];

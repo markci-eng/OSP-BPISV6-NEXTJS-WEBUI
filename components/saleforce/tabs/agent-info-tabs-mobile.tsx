@@ -8,7 +8,7 @@ import AgentPersonalInfoCard from "../cards/AgentPersonalInfoCard";
 import AgentEmploymentInfoCard from "../cards/AgentEmploymentInfoCard";
 import AgentContactInfoCard from "../cards/AgentContactInfoCard";
 import { PlanholderAddressCard } from "@/components/plan-management/planholder-profile/sections/address-info";
-import { TertiarySmButton } from "st-peter-ui";
+import { TertiarySmButton } from "osp-ui-kit";
 
 interface AgentInfoTabsMobileProps {
   agent?: SalesAgent;

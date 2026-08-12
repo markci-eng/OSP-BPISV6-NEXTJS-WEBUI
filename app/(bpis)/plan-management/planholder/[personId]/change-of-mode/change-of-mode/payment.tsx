@@ -9,7 +9,7 @@ import {
   Steps,
 } from "@chakra-ui/react";
 import React from "react";
-import { PrimaryMdButton } from "st-peter-ui";
+import { PrimaryMdButton } from "osp-ui-kit";
 
 const eWallets = createListCollection({
   items: [

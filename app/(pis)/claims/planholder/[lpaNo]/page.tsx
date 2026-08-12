@@ -153,6 +153,15 @@ export default function ClaimsPlanholderPage() {
     [isDesktop],
   );
 
+  /**
+   * Whether the claim view is up — settled OR arriving.
+   *
+   * Read off the REFERENCE and not the looked-up claim, so it is already true
+   * during the swap: the page's heading has to be gone before the claim lands,
+   * or it goes at the end of the animation and reads as a second, later move.
+   */
+  const claimSheetUp = isDesktop && openClaimRef !== null;
+
   // A swap left mid-flight — navigating away, or the claim opened from a list
   // that unmounts — must not call back into a page that is gone.
   useEffect(
@@ -174,6 +183,29 @@ export default function ClaimsPlanholderPage() {
       // The shell's 96px reserve is for the mobile bottom navigation; a desktop
       // does not render it and should not scroll past it.
       paddingBottom={{ base: "96px", lg: "24px" }}
+      /*
+       * The page's own heading, dropped while a claim is open.
+       *
+       * A claim replaces this page rather than sitting under it, and a title
+       * reading "Planholder Profile" over a view that has taken the profile's
+       * place names the wrong thing. The claim names itself: the plan holder is
+       * the first card on it, and the way back is directly above them.
+       *
+       * Done here rather than by dropping the props, because the props are still
+       * right — the MOBILE bar goes on using them, and a claim never opens into
+       * this branch there. Only the desktop heading is hidden.
+       *
+       * The shell renders three boxes in order: the mobile bar, the desktop
+       * heading, the content. `of-type` and not `nth-child`, for the reason
+       * given on the plan holder card — emotion inserts a <style> among these
+       * children when the page is rendered on the server and shifts every child
+       * index by one.
+       */
+      css={
+        claimSheetUp
+          ? { "& > div:nth-of-type(2)": { display: "none" } }
+          : undefined
+      }
     >
       {/* The plan's actions, in the page header's tool slot — far right of the
           title row. A PHONE only: the title row is the width of the screen
@@ -194,7 +226,9 @@ export default function ClaimsPlanholderPage() {
           {planholder && swapping ? (
             /* Mid-swap. Shaped like the layout ARRIVING, so the real content
                lands on a shape that is already correct. */
-            <PlanholderSwapSkeleton target={openClaimRef ? "claim" : "profile"} />
+            <PlanholderSwapSkeleton
+              target={openClaimRef ? "claim" : "profile"}
+            />
           ) : planholder && openClaim ? (
             /* A claim is open, and this is a desktop — so the page IS the
                claim. The two columns swap roles: the claim takes the main one

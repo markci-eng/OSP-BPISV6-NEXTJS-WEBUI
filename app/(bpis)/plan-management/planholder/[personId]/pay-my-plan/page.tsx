@@ -21,9 +21,8 @@ import {
   STANDARD_SIZES,
   STANDARD_SPACING,
 } from "@/lib/theme/standard-design-tokens";
-import { BaseButton, PrimaryMdButton } from "st-peter-ui";
+import { BaseButton, PrimaryMdButton, useDemoAuth, Page } from "osp-ui-kit";
 import { useEffect, useMemo, useState } from "react";
-import { useDemoAuth } from "osp-ui-kit";
 import { FaEllipsisH } from "react-icons/fa";
 import {
   LuChevronFirst,
@@ -40,7 +39,6 @@ import {
   LuSearch,
   LuUser,
 } from "react-icons/lu";
-import { Page } from "osp-ui-kit";
 import InfoCard from "@/components/info-card/info-card";
 import { ActivePlan, activePlans } from "./activeplan";
 import { TbCurrencyPeso } from "react-icons/tb";

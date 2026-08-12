@@ -44,12 +44,12 @@ const EmploymentInfo = ({ agent }: AgentEmploymentInfoCardProps) => {
       </Flex>
 
       {/* Desktop: employee status badge header + 2-column grid */}
-      <Box hideBelow="lg" padding={4}>
+      <Box hideBelow="lg">
         <Flex align="center" justify="space-between" mb={4}>
           <Strong color="gray.700">Employee Status</Strong>
           <EmployeeStatusBadge status={agent.employeeStatus} />
         </Flex>
-        <Grid templateColumns="repeat(2, 1fr)" gapX={2} gapY={4}>
+        <Grid templateColumns="repeat(4, 1fr)" gapX={2} gapY={4}>
           <InfoItem label="Position" value={agent.position} />
           <InfoItem label="Employer" value={agent.employer} />
           <InfoItem label="Date Hired" value={agent.hireDate} />

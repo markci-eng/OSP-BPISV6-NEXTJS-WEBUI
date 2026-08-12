@@ -10,8 +10,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { Body, Small } from "st-peter-ui";
-import { OSPBadge } from "osp-ui-kit";
+import { Body, Small, OSPBadge } from "osp-ui-kit";
 import {
   LuFileCheck,
   LuReplace,

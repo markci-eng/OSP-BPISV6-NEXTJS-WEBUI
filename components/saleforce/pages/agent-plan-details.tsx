@@ -46,11 +46,11 @@ import {
   MetricCard,
   Page,
   ProfileHeaderCard,
+  SecondarySmButton,
 } from "osp-ui-kit";
 import { PlanholderAddressCard } from "@/components/plan-management/planholder-profile/sections/address-info";
 import ReferralPage from "./referral-page";
 import AgentContactInfoCard from "../cards/AgentContactInfoCard";
-import { SecondarySmButton } from "st-peter-ui";
 import { mockAvatarUrl } from "@/lib/mock-avatar";
 import ActionButtons, {
   ActionButtonItem,
@@ -337,19 +337,19 @@ export function AgentDetails(params: {
                 alignItems="stretch"
               >
                 <GridItem>
-                  <AgentPersonalInfoCard
-                    agent={selectedAgent}
-                    isOpen={personalOpen}
-                    onToggle={() => setPersonalOpen((p) => !p)}
-                    h={personalOpen ? "full" : undefined}
-                  />
-                </GridItem>
-                <GridItem>
                   <AgentEmploymentInfoCard
                     agent={selectedAgent}
                     isOpen={employmentOpen}
                     onToggle={() => setEmploymentOpen((p) => !p)}
                     h={employmentOpen ? "full" : undefined}
+                  />
+                </GridItem>
+                <GridItem>
+                  <AgentPersonalInfoCard
+                    agent={selectedAgent}
+                    isOpen={personalOpen}
+                    onToggle={() => setPersonalOpen((p) => !p)}
+                    h={personalOpen ? "full" : undefined}
                   />
                 </GridItem>
               </Grid>

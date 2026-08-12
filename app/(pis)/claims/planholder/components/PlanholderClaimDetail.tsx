@@ -41,7 +41,7 @@ import {
   LuUser,
 } from "react-icons/lu";
 import { toast } from "sonner";
-import { Card, useMessageDialog } from "osp-ui-kit";
+import { useMessageDialog } from "osp-ui-kit";
 import { TertiarySmButton } from "st-peter-ui";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { RowItem } from "@/components/info-card/row-item";
@@ -68,9 +68,12 @@ import {
   ActionButtonRow,
   ActionRowButton,
 } from "../../components/action-button-row";
-import { DrawerPageHeader } from "./DrawerPageHeader";
+import { DetailCard } from "../../components/detail-card";
+import { InfoLabel } from "../../components/info-label";
+import { BackButton, DrawerPageHeader } from "./DrawerPageHeader";
 import { PlanholderProfileHeader } from "./PlanholderProfileHeader";
 import { PlanholderDetailsDrawer } from "./PlanholderDetailsDrawer";
+import { PlanholderDocuments } from "./PlanholderDocuments";
 import { SwipeToRemoveRow } from "./SwipeToRemoveRow";
 import { PlanholderSectionHeader } from "./PlanholderSectionHeader";
 import { PlanholderRemarks } from "./PlanholderRemarks";
@@ -104,6 +107,73 @@ const amount = (value?: number) =>
 
 const rate = (value?: number) =>
   value === undefined ? undefined : `${value.toFixed(2)}%`;
+
+/**
+ * The claim's own facts, in the order they are read.
+ *
+ * One list rather than fixed rows: the grid is four across at `xl`, and sixteen
+ * facts fall into four full rows there, each of which happens to be a question
+ * about the claim answered across the card —
+ *
+ *   1. What is this claim?      no · benefit · status · nature
+ *   2. What happened?           date of death · age at death · contestability ·
+ *                               deficient
+ *   3. And then?                cause of death · interment date · filed ·
+ *                               received
+ *   4. Who handled it?          branch · branch manager · audit user · date
+ *
+ * — but the ORDER is what is fixed here, not the rows. Narrower, the same list
+ * reflows into two or three columns and the reading order survives, which is
+ * what it is for; and a field added or dropped shifts what follows it rather
+ * than leaving a hole to be padded out.
+ *
+ * Verified By, Endorsed To and Endorsed By are NOT here. Verifying or endorsing
+ * a claim writes a line into its Remarks — with who, and when — and that trail
+ * is the record. Three fields repeating the last of it, blank on every claim
+ * nobody has touched yet, were three empty cells on most claims and a worse
+ * version of the section directly below on the rest.
+ *
+ * In the PAGE, Claim No and Benefit lead. They used to be the heading above the
+ * whole view; the page leads with the plan holder now, and a number and a
+ * benefit are two facts about the claim like the rest. The DRAWER still has that
+ * heading, so it leaves them out rather than saying the same two things twice a
+ * centimetre apart.
+ */
+const detailItems = (
+  claim: ClaimRequest,
+  /** Whether the claim's number and benefit are among them — see above. */
+  withIdentity: boolean,
+): { label: string; value?: string }[] => [
+  ...(withIdentity
+    ? [
+        { label: "Claim No", value: claimNoOf(claim) },
+        { label: "Benefit", value: claimTypeOf(claim) },
+      ]
+    : []),
+  // "Status", not "Claim Status": every field in this card is the claim's, and
+  // the two beside it have just said so.
+  { label: "Status", value: claim.phase },
+  { label: "Nature of Claim", value: claim.natureOfClaim },
+
+  { label: "Date of Death", value: claim.dateOfDeathDisplay },
+  { label: "Age at Death", value: claim.ageOfDeath },
+  { label: "Contestability", value: contestabilityLabel(claim) || undefined },
+  // Nothing records this yet — see `isDeficient` on the request.
+  { label: "Deficient" },
+
+  { label: "Cause of Death", value: claim.causeOfIncident },
+  // Nor this — see `intermentDateDisplay` on the request.
+  { label: "Interment Date", value: claim.intermentDateDisplay },
+  { label: "Date Filed", value: claim.filedDisplay },
+  { label: "Date Received", value: claim.dateReceivedDisplay },
+
+  { label: "Req. Branch", value: claim.requestingBranch },
+  // Spelled out. "BM" is what the legacy screen called it, and it is two
+  // letters standing where every other label on the card is a phrase.
+  { label: "Branch Manager", value: claim.processor.name },
+  { label: "Audit User", value: claim.processor.name },
+  { label: "Audit Date", value: claim.auditDateDisplay },
+];
 
 /** An entry in the "More" sheet, before its onClick is bound to the claim. */
 type ClaimAction = Omit<
@@ -616,13 +686,13 @@ export function PlanholderClaimDetail({
     setAddPayeeOpen(false);
   };
 
-  /* Page-style bar: "<" back, claim number over claim type. In the page view
-     the same bar is the claim's own heading and the "<" returns to the profile.
+  /* Page-style bar: "<" back, claim number over claim type, "More" in the tool
+     slot. The DRAWER's, now — the page leads with the plan holder instead and
+     carries the claim's number and benefit in the details card below it.
 
-     The "More" pill rides in the bar's tool slot on a PHONE, where that slot is
-     the only place for it. In the page it is a button in the row with the
-     rest — the actions are all in one place there, and a pill stranded at the
-     far end of a heading is a long way from anything it acts on. */
+     `asPage` is still passed because the drawer branch is also what an `asPage`
+     caller falls back to when it hands over no plan holder, and `Drawer.Title`
+     outside a `Drawer.Root` throws. */
   const header = (
     <DrawerPageHeader
       title={claimNoOf(claim)}
@@ -648,7 +718,10 @@ export function PlanholderClaimDetail({
           it and moves under the header. The page view scrolls as a PAGE, so
           there it is a plain box and only the padding it brings is its own. */}
       <Box
-        py={5}
+        // No top padding in the page: the gap above is the plan holder card's,
+        // and only the drawer needs its own clearance under the bar.
+        pt={asPage ? 0 : 5}
+        pb={5}
         px={asPage ? 0 : { base: 4, md: 6 }}
         flex={asPage ? undefined : "1 1 auto"}
         minH={asPage ? undefined : 0}
@@ -676,35 +749,36 @@ export function PlanholderClaimDetail({
           )}
 
           {/* ───────────────── Claim Details ─────────────────
-              Untitled by design: the header already names the claim, so the
-              fields just sit in a card (label · dotted leader · value rows). */}
-          <Card.Root>
-            <Card.MainContent>
-              <RowItem label="Claim Status" value={claim.phase} />
-              <RowItem label="Date Filed" value={claim.filedDisplay} />
-              <RowItem
-                label="Date Received"
-                value={claim.dateReceivedDisplay}
-              />
-              <RowItem label="Date of Death" value={claim.dateOfDeathDisplay} />
-              <RowItem
-                label="Contestability"
-                value={contestabilityLabel(claim) || undefined}
-              />
-              <RowItem label="Age at Death" value={claim.ageOfDeath} />
-              <RowItem label="Req. Branch" value={claim.requestingBranch} />
-              <RowItem label="BM" value={claim.processor.name} />
-              <RowItem label="Nature of Claim" value={claim.natureOfClaim} />
-              <RowItem label="Deficient" />
-              <RowItem label="Audit User" value={claim.processor.name} />
-              <RowItem label="Audit Date" value={claim.auditDateDisplay} />
-              <RowItem label="Cause of Death" value={claim.causeOfIncident} />
-              {/* Blank until the claim is verified / endorsed. */}
-              <RowItem label="Verified By" value={claim.verifiedDisplay} />
-              <RowItem label="Endorsed To" value={claim.endorsedTo} />
-              <RowItem label="Endorsed By" value={claim.endorsedDisplay} />
-            </Card.MainContent>
-          </Card.Root>
+              Untitled by design: this is what the claim IS, and the card is the
+              first thing under the plan holder it was filed against.
+
+              Two layouts of the same facts, and the caller picks — which is why
+              neither is written to change size on its own.
+
+              In the PAGE, stacked label-over-value pairs flowing across four
+              columns in {@link detailItems}' order: a dotted leader is the wrong
+              shape once the card is a full column wide, stretching half a foot
+              of empty rule between a label and its value a dozen times over.
+
+              In the DRAWER they are those leader rows after all — a phone's
+              width holds nothing else.
+
+              {@link InfoLabel} and not the kit's `InfoItem`, {@link DetailCard}
+              and not the kit's `Card`: same shapes, set for this card. See each
+              for why. */}
+          <DetailCard>
+            {asPage ? (
+              <SimpleGrid columns={{ base: 2, md: 3, xl: 4 }} gapX={4} gapY={3}>
+                {detailItems(claim, true).map(({ label, value }) => (
+                  <InfoLabel key={label} label={label} value={value} />
+                ))}
+              </SimpleGrid>
+            ) : (
+              detailItems(claim, false).map(({ label, value }) => (
+                <RowItem key={label} label={label} value={value} />
+              ))
+            )}
+          </DetailCard>
 
           {/* ─────────────── Remarks · Notes ───────────────
               Per-claim remarks and notes, one section each. Endorsing the claim
@@ -912,6 +986,15 @@ export function PlanholderClaimDetail({
 
   return (
     <>
+      {/* The claim IS the page while it is open — the profile page drops its own
+          title from its side, so this starts at the top of the content area and
+          the sections below stand on the page directly.
+
+          Not on a surface of their own. A panel around both columns turns every
+          card inside it into a card on a card, and the two columns into the
+          contents of one box rather than the page's own layout. What makes this
+          read as a view laid over the profile is that it has replaced it and
+          carries the way back at the top — not a border drawn around it. */}
       <Grid
         templateColumns={{
           base: "minmax(0, 1fr)",
@@ -919,6 +1002,10 @@ export function PlanholderClaimDetail({
           "2xl": "minmax(0, 1fr) 420px",
         }}
         gap={6}
+        // The clearance the page's own heading block used to leave under the
+        // app header. With the heading hidden, both columns would otherwise
+        // start on the header's bottom edge.
+        pt="10px"
         // Each column as tall as its own content: the rail is a fraction of the
         // claim's height, and stretching it would only put a card's worth of
         // empty white beside it. It is also what lets the rail stick, since a
@@ -926,7 +1013,18 @@ export function PlanholderClaimDetail({
         alignItems="start"
       >
         <GridItem minW={0}>
-          {header}
+          {/* Who the claim is about, at the top of the READING column.
+
+              In this column and not across both: the rail is the column of
+              things to reach for — the actions, the way into the full record —
+              and a card the width of the page above it would push all of that a
+              card's height down before any of it could be seen. The plan holder
+              belongs with what is read, which is this column, at the top of it,
+              above the claim filed against them. */}
+          <Box pb={5}>
+            <PlanholderProfileHeader planholder={planholder} />
+          </Box>
+
           {body}
         </GridItem>
 
@@ -938,7 +1036,71 @@ export function PlanholderClaimDetail({
           // beside it than above it.
           position="sticky"
           top="8px"
+          // A flex COLUMN with a ceiling, the same shape the profile's rail
+          // has, and for the same reason: the folder at the bottom of it holds
+          // as many documents as the person has, and a pinned column taller
+          // than the screen puts its own foot somewhere it can never be
+          // scrolled to. One screenful is the budget — the app header takes
+          // 64px above the scrollport and this sits 8px into it — and the
+          // sections divide it between them. Only the folder gives ground: it
+          // is the one with a list to scroll inside its share.
+          //
+          // The column itself NEVER scrolls. A pinned column that scrolls is a
+          // second scrollbar next to the page's own, and the reader has to work
+          // out which one their wheel is over; worse, the column's height then
+          // moves with its content, so a tab with more rows in it makes the
+          // whole rail taller. Height is the screen's, the folder takes what is
+          // left of it, and the only thing that scrolls is the list inside the
+          // folder. `hidden` is what holds that: the 4px the list box bleeds
+          // sideways for a row's hover shadow is clipped here, and a box that
+          // scrolls on one axis may not leave the other `visible` anyway — CSS
+          // promotes it to `auto`, which was a horizontal scrollbar over four
+          // pixels of shadow.
+          display="flex"
+          flexDirection="column"
+          maxH="calc(100vh - 88px)"
+          overflow="hidden"
+          // The clip needs somewhere to land that is not on the cards. A card's
+          // edge here IS a shadow — the summary card draws no border at all —
+          // and a shadow paints OUTSIDE the box it belongs to, so a column
+          // clipped flush to its content cuts every edge off level with the
+          // card and leaves it looking like a rectangle of white. Four pixels
+          // of padding is the room those edges need; the negative margin hands
+          // it straight back to the gutter, so the cards stay the width they
+          // were and stay level with the column beside them.
+          //
+          // It also catches the folder's list box, which bleeds the same 4px
+          // sideways for a row's hover shadow — that used to be clipped too.
+          px="4px"
+          mx="-4px"
+          pb="4px"
         >
+          {/* The way back, at the top of the rail — above the actions rather
+              than above the plan holder card opposite.
+
+              It sits in the STICKY column on purpose: leaving a claim is worth
+              reaching from anywhere in it, and in the reading column the link
+              scrolled away with the first card and left a long claim with no
+              way out but the browser's own back. Here it travels with the
+              actions, which are already pinned for the same reason — they apply
+              to the whole claim, not to the part of it on screen.
+
+              Against the column's RIGHT edge, with the arrow after the words —
+              the rail is read right-aligned at that edge (the "More" button
+              ends there, and every value in the card below it is set to it),
+              and a control tucked into the left corner of it starts a second
+              edge for one line. Negative margin so the arrow's own padding does
+              not inset it: the chevron ends level with the buttons below. */}
+          <Flex justify="flex-end" mr="-4px" mb={2} flexShrink={0}>
+            <BackButton
+              onBack={onBack}
+              label="Back to the plan holder"
+              iconPlacement="end"
+            >
+              Back to profile
+            </BackButton>
+          </Flex>
+
           {/* The claim's actions, at the top of the rail — the same row of
               labelled buttons the profile puts above its own sections, and in
               the same place relative to the plan holder card.
@@ -946,76 +1108,128 @@ export function PlanholderClaimDetail({
               "More" is the sixth of them rather than a pill in the heading, so
               every way into an action on this claim is in one block. Three
               across, matching the plan's own row: six in a line would put
-              "Endorse" in about fifty pixels. */}
-          <ActionButtonRow
-            columns={3}
-            actions={PRIMARY_ACTIONS.map(({ label, icon }) => ({
-              label,
-              icon,
-              onClick: () => runAction(label),
-            }))}
-            after={
-              /* A DROPDOWN, not the phone's bottom sheet. A sheet slides up
-                 from the bottom of the window and takes it over — right for a
-                 thumb, and far from a button sitting in a rail two thirds up
-                 the screen with a pointer already on it. The menu opens where
-                 the button is.
+              "Endorse" in about fifty pixels.
 
-                 It lists only what is NOT already a button: the five beside it
-                 are right there, and repeating them would make the menu look
-                 like the place actions live rather than the overflow. */
-              <Menu.Root>
-                <Menu.Trigger asChild>
-                  <ActionRowButton label="More" icon={LuEllipsis} />
-                </Menu.Trigger>
-                <Portal>
-                  <Menu.Positioner>
-                    <Menu.Content minW="248px">
-                      {MORE_ACTIONS.map(
-                        ({ label, icon: Icon, description, iconColor }) => (
-                          <Menu.Item
-                            key={label}
-                            value={label}
-                            onClick={() => runAction(label)}
-                            py={2}
-                          >
-                            <Flex align="center" gap={2.5} minW={0}>
-                              <Box
-                                color={iconColor ?? BRAND_COLORS.darkGreen}
-                                flexShrink={0}
-                              >
-                                <Icon size={15} />
-                              </Box>
-                              <Box minW={0}>
-                                <Text
-                                  fontSize="sm"
-                                  fontWeight="500"
-                                  color="gray.800"
+              Wrapped so the row keeps its own height in the flex column: a row
+              of buttons costs what it costs, and what is left over is what the
+              folder below scrolls inside. */}
+          <Box flexShrink={0}>
+            <ActionButtonRow
+              columns={3}
+              actions={PRIMARY_ACTIONS.map(({ label, icon }) => ({
+                label,
+                icon,
+                onClick: () => runAction(label),
+              }))}
+              after={
+                /* A DROPDOWN, not the phone's bottom sheet. A sheet slides up
+                   from the bottom of the window and takes it over — right for a
+                   thumb, and far from a button sitting in a rail two thirds up
+                   the screen with a pointer already on it. The menu opens where
+                   the button is.
+
+                   It lists only what is NOT already a button: the five beside
+                   it are right there, and repeating them would make the menu
+                   look like the place actions live rather than the overflow. */
+                <Menu.Root>
+                  <Menu.Trigger asChild>
+                    <ActionRowButton label="More" icon={LuEllipsis} />
+                  </Menu.Trigger>
+                  <Portal>
+                    <Menu.Positioner>
+                      <Menu.Content minW="248px">
+                        {MORE_ACTIONS.map(
+                          ({ label, icon: Icon, description, iconColor }) => (
+                            <Menu.Item
+                              key={label}
+                              value={label}
+                              onClick={() => runAction(label)}
+                              py={2}
+                            >
+                              <Flex align="center" gap={2.5} minW={0}>
+                                <Box
+                                  color={iconColor ?? BRAND_COLORS.darkGreen}
+                                  flexShrink={0}
                                 >
-                                  {label}
-                                </Text>
-                                {description && (
-                                  <Text fontSize="11px" color="gray.500">
-                                    {description}
+                                  <Icon size={15} />
+                                </Box>
+                                <Box minW={0}>
+                                  <Text
+                                    fontSize="sm"
+                                    fontWeight="500"
+                                    color="gray.800"
+                                  >
+                                    {label}
                                   </Text>
-                                )}
-                              </Box>
-                            </Flex>
-                          </Menu.Item>
-                        ),
-                      )}
-                    </Menu.Content>
-                  </Menu.Positioner>
-                </Portal>
-              </Menu.Root>
-            }
-          />
+                                  {description && (
+                                    <Text fontSize="11px" color="gray.500">
+                                      {description}
+                                    </Text>
+                                  )}
+                                </Box>
+                              </Flex>
+                            </Menu.Item>
+                          ),
+                        )}
+                      </Menu.Content>
+                    </Menu.Positioner>
+                  </Portal>
+                </Menu.Root>
+              }
+            />
+          </Box>
 
-          {/* The same pair the create form puts in its rail: the profile card,
-              then the details card that opens the full record. */}
-          <Box mt={4}>
-            <PlanholderProfileHeader planholder={planholder} />
-            <PlanholderDetailsDrawer planholder={planholder} />
+          {/* The plan holder's RECORD — the card that opens their full details.
+              The profile card that used to head this pair is at the top of the
+              page now, so what is left in the rail is the way into everything
+              the top card does not show. */}
+          <Box flexShrink={0}>
+            {/* Pairs, not leader rows — this view is a desktop's, and the ten
+                facts come to five rows instead of ten. What that saves is the
+                folder's, directly below. See the prop. */}
+            <PlanholderDetailsDrawer planholder={planholder} summaryAsPairs />
+          </Box>
+
+          {/* The folder, under the summary — the same section the profile keeps
+              at the foot of its own rail, on the same person, so a document is
+              opened from the same place whether the claim is being read or the
+              profile is.
+
+              It is here rather than in the reading column because a claim is
+              DECIDED on its documents: a processor checks the death certificate
+              against the date of death on the card opposite, and a folder two
+              screens down the claim is a scroll away from the thing it is being
+              read against.
+
+              `0 1 auto` — shrink, never grow. The height it asks for is its
+              content's; the rail only ever takes height away, and what is taken
+              becomes a scroll inside the list rather than a heading pushed off
+              the bottom. `minH: 0` is what lets a flex item shrink below its
+              content at all. */}
+          <Box
+            mt={4}
+            display="flex"
+            flexDirection="column"
+            flex="0 1 auto"
+            // `minH: 0` — no floor. The section's height is whatever the screen
+            // has left after the three above it, measured on every resize, and
+            // its list scrolls inside that. A floor here would be the section
+            // refusing the height it was given, which the column can only
+            // answer by growing past the screen and scrolling — the two things
+            // the rail is shaped not to do.
+            minH={0}
+            // The rail's last section: the space below it is the gap to the
+            // bottom of the screenful, not to another section.
+            pb={1}
+          >
+            {/* Two lists here, not one: a claim is held up by what is MISSING
+                as often as it is decided by what is filed, and the deficiency
+                tab is that question asked of the same folder. On the profile
+                the section stays a plain list — see the prop. */}
+            <PlanholderDocuments
+              personId={planholder.personId}
+              withDeficiencies
+            />
           </Box>
         </GridItem>
       </Grid>

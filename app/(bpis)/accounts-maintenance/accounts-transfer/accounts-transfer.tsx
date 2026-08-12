@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  Box,
   Flex,
   Grid,
   GridItem,
@@ -10,17 +11,16 @@ import {
   Text,
   Textarea,
 } from "@chakra-ui/react";
-import { Box, PrimaryMdFlexButton } from "st-peter-ui";
-import { LuArrowRightLeft, LuFilter, LuUsers } from "react-icons/lu";
-import { TbTransferIn, TbTransferOut } from "react-icons/tb";
-
 import {
+  PrimaryMdFlexButton,
   FloatingLabelSelect,
   InfoCardAccordion,
   LookupField,
   Page,
   useMessageDialog,
 } from "osp-ui-kit";
+import { LuArrowRightLeft, LuFilter, LuUsers } from "react-icons/lu";
+import { TbTransferIn, TbTransferOut } from "react-icons/tb";
 
 import { TransferType, TrxMonth } from "../data/transaction-month";
 import TransferAccountList from "./account-transfer-list";

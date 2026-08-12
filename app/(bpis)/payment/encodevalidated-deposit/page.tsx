@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Breadcrumb } from "st-peter-ui";
+import { Box } from "@chakra-ui/react";
 import EncodeDeposit from "./encodeDeposit";
 
 export default function page() {

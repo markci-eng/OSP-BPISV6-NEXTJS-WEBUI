@@ -2,9 +2,8 @@
 
 import React from "react";
 import { Flex, Box, Text, Strong, Grid, GridItem } from "@chakra-ui/react";
-import { PrimaryMdButton } from "st-peter-ui";
+import { PrimaryMdButton, Page } from "osp-ui-kit";
 import { LuPrinter } from "react-icons/lu";
-import { Page } from "osp-ui-kit";
 
 const PrintingPage = () => {
   return (

@@ -2,6 +2,7 @@
 
 import { SearchPlanholderDialog } from "@/components/common/planholder-lookup/search-planholder-dialog";
 import {
+  Box,
   EmptyState,
   Flex,
   Skeleton,
@@ -11,10 +12,16 @@ import {
 } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { LuCheck, LuShoppingCart } from "react-icons/lu";
-import { Body, Box, DynamicButton, H3 } from "st-peter-ui";
+import {
+  Body,
+  DynamicButton,
+  H3,
+  DataTable,
+  ErrorStateCard,
+  InfoItem,
+} from "osp-ui-kit";
 import { depositColumns } from "../payment/data/paymentDetails";
 import { useDepositList } from "../payment/hooks/useDepositList";
-import { DataTable, ErrorStateCard, InfoItem } from "osp-ui-kit";
 
 export default function StlApproval() {
   const [selectedRemittance, setSelectedRemittance] = useState<any>(null);

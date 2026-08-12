@@ -13,12 +13,16 @@ import {
   Span,
   createListCollection,
 } from "@chakra-ui/react";
-import { H4, SecondaryLgFlexButton } from "st-peter-ui";
-import { FloatingLabelSelect, SectionTitle } from "osp-ui-kit";
-import { InfoCard } from "osp-ui-kit";
+import {
+  H4,
+  SecondaryLgFlexButton,
+  FloatingLabelSelect,
+  SectionTitle,
+  InfoCard,
+  FloatingLabelInput,
+} from "osp-ui-kit";
 
 import { PayeeInfo, blankPayee, composePayeeName } from "./claims.types";
-import { FloatingLabelInput } from "osp-ui-kit";
 
 const SOFT_PAYEE_LIMIT = 3;
 

@@ -16,11 +16,12 @@ import {
   useBreakpointValue,
   type BoxProps,
 } from "@chakra-ui/react";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
+import { deathBenefitLabel } from "@/app/(pis)/data";
 import {
   claimIdentity,
   planholderName,
   toFullName,
+  NO_IDENTITY,
   type ClaimIdentifier,
   type DeathClaim,
 } from "../death-claims-data";
@@ -37,6 +38,7 @@ import DeathClaimsFilter, {
 } from "./DeathClaimsFilter";
 import { DeathClaimsDataTable } from "./DeathClaimsDataTable";
 import { ClaimsViewToggle, type ClaimsView } from "./ClaimsViewToggle";
+import { DeathClaimsMoreFilters } from "./DeathClaimsMoreFilters";
 
 const ALL_BRANCHES = "all";
 
@@ -113,14 +115,79 @@ function CardGrid({
  */
 const BOTTOM_RESERVE = 88;
 
+/**
+ * Width of the skeleton's trailing block — a branch name's worth.
+ *
+ * One constant rather than a per-queue prop, which is what it used to be: the
+ * queues trailed with different things, a filed date on one and a chevron on the
+ * other two. They all trail with the branch now, so a knob for it would be three
+ * copies of one number waiting to drift apart.
+ */
+const SKELETON_TRAILING_WIDTH = "80px";
+
+/**
+ * Most of a card the requesting branch may take, opposite the reference.
+ *
+ * It has to be capped, and the cap has to be this tight, because of what it
+ * replaced. A filed date is always about the same width; a branch name is not,
+ * and "Cagayan de Oro Branch" is half again as wide as "Davao City Branch" —
+ * enough to push the longest references off the end of their own line on a
+ * phone. The reference is the one thing on the card that must survive whole: it
+ * is what the claim is quoted by, and a truncated one has lost the sequence
+ * number that tells two claims from the same branch apart. A truncated branch
+ * name has lost the word "Branch".
+ *
+ * A percentage rather than pixels because what varies is the CARD's width — the
+ * grid fits two or three per row on a desktop column — and a fixed cap would be
+ * tuned for a phone and mean nothing at 490px. At 30% no branch name truncates
+ * on a desktop card, and only the longest do on a phone.
+ *
+ * A percentage of the row rather than `flexShrink`, which cannot do this job:
+ * the reading column beside this has a flex basis of zero, so it contributes
+ * nothing to the shrink and this would absorb none of it.
+ */
+export const BRANCH_MAX_WIDTH = "30%";
+
+/**
+ * The requesting branch as a card shows it: "Cagayan de Oro", not "Cagayan de
+ * Oro Branch".
+ *
+ * Every value in this position is a branch, so the word is doing no work — and
+ * it is not free. It is the widest part of the longest names, and this sits on
+ * the same line as the reference, which must not truncate (see
+ * {@link BRANCH_MAX_WIDTH}); with the word in, the two longest references were
+ * losing their last characters on a phone.
+ *
+ * Only a trailing " Branch" is stripped, so anything named some other way — a
+ * head office, a satellite — comes through as it is written.
+ *
+ * Cards only. The table's Branch column keeps the full name: it has a heading
+ * to sit under, and room for it.
+ */
+export function branchShortLabel(branch: string): string {
+  return branch.replace(/\s+Branch$/i, "");
+}
 
 /**
  * A single claim rendered as a clickable card.
  *
  * Ordered the way a processor picks work up: the claim REQUEST NUMBER first —
- * that is what identifies the claim and what they quote — then the LPA number,
- * then the deceased's name as context. The LPA number carries no "plan" label:
- * a processor reads an "L…" number for what it is.
+ * that is what identifies the claim and what they quote — then the PLAN and the
+ * person who held it on one line, then the BENEFIT being claimed. The branch
+ * that filed it sits opposite the reference, out of the reading column. The LPA
+ * number carries no "plan" label: a processor reads an "L…" number for what it
+ * is.
+ *
+ * The plan and its holder are one line because they are one fact — the name is
+ * looked up FROM the number, and a card that split them across two lines made
+ * the eye pair them itself on every claim. That frees the last line for the
+ * benefit alone, which is what decides how a claim is worked.
+ *
+ * Nothing here says when it was filed. That reads as a queue of dates rather
+ * than a queue of claims, and the date is a column of the table view and a field
+ * of the claim itself. This is the same shape, in the same weights, as
+ * {@link ProcessedClaimCard} in `ClaimQueuesSection`: the two cards show
+ * different identity numbers because their queues do, and nothing else.
  */
 function ClaimCard({
   claim,
@@ -132,13 +199,6 @@ function ClaimCard({
   onClick?: () => void;
 }) {
   const name = planholderName(claim.lpaNo);
-  // Special claims lead with why they are special — the incident.
-  const context = [
-    name ? toFullName(name) : "—",
-    claim.type === "special" ? claim.typeOfIncident : "",
-  ]
-    .filter(Boolean)
-    .join(" · ");
 
   return (
     <Box
@@ -179,7 +239,7 @@ function ClaimCard({
             <Text fontSize="sm" fontWeight="700" color="gray.800" truncate>
               {claimIdentity(claim, "request")}
             </Text>
-            {/* 2 — the plan it was filed against, and the branch that filed it. */}
+            {/* 2 — the plan it was filed against, and who held it. */}
             <Text
               fontSize="xs"
               fontWeight="600"
@@ -190,18 +250,35 @@ function ClaimCard({
               {claim.lpaNo}
               <Text as="span" fontWeight="400" color="gray.500">
                 {" · "}
-                {claim.requestingBranch}
+                {name ? toFullName(name) : NO_IDENTITY}
               </Text>
             </Text>
-            {/* 3 — who died, and for special claims what happened. */}
-            <Text fontSize="11px" color="gray.500" mt="2px" truncate>
-              {context}
+            {/* 3 — the benefit claimed, on its own.
+                Weighted rather than left the faintest thing on the card: it is
+                last because it is the detail the other two lines lead TO, not
+                because it matters least. */}
+            <Text
+              fontSize="11px"
+              fontWeight="600"
+              color="gray.600"
+              mt="2px"
+              truncate
+            >
+              {deathBenefitLabel(claim.benefits)}
             </Text>
           </Box>
         </Flex>
 
-        <Text fontSize="10px" color="gray.400" flexShrink={0}>
-          {claim.filedDisplay}
+        {/* The branch that filed it, opposite the reference. */}
+        <Text
+          fontSize="10px"
+          color="gray.400"
+          flexShrink={0}
+          maxW={BRANCH_MAX_WIDTH}
+          textAlign="right"
+          truncate
+        >
+          {branchShortLabel(claim.requestingBranch)}
         </Text>
       </Flex>
     </Box>
@@ -217,13 +294,7 @@ function ClaimCard({
  * {@link DeathClaimsTable}). A skeleton that were not a card's height would
  * hand back a page size that the real cards then contradict.
  */
-function ClaimCardSkeleton({
-  showTypeDot,
-  trailingWidth,
-}: {
-  showTypeDot: boolean;
-  trailingWidth: string;
-}) {
+function ClaimCardSkeleton({ showTypeDot }: { showTypeDot: boolean }) {
   return (
     <Box
       borderWidth="1px"
@@ -236,19 +307,31 @@ function ClaimCardSkeleton({
       <Flex justify="space-between" align="flex-start" gap={2}>
         <Flex align="flex-start" gap={2} minW={0} flex="1">
           {showTypeDot && (
-            <Skeleton mt="6px" w="8px" h="8px" borderRadius="full" flexShrink={0} />
+            <Skeleton
+              mt="6px"
+              w="8px"
+              h="8px"
+              borderRadius="full"
+              flexShrink={0}
+            />
           )}
           <Box minW={0} flex="1">
-            {/* Claim request number. */}
+            {/* Identity number. */}
             <Skeleton h="14px" w="72%" borderRadius="sm" />
-            {/* LPA number · requesting branch. */}
+            {/* LPA number · plan holder. */}
             <Skeleton h="12px" w="66%" mt="3px" borderRadius="sm" />
-            {/* Deceased · incident. */}
+            {/* Benefit. */}
             <Skeleton h="11px" w="58%" mt="4px" borderRadius="sm" />
           </Box>
         </Flex>
-        {/* Filed date, or the card's trailing chevron. */}
-        <Skeleton h="10px" w={trailingWidth} borderRadius="sm" flexShrink={0} />
+        {/* Requesting branch. One width for every queue now that both cards
+            trail with the same thing — see `SKELETON_TRAILING_WIDTH`. */}
+        <Skeleton
+          h="10px"
+          w={SKELETON_TRAILING_WIDTH}
+          borderRadius="sm"
+          flexShrink={0}
+        />
       </Flex>
     </Box>
   );
@@ -274,8 +357,6 @@ interface DeathClaimsTableProps extends Omit<BoxProps, "data"> {
    * loader — is shared either way.
    */
   renderCard?: (claim: DeathClaim, showTypeDot: boolean) => React.ReactNode;
-  /** Width of the skeleton's trailing block — match the card's right-hand element. */
-  skeletonTrailingWidth?: string;
   /**
    * Which number identifies a claim in this queue — the request no it was filed
    * under, or the claim no opening it minted. The table shows that one and drops
@@ -288,6 +369,17 @@ interface DeathClaimsTableProps extends Omit<BoxProps, "data"> {
   counts: Record<DeathClaimFilter, number>;
   /** Distinct requesting branches, for the branch dropdown. */
   branchOptions: string[];
+  /**
+   * Distinct territories in the queue, for the filter dropdown's first section.
+   * Codes as they are stored ("MW1"), which is what a supervisor names them by.
+   */
+  territoryOptions?: string[];
+  /**
+   * Distinct benefit codes in the queue, for the filter dropdown's second
+   * section. Rendered through `deathBenefitLabel`, so the list reads as the
+   * benefits do everywhere else rather than as four acronyms.
+   */
+  benefitOptions?: DeathClaim["benefits"][];
   /**
    * Anything OUTSIDE this table whose change should read as a load — the queue
    * tab above it, in practice. Changing it runs the same skeleton beat that
@@ -320,19 +412,45 @@ export function DeathClaimsTable({
   showTypeDot = false,
   onProcess,
   renderCard,
-  skeletonTrailingWidth = "64px",
   identifier = "request",
   filter,
   onFilterChange,
   counts,
   branchOptions,
+  territoryOptions = [],
+  benefitOptions = [],
   loadKey,
   originRef,
   ...boxProps
 }: DeathClaimsTableProps) {
   const [search, setSearch] = useState("");
   const [branch, setBranch] = useState<string>(ALL_BRANCHES);
-  const [view, setView] = useState<ClaimsView>("cards");
+
+  // The dropdown's two groups. Multi-select, so each is an ARRAY and empty
+  // means "not narrowing" — a filter nobody has opened must not exclude
+  // anything, and an empty array is the only value that says that without a
+  // second flag beside it.
+  const [territories, setTerritories] = useState<string[]>([]);
+  const [benefits, setBenefits] = useState<string[]>([]);
+
+  // Every queue is a different set of claims, so a territory ticked in one is
+  // not necessarily on offer in the next. Cleared when the tab changes, which
+  // is the same event the skeleton beat below runs on.
+  useEffect(() => {
+    setTerritories([]);
+    setBenefits([]);
+  }, [loadKey]);
+
+  /**
+   * The view the user PICKED, or `null` for "hasn't picked one" — which is not
+   * the same as "cards", and holding the difference is the whole reason this is
+   * nullable. The default depends on the device, and the device is not known
+   * until after mount (see `isDesktop`), so a plain `useState("cards")` would
+   * have to be corrected by an effect the moment it was measured — and that
+   * effect could not tell a default it had set itself from a choice the user
+   * had made, so it would keep overwriting the toggle.
+   */
+  const [chosenView, setChosenView] = useState<ClaimsView | null>(null);
 
   /**
    * Whether the table view is even on offer.
@@ -342,12 +460,25 @@ export function DeathClaimsTable({
    * breakpoints rather than a hand-written query, so it turns over on the same
    * pixel as the toolbar it sits in.
    *
-   * `false` before it has measured, which never shows: the view resets to cards
-   * on every mount, so the only way to be in `table` is to have already clicked
-   * the toggle — by which point this has long since answered.
+   * `false` until it has measured, which is one render: cards go up, then the
+   * desktop default below swaps in the table. Erring towards cards for that
+   * beat is the right way round — cards are what a phone keeps, so the wrong
+   * guess is corrected only on desktop, where there is room for it to happen
+   * without the page moving under a thumb.
    */
   const isDesktop =
     useBreakpointValue({ base: false, lg: true }, { ssr: false }) ?? false;
+
+  /**
+   * Cards on a phone, the table on a desktop.
+   *
+   * The desktop default is the table because of what the two views are FOR. The
+   * deck exists to put one claim under a thumb at a time; the table puts thirty
+   * side by side under one set of column headings, which is how the queue is
+   * actually worked at a desk — scanned, sorted, compared. The toggle is still
+   * there, and picking from it wins from then on.
+   */
+  const view = chosenView ?? (isDesktop ? "table" : "cards");
   const showTable = view === "table" && isDesktop;
 
   // The frame sits outside the deck, so its position is never touched by the
@@ -369,12 +500,17 @@ export function DeathClaimsTable({
     maxRows: MAX_PAGE_ROWS,
   });
 
-
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return data.filter((c) => {
       if (branch !== ALL_BRANCHES && c.requestingBranch !== branch)
         return false;
+      // Empty means the group is not narrowing — see the state above. Within a
+      // group the ticks are OR (Davao OR Cebu); between groups they are AND, so
+      // territory and benefit each cut what the other left.
+      if (territories.length && !territories.includes(c.territoryCode))
+        return false;
+      if (benefits.length && !benefits.includes(c.benefits)) return false;
       if (!q) return true;
       const nm = planholderName(c.lpaNo);
       return [
@@ -385,10 +521,13 @@ export function DeathClaimsTable({
         c.claimNo ?? "",
         c.lpaNo,
         c.requestingBranch,
-        c.typeOfIncident,
+        // No cause of incident. Neither view shows it any more, and a claim
+        // that matched on it would appear with nothing on it to say why —
+        // which reads as the search being wrong rather than as a hidden field
+        // having matched.
       ].some((v) => v.toLowerCase().includes(q));
     });
-  }, [data, search, branch]);
+  }, [data, search, branch, territories, benefits]);
 
   const pages = paginate(filtered, pageSize);
 
@@ -423,7 +562,7 @@ export function DeathClaimsTable({
    * come back from a search to page four of a list that is now one page long and
    * the deck would otherwise be parked past its own end.
    */
-  const deckKey = `${loadKey ?? ""}|${filter}|${search}|${branch}|${pageSize}`;
+  const deckKey = `${loadKey ?? ""}|${filter}|${search}|${branch}|${territories.join(",")}|${benefits.join(",")}|${pageSize}`;
 
   return (
     // A column on a desktop: the toolbar keeps its height, the list takes the
@@ -452,7 +591,9 @@ export function DeathClaimsTable({
             dropdowns only decide which claims it holds. Desktop only, since a
             phone gets cards and no toggle; see `isDesktop`. */}
         <Flex align="center" gap={2} flexShrink={0}>
-          {isDesktop && <ClaimsViewToggle value={view} onChange={setView} />}
+          {isDesktop && (
+            <ClaimsViewToggle value={view} onChange={setChosenView} />
+          )}
 
           {/* Desktop only — the pill row below collapses into this, and its own
               row goes with it. Ahead of the branch picker because it is the
@@ -483,6 +624,32 @@ export function DeathClaimsTable({
             </NativeSelect.Field>
             <NativeSelect.Indicator />
           </NativeSelect.Root>
+
+          {/* Right of the branch, and last of the filters: type and branch are
+              the two the queue is worked by and they name themselves; these
+              narrow what those two left, so they sit at the end of the group
+              behind one icon. See {@link DeathClaimsMoreFilters}. */}
+          <DeathClaimsMoreFilters
+            groups={[
+              {
+                key: "territory",
+                label: "Territory",
+                options: territoryOptions.map((t) => ({ value: t, label: t })),
+                selected: territories,
+                onChange: setTerritories,
+              },
+              {
+                key: "benefit",
+                label: "Benefits",
+                options: benefitOptions.map((b) => ({
+                  value: b,
+                  label: deathBenefitLabel(b),
+                })),
+                selected: benefits,
+                onChange: setBenefits,
+              },
+            ]}
+          />
         </Flex>
 
         {/* `ml="auto"` rather than `justify="space-between"` on the row, so the
@@ -559,11 +726,7 @@ export function DeathClaimsTable({
               aria-live="polite"
             >
               {Array.from({ length: skeletonCount }, (_, i) => (
-                <ClaimCardSkeleton
-                  key={i}
-                  showTypeDot={showTypeDot}
-                  trailingWidth={skeletonTrailingWidth}
-                />
+                <ClaimCardSkeleton key={i} showTypeDot={showTypeDot} />
               ))}
             </CardGrid>
           ) : filtered.length === 0 ? (

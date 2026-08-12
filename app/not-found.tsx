@@ -7,7 +7,7 @@ import {
   Small,
   PrimaryMdButton,
   SecondaryMdButton,
-} from "st-peter-ui";
+} from "osp-ui-kit";
 import { useRouter } from "next/navigation";
 import { LuArrowLeft, LuHouse, LuFileQuestion } from "react-icons/lu";
 

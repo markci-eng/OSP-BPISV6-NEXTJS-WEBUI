@@ -6,16 +6,16 @@ import {
   Span,
   Text,
 } from "@chakra-ui/react";
-import { PrimaryMdFlexButton } from "st-peter-ui";
-import { useRouter } from "next/navigation";
 import {
+  PrimaryMdFlexButton,
   StaticCard,
   FloatingLabelInput,
   FloatingLabelSelect,
   SingleFileUpload,
   useMessageDialog,
+  Page,
 } from "osp-ui-kit";
-import { Page } from "osp-ui-kit";
+import { useRouter } from "next/navigation";
 import { LuFileText, LuInfo, LuUpload } from "react-icons/lu";
 import { PlanDetailsData } from "@/app/(bpis)/plan-management/data/plan-details.data";
 

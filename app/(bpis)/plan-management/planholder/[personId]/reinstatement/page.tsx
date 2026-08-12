@@ -2,7 +2,6 @@
 import { ReinstatementPage } from "@/components/plan-management/reinstatement-page/reinstatement-page";
 import { Box } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
-import { Breadcrumb } from "st-peter-ui";
 import { useMessageDialog } from "osp-ui-kit";
 
 export default function Reinstatement() {

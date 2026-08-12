@@ -16,7 +16,16 @@ import {
   useBreakpointValue,
   Strong,
 } from "@chakra-ui/react";
-import { OSPBadge } from "osp-ui-kit";
+import {
+  OSPBadge,
+  H4,
+  Small,
+  useMessageDialog,
+  Card,
+  EmptyStateCard,
+  InfoCardAccordion,
+  InfoCardSheet,
+} from "osp-ui-kit";
 import { FaRegFileAlt } from "react-icons/fa";
 import {
   LuBan,
@@ -33,14 +42,12 @@ import { useEffect, useState } from "react";
 import { PlanDetailType } from "@/components/plan-management/planholder-profile/planholder-profile-page";
 
 import { LPANumberButton } from "../components/buttons/lpa-button";
-import { H4, Small } from "st-peter-ui";
 import { FiFileText } from "react-icons/fi";
 import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
 import { MdHealthAndSafety } from "react-icons/md";
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";
 import { GiMartyrMemorial } from "react-icons/gi";
 import { PlanDetailsPage } from "../pages/plan-details";
-import { useMessageDialog } from "osp-ui-kit";
 import { Beneficiaries } from "../pages/beneficiaries";
 import { StatementOfAccount } from "../pages/statement-of-accounts";
 import { getPlanStatement } from "../data/plan-statement";
@@ -48,12 +55,6 @@ import { HealthDeclaration } from "../pages/health-declaration";
 import AccountQuickActions, {
   QuickAction,
 } from "../cards/account-quick-actions";
-import {
-  Card,
-  EmptyStateCard,
-  InfoCardAccordion,
-  InfoCardSheet,
-} from "osp-ui-kit";
 
 export interface PhBeneficiaries {
   lpaNumber: string;

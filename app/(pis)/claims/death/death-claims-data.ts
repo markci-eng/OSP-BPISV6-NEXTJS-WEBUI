@@ -25,7 +25,6 @@
 // (SC), otherwise regular (RC). Mirrors `ClaimsHdrDC.natureCode`.
 
 import {
-  bulkDecidedClaimRefs,
   db,
   formatFiledDateTime,
   type ClaimRequest as ClaimRequestModel,
@@ -34,6 +33,9 @@ import {
   type Planholder,
 } from "../../data";
 import { getCreatedDeathClaim, hasCreatedDeathClaim } from "../claim-store";
+// Moved up a level so the plan holder profile can read it too — see the note at
+// the top of that file. This module still owns everything BUILT from it.
+import { activityFeed } from "../claim-activity";
 import {
   ageOfDeathFor,
   deathClaimNatureCode,
@@ -101,6 +103,12 @@ export interface DeathClaim {
   requestingBranch: string;
   /** Raw branch code, e.g. "DAVAO" — supplies the claim no's territory. */
   requestingBranchCode: string;
+  /**
+   * The branch's territory, e.g. "MW1". Read off the branch record rather than
+   * parsed back out of the claim no: a pending request has no claim no at all,
+   * and the queue filters by territory before any of them do.
+   */
+  territoryCode: string;
   /** Benefit code (CAB / ECAB / ADB / USB) filed for. */
   benefits: DeathBenefit;
   /** Age of the deceased, "61 yrs 1 mos 5 days". */
@@ -166,6 +174,11 @@ function toDeathClaim(
     phase: request.statusLabel,
     requestingBranch: request.requestingBranch,
     requestingBranchCode: request.requestingBranchCode,
+    // Falls back to the branch code so a branch missing from the reference
+    // table still groups with itself rather than into a nameless bucket.
+    territoryCode:
+      db.getBranch(request.requestingBranchCode)?.territoryCode ??
+      request.requestingBranchCode,
     benefits: header?.benefits ?? benefitFromRequestNo(request.requestNo),
     ageOfDeath: header?.ageOfDeath ?? ageOfDeathFor(request, planholder),
     claimNo: header?.claimNo,
@@ -345,163 +358,6 @@ export interface ClaimUpdate {
   /** Relative time label, e.g. "25m ago". */
   timeAgo: string;
 }
-
-/**
- * A single status-change event on a real death claim, keyed by the claim's
- * request reference. The seed only stores each claim's CURRENT status (mostly
- * "Pending"), so the activity feed is generated here.
- *
- * Deliberately carries NO "Pending" events. A pending claim is already counted
- * on the dashboard's Claims Overview and listed in full under For Process
- * Claims, so repeating it here would say nothing new. This feed is for claims
- * that have MOVED ON — endorsed, approved or denied.
- */
-interface ActivityEvent {
-  reference: string;
-  phase: ClaimPhase;
-  remarks: string;
-  timeAgo: string;
-}
-
-const activityFeed: ActivityEvent[] = [
-  {
-    reference: "CLTACLOBAN2026ADB000015",
-    phase: "For Approval",
-    remarks: "Submitted for approval",
-    timeAgo: "15m ago",
-  },
-  {
-    reference: "CLCDO2026ADB000014",
-    phase: "Approved",
-    remarks: "Approved for release",
-    timeAgo: "40m ago",
-  },
-  {
-    reference: "CLBAGUIO2026ADB000013",
-    phase: "Denied",
-    remarks: "Denied — beyond contestability period",
-    timeAgo: "1h ago",
-  },
-  {
-    reference: "CLANGELES2026CAB000011",
-    phase: "Approved",
-    remarks: "Benefit released to beneficiary",
-    timeAgo: "3h ago",
-  },
-  {
-    reference: "CLVIGAN2026CAB000010",
-    phase: "For Approval",
-    remarks: "Endorsed for approval",
-    timeAgo: "5h ago",
-  },
-  {
-    reference: "CLLUCENA2026USB000009",
-    phase: "Denied",
-    remarks: "Denied — insufficient supporting documents",
-    timeAgo: "Yesterday",
-  },
-  {
-    reference: "CLMANILA2026CAB000007",
-    phase: "Approved",
-    remarks: "Approved for release",
-    timeAgo: "2d ago",
-  },
-  {
-    reference: "CLMANILA2026CAB000003",
-    phase: "For Approval",
-    remarks: "Submitted for approval",
-    timeAgo: "2d ago",
-  },
-  {
-    reference: "CLILOILO2026CAB000005",
-    phase: "Approved",
-    remarks: "Approved for release — payee verified and cleared for payout",
-    timeAgo: "3d ago",
-  },
-  {
-    reference: "CLBATANGAS2026ECAB000004",
-    phase: "Denied",
-    remarks:
-      "Denied — the plan was already lapsed on the date of the incident, so no benefit is payable",
-    timeAgo: "3d ago",
-  },
-  {
-    reference: "CLCEBU2026CAB000002",
-    phase: "For Approval",
-    remarks: "Endorsed for approval — complete requirements on file",
-    timeAgo: "4d ago",
-  },
-  {
-    reference: "CLQCITY2026CAB000001",
-    phase: "Approved",
-    remarks: "Benefit released to the named beneficiary",
-    timeAgo: "5d ago",
-  },
-  // Older history. Everything from here down is past the 12 the dashboard deck
-  // shows, and is only ever seen in the drawer — which is the point: it is what
-  // the batched loading there exists to page through.
-  {
-    reference: "CLSANFER2026CAB000006",
-    phase: "Approved",
-    remarks: "Approved for release",
-    timeAgo: "5d ago",
-  },
-  {
-    reference: "CLNAGA2026CAB000008",
-    phase: "Denied",
-    remarks: "Denied — the incident falls outside the coverage of the plan",
-    timeAgo: "6d ago",
-  },
-  {
-    reference: "CLDAVAO2026ADB000012",
-    phase: "For Approval",
-    remarks: "Endorsed for approval after the branch completed the requirements",
-    timeAgo: "6d ago",
-  },
-  {
-    reference: "CLQCITY2026CAB000016",
-    phase: "Approved",
-    remarks: "Benefit released to beneficiary",
-    timeAgo: "1w ago",
-  },
-  {
-    reference: "CLCEBU2026CAB000017",
-    phase: "For Approval",
-    remarks: "Submitted for approval",
-    timeAgo: "1w ago",
-  },
-  {
-    reference: "CLMANILA2026ECAB000018",
-    phase: "Denied",
-    remarks: "Denied — cause of death excluded under the extended coverage",
-    timeAgo: "1w ago",
-  },
-  {
-    reference: "CLDAVAO2026ADB000019",
-    phase: "Approved",
-    remarks: "Approved for release — cleared for payout",
-    timeAgo: "2w ago",
-  },
-  {
-    reference: "CLILOILO2026CAB000020",
-    phase: "For Approval",
-    remarks: "Endorsed for approval",
-    timeAgo: "2w ago",
-  },
-  // The bulk claims the seed marked as decided. This queue is driven by the
-  // feed rather than by status alone (see `getForEndorsementClaims`), so a
-  // decided claim only reaches it once something here names it — which is why
-  // these are generated from the seed's own list rather than written out.
-  ...bulkDecidedClaimRefs.map((reference, index) => ({
-    reference,
-    phase: (index % 4 === 0 ? "Denied" : "Approved") as ClaimPhase,
-    remarks:
-      index % 4 === 0
-        ? "Denied — beyond the contestability period"
-        : "Approved for release",
-    timeAgo: `${index + 3}w ago`,
-  })),
-];
 
 /**
  * How many updates the dashboard's deck carries. How they are split into swipes

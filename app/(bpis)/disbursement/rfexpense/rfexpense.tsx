@@ -8,6 +8,7 @@ import {
   FloatingLabelSelect,
   InfoCardAccordion,
   Page,
+  PrimaryMdFlexButton,
 } from "osp-ui-kit";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import {
@@ -21,7 +22,6 @@ import {
 import { BsPrinter } from "react-icons/bs";
 import { FaMoneyBillWave, FaWallet } from "react-icons/fa6";
 import { LuPencilLine } from "react-icons/lu";
-import { PrimaryMdFlexButton } from "st-peter-ui";
 
 export default function RFexpense() {
   const expense = 25000;

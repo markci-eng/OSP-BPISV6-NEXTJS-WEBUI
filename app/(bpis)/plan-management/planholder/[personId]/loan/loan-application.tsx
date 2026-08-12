@@ -22,8 +22,8 @@ import { PlanholderInfoType } from "@/components/plan-management/planholders/pla
 import InfoCard from "@/components/info-card/info-card";
 import { RowItem } from "@/components/info-card/row-item";
 import { LoanRecord } from "./loan-select-plan";
-import { TertiarySmButton } from "st-peter-ui";
 import {
+  TertiarySmButton,
   FloatingLabelInput,
   FloatingLabelSelect,
   InfoCardAccordion,

@@ -26,6 +26,7 @@ import {
 } from "../../components/swipe-carousel";
 import { ScrollFade } from "../../components/scroll-fade";
 import { PlanholderSectionHeader } from "./PlanholderSectionHeader";
+import { PlanholderCreateClaim } from "./PlanholderCreateClaim";
 import { PlanholderClaimRequestDrawer } from "./PlanholderClaimRequestDrawer";
 
 /** From this many requests up, the list switches to simpler, paged cards. */
@@ -42,25 +43,45 @@ const PHASE_STYLE: Record<ClaimPhase, { bg: string; color: string }> = {
   Approved: { bg: "green.50", color: "green.600" },
 };
 
-const claimNoOf = (claim: ClaimRequest) => claim.claimNo ?? claim.reference;
-/** The "type" shown under the claim no — the benefit for death claims. */
-const claimTypeOf = (claim: ClaimRequest) =>
-  claim.benefit ?? claim.kind ?? "—";
+/**
+ * A claim request that has been OPENED — one a processor has worked, which is
+ * to say one with a claim no.
+ *
+ * The section lists only these. A request number tracks a request through the
+ * branch; a CLAIM number is minted when the claim itself is created, and from
+ * then on it is what the whole system quotes. A row showing a request number
+ * was showing the tracking reference for something that is not yet a claim.
+ *
+ * Carried as a type rather than checked at each use, so the claim no can be
+ * read as the string it is: the predicate below is the only place the absence
+ * is handled, and everything past it has one.
+ */
+type ProcessedClaim = ClaimRequest & { claimNo: string };
+
+const isProcessed = (claim: ClaimRequest): claim is ProcessedClaim =>
+  Boolean(claim.claimNo);
+
+/** Never the request no in its place — see {@link ProcessedClaim}. */
+const claimNoOf = (claim: ProcessedClaim) => claim.claimNo;
+
+/**
+ * What is shown under the claim no: the BENEFIT claimed, not the kind of claim.
+ *
+ * "Death Claim" was the same three words on every card in the section — it is
+ * what the section is for, so it said nothing. The benefit is what differs
+ * between two claims on one plan and what decides how each is worked.
+ *
+ * Set on the same pass that sets the claim no, so anything reaching this has
+ * one; the dash is for a claim edited by hand into a state the data layer does
+ * not otherwise produce.
+ */
+const benefitOf = (claim: ProcessedClaim) => claim.benefit ?? "—";
 const contestabilityLabel = (claim: ClaimRequest) =>
   claim.contestability
     ? claim.contestability === "within"
       ? "Within"
       : "Over"
     : "—";
-/** Primary payee (claimant) label — "Name · Relation", "+N more" if several. */
-const payeeLabel = (claim: ClaimRequest) => {
-  const payees = claim.payees ?? [];
-  if (payees.length === 0) return undefined;
-  const [first, ...rest] = payees;
-  const base = `${first.name} · ${first.relation}`;
-  return rest.length ? `${base} +${rest.length} more` : base;
-};
-
 /** Small coloured status pill for a claim's phase. */
 function PhasePill({ phase }: { phase: ClaimPhase }) {
   const s = PHASE_STYLE[phase];
@@ -82,8 +103,23 @@ function PhasePill({ phase }: { phase: ClaimPhase }) {
   );
 }
 
-/** Label / value pair used inside the feature card's detail grid. */
-function Detail({ label, value }: { label: string; value: string }) {
+/**
+ * Label / value pair used inside the feature card's detail grid.
+ *
+ * `tone` colours the VALUE, and only for the reading that needs acting on — a
+ * claim still within contestability, a claim with requirements outstanding. The
+ * other reading of each stays grey, so a coloured value on a card means "this
+ * one has something on it" rather than "this field exists".
+ */
+function Detail({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
   return (
     <Box minW={0}>
       <Text
@@ -96,7 +132,12 @@ function Detail({ label, value }: { label: string; value: string }) {
       >
         {label}
       </Text>
-      <Text fontSize="sm" fontWeight="medium" color="gray.800" mt="2px">
+      <Text
+        fontSize="sm"
+        fontWeight={tone ? "semibold" : "medium"}
+        color={tone ?? "gray.800"}
+        mt="2px"
+      >
         {value}
       </Text>
     </Box>
@@ -106,15 +147,24 @@ function Detail({ label, value }: { label: string; value: string }) {
 /* ------------------------------ feature card ------------------------------ */
 
 /**
- * Detailed card shown when a plan has 1–4 claims. Surfaces every field the
- * user asked for: Claim Type, Claim No, Status, Date of Death, Age of Death
- * and Contestability.
+ * Detailed card shown when a plan has 1–4 claims.
+ *
+ * Carries the seven things a death claim is judged on, and nothing else: the
+ * CLAIM NO and the BENEFIT identify it, the STATUS says where it has got to, and
+ * the four below the rule are what a processor actually reads it for — DATE OF
+ * DEATH, CONTESTABILITY, DEFICIENT and NATURE OF CLAIM.
+ *
+ * Two fields were dropped to make room, and the reason is the same for both:
+ * AGE OF DEATH is a restatement of the date beside it, and the PAYEE is a fact
+ * about who gets paid rather than about whether the claim is payable — which is
+ * the question this card exists to answer. Both are on the claim itself, one tap
+ * away.
  */
 function FeatureCard({
   claim,
   onClick,
 }: {
-  claim: ClaimRequest;
+  claim: ProcessedClaim;
   onClick?: () => void;
 }) {
   return (
@@ -137,13 +187,13 @@ function FeatureCard({
     >
       <Flex align="center" justify="space-between" gap={3}>
         <Flex align="center" gap={3} minW={0}>
-          <Box
-            p={3}
-            borderRadius="full"
-            bg="#eaf5ee"
-            color={BRAND_COLORS.darkGreen}
-            flexShrink={0}
-          >
+          {/* Bare, and given no colour of its own — the same treatment as the
+              beneficiary card's mark, and for the same reason: a chip holds a
+              small icon steady inside a ROW of text, and this is a card with a
+              heading for the icon to sit against. react-icons draw with
+              `currentColor`, so leaving the colour unset is what keeps it on
+              the card's own text. */}
+          <Box flexShrink={0}>
             <LuFileText size={20} />
           </Box>
           <Box minW={0}>
@@ -151,7 +201,7 @@ function FeatureCard({
               {claimNoOf(claim)}
             </Text>
             <Text fontSize="xs" color="gray.500" truncate>
-              {claimTypeOf(claim)}
+              {benefitOf(claim)}
             </Text>
           </Box>
         </Flex>
@@ -160,15 +210,29 @@ function FeatureCard({
 
       <Separator my={4} />
 
-      <SimpleGrid columns={{ base: 2, md: 3 }} gap={4}>
+      {/* Two across, never three: four details divide evenly into two rows,
+          where three would leave one alone on a second row and the eye reading
+          down a column would find a different field in each card. */}
+      <SimpleGrid columns={2} gap={4}>
         <Detail label="Date of Death" value={claim.dateOfDeathDisplay ?? "—"} />
-        <Detail label="Age of Death" value={claim.ageOfDeath ?? "—"} />
-        <Detail label="Contestability" value={contestabilityLabel(claim)} />
-        {payeeLabel(claim) && (
-          <Box gridColumn={{ base: "1 / -1", md: "auto" }} minW={0}>
-            <Detail label="Payee" value={payeeLabel(claim)!} />
-          </Box>
-        )}
+        <Detail
+          label="Contestability"
+          value={contestabilityLabel(claim)}
+          // "Within" is the reading that matters: the claim is inside the
+          // period where the plan can still be contested, so it is worked
+          // differently. "Over" is the ordinary case and stays quiet.
+          tone={claim.contestability === "within" ? "orange.600" : undefined}
+        />
+        <Detail
+          label="Deficient"
+          value={claim.isDeficient ? "Yes" : "No"}
+          // Every claim reads "Yes" today — the data layer has no deficiency
+          // list yet, see `isDeficient` on `ClaimRequest`. The tone is written
+          // against the real thing rather than the placeholder, so it needs no
+          // second pass when that arrives.
+          tone={claim.isDeficient ? "red.600" : undefined}
+        />
+        <Detail label="Nature of Claim" value={claim.natureOfClaim ?? "—"} />
       </SimpleGrid>
     </Box>
   );
@@ -181,7 +245,7 @@ function SimpleCard({
   claim,
   onClick,
 }: {
-  claim: ClaimRequest;
+  claim: ProcessedClaim;
   onClick?: () => void;
 }) {
   return (
@@ -209,7 +273,7 @@ function SimpleCard({
             {claimNoOf(claim)}
           </Text>
           <Text fontSize="11px" color="gray.500" truncate>
-            {claimTypeOf(claim)}
+            {benefitOf(claim)}
           </Text>
           {claim.payees?.[0] && (
             <Text fontSize="11px" color="gray.400" truncate>
@@ -228,8 +292,8 @@ function SimpleCardCarousel({
   requests,
   onSelect,
 }: {
-  requests: ClaimRequest[];
-  onSelect?: (claim: ClaimRequest) => void;
+  requests: ProcessedClaim[];
+  onSelect?: (claim: ProcessedClaim) => void;
 }) {
   const pages = paginate(requests, PAGE_SIZE);
   const { trackRef, active, handleScroll, goToPage } = useSwipePages();
@@ -288,7 +352,11 @@ export function PlanholderClaimRequests({
   // Re-read whenever a claim is opened, so a claim the processor just created
   // shows up here with its claim no, computation and payee.
   useClaimStore();
-  const requests = getClaimRequests(lpaNo);
+  // Only claims that have been opened — see {@link ProcessedClaim}. A request
+  // nobody has worked yet has no claim no, and this section is the plan's list
+  // of CLAIMS; an unopened request belongs to the branch that filed it and to
+  // the "For Process" queue, both of which track it by its request no.
+  const requests = getClaimRequests(lpaNo).filter(isProcessed);
   const count = requests.length;
 
   /**
@@ -329,9 +397,12 @@ export function PlanholderClaimRequests({
     // would fill it. Each section used to draw its own, and they had drifted —
     // a solid card here, a grey icon circle there, three different type scales.
     body = (
+      // Worded for what the list now holds. "Requests filed against this plan
+      // will appear here" would be a promise the section no longer keeps: a
+      // request that has been filed but not opened does NOT appear here.
       <EmptyStateCard
-        title="No claim requests"
-        description="Requests filed against this plan will appear here."
+        title="No claims opened"
+        description="Claims opened against this plan will appear here."
       />
     );
   } else if (isRail) {
@@ -407,10 +478,15 @@ export function PlanholderClaimRequests({
       flex={{ xl: "1 1 auto" }}
       minH={{ xl: 0 }}
     >
+      {/* Create Claim rides in the heading's action slot, the same place Add
+          Document and Add Note sit — it is what FILLS this list, since a claim
+          appears here the moment it is opened. It renders nothing when the plan
+          has no unopened request, which is the usual case. */}
       <PlanholderSectionHeader
         title="Claim Requests"
         subtitle="Requests filed against this plan"
         count={count}
+        action={<PlanholderCreateClaim lpaNo={lpaNo} />}
       />
       <Box
         display={{ xl: "flex" }}

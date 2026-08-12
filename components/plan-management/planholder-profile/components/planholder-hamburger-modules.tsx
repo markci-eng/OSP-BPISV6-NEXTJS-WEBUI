@@ -20,7 +20,7 @@ import {
 import { MdPayment } from "react-icons/md";
 import { RxHamburgerMenu } from "react-icons/rx";
 import { TbLockDollar, TbTransfer } from "react-icons/tb";
-import { Body } from "st-peter-ui";
+import { Body } from "osp-ui-kit";
 
 export function PlanholderHamburgerModules({
   personId,

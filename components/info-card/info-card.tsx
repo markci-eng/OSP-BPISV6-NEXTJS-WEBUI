@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import { Box, HStack, Text } from "@chakra-ui/react";
 
-import { Body } from "st-peter-ui";
+import { Body } from "osp-ui-kit";
 import { HiInformationCircle } from "react-icons/hi";
 import type { IconType } from "react-icons";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";

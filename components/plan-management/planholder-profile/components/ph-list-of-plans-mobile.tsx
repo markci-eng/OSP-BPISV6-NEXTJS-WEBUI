@@ -23,13 +23,8 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { LuArrowDown, LuFile, LuSearch, LuUsersRound } from "react-icons/lu";
-import { OSPBadge } from "osp-ui-kit";
-import { FaRegFileAlt, FaTrash, FaUser } from "react-icons/fa";
-import { FiFileText } from "react-icons/fi";
-import { HiOutlinePencilAlt, HiRefresh } from "react-icons/hi";
-import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
-import { IoMdPersonAdd } from "react-icons/io";
 import {
+  OSPBadge,
   Small,
   Body,
   PrimarySmButton,
@@ -37,9 +32,14 @@ import {
   PrimaryMdButton,
   H4,
   Checkbox,
-} from "st-peter-ui";
+  InfoItem,
+} from "osp-ui-kit";
+import { FaRegFileAlt, FaTrash, FaUser } from "react-icons/fa";
+import { FiFileText } from "react-icons/fi";
+import { HiOutlinePencilAlt, HiRefresh } from "react-icons/hi";
+import { HiOutlineDocumentCurrencyDollar } from "react-icons/hi2";
+import { IoMdPersonAdd } from "react-icons/io";
 import { StatementOfAccount } from "./ph-statement-of-account";
-import { InfoItem } from "osp-ui-kit";
 import { IconType } from "react-icons";
 import { GiMartyrMemorial } from "react-icons/gi";
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";

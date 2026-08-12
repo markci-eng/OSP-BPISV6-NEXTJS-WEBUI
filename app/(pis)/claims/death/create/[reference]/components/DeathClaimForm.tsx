@@ -29,12 +29,45 @@ import { SectionTitle } from "@/app/(pis)/claims/components/section-title";
 
 /* ------------------------------ helpers ------------------------------ */
 
-/** Full years between two dates — used for age at death. */
-function fullYearsBetween(start: Date, end: Date): number {
-  let years = end.getFullYear() - start.getFullYear();
-  const m = end.getMonth() - start.getMonth();
-  if (m < 0 || (m === 0 && end.getDate() < start.getDate())) years -= 1;
-  return years;
+/** `1 day`, `2 days` — a count with its unit, singular when it is one. */
+function plural(count: number, unit: string): string {
+  return `${count} ${unit}${count === 1 ? "" : "s"}`;
+}
+
+/**
+ * Age at death, to the day — "42 years 10 months 2 days".
+ *
+ * Years alone is not enough here. Contestability and the benefit both turn on
+ * how long the plan ran against a life, and a claim filed weeks either side of
+ * a birthday is the case where that matters — rounding it to a year is
+ * throwing away the part being checked.
+ *
+ * Every part is shown even at zero, so the field reads the same length and in
+ * the same shape whatever the dates are; a value that drops a unit reads as a
+ * different KIND of answer rather than as the same answer with a zero in it.
+ *
+ * The arithmetic is `formatAgeOfDeath`'s in the data layer, which renders the
+ * same three parts abbreviated ("30 yrs 9 mos 6 days") for the tighter spaces
+ * on the claim cards. Same calculation, spelled out for a form field.
+ */
+function formatAgeAtDeath(birth: Date, death: Date): string {
+  let years = death.getFullYear() - birth.getFullYear();
+  let months = death.getMonth() - birth.getMonth();
+  let days = death.getDate() - birth.getDate();
+
+  if (days < 0) {
+    // Borrow from the month before the death date, whose length is what the
+    // remaining days are counted against.
+    const previousMonth = new Date(death.getFullYear(), death.getMonth(), 0);
+    days += previousMonth.getDate();
+    months -= 1;
+  }
+  if (months < 0) {
+    months += 12;
+    years -= 1;
+  }
+
+  return `${plural(years, "year")} ${plural(months, "month")} ${plural(days, "day")}`;
 }
 
 function formatPeso(amount: number): string {
@@ -52,17 +85,6 @@ function todayISO(): string {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${now.getFullYear()}-${month}-${day}`;
-}
-
-/** An ISO date rendered for a read-only field, e.g. "Apr 18, 2026". */
-function formatDate(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  });
 }
 
 /**
@@ -94,6 +116,30 @@ const BENEFITS: {
   { value: "USB", label: "Unrendered Service Benefit", icon: LuHandHeart },
 ];
 
+/**
+ * What kind of unrendered service is being claimed — the nature code the source
+ * system files a USB claim under.
+ *
+ * Only USB claims carry one, which is why this is not the form's `nature` field
+ * (Regular/Special, RC/SC): that one says how the claim was classified and
+ * every claim has it. These say what the plan holder's service was to have
+ * been, and the code is what the system stores.
+ *
+ * The code is kept in the label as well as the value. Processors work from
+ * paperwork that names the code, not the description, so a list of descriptions
+ * alone would make them translate in their heads.
+ */
+const USB_TYPES: { value: string; label: string }[] = [
+  { value: "CP", label: "CP - Cremation" },
+  { value: "NA", label: "NA - Not Applicable" },
+  { value: "OP", label: "OP - One Paid-up Plan" },
+  { value: "RP", label: "RP - ROP" },
+  { value: "SP", label: "SP - 70% of Pre-Need" },
+  { value: "TC", label: "TC - USB - Continue" },
+  { value: "TT", label: "TT - Traditional" },
+  { value: "TV", label: "TV - Termination Value" },
+];
+
 interface FormValues {
   dateReceived: string;
   dateOfDeath: string;
@@ -101,6 +147,8 @@ interface FormValues {
   nature: DeathClaimType;
   claimStatus: ClaimPhase;
   benefit: DeathBenefit;
+  /** USB only — see {@link USB_TYPES}. Opens on "NA" (Not Applicable). */
+  usbType: string;
   payeeFirstName: string;
   payeeMiddleName: string;
   payeeLastName: string;
@@ -174,6 +222,14 @@ function DerivedField({ label, value }: { label: string; value: string }) {
  * `helperText` is how a field says the value in it is only a suggestion — the
  * nature of claim uses it to make clear the processor may override what the
  * system worked out.
+ *
+ * The blank choice is taken off every select on this form. The kit prepends one
+ * of its own, for a field that opens with nothing chosen; none of these do —
+ * the nature and the status are computed from the request, and the USB type
+ * opens on NA — so the blank is only a way to un-answer a question that always
+ * has an answer. CSS rather than a prop, because the option is hardcoded inside
+ * the component. The kit's mobile sheet already leaves empty-valued options
+ * out, so this brings the native dropdown into line with it.
  */
 function SelectField<T extends string>({
   control,
@@ -189,7 +245,7 @@ function SelectField<T extends string>({
   helperText?: string;
 }) {
   return (
-    <Field.Root>
+    <Field.Root css={{ "& option[value='']": { display: "none" } }}>
       <Controller
         control={control}
         name={name}
@@ -277,22 +333,27 @@ export function DeathClaimForm({
 }) {
   const router = useRouter();
 
-  const { control, handleSubmit, watch, setValue } = useForm<FormValues>({
+  const { control, handleSubmit, watch } = useForm<FormValues>({
     defaultValues: {
       // Auto-filled from our data.
       dateOfDeath: claim.dateOfDeath.slice(0, 10),
       causeOfDeath: claim.typeOfIncident,
       planValue: planholder.planDetail.contractPrice,
-      // Prefilled from the benefit the branch filed for (it is encoded in the
-      // request number) — the processor can still change it.
+      // The benefit the branch filed for, encoded in the request number. Shown
+      // and submitted, never chosen here — see the Benefit section.
       benefit: claim.benefits,
-      // Suggestions the processor may override: the nature the system read off
-      // the request, and the status opening the header would normally set.
+      // Computed from the request, and left editable because a claim does get
+      // re-classified.
       nature: claim.type,
+      // Where a claim starts, not where it ends — see CREATED_CLAIM_STATUS.
       claimStatus: CREATED_CLAIM_STATUS,
       // The paperwork is logged the day it lands on the desk, so today is
       // nearly always right — but a backdated receipt can still be typed in.
       dateReceived: todayISO(),
+      // "Not Applicable" is the common case and a real answer in its own
+      // right, so the field opens on it rather than blank — the processor
+      // changes it only when the plan actually names a service.
+      usbType: "NA",
       payeeFirstName: "",
       payeeMiddleName: "",
       payeeLastName: "",
@@ -315,7 +376,12 @@ export function DeathClaimForm({
   // of when the claim was lodged.
   const requestingBranch = claim.requestingBranch;
   const branchManager = claim.processor.name;
-  const dateFiled = formatDate(claim.filedAt);
+  // `yyyy-mm-dd`, which is what a date input takes — the seed carries a full
+  // timestamp for some requests and a bare date for others, so the time is
+  // trimmed rather than assumed absent. The BROWSER decides how it is then
+  // displayed, which is exactly why this is the same as the two fields beside
+  // it instead of a format of its own.
+  const dateFiled = claim.filedAt.slice(0, 10);
 
   // Derived, not editable — contestability follows from the plan's effectivity,
   // not from anything typed on this form.
@@ -329,12 +395,16 @@ export function DeathClaimForm({
     label: status,
   }));
 
-  // Age at death — recomputed live from date of death vs. the plan holder's DOB.
+  // Age at death — recomputed live from date of death vs. the plan holder's
+  // DOB. The date is read while it is being typed, so a half-finished one is
+  // normal and has to leave the field blank rather than show "NaN years".
   const dateOfDeath = watch("dateOfDeath");
-  const ageAtDeath =
-    planholder.dateOfBirth && dateOfDeath
-      ? fullYearsBetween(planholder.dateOfBirth, new Date(dateOfDeath))
-      : "";
+  const ageAtDeath = (() => {
+    if (!planholder.dateOfBirth || !dateOfDeath) return "";
+    const death = new Date(dateOfDeath);
+    if (Number.isNaN(death.getTime())) return "";
+    return formatAgeAtDeath(planholder.dateOfBirth, death);
+  })();
 
   // Live claim computation.
   const planValue = Number(watch("planValue")) || 0;
@@ -359,6 +429,9 @@ export function DeathClaimForm({
       dateOfDeathISO: values.dateOfDeath,
       causeOfDeath: values.causeOfDeath,
       natureCode: values.nature === "special" ? "SC" : "RC",
+      // Only USB is classified this way — see the payee note below, which is
+      // carried for the same reason.
+      usbType: values.benefit === "USB" ? values.usbType : undefined,
       statusLabel: values.claimStatus,
       contestability: planholder.contestability,
       processor: branchManager,
@@ -453,10 +526,22 @@ export function DeathClaimForm({
                 </SimpleGrid>
 
                 <SimpleGrid columns={{ base: 1, sm: 2 }} gap={5}>
-                  {/* Date filed is the branch's record of the lodgement — read-only.
-              Date received defaults to today; only a backdated receipt needs
-              changing. */}
-                  <DerivedField label="Date Filed" value={dateFiled} />
+                  {/* Date filed is the branch's record of the lodgement —
+                      read-only. Date received defaults to today; only a
+                      backdated receipt needs changing.
+
+                      The same date CONTROL as the two beside it, rather than a
+                      text field spelling the date out. Three dates in a row
+                      written two different ways read as two different kinds of
+                      fact; they are the same kind, and only one of them happens
+                      not to be editable. */}
+                  <Field.Root>
+                    <FloatingLabelDate
+                      label="Date Filed"
+                      value={dateFiled}
+                      readOnly
+                    />
+                  </Field.Root>
                   <DateField
                     control={control}
                     name="dateReceived"
@@ -473,7 +558,7 @@ export function DeathClaimForm({
                   <Field.Root>
                     <FloatingLabelInput
                       label="Age at Death"
-                      value={ageAtDeath === "" ? "" : String(ageAtDeath)}
+                      value={ageAtDeath}
                       readOnly
                     />
                   </Field.Root>
@@ -512,29 +597,41 @@ export function DeathClaimForm({
               {/* ── Benefit ── */}
               <Section
                 title="Benefit"
-                subtitle="Select one benefit for this claim."
+                subtitle="Filed on the claim request. Not editable here."
               >
-                <SimpleGrid columns={4} gap={{ base: 2, md: 3 }}>
+                {/* Read-only. The benefit is decided when the branch files the
+                    request — it is encoded in the request number — and the
+                    processor opening the header does not get to re-decide it.
+
+                    Still all four, rather than the one: the row is what says
+                    WHICH of the four this claim is, and a lone card would leave
+                    a reader to remember the other three to know that. The three
+                    that were not filed are dimmed rather than dropped.
+
+                    A `<ul>`, because that is what this now is — a list of the
+                    benefits with one marked, not a set of controls. Nothing in
+                    it is focusable or clickable, so a keyboard tabs straight
+                    past it to the first field that is actually the processor's
+                    to fill. */}
+                <SimpleGrid as="ul" columns={4} gap={{ base: 2, md: 3 }}>
                   {BENEFITS.map((b) => {
                     const isSelected = benefit === b.value;
                     const BenefitIcon = b.icon;
                     return (
                       <Box
+                        as="li"
                         key={b.value}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setValue("benefit", b.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ")
-                            setValue("benefit", b.value);
-                        }}
+                        listStyleType="none"
+                        // Says "this is the one" to a screen reader, which
+                        // otherwise gets four benefits and no indication of
+                        // which the claim was filed for — the colour is the
+                        // only thing carrying it.
+                        aria-current={isSelected ? "true" : undefined}
                         borderWidth="1px"
                         borderRadius="xl"
                         p={{ base: 2, md: 4 }}
                         minH={{ base: "96px", md: "116px" }}
                         textAlign="center"
-                        cursor="pointer"
-                        transition="all 0.15s ease"
                         display="flex"
                         flexDirection="column"
                         alignItems="center"
@@ -547,19 +644,17 @@ export function DeathClaimForm({
                         boxShadow={
                           isSelected
                             ? `0 0 0 1px ${BRAND_COLORS.primaryGreen}`
-                            : "xs"
+                            : "none"
                         }
-                        _hover={{
-                          borderColor: isSelected
-                            ? BRAND_COLORS.primaryGreen
-                            : "gray.300",
-                        }}
+                        // The unfiled three step back rather than disappear.
+                        // They were already the pale version of the card; what
+                        // they lose now is the shadow that made them look
+                        // liftable and pressable.
+                        opacity={isSelected ? 1 : 0.55}
                       >
                         <Box
                           color={
-                            isSelected
-                              ? BRAND_COLORS.primaryGreen
-                              : "gray.500"
+                            isSelected ? BRAND_COLORS.primaryGreen : "gray.500"
                           }
                           fontSize={{ base: "lg", md: "2xl" }}
                         >
@@ -570,9 +665,7 @@ export function DeathClaimForm({
                           fontWeight="800"
                           lineHeight="1"
                           color={
-                            isSelected
-                              ? BRAND_COLORS.primaryGreen
-                              : "gray.800"
+                            isSelected ? BRAND_COLORS.primaryGreen : "gray.800"
                           }
                         >
                           {b.value}
@@ -619,6 +712,12 @@ export function DeathClaimForm({
                     >
                       Payee Name
                     </Text>
+                    {/* Two columns, deliberately — NOT the one-row block the
+                        Add Payee sheet carries. This column is the narrow half
+                        of a two-column page from `xl`, so four fields across it
+                        are four cramped fields; paired, each is the width of a
+                        name. The sheet is the width of the screen and can
+                        afford the row. */}
                     <SimpleGrid columns={{ base: 1, md: 2 }} gap={5}>
                       <TextField
                         control={control}
@@ -695,6 +794,26 @@ export function DeathClaimForm({
                         label="Zip Code"
                       />
                     </SimpleGrid>
+
+                    <Text
+                      fontSize="xs"
+                      fontWeight="semibold"
+                      textTransform="uppercase"
+                      letterSpacing="wider"
+                      color="gray.500"
+                      mt={5}
+                      mb={2}
+                    >
+                      USB Type
+                    </Text>
+                    {/* One field, so no grid — full width, the same as every
+                        other lone field on this form. */}
+                    <SelectField
+                      control={control}
+                      name="usbType"
+                      label="USB Type"
+                      options={USB_TYPES}
+                    />
                   </Box>
                 )}
               </Section>

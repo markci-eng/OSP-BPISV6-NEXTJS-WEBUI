@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { PrimaryMdFlexButton } from "st-peter-ui";
-import { LuCalendar, LuCircleCheck, LuLoader } from "react-icons/lu";
-
 import {
+  PrimaryMdFlexButton,
   FloatingLabelSelect,
   InfoCardAccordion,
   Page,
@@ -13,6 +11,8 @@ import {
   useMessageDialog,
   useProgressController,
 } from "osp-ui-kit";
+import { LuCalendar, LuCircleCheck, LuLoader } from "react-icons/lu";
+
 import InfoCard from "@/components/info-card/info-card";
 
 import { TrxMonth } from "../data/transaction-month";

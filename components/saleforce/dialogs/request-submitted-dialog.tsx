@@ -9,7 +9,7 @@ import {
   Portal,
   Text,
 } from "@chakra-ui/react";
-import { Body, H4, PrimaryMdButton, Small } from "st-peter-ui";
+import { Body, H4, PrimaryMdButton, Small } from "osp-ui-kit";
 import { LuCircleCheck } from "react-icons/lu";
 
 interface RequestSubmittedDialogProps {

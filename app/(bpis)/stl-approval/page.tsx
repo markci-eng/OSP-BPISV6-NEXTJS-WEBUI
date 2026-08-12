@@ -1,6 +1,6 @@
 "use client";
 import StlApproval from "./stlApproval";
-import { Box } from "st-peter-ui";
+import { Box } from "@chakra-ui/react";
 
 export default function page() {
   return (

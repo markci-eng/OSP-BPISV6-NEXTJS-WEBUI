@@ -1,11 +1,17 @@
 "use client";
 
 import { Box, Flex, Grid, Text } from "@chakra-ui/react";
-import { Body, PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
+import {
+  Body,
+  PrimaryMdButton,
+  SecondaryMdButton,
+  SectionTitle,
+  useMessageDialog,
+  Card,
+} from "osp-ui-kit";
 import { LuArrowRight, LuTriangleAlert } from "react-icons/lu";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SectionTitle, useMessageDialog } from "osp-ui-kit";
 import {
   getAgentById,
   getPositionDesc,
@@ -14,7 +20,6 @@ import {
 import SuperiorLookup from "../pickers/superior-lookup";
 import RequestSubmittedDialog from "../dialogs/request-submitted-dialog";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
-import { Card } from "osp-ui-kit";
 
 interface AgentReassignFormProps {
   selectedAgent: SalesAgent;

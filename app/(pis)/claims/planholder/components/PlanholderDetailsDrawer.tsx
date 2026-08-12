@@ -16,8 +16,15 @@ import { PlanholderInfoCard } from "./PlanholderInfoCard";
  */
 export function PlanholderDetailsDrawer({
   planholder,
+  summaryAsPairs = false,
 }: {
   planholder: Planholder;
+  /**
+   * Draw the inline card's summary as stacked pairs rather than dotted rows —
+   * passed straight through to {@link PlanholderInfoCard}, which owns the
+   * decision and explains it.
+   */
+  summaryAsPairs?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [showButton, setShowButton] = useState(false);
@@ -43,6 +50,7 @@ export function PlanholderDetailsDrawer({
           planholder={planholder}
           open={open}
           onOpenChange={setOpen}
+          summaryAsPairs={summaryAsPairs}
         />
       </Box>
 

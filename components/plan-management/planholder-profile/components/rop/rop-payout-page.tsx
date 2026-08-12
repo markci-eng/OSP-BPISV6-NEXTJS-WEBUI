@@ -30,17 +30,19 @@ import {
   LuPencil,
   LuPhone,
 } from "react-icons/lu";
-import { PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
-import { z } from "zod";
-
 import {
+  PrimaryMdButton,
+  SecondaryMdButton,
   DocumentUploader,
   FloatingLabelInput,
   FloatingLabelSelect,
   FormStepper,
   useMessageDialog,
+  StaticCard,
+  Page,
 } from "osp-ui-kit";
-import { StaticCard, Page } from "osp-ui-kit";
+import { z } from "zod";
+
 import {
   Tab,
   type TabItem,

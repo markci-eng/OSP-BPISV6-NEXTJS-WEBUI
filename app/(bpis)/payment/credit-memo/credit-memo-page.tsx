@@ -33,9 +33,9 @@ import {
   Page,
   SectionTitle,
   useMessageDialog,
+  PrimaryMdFlexButton,
+  FloatingLabelInput,
 } from "osp-ui-kit";
-import { PrimaryMdFlexButton } from "st-peter-ui";
-import { FloatingLabelInput } from "osp-ui-kit";
 
 const PAY_CLASSES = ["Monthly", "Quarterly", "Semi-Annual", "Annual"] as const;
 

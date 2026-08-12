@@ -2,13 +2,13 @@
 
 import { Beneficiaries } from "@/components/plan-management/planholder-profile/pages/beneficiaries";
 import { Box, createListCollection, Grid } from "@chakra-ui/react";
-import { Checkbox } from "st-peter-ui";
 import {
+  Checkbox,
   FloatingLabelInput,
   FloatingLabelSelect,
   useMessageDialog,
+  Card,
 } from "osp-ui-kit";
-import { Card } from "osp-ui-kit";
 
 const GenderCollection = createListCollection({
   items: [

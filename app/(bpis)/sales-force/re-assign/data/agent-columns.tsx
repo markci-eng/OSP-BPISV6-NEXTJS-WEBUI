@@ -1,9 +1,8 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Small } from "st-peter-ui";
+import { Small, getPositionDesc, SalesAgent } from "osp-ui-kit";
 import { AgentIdentityCell, StatusBadge } from "../components/shared";
-import { getPositionDesc, SalesAgent } from "osp-ui-kit";
 import { getAgentNameById } from "@/components/common/agent-lookup/agent-lookup.type";
 
 /* ─── Agent table columns / mobile config ────────────────────────────────── */

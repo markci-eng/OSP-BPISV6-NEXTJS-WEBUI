@@ -17,7 +17,10 @@ import {
   PrimarySmButton,
   SecondaryMdButton,
   Small,
-} from "st-peter-ui";
+  DataTable,
+  Card,
+  ErrorStateCard,
+} from "osp-ui-kit";
 import {
   LuCopy,
   LuDownload,
@@ -35,14 +38,12 @@ import {
 } from "react-icons/fa6";
 import { toast } from "sonner";
 import { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "osp-ui-kit";
 import {
   REFERRAL_LINK,
   REFERRAL_QR_URL,
   ReferralHistoryItem,
 } from "../data/referral.mock";
 import { useReferralHistory } from "../hooks/useReferralHistory";
-import { Card, ErrorStateCard } from "osp-ui-kit";
 
 const shareTargets = [
   { label: "Facebook", icon: FaFacebook, color: "#1877F2" },

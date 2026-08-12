@@ -79,58 +79,59 @@ function RowLines({ count }: { count: number }) {
 
 /* --------------------------- the claim column --------------------------- */
 
-/** Shaped like {@link PlanholderClaimDetail}: bar, tiles, card, sections. */
+/** The stacked label-over-value pairs a details card holds in the page. */
+function PairGrid({ count }: { count: number }) {
+  return (
+    <SimpleGrid columns={{ base: 2, md: 3, xl: 4 }} gapX={4} gapY={3}>
+      {Array.from({ length: count }, (_, i) => (
+        <Box key={i}>
+          <Bar w={`${52 + ((i * 9) % 30)}%`} h="10px" />
+          <Bar w={`${64 + ((i * 7) % 26)}%`} h="13px" mt="5px" />
+        </Box>
+      ))}
+    </SimpleGrid>
+  );
+}
+
+/** Shaped like {@link PlanholderClaimDetail}: details card, then sections. */
 function ClaimDetailSkeleton() {
   return (
     <Box>
-      {/* The claim's own header bar — "<", claim no over claim type, "More". */}
-      <Flex
-        align="center"
-        gap={3}
-        pb={3}
-        borderBottomWidth="1px"
-        borderColor="blackAlpha.200"
-      >
-        <Skeleton w="20px" h="20px" borderRadius="md" flexShrink={0} />
-        <Box flex="1" minW={0}>
-          <Bar w="46%" h="15px" />
-          <Bar w="30%" h="11px" mt="4px" />
-        </Box>
-        <Skeleton w="76px" h="30px" borderRadius="full" flexShrink={0} />
-      </Flex>
+      {/* The plan holder, then the claim filed against them — both in this
+          column, with the rail beside them for the actions. */}
+      <ClaimHeaderSkeleton />
 
-      <Box pt={5}>
-        {/* Claim Details. The actions are NOT here — on a desktop they sit at
-            the top of the rail, over the plan holder card. */}
-        <CardBlock>
-          <RowLines count={12} />
+      {/* Claim Details — Claim No and Benefit lead it now that the header bar
+          that named the claim is gone. The actions are NOT here; they head the
+          rail. */}
+      <CardBlock>
+        <PairGrid count={16} />
+      </CardBlock>
+
+      {/* Remarks · Notes. */}
+      <Box mt={6}>
+        <HeadingBlock withPill={false} />
+        <CardBlock p={3}>
+          <Bar w="92%" h="11px" />
+          <Bar w="78%" h="11px" mt="6px" />
+          <Bar w="85%" h="11px" mt="6px" />
         </CardBlock>
+      </Box>
 
-        {/* Remarks · Notes. */}
-        <Box mt={6}>
-          <HeadingBlock withPill={false} />
-          <CardBlock p={3}>
-            <Bar w="92%" h="11px" />
-            <Bar w="78%" h="11px" mt="6px" />
-            <Bar w="85%" h="11px" mt="6px" />
-          </CardBlock>
-        </Box>
+      {/* Computation/Explanation. */}
+      <Box mt={6}>
+        <HeadingBlock withPill={false} />
+        <RowLines count={6} />
+      </Box>
 
-        {/* Computation/Explanation. */}
-        <Box mt={6}>
-          <HeadingBlock withPill={false} />
-          <RowLines count={6} />
-        </Box>
-
-        {/* Payee's Information. */}
-        <Box mt={6}>
-          <HeadingBlock withPill={false} />
-          <Flex direction="column" gap={2}>
-            {Array.from({ length: 2 }, (_, i) => (
-              <Skeleton key={i} h="56px" borderRadius="xl" />
-            ))}
-          </Flex>
-        </Box>
+      {/* Payee's Information. */}
+      <Box mt={6}>
+        <HeadingBlock withPill={false} />
+        <Flex direction="column" gap={2}>
+          {Array.from({ length: 2 }, (_, i) => (
+            <Skeleton key={i} h="56px" borderRadius="xl" />
+          ))}
+        </Flex>
       </Box>
     </Box>
   );
@@ -138,39 +139,45 @@ function ClaimDetailSkeleton() {
 
 /* -------------------------- the summary column -------------------------- */
 
-/** The plan holder as it appears in the rail beside an open claim. */
+/** The claim's actions and the plan holder's record, in the rail beside it. */
 function PlanholderSummarySkeleton() {
   return (
     <Box>
-      {/* Print · Edit · Delete · Verify · Endorse · More, over the card. */}
+      {/* Print · Edit · Delete · Verify · Endorse · More. */}
       <SimpleGrid columns={3} gap={2} mb={4}>
         {Array.from({ length: 6 }, (_, i) => (
           <Skeleton key={i} h="62px" borderRadius="md" />
         ))}
       </SimpleGrid>
 
+      {/* The details card. The profile card that used to sit above it is at the
+          top of the page now — see the header block in the swap below. */}
       <CardBlock>
-        <Flex align="center" gap={3}>
-          <Skeleton w="56px" h="56px" borderRadius="full" flexShrink={0} />
-          <Box flex="1" minW={0}>
-            <Bar w="72%" h="14px" />
-            <Bar w="46%" h="11px" mt="5px" />
-          </Box>
-        </Flex>
-        <Box mt={4}>
-          <Bar w="88%" h="11px" />
-          <Bar w="64%" h="11px" mt="6px" />
-          <Bar w="70%" h="11px" mt="6px" />
+        <Bar w="52%" h="13px" />
+        <Bar w="72%" h="11px" mt="5px" />
+        <Box mt={3}>
+          <RowLines count={4} />
         </Box>
       </CardBlock>
+    </Box>
+  );
+}
 
-      <Box mt={4}>
+/** The back link and the plan holder card, atop an open claim's own column. */
+function ClaimHeaderSkeleton() {
+  return (
+    <Box pb={5}>
+      <Bar w="104px" h="14px" mt="2px" />
+      <Box mt={2}>
         <CardBlock>
-          <Bar w="52%" h="13px" />
-          <Bar w="72%" h="11px" mt="5px" />
-          <Box mt={3}>
-            <RowLines count={4} />
-          </Box>
+          <Flex align="center" gap={4}>
+            <Skeleton w="64px" h="64px" borderRadius="full" flexShrink={0} />
+            <Box flex="1" minW={0}>
+              <Bar w="58%" h="16px" />
+              <Bar w="34%" h="11px" mt="6px" />
+              <Bar w="80%" h="11px" mt="8px" />
+            </Box>
+          </Flex>
         </CardBlock>
       </Box>
     </Box>
@@ -275,6 +282,10 @@ export function PlanholderSwapSkeleton({ target }: { target: SwapTarget }) {
         "2xl": "minmax(0, 1fr) 420px",
       }}
       gap={6}
+      // Matches the claim view's own clearance under the app header, which the
+      // page's hidden heading used to provide. The profile keeps its heading,
+      // so it does not need it.
+      pt={target === "claim" ? "10px" : undefined}
       alignItems="start"
       aria-hidden
     >

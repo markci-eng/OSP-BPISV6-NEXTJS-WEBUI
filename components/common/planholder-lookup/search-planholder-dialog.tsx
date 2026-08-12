@@ -13,7 +13,7 @@ import {
   Table,
 } from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight, LuSearch, LuX } from "react-icons/lu";
-import { Small } from "st-peter-ui";
+import { Small } from "osp-ui-kit";
 import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
 import { useEffect, useState } from "react";
 import type { PlanholderLookup } from "@/components/plan-management/planholders/tables/planholder-list-table";

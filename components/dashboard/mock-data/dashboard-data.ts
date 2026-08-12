@@ -74,15 +74,17 @@ export const monthlyNewSales = [
     },
 ];
 
+// Per-agent quota / collection / account figures sum to the `quotaAndCollections`
+// totals above, so the leaderboard and the efficiency cards agree.
 export const agentLeaderboards = [
-    { name: "MARC NOEL SENIER", ns: 45 },
-    { name: "ELLA PALMERO", ns: 43 },
-    { name: "VICENTE LACATANGO", ns: 38 },
-    { name: "EREBERTO LACUESTA", ns: 37 },
-    { name: "CAROLINA VILLANUEVA", ns: 34 },
-    { name: "LUZVIMINDA ANGUE", ns: 26 },
-    { name: "SHEMINE COSARE", ns: 25 },
-    { name: "NORMA URO", ns: 22 },
-    { name: "MERCEDES JANOBAS", ns: 18 },
-    { name: "YOLANDA MACAPAGAL", ns: 14 },
+    { name: "MARC NOEL SENIER", ns: 45, quota: 62400, collection: 55120, acctDue: 26, acctCollection: 17 },
+    { name: "ELLA PALMERO", ns: 43, quota: 58150, collection: 42300, acctDue: 24, acctCollection: 11 },
+    { name: "VICENTE LACATANGO", ns: 38, quota: 41800, collection: 38940, acctDue: 19, acctCollection: 13 },
+    { name: "EREBERTO LACUESTA", ns: 37, quota: 47600, collection: 25180, acctDue: 21, acctCollection: 8 },
+    { name: "CAROLINA VILLANUEVA", ns: 34, quota: 36250, collection: 33410, acctDue: 17, acctCollection: 12 },
+    { name: "LUZVIMINDA ANGUE", ns: 26, quota: 39900, collection: 21650, acctDue: 18, acctCollection: 7 },
+    { name: "SHEMINE COSARE", ns: 25, quota: 28700, collection: 26845, acctDue: 14, acctCollection: 10 },
+    { name: "NORMA URO", ns: 22, quota: 33540, collection: 19220, acctDue: 16, acctCollection: 6 },
+    { name: "MERCEDES JANOBAS", ns: 18, quota: 24900, collection: 23110, acctDue: 12, acctCollection: 8 },
+    { name: "YOLANDA MACAPAGAL", ns: 14, quota: 19700, collection: 16710, acctDue: 19, acctCollection: 3 },
 ];

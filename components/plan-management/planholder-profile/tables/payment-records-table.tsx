@@ -1,8 +1,7 @@
 import { Box, Strong } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Small } from "st-peter-ui";
+import { Small, multiSelectFilter, DataTable } from "osp-ui-kit";
 import { PhPaymentType } from "../pages/statement-of-accounts";
-import { multiSelectFilter, DataTable } from "osp-ui-kit";
 
 export function PaymentRecordTable({
   payments,

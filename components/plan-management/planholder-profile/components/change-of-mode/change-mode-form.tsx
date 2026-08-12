@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Flex, HStack, Text } from "@chakra-ui/react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Checkbox, H4, Small } from "st-peter-ui";
+import { Checkbox, H4, Small, DataTable, OSPBadge, RowItem } from "osp-ui-kit";
 import { LuChevronRight } from "react-icons/lu";
 import type {
   CheckedPlanType,
   PlanDetails,
 } from "@/app/(bpis)/data/plan-management/change-of-mode/change-mode.types";
 import { PlanDetailsDialog } from "./plan-details-dialog";
-import { DataTable, OSPBadge, RowItem } from "osp-ui-kit";
 
 export function ChangeModeForm({
   activePlans,

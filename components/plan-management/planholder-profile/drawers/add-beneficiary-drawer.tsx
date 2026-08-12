@@ -12,10 +12,14 @@ import {
   Text,
   Textarea,
 } from "@chakra-ui/react";
-import { PrimaryMdButton, SecondaryMdButton } from "st-peter-ui";
+import {
+  PrimaryMdButton,
+  SecondaryMdButton,
+  FloatingLabelInput,
+  FloatingLabelSelect,
+} from "osp-ui-kit";
 import React, { useState } from "react";
 import type { BeneficiaryProps } from "../pages/beneficiaries";
-import { FloatingLabelInput, FloatingLabelSelect } from "osp-ui-kit";
 
 const relationships = createListCollection({
   items: [

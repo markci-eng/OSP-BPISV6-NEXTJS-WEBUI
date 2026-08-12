@@ -34,12 +34,13 @@ import {
 import {
   Body,
   Breadcrumb,
-  BreadcrumbItemProps,
-  BreadcrumbItemType,
   CancelButton,
   H3,
   SaveButton,
-} from "st-peter-ui";
+  FloatingLabelInput,
+  InfoItem,
+  PlanholderLookup,
+} from "osp-ui-kit";
 import { PlanholderHamburgerModules } from "./components/planholder-hamburger-modules";
 import { PlanholderInfoCard } from "@/components/common/cards/planholder-info-card";
 import { PlanholderAddressCard } from "./components/planholder-address";
@@ -50,7 +51,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { planholderLookup } from "@/app/(bpis)/plan-management/data/planholder-lookup";
 import RequestHistoryDrawer from "@/components/common/drawers/request-history-drawer";
-import { FloatingLabelInput, InfoItem, PlanholderLookup } from "osp-ui-kit";
 
 export interface PlanholderInfoType {
   personId: string;
@@ -155,7 +155,6 @@ export interface PhPaymentType {
 }
 
 export interface PlanholderProfileProps {
-  breadcrumbItems: BreadcrumbItemType[];
   personId?: string | null;
   plans?: PlanDetailType[] | null;
   planholderInfo?: PlanholderInfoType | null;
@@ -580,7 +579,7 @@ export function PlanholderProfilePage({
 
   return (
     <Box mx={isMobile ? 0 : 5}>
-      {!isMobile && <Breadcrumb items={props.breadcrumbItems} />}
+      {!isMobile && <Breadcrumb />}
 
       {/* HEADER */}
       <Flex justify="space-between" align="center">

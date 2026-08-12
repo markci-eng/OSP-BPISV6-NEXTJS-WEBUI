@@ -16,12 +16,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import {
-  LuChevronRight,
-  LuInbox,
-  LuSend,
-  LuShieldCheck,
-} from "react-icons/lu";
+import { LuInbox, LuSend, LuShieldCheck } from "react-icons/lu";
 import type { IconType } from "react-icons";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { deathBenefitLabel } from "@/app/(pis)/data";
@@ -32,11 +27,16 @@ import {
   claimIdentity,
   planholderName,
   toFullName,
+  NO_IDENTITY,
   type ClaimIdentifier,
   type DeathClaim,
 } from "../death-claims-data";
 import { TYPE_DOT, type DeathClaimFilter } from "./DeathClaimsFilter";
-import { DeathClaimsTable } from "./DeathClaimsTable";
+import {
+  BRANCH_MAX_WIDTH,
+  branchShortLabel,
+  DeathClaimsTable,
+} from "./DeathClaimsTable";
 
 /**
  * One already-processed claim as a clickable card — used by both queues that
@@ -45,8 +45,12 @@ import { DeathClaimsTable } from "./DeathClaimsTable";
  * Ordered by what a supervisor works from. The CLAIM NO leads: it is generated
  * when the claim is created and becomes that claim's reference everywhere —
  * not only in this system — so it outranks everything else on the card. Then
- * the plan it was filed against and the benefit claimed, with the deceased and
- * the requesting branch as context underneath.
+ * the plan and the person who held it on one line, then the benefit claimed,
+ * with the requesting branch opposite the claim no.
+ *
+ * The same shape, in the same weights, as the `ClaimCard` the "For Process"
+ * queue uses — deliberately, since the two differ only in which identity number
+ * their queue works from. Change one and change the other.
  *
  * No status is shown. Membership of a queue already says where the claim is;
  * the specific status lives on the claim itself, which is one tap away.
@@ -61,9 +65,6 @@ function ProcessedClaimCard({
   onClick?: () => void;
 }) {
   const name = planholderName(claim.lpaNo);
-  const context = [name ? toFullName(name) : "—", claim.requestingBranch]
-    .filter(Boolean)
-    .join(" · ");
 
   return (
     <Box
@@ -106,7 +107,7 @@ function ProcessedClaimCard({
             <Text fontSize="sm" fontWeight="700" color="gray.800" truncate>
               {claimIdentity(claim, "claim")}
             </Text>
-            {/* 2 — the plan, then 3 — the benefit being claimed. */}
+            {/* 2 — the plan it was filed against, and who held it. */}
             <Text
               fontSize="xs"
               fontWeight="600"
@@ -117,19 +118,37 @@ function ProcessedClaimCard({
               {claim.lpaNo}
               <Text as="span" fontWeight="400" color="gray.500">
                 {" · "}
-                {deathBenefitLabel(claim.benefits)}
+                {name ? toFullName(name) : NO_IDENTITY}
               </Text>
             </Text>
-            {/* Context — who died, and which branch filed it. */}
-            <Text fontSize="11px" color="gray.500" mt="2px" truncate>
-              {context}
+            {/* 3 — the benefit claimed, on its own. */}
+            <Text
+              fontSize="11px"
+              fontWeight="600"
+              color="gray.600"
+              mt="2px"
+              truncate
+            >
+              {deathBenefitLabel(claim.benefits)}
             </Text>
           </Box>
         </Flex>
 
-        <Box color={BRAND_COLORS.primaryGreen} flexShrink={0} mt="2px">
-          <LuChevronRight size={18} />
-        </Box>
+        {/* The branch that filed it, where the chevron used to point.
+            Losing the chevron costs nothing: the whole card is the button, it
+            lifts and greens its border on hover, and the "For Process" card next
+            to it has never had one. The branch is a fact the supervisor sorts by
+            and the arrow only repeated what the cursor already said. */}
+        <Text
+          fontSize="10px"
+          color="gray.400"
+          flexShrink={0}
+          maxW={BRANCH_MAX_WIDTH}
+          textAlign="right"
+          truncate
+        >
+          {branchShortLabel(claim.requestingBranch)}
+        </Text>
       </Flex>
     </Box>
   );
@@ -195,8 +214,6 @@ interface QueueDefinition {
    * drops — kept here so the two cannot answer it differently.
    */
   identifier: ClaimIdentifier;
-  /** Card width to match in the skeleton — a date, or a chevron. */
-  skeletonTrailingWidth: string;
 }
 
 const QUEUES: QueueDefinition[] = [
@@ -206,7 +223,6 @@ const QUEUES: QueueDefinition[] = [
     Icon: LuInbox,
     verb: "awaiting your action",
     identifier: "request",
-    skeletonTrailingWidth: "64px",
   },
   {
     key: "verification",
@@ -215,7 +231,6 @@ const QUEUES: QueueDefinition[] = [
     // "decision", not "approval" — a claim can be endorsed for denial.
     verb: "endorsed for your decision",
     identifier: "claim",
-    skeletonTrailingWidth: "18px",
   },
   {
     key: "endorsement",
@@ -223,7 +238,6 @@ const QUEUES: QueueDefinition[] = [
     Icon: LuSend,
     verb: "ready to endorse",
     identifier: "claim",
-    skeletonTrailingWidth: "18px",
   },
 ];
 
@@ -291,6 +305,26 @@ export function ClaimQueuesSection({
   const branchOptions = useMemo(
     () =>
       Array.from(new Set(claims.map((c) => c.requestingBranch)))
+        .filter(Boolean)
+        .sort(),
+    [claims],
+  );
+
+  // The filter dropdown's two lists, read off the QUEUE rather than off the
+  // reference tables: a territory with no claim waiting in this queue is an
+  // option that can only ever empty the list, and the branch picker beside it
+  // has always been built the same way.
+  const territoryOptions = useMemo(
+    () =>
+      Array.from(new Set(claims.map((c) => c.territoryCode)))
+        .filter(Boolean)
+        .sort(),
+    [claims],
+  );
+
+  const benefitOptions = useMemo(
+    () =>
+      Array.from(new Set(claims.map((c) => c.benefits)))
         .filter(Boolean)
         .sort(),
     [claims],
@@ -394,9 +428,10 @@ export function ClaimQueuesSection({
         }}
         counts={counts}
         branchOptions={branchOptions}
+        territoryOptions={territoryOptions}
+        benefitOptions={benefitOptions}
         loadKey={active}
         originRef={sectionRef}
-        skeletonTrailingWidth={queue.skeletonTrailingWidth}
         identifier={queue.identifier}
         // Serves the default card AND every row of the table view — see
         // `openClaim` for where each queue sends them.

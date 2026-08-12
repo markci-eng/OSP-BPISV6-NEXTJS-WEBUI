@@ -3,14 +3,14 @@ import { Box, Strong } from "@chakra-ui/react";
 import { ColumnDef } from "@tanstack/react-table";
 import React from "react";
 import { toast } from "sonner";
-import { Small } from "st-peter-ui";
-import { useRouter } from "next/navigation";
 import {
+  Small,
   BulkAction,
   multiSelectFilter,
   RowAction,
+  DataTable,
 } from "osp-ui-kit";
-import { DataTable } from "osp-ui-kit";
+import { useRouter } from "next/navigation";
 
 export interface PlanholderLookup {
   id: number;

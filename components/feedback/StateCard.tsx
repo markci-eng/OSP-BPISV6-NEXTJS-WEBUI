@@ -1,6 +1,6 @@
 import { Button, Flex, FlexProps } from "@chakra-ui/react";
 import { LuRefreshCw } from "react-icons/lu";
-import { Body, Small } from "st-peter-ui";
+import { Body, Small } from "osp-ui-kit";
 
 export type StateCardStatus = "empty" | "error";
 

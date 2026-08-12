@@ -1,6 +1,6 @@
-import { Strong, VStack } from "@chakra-ui/react";
+import { Box, Strong, VStack } from "@chakra-ui/react";
 import React from "react";
-import { Body, Box, Small } from "st-peter-ui";
+import { Body, Small } from "osp-ui-kit";
 
 export function HealthDeclaration() {
   return (

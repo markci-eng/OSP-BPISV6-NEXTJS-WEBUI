@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { StPeterProvider } from "st-peter-ui";
+import {
+  StPeterProvider,
+  DemoAuthProvider,
+  MessageDialogProvider,
+} from "osp-ui-kit";
 import { Toaster } from "sonner";
 import { RenderPage } from "./render-page";
 import RootLayoutClient from "./root-layout-client";
 import { cookies } from "next/headers";
 import { USER_COOKIE } from "@/lib/session";
-import { DemoAuthProvider, MessageDialogProvider } from "osp-ui-kit";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -2,9 +2,8 @@
 
 import { useMemo } from "react";
 import { Box, Flex, Grid, GridItem } from "@chakra-ui/react";
-import { Page, UserWelcomeBanner } from "osp-ui-kit";
+import { Page } from "osp-ui-kit";
 import { useClaimStore } from "../claim-store";
-import { useCurrentUser } from "../components/use-current-user";
 import {
   getForEndorsementClaims,
   getForProcessClaims,
@@ -50,7 +49,6 @@ export default function DeathClaimsPage() {
   // Creating a claim moves it from the first queue to the second, so all of
   // them are re-read whenever the claim store changes.
   const storeVersion = useClaimStore();
-  const { firstName, branch } = useCurrentUser();
   const forProcessClaims = useMemo(
     () => getForProcessClaims(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -213,21 +211,20 @@ export default function DeathClaimsPage() {
                 not, and its cards lay themselves out in as many columns as that
                 leaves room for. */}
             <GridItem order={{ base: 1, xl: 0 }} minW={0}>
-              {/* The greeting, then the figures, then the work. All three from
-                  `xl` and no lower: this is the top of a COLUMN, and `xl` is
-                  where there is a second column for it to be the top of. Below
-                  that the layout is one stack in mobile order — the rail first,
-                  then the queues — and either of these here would land between
-                  two sections rather than above everything. */}
-              <Box display={{ base: "none", xl: "block" }} mb={5}>
-                <UserWelcomeBanner firstName={firstName} branch={branch} />
-              </Box>
+              {/* The figures, then the work. The welcome banner that used to
+                  head this column is gone: it greeted a processor who is
+                  already named in the header above it, and it cost the queue a
+                  banner's height on every load of the page they live in.
 
-              {/* The same section that is in the rail below `xl`, laid out for
-                  the width it has here: three tiles across one row rather than
-                  a headline over two, no line under the heading, and the short
-                  name — with the banner directly above it there is nothing left
-                  for "Pending Claims Overview" to distinguish itself from. */}
+                  What is left is still `xl` and no lower — this is the top of a
+                  COLUMN, and `xl` is where there is a second column for it to be
+                  the top of. Below that the layout is one stack in mobile order
+                  (the rail first, then the queues) and this would land between
+                  two sections rather than above everything.
+
+                  Laid out for the width it has here: three tiles across one row
+                  rather than a headline over two, no line under the heading, and
+                  the short name. */}
               <Box display={{ base: "none", xl: "block" }} mb={5}>
                 <PendingClaimsSummary
                   counts={counts}

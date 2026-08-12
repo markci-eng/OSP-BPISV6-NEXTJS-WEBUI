@@ -18,33 +18,19 @@ const PersonalInfo = ({ agent }: AgentPersonalInfoCardProps) => {
     <>
       {/* Mobile / tablet: stacked rows */}
       <Flex direction="column" hideFrom="lg">
-        <RowItem label="Place of Birth" value={agent.placeOfBirth} />
         <RowItem label="Date of Birth" value={agent.birthDate} />
         <RowItem label="Gender" value={agent.gender} />
         <RowItem label="Civil Status" value={agent.civilStatus} />
         <RowItem label="Nationality" value={agent.nationality} />
-        <RowItem
-          label="Naturalization Date"
-          value={agent.naturalizationDate ?? "N/A"}
-        />
-        <RowItem label="Height" value={agent.height ?? "N/A"} />
-        <RowItem label="Weight" value={agent.weight ?? "N/A"} />
       </Flex>
 
       {/* Desktop: 4-column grid grouped by section */}
       <Box hideBelow="lg">
-        <Grid templateColumns="repeat(4, 1fr)" gapX={2} gapY={4} padding={4}>
-          <InfoItem label="Place of Birth" value={agent.placeOfBirth} />
+        <Grid templateColumns="repeat(2, 1fr)" gapX={2} gapY={4}>
           <InfoItem label="Date of Birth" value={agent.birthDate} />
           <InfoItem label="Nationality" value={agent.nationality} />
-          <InfoItem
-            label="Naturalization Date"
-            value={agent.naturalizationDate ?? "N/A"}
-          />
           <InfoItem label="Gender" value={agent.gender} />
           <InfoItem label="Civil Status" value={agent.civilStatus} />
-          <InfoItem label="Height" value={agent.height ?? "N/A"} />
-          <InfoItem label="Weight" value={agent.weight ?? "N/A"} />
         </Grid>
       </Box>
     </>

@@ -3,7 +3,18 @@
 import { Box, Flex, Grid, SimpleGrid, Text } from "@chakra-ui/react";
 import { ReactNode, useEffect, useState } from "react";
 
-import { PrimaryMdFlexButton } from "st-peter-ui";
+import {
+  PrimaryMdFlexButton,
+  StaticCard,
+  Card,
+  EmptyStateCard,
+  FloatingLabelInput,
+  LookupColumn,
+  LookupField,
+  OSPBadge,
+  Page,
+  useMessageDialog,
+} from "osp-ui-kit";
 import { useDrsList } from "../hooks/useDrsList";
 import { useSamplePayments } from "../hooks/useSamplePayments";
 
@@ -18,17 +29,6 @@ import { EMPLOYEES } from "@/app/(bpis)/data/doc-management/documenttype";
 import { refBankBranch } from "@/app/(bpis)/Model/Types/global.types";
 import { refBankBranchData } from "@/app/(bpis)/Model/Data/rawData";
 import { useRouter } from "next/navigation";
-import {
-  StaticCard,
-  Card,
-  EmptyStateCard,
-  FloatingLabelInput,
-  LookupColumn,
-  LookupField,
-  OSPBadge,
-  Page,
-  useMessageDialog,
-} from "osp-ui-kit";
 import { LuBanknote } from "react-icons/lu";
 import { SlipUpload, SlipUploadStatus } from "../components/SlipUpload";
 

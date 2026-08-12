@@ -78,15 +78,14 @@ const StackedCell = ({
   </Box>
 );
 
-
 /**
- * Five columns, four of which carry two fields — see {@link StackedCell}.
+ * Five columns, two of which carry two fields — see {@link StackedCell}.
  *
  * The one thing merging costs is sorting. A column sorts on one value, and here
- * that is always the bold one, so Filed and Incident can no longer be sorted on
- * directly: Filed rides along under Branch. Ordering a queue by age is a real
- * thing to want, so if it is missed, the answer is to split Filed back out as
- * its own column rather than to sort Branch by date behind the user's back.
+ * that is always the bold one, so Filed can no longer be sorted on directly: it
+ * rides along under Branch. Ordering a queue by age is a real thing to want, so
+ * if it is missed, the answer is to split Filed back out as its own column
+ * rather than to sort Branch by date behind the user's back.
  */
 const columns: ColumnDef<DeathClaim>[] = [
   {
@@ -157,14 +156,19 @@ const columns: ColumnDef<DeathClaim>[] = [
     },
   },
   {
-    // What is being claimed, over what caused it.
+    // What is being claimed.
+    //
+    // One line, not a {@link StackedCell}: the cause of incident used to sit
+    // under it and no longer does. The benefit is what decides how the claim is
+    // worked; the incident is the story behind it, which the claim itself tells
+    // once opened, and pairing the two here gave a passing detail the same
+    // weight in the eye as the thing being claimed.
     accessorKey: "benefits",
     header: "Benefit",
     cell: (info) => (
-      <StackedCell
-        primary={deathBenefitLabel(info.getValue() as DeathClaim["benefits"])}
-        secondary={info.row.original.typeOfIncident}
-      />
+      <Text fontSize="xs" fontWeight="600" color="gray.800" truncate>
+        {deathBenefitLabel(info.getValue() as DeathClaim["benefits"])}
+      </Text>
     ),
   },
   {

@@ -25,6 +25,7 @@ import {
 import type { ApprovalConfig } from "../config/approval-config";
 import { ApprovalStatusBadge } from "@/components/feedback/ApprovalStatusBadge";
 import { DRSPrintModal } from "./DRSPrintModal";
+import { SecondaryMdButton, SecondaryMdFlexButton } from "osp-ui-kit";
 
 type ApprovalDetailContentProps = {
   row: any;
@@ -240,16 +241,15 @@ export function ApprovalDetailContent({
               {primaryValue}
             </Text>
           </Box>
-          <ApprovalStatusBadge status={status} icon={<statusMeta.icon size={11} />} />
+          <ApprovalStatusBadge
+            status={status}
+            icon={<statusMeta.icon size={11} />}
+          />
         </HStack>
       </Box>
 
       <SectionCard title="Request Details" icon={<FileText size={13} />}>
-        <Box
-          display="grid"
-          gridTemplateColumns="1fr"
-          gap={3}
-        >
+        <Box display="grid" gridTemplateColumns="1fr" gap={3}>
           {config.detailFields.map((field) => {
             const isStatusField =
               field.key === "status" || field.key.endsWith(".status");
@@ -276,14 +276,10 @@ export function ApprovalDetailContent({
 
         {isDRSApproval && (
           <Box mt={4} pt={4} borderTopWidth="1px" borderColor="border.muted">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDrsPrintOpen(true)}
-            >
+            <SecondaryMdFlexButton onClick={() => setDrsPrintOpen(true)}>
               <Printer size={14} />
               View / Print DRS
-            </Button>
+            </SecondaryMdFlexButton>
           </Box>
         )}
       </SectionCard>

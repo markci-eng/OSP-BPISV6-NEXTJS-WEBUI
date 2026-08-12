@@ -29,11 +29,15 @@ import {
   LuSearch,
 } from "react-icons/lu";
 import { MdPayment } from "react-icons/md";
-import { useMessageDialog } from "osp-ui-kit";
+import {
+  useMessageDialog,
+  Page,
+  ProfileHeaderCard,
+  LookupField,
+  SecondarySmButton,
+} from "osp-ui-kit";
 import { TbMoneybagMove } from "react-icons/tb";
-import { Page, ProfileHeaderCard, LookupField } from "osp-ui-kit";
 import type { LookupColumn } from "osp-ui-kit";
-import { SecondarySmButton } from "st-peter-ui";
 import ActionButtons from "@/components/primitives/ActionButtons";
 import { LiaHandHoldingUsdSolid } from "react-icons/lia";
 import { mockAvatarUrl } from "@/lib/mock-avatar";

@@ -1,4 +1,4 @@
-import { Box, Breadcrumb } from "st-peter-ui";
+import { Box } from "@chakra-ui/react";
 import Disbursement from "./disbursement";
 
 export default function Page() {

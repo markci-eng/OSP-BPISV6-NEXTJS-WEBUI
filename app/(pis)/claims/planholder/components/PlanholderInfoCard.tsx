@@ -17,10 +17,10 @@ import {
   LuChevronUp,
   LuIdCard,
 } from "react-icons/lu";
-import { InfoItem, StaticCard } from "osp-ui-kit";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
+import { StaticCard } from "osp-ui-kit";
 import { RowItem } from "@/components/info-card/row-item";
 import { GroupLabel } from "../../components/group-label";
+import { InfoLabel } from "../../components/info-label";
 import { SectionTitle } from "../../components/section-title";
 import type { Planholder } from "../../claims-data";
 import { DrawerPageHeader } from "./DrawerPageHeader";
@@ -50,11 +50,11 @@ interface DetailItem {
   /** How the row renders it — a string, or a {@link Pill} for a status. */
   value: ReactNode;
   /**
-   * The same fact as plain text, for the layouts that cannot take a node.
+   * The same fact as plain text, for the layouts that draw it as one line.
    *
-   * The shared {@link InfoItem} draws a value as one line of type, so a status
-   * that is a pill in a row becomes coloured text there — see `tone`. Only the
-   * summary needs these; the drawer's panels are rows throughout.
+   * The panels set a value as a single run of type, so a status that is a pill
+   * in a row becomes coloured text there — see `tone`. Only the summary needs
+   * these; the drawer's panels are rows throughout.
    */
   text?: string;
   /** Colour for `text`, when the fact carries one. */
@@ -245,17 +245,49 @@ const asText = (item: DetailItem): string =>
  * column to sit in. See the note on `asDetails`.
  *
  * Headed by a {@link GroupLabel} and not the page's `SectionTitle`: this is a
- * run inside a card, under the card's own title, and the section heading is set
- * exactly as an `InfoItem`'s value — 16px/600 either way — so a grid of them
- * under one would read as a fact called "Summary".
+ * run inside a card, under the card's own title, and the section heading was set
+ * exactly as the kit `InfoItem`'s value — 16px/600 either way — so a grid of
+ * them under one read as a fact called "Summary". The pairs are quieter now (see
+ * below) and the heading no longer collides with them, but it stays a
+ * `GroupLabel`: a run inside a card is what it is regardless of what saved it.
+ *
+ * The pairs are {@link InfoLabel}, the claims area's own — the same component
+ * the claim details card uses, so the two cards on the claim view are set alike
+ * rather than one shouting its values at 16px/600 and the other not. See it for
+ * the sizes and why they differ from the kit's.
  */
-function DetailPanel({ title, items }: { title: string; items: DetailItem[] }) {
+function DetailPanel({
+  title,
+  items,
+  titled = true,
+}: {
+  title: string;
+  items: DetailItem[];
+  /**
+   * Whether the heading is showing.
+   *
+   * A group label earns its place by telling one run from the next. Shut, this
+   * card holds ONE run, and "Summary" over the only thing on the card names what
+   * cannot be mistaken for anything else — under a card already titled
+   * "Planholder Details", it is a third heading for the same block. It comes
+   * back with the panels it distinguishes.
+   */
+  titled?: boolean;
+}) {
   return (
     <Box>
-      <GroupLabel>{title}</GroupLabel>
+      {/* Rendered or not, rather than collapsed like the panels below.
+          `grid-template-rows: 0fr → 1fr` is the trick this card uses to open
+          those, and it does not work for a single line: `overflow: hidden` makes
+          the track's automatic minimum zero, so the `1fr` it animates to
+          resolves to zero as well and the heading never comes back. A label is
+          one line either way — there is nothing to animate that is worth a
+          mechanism that has to be argued with. */}
+      {titled && <GroupLabel>{title}</GroupLabel>}
+
       <SimpleGrid columns={{ base: 2, md: 3, xl: 4 }} gapX={4} gapY={3}>
         {items.map((item) => (
-          <InfoItem
+          <InfoLabel
             key={item.label}
             label={item.label}
             value={asText(item)}
@@ -270,7 +302,13 @@ function DetailPanel({ title, items }: { title: string; items: DetailItem[] }) {
 /* ------------------------------ drawer section ------------------------------ */
 
 /** A titled block inside the details drawer. */
-function DrawerSection({ title, items }: { title: string; items: DetailItem[] }) {
+function DrawerSection({
+  title,
+  items,
+}: {
+  title: string;
+  items: DetailItem[];
+}) {
   return (
     <Box>
       <SectionTitle title={title} />
@@ -307,10 +345,33 @@ export function PlanholderInfoCard({
   open: controlledOpen,
   onOpenChange,
   asDetails = false,
+  summaryAsPairs = false,
 }: {
   planholder: Planholder;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /**
+   * Draw the summary body as stacked label-over-value PAIRS, two across,
+   * instead of dotted-leader rows.
+   *
+   * For the DESKTOP rails. A leader row spends its whole width on one fact and
+   * the rule between its halves; the same fact as a pair is two short lines,
+   * so two of them fit side by side and ten facts come to five rows instead of
+   * ten. In a rail that is one column of a claim — where the height this frees
+   * goes straight to the folder underneath — that is the difference between a
+   * card and half a screen.
+   *
+   * It is also the layout the profile's details panel uses ({@link
+   * DetailPanel}), so the same record is set the same way wherever a desktop
+   * shows it. A status that is a pill in a row becomes coloured text here, for
+   * the reason given on `DetailItem.text`.
+   *
+   * A caller's decision and not a breakpoint's: this card is dropped into rails
+   * of about 360px and into full-width pages, and the width that matters is the
+   * card's, which no media query here can see. A phone keeps rows — at that
+   * width two columns of pairs is four words a line.
+   */
+  summaryAsPairs?: boolean;
   /**
    * Whether this card is the page's details panel rather than a summary of one.
    *
@@ -416,19 +477,23 @@ export function PlanholderInfoCard({
           //    header runs edge to edge, and 4px of inset is exactly what would
           //    stop it doing that.
           "& > div": { padding: 0 },
-          // 2. The icon chip is the brand's pale green, not the card's grey.
+          // 2. The icon has NO chip — not the card's grey, and not the pale
+          //    green this used to override it to. A chip holds a small mark
+          //    steady inside a row of text; the icon here has the card's own
+          //    title beside it and needs no holding. Same treatment as the
+          //    beneficiary card's mark, so the profile's cards agree.
           "& > div > div:first-of-type > div:first-of-type > div:first-of-type":
-            { background: "#eaf5ee" },
+            { background: "transparent" },
           // 3. The body sits closer under the rule and further from the edges
           //    than the card's even 12px — 8px above, 16px around and below.
           "& > div > div:nth-of-type(2)": { padding: "8px 16px 16px" },
         }}
       >
         <StaticCard
-          // The chip around it is the card's, and grey; the icon inside it is
-          // ours, and the brand's.
+          // No colour set: react-icons draw with `currentColor`, so the mark
+          // takes the card's text rather than a value hard-coded here.
           activeIcon={
-            <Box display="flex" color={BRAND_COLORS.darkGreen}>
+            <Box display="flex">
               <LuIdCard size={16} />
             </Box>
           }
@@ -449,10 +514,27 @@ export function PlanholderInfoCard({
             </Box>
           }
         >
-          {/* Body — Summary detail only. The card rules it off and pads it. */}
-          {summaryItems(planholder).map((item) => (
-            <RowItem key={item.label} label={item.label} value={item.value} />
-          ))}
+          {/* Body — Summary detail only. The card rules it off and pads it.
+
+              Two shapes of the same ten facts; see `summaryAsPairs`. The pairs
+              take the panel's own gaps rather than gaps of their own, so the
+              card reads as the details panel does on the profile. */}
+          {summaryAsPairs ? (
+            <SimpleGrid columns={2} gapX={4} gapY={3}>
+              {summaryItems(planholder).map((item) => (
+                <InfoLabel
+                  key={item.label}
+                  label={item.label}
+                  value={asText(item)}
+                  color={item.tone}
+                />
+              ))}
+            </SimpleGrid>
+          ) : (
+            summaryItems(planholder).map((item) => (
+              <RowItem key={item.label} label={item.label} value={item.value} />
+            ))
+          )}
         </StaticCard>
       </Box>
 
@@ -491,14 +573,15 @@ export function PlanholderInfoCard({
           // Typed selectors, for the reason given on the card above.
           css={{
             "& > div": { padding: 0 },
+            // No chip — see the note on the card above.
             "& > div > div:first-of-type > div:first-of-type > div:first-of-type":
-              { background: "#eaf5ee" },
+              { background: "transparent" },
             "& > div > div:nth-of-type(2)": { padding: "8px 16px 16px" },
           }}
         >
           <StaticCard
             activeIcon={
-              <Box display="flex" color={BRAND_COLORS.darkGreen}>
+              <Box display="flex">
                 <LuIdCard size={16} />
               </Box>
             }
@@ -533,8 +616,13 @@ export function PlanholderInfoCard({
             }
           >
             <Box ref={bodyRef}>
-              {/* Always. */}
-              <DetailPanel title="Summary" items={summaryItems(planholder)} />
+              {/* Always — but only headed once there is a second panel for the
+                  heading to tell it apart from. See `titled`. */}
+              <DetailPanel
+                title="Summary"
+                items={summaryItems(planholder)}
+                titled={detailsOpen}
+              />
 
               {/* And the rest, when asked for. `0fr` is a row of no height, so
                   the panels inside are clipped to nothing — off the page, and

@@ -28,6 +28,9 @@ import {
 // same reason — `Address` exposes only the one-line `formatted` string, and the
 // beneficiary form binds to the individual parts. See `addressPartsOf`.
 import { addressSeed, claimsHdrDCSeed } from "../data/seed";
+// The status-change history: evidence a claim exists (`hasBeenOpened`), and the
+// status it was last reported at.
+import { openedClaimPhases, openedClaimReferences } from "./claim-activity";
 import {
   getClaimEdit,
   getClaimEndorsement,
@@ -194,6 +197,18 @@ export interface ClaimRequest {
   dateOfDeathISO?: string;
   /** Age of Death, "61 yrs 1 mos 5 days" (death claims only). */
   ageOfDeath?: string;
+  /**
+   * Interment Date label — when the plan holder was buried.
+   *
+   * PLACEHOLDER: nothing in the data layer records this yet. It is not on the
+   * claim request, not captured by the create form, and not derivable from the
+   * date of death, so every claim reads as a dash until the real thing arrives.
+   *
+   * Modelled as a field rather than dashed out in the card — the same choice
+   * {@link ClaimRequest.isDeficient} makes — so there is one place to change
+   * when it does, and the card is not the thing asserting it is unknown.
+   */
+  intermentDateDisplay?: string;
   /** Payees (claimants) named on this claim. */
   payees?: ClaimPayeeView[];
   /** Branch that filed the request, e.g. "Quezon City Branch". */
@@ -202,6 +217,21 @@ export interface ClaimRequest {
   causeOfIncident: string;
   /** "Regular" / "Special" — from how soon after the incident it was filed. */
   natureOfClaim?: string;
+  /**
+   * Whether the claim's requirements are incomplete.
+   *
+   * PLACEHOLDER: nothing in the data layer records this yet — there is no
+   * deficiency list on a claim request, and no rule deriving one from the
+   * documents on file. Every claim therefore reads as deficient (see
+   * {@link DEFICIENT_UNTIL_RECORDED}), which is the safe direction to be wrong
+   * in: it says "check the requirements", where a default of `false` would say
+   * "the requirements are complete" about a claim nobody has checked.
+   *
+   * Modelled as a field rather than hard-coded in the card so there is one place
+   * to change when the real thing arrives, and so the card is not the thing
+   * asserting it.
+   */
+  isDeficient: boolean;
   /** When the request was recorded, e.g. "Apr 18, 2026". */
   auditDateDisplay: string;
   /**
@@ -280,9 +310,7 @@ const SPECIAL_CLAIM_DAYS = 7;
  * "SC" (Special Claim) when the claim was filed within a week of the incident,
  * otherwise "RC" (Regular Claim). Mirrors `ClaimsHdrDC.natureCode`.
  */
-export function deathClaimNatureCode(
-  request: ClaimRequestModel,
-): "SC" | "RC" {
+export function deathClaimNatureCode(request: ClaimRequestModel): "SC" | "RC" {
   const days =
     (request.fileDate.getTime() - request.incidentDate.getTime()) / 86_400_000;
   return days <= SPECIAL_CLAIM_DAYS ? "SC" : "RC";
@@ -427,6 +455,42 @@ function applyClaimEdit(view: ClaimRequest, request: ClaimRequestModel) {
  * then. Call this from a component that also calls `useClaimStore()` so the
  * list re-renders when a claim is created.
  */
+/**
+ * What every claim's deficiency reads as until the data layer records one.
+ *
+ * `true`, and deliberately: see `isDeficient` on {@link ClaimRequest}. When a
+ * deficiency list exists this constant is what it replaces, and the field on the
+ * view is already the shape the card reads.
+ */
+const DEFICIENT_UNTIL_RECORDED = true;
+
+/**
+ * Whether a claim has actually been opened against this request — which decides
+ * whether the header joined to it carries a real claim no.
+ *
+ * The request's own status is the first answer and an incomplete one. The seed
+ * leaves most requests at "Pending" while still carrying a `ClaimsHdrDC` row for
+ * each, because `ClaimsPayee` is keyed only by claim no and that row is the sole
+ * join to the payee filed with the request. Going by status alone therefore
+ * misses every claim the seed reports on elsewhere: the dashboard's Recent
+ * Updates deck has always resolved a claim no for these, so a claim it was
+ * showing as approved was, on the plan holder's page, a request nobody had
+ * opened.
+ *
+ * So the activity history is the second answer. Every event in it is a status a
+ * claim reached AFTER being created, so being named there is proof the claim
+ * exists — see {@link openedClaimReferences}.
+ *
+ * A request that is neither is genuinely unopened: no claim no, and it is what
+ * the profile's Create Claim menu offers.
+ */
+function hasBeenOpened(request: ClaimRequestModel): boolean {
+  return (
+    request.statusLabel !== "Pending" ||
+    openedClaimReferences.has(request.requestNo)
+  );
+}
+
 export function getClaimRequests(lpaNo: string): ClaimRequest[] {
   const contestability = db.getPlanholder(lpaNo)?.contestability;
 
@@ -452,6 +516,7 @@ export function getClaimRequests(lpaNo: string): ClaimRequest[] {
       // Notes only ever come from this session — the source data has none.
       notes: getClaimNotes(request.requestNo).join("\n"),
       isVerified: false,
+      isDeficient: DEFICIENT_UNTIL_RECORDED,
     };
 
     // Endorsements and verifications apply to any claim, whether it came from
@@ -492,12 +557,17 @@ export function getClaimRequests(lpaNo: string): ClaimRequest[] {
 
       if (created) {
         applyCreatedClaim(view, created);
-      } else if (hdr && request.statusLabel !== "Pending") {
-        // A pending request has no header yet; its seed header exists only to
-        // join the request to its payee. See `payeeRecordsForRequest`.
+      } else if (hdr && hasBeenOpened(request)) {
         view.claimNo = hdr.claimNo;
         view.benefit = deathBenefitLabel(hdr.benefits);
-        view.phase = hdr.statusLabel;
+        // The history's status where there is one, the header's otherwise. The
+        // history is newer by construction — every event in it is a status the
+        // claim reached after the header was written — and it is what the
+        // dashboard reports for this same claim. Without it a claim listed on
+        // the strength of that history showed a claim no beside the word
+        // "Pending": created, and not yet started, which is not a state.
+        view.phase =
+          openedClaimPhases.get(request.requestNo) ?? hdr.statusLabel;
         view.contestability = hdr.contestability;
         view.dateOfDeathDisplay = formatFiledDate(hdr.dateOfDeathISO);
         view.dateOfDeathISO = hdr.dateOfDeathISO.slice(0, 10);
@@ -821,7 +891,8 @@ export function getPlanholderDocuments(personId: string): PlanholderDocument[] {
     return {
       id: doc.docId,
       code: doc.documentCode,
-      name: db.getDocumentType(doc.documentCode)?.documentDesc ?? doc.documentCode,
+      name:
+        db.getDocumentType(doc.documentCode)?.documentDesc ?? doc.documentCode,
       fileName,
       format: ext.toUpperCase(),
       url: doc.value,

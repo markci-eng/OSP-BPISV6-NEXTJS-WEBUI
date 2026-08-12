@@ -25,9 +25,11 @@ import {
   LuSearch,
   LuShieldCheck,
 } from "react-icons/lu";
-import { Checkbox, H4, PrimaryMdButton, Small } from "st-peter-ui";
-import { z } from "zod";
 import {
+  Checkbox,
+  H4,
+  PrimaryMdButton,
+  Small,
   StaticCard,
   DataTable,
   FieldSummaryCard,
@@ -36,6 +38,7 @@ import {
   Page,
   useMessageDialog,
 } from "osp-ui-kit";
+import { z } from "zod";
 import InfoCard from "@/components/info-card/info-card";
 import { RowItem } from "@/components/info-card/row-item";
 

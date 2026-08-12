@@ -7,7 +7,11 @@ import {
   PrimaryMdButton,
   SecondaryMdButton,
   Small,
-} from "st-peter-ui";
+  FloatingLabelSelect,
+  SectionTitle,
+  useMessageDialog,
+  Card,
+} from "osp-ui-kit";
 import {
   LuArrowRight,
   LuMoveDown,
@@ -19,18 +23,12 @@ import {
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  FloatingLabelSelect,
-  SectionTitle,
-  useMessageDialog,
-} from "osp-ui-kit";
-import {
   getPositionDesc,
   Position,
   SalesAgent,
 } from "../../common/agent-lookup/agent-lookup.type";
 import RequestSubmittedDialog from "../dialogs/request-submitted-dialog";
 import AgentProfileHeaderCard from "../cards/agent-profile-header-card";
-import { Card } from "osp-ui-kit";
 
 interface AgentMovementFormProps {
   selectedAgent: SalesAgent;

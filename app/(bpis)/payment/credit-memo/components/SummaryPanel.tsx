@@ -1,9 +1,8 @@
 "use client";
 
 import { Badge, Box, Button, HStack, Text, VStack } from "@chakra-ui/react";
-import { PrimaryMdFlexButton } from "st-peter-ui";
+import { PrimaryMdFlexButton, Card } from "osp-ui-kit";
 import { formatCurrency } from "@/lib/format/currency";
-import { Card } from "osp-ui-kit";
 
 interface SummaryPanelProps {
   totalDeposits: number;
