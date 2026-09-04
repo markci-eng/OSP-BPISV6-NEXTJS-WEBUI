@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { RowItem } from "@/components/info-card/row-item";
+import { isAccountInGoodStanding } from "../../../data";
 import type { Planholder } from "../../claims-data";
 
 /* ------------------------------ formatting ------------------------------ */
@@ -87,12 +88,11 @@ function summaryItems(planholder: Planholder): InfoItem[] {
     { label: "Termination Status", value: planholder.terminationStatus },
     {
       label: "Account Status",
-      value:
-        planholder.accountStatus === "AC" ? (
-          <Pill tone="green">Active</Pill>
-        ) : (
-          <Pill tone="amber">Lapsed</Pill>
-        ),
+      value: isAccountInGoodStanding(planholder.accountStatus) ? (
+        <Pill tone="green">{planholder.accountStatusLabel}</Pill>
+      ) : (
+        <Pill tone="amber">{planholder.accountStatusLabel}</Pill>
+      ),
     },
     { label: "Date of Birth", value: formatDate(planholder.dateOfBirth) },
     {

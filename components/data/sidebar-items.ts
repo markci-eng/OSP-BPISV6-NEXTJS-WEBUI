@@ -1,4 +1,9 @@
-import { HiOutlineUsers, HiUsers } from "react-icons/hi2";
+import {
+  HiOutlineShieldCheck,
+  HiOutlineUsers,
+  HiShieldCheck,
+  HiUsers,
+} from "react-icons/hi2";
 import { PesoOutlineIcon, PesoSolidIcon } from "../icons/peso-icons";
 import { McprOutlineIcon, McprSolidIcon } from "../icons/mcpr-icons";
 
@@ -28,7 +33,6 @@ import {
   RiUser2Line,
 } from "react-icons/ri";
 import { FaHandHoldingUsd } from "react-icons/fa";
-import { LuClipboardCheck } from "react-icons/lu";
 import { BiCoin, BiSolidCoin } from "react-icons/bi";
 import { TbReceiptDollar, TbReceiptDollarFilled } from "react-icons/tb";
 import { MdOutlineSyncLock } from "react-icons/md";
@@ -167,6 +171,14 @@ export const SideBarItemsBranch: NavItem[] = [
       },
     ],
   },
+  {
+    icon: HiOutlineShieldCheck,
+    activeIcon: HiShieldCheck,
+    label: "User Access Management",
+    displayName: "Access",
+    href: "/user-access-management",
+  },
+
   // {
   //   icon: MdOutlineAppRegistration,
   //   label: "STL Approval",
@@ -282,25 +294,30 @@ export const SideBarItemsClaims: NavItem[] = [
     displayName: "Planholder",
   },
   {
+    // Death, WOI and Dismemberment are the three natures of a death claim, so
+    // they are one group rather than three siblings. The parent has no `href`
+    // of its own — the kit treats an item with `subItems` as an accordion and
+    // sends the mobile bottom-nav tab to the first sub-item, "Death".
     icon: LiaHandHoldingUsdSolid,
     activeIcon: FaHandHoldingUsd,
-    label: "Death",
-    href: "/claims/death",
+    label: "Death Claim",
+    displayName: "Death",
     bottomNav: true,
     bottomNavOrder: 2,
+    subItems: [
+      { label: "Death", href: "/claims/death-claim/death" },
+      { label: "WOI", href: "/claims/death-claim/woi" },
+      { label: "Dismemberment", href: "/claims/death-claim/dismemberment" },
+    ],
   },
   {
-    icon: RiClipboardLine,
-    activeIcon: RiClipboardFill,
-    label: "WOI",
-    href: "/claims/woi",
-  },
-  {
-    icon: LuClipboardCheck,
-    label: "Dismemberment",
-    href: "/claims/dismemberment",
-  },
-  {
+    // ONE ENTRY, NOT A GROUP — unlike Death Claim above, and deliberately.
+    //
+    // The module's four stages have routes of their own, and they were briefly
+    // listed here as sub-items. They are not any more: the dashboard is the way
+    // in to this module, and every stage is reached from it. A sidebar branch
+    // offering a second way past it would let a user arrive at a stage without
+    // the figures that say whether it is worth opening.
     icon: PesoOutlineIcon,
     activeIcon: PesoSolidIcon,
     label: "Service Payables",

@@ -9,7 +9,7 @@
 //   ClaimRequest.RequestNo  CL + branch + year + claim code + 6-digit sequence
 //                           e.g. CLQCITY2026CAB000001
 //   ClaimsHdr.ClaimNo       territory + claim code + 2-digit year + sequence
-//                           e.g. NCT2-2DC26009785
+//                           e.g. NCT1DC26009785
 //   Status                  AP / DN / FA / FD / PE
 //   Benefits                CAB / ECAB / ADB / USB
 //
@@ -21,6 +21,7 @@ import {
   type AddressRecord,
   type BeneficiaryRecord,
   type BranchRecord,
+  type ChapelBranchRecord,
   type ClaimRequestRecord,
   type ClaimsHdrDCRecord,
   type ClaimsPayeeRecord,
@@ -34,8 +35,13 @@ import {
   type PlanholderRecord,
   type PlanholderRemarkRecord,
   type PlanTypeRecord,
+  type RefAccountStatusRecord,
+  type RefCreditOfServiceRecord,
+  type RefMortuaryRecord,
   type RefPayClassRecord,
   type RefPayoutChannelRecord,
+  type RefTermiStatRecord,
+  type TerritoryRecord,
 } from "./models";
 
 const AUDIT = { user: "system", date: "2026-01-01T00:00:00" };
@@ -83,6 +89,22 @@ function planFigures(planCode: string, instNo: number) {
   };
 }
 
+/**
+ * A plan settled in full — every installment of its term paid, nothing left on
+ * the balance.
+ *
+ * What a DECEASED plan holder's account looks like by the time a chapel's
+ * service payable is raised against it: the death benefit closes the account
+ * out, and the service-payable rules will only let a plan be serviced once its
+ * account status is `FP`. So the two go together, and every plan holder below
+ * carrying `acctStatCode: "FP"` gets its ledger from here.
+ */
+function paidInFull(planCode: string) {
+  const pt = planTypeSeed.find((p) => p.planCode === planCode);
+  if (!pt) throw new Error(`Unknown plan code: ${planCode}`);
+  return planFigures(planCode, pt.term * 12);
+}
+
 /* ============================ Bulk claim volume ============================ */
 //
 // Everything hand-written below has a story attached — a lapsed plan, a second
@@ -107,16 +129,23 @@ const BULK_MIDDLE = ["Bautista", "Salvador", "Alcantara", "Gatchalian", "Escobar
 const BULK_LAST = ["Marquez", "Escudero", "Buenaventura", "Fernandez", "Pascual", "Delfin", "Rosales", "Tolentino", "Abadilla", "Nicolas"];
 const BULK_BIRTHPLACE = ["Pasig City", "Bacolod City", "Zamboanga City", "Dagupan City", "Roxas City", "Butuan City"];
 
-/** Branch + territory pairs, so a generated claim no matches its branch. */
+/**
+ * Branch + territory pairs, so a generated claim no matches its branch.
+ *
+ * Written out rather than looked up in `branchSeed`: this block runs at module
+ * load and that array is declared further down the file. Keep the two in step —
+ * a territory here that disagrees with the branch's own would put a claim in one
+ * territory's queue under another territory's number.
+ */
 const BULK_BRANCH = [
-  { code: "QCITY", territory: "NCT2-2" },
-  { code: "CEBU", territory: "VW1-2" },
-  { code: "DAVAO", territory: "MW1" },
-  { code: "BAGUIO", territory: "NL1" },
-  { code: "ILOILO", territory: "VW1-2" },
-  { code: "NAGA", territory: "MIMAROPA2" },
-  { code: "CDO", territory: "MW1" },
-  { code: "MANILA", territory: "NCT2-2" },
+  { code: "QCITY", territory: "NCT1" },
+  { code: "CEBU", territory: "VCT" },
+  { code: "DAVAO", territory: "MCET" },
+  { code: "BAGUIO", territory: "CLT2" },
+  { code: "ILOILO", territory: "VWT1" },
+  { code: "NAGA", territory: "BT" },
+  { code: "CDO", territory: "MCET" },
+  { code: "MANILA", territory: "NCT2" },
 ];
 
 const BULK_PLAN = ["A5M", "B5M10", "RC5M4", "C5M8", "D5M9", "RF5M8", "RD5M5", "NF5M4"];
@@ -179,13 +208,31 @@ function buildBulkClaim(index: number, stage: "pending" | "endorsed" | "decided"
     addresses: [],
   };
 
+  // Every bulk plan holder is deceased, so the account behind each is the one a
+  // chapel's service payable is raised against: settled in full, and not yet
+  // terminated — the state the service-payable rules require before a plan can
+  // be serviced at all. Two minorities break that up, and both exist so the
+  // service-payables queue has something to catch:
+  //
+  //   ROP     the plan was returned as premium (FR / RP). Not serviceable, and
+  //           the branch has to answer for it — this is the ROP discrepancy.
+  //   LAPSED  the account never reached fully paid, so the plan is not ready.
+  //
+  // Checked ROP first so the two cannot both land on one row: `FR` reads FULLY
+  // PAID ROP, and a lapsed account under it would be a row contradicting itself.
+  const rop = seq % 13 === 0 ? "FR" : seq % 17 === 0 ? "RP" : null;
+  const lapsed = !rop && seq % 9 === 0;
+  const planCode = BULK_PLAN[seq % BULK_PLAN.length];
+
   const planholder: PlanholderRecord = {
     lpaNo,
     personId,
-    ...planFigures(BULK_PLAN[seq % BULK_PLAN.length], 12 + (seq % 48)),
+    ...(lapsed
+      ? planFigures(planCode, 12 + (seq % 48))
+      : paidInFull(planCode)),
     accountClass: "R",
-    acctStatCode: seq % 5 === 0 ? "LP" : "AC",
-    termiStatCode: "",
+    acctStatCode: lapsed ? "LP" : "FP",
+    termiStatCode: rop ?? "NT",
     dueDate: "2026-08-01",
     effectivityDate: `20${20 + (seq % 6)}-${pad((seq % 12) + 1, 2)}-01`,
     isServiceOnly: false,
@@ -263,6 +310,496 @@ export const bulkDecidedClaimRefs = bulkClaims
   .filter((c) => c.stage === "decided")
   .map((c) => c.requestNo);
 
+/* ========================= Assigned plans — `SA` ========================= */
+//
+// THE PLAN HOLDER IS USUALLY NOT THE DECEASED, and until now this seed said the
+// opposite. Every plan above is held by the person it buries, so
+// `TblICIS_Billing_Processed.DeceasedName` and the plan holder's name were the
+// same string on every row in the file — and a processor whose job is to check
+// one against the other had nothing to check, on any billing, ever.
+//
+// These are the other case: a plan bought by one person and used to bury
+// another. The holder is alive; the plan's termination status is `SA` —
+// SERVICED - ASSIGNED, which is the reference table's own word for it, and the
+// only status that says the plan and the funeral belong to two different
+// people. (`SP`, its neighbour, is serviced FOR the plan holder — the ordinary
+// case, and what every other plan here would carry once terminated.)
+//
+// NO DEATH CLAIM IS FILED AGAINST ANY OF THEM, which is what keeps them out of
+// the derived endorsement pass — these plans reach a billing only through
+// `assignedEndorsements` in `billing-seed.ts`, which deals them across the
+// billing codes so that every code has at least one. That is the point of
+// generating a POOL rather than placing them by hand: the number of billing
+// codes is not knowable here, it falls out of how the chapels' weeks divide up,
+// so the pool is made comfortably larger than it and the billing seed spends
+// all of it.
+//
+// The count is a supply, not a target. Every plan in it is used — the dealer
+// goes round again rather than leaving one unspent, because a plan marked
+// SERVICED with no service against it would be a row contradicting itself.
+const ASSIGNED_PLANS = 48;
+
+/**
+ * First names for the DECEASED on an assigned plan.
+ *
+ * A pool of its own, sharing nothing with {@link BULK_FIRST}, and that is what
+ * makes "the two names differ" true by construction rather than by luck: the
+ * holder's first name comes from that list and the deceased's from this one, so
+ * no arithmetic over the two can ever land them on the same full name.
+ *
+ * The surname and middle name come from the same pools as everybody else's,
+ * because a dependant is usually family.
+ */
+const ASSIGNED_DECEASED_FIRST = ["Anastacio", "Benedicta", "Crisanto", "Dionisia", "Estanislao", "Fructuosa", "Gregorio", "Hilaria", "Isabelo", "Juanita", "Leoncio", "Maximina"];
+
+/**
+ * One assigned plan: the holder, their plan, and the name of the person the
+ * plan was spent on.
+ *
+ * The deceased is a NAME AND NOT A PERSON, deliberately. The source column is a
+ * name with no foreign key behind it — `IcisBillingProcessedRecord.deceasedName`
+ * says as much — so seeding a `Person` for them would invent a link the real
+ * table does not have.
+ */
+function buildAssignedPlan(index: number) {
+  const seq = index + 1;
+  const pad = (n: number, width: number) => String(n).padStart(width, "0");
+
+  // `P-4…` and `L25 2…` are both untaken: the bulk block holds P-1xx, the
+  // territory heads P-2xx and the chapel managers P-3xxx.
+  const personId = `P-4${pad(seq, 3)}`;
+  const lpaNo = `L25${pad(2000 + seq, 6)}${"ABCDEFGHJKLMNPQRSTUVWXYZ"[seq % 24]}`;
+  const planCode = BULK_PLAN[(seq * 3) % BULK_PLAN.length];
+
+  const person: PersonRecord = {
+    personId,
+    lastName: BULK_LAST[(seq * 7) % BULK_LAST.length],
+    firstName: BULK_FIRST[(seq * 5) % BULK_FIRST.length],
+    middleName: BULK_MIDDLE[(seq * 3) % BULK_MIDDLE.length],
+    dateOfBirth: `19${50 + (seq % 30)}-${pad((seq % 12) + 1, 2)}-${pad((seq % 27) + 1, 2)}`,
+    placeOfBirth: BULK_BIRTHPLACE[seq % BULK_BIRTHPLACE.length],
+    genderAtBirth: seq % 2 === 0 ? "Male" : "Female",
+    preferredGender: seq % 2 === 0 ? "Male" : "Female",
+    civilStatus: seq % 3 === 0 ? "Widowed" : "Married",
+    height: String(150 + (seq % 25)),
+    weight: String(50 + (seq % 30)),
+    auditUser: AUDIT.user,
+    auditDate: AUDIT.date,
+    addresses: [],
+  };
+
+  // FULLY PAID AND NOT AN ROP, every one of them. These rows exist to make the
+  // deceased column mean something; a discrepancy on top would be a second
+  // lesson taught over the first, and the queue already has its examples of
+  // both kinds from the bulk block.
+  const planholder: PlanholderRecord = {
+    lpaNo,
+    personId,
+    ...paidInFull(planCode),
+    accountClass: "R",
+    acctStatCode: "FP",
+    termiStatCode: "SA",
+    dueDate: "2026-08-01",
+    effectivityDate: `20${18 + (seq % 8)}-${pad((seq % 12) + 1, 2)}-01`,
+    isServiceOnly: false,
+    riDate: null,
+    lastPaymentDate: "2026-07-01",
+    ...PH_AUDIT,
+  };
+
+  const deceasedName = [
+    ASSIGNED_DECEASED_FIRST[(seq * 5) % ASSIGNED_DECEASED_FIRST.length],
+    BULK_MIDDLE[(seq * 11) % BULK_MIDDLE.length],
+    BULK_LAST[(seq * 13) % BULK_LAST.length],
+  ].join(" ");
+
+  return { person, planholder, deceasedName };
+}
+
+const assignedPlans = Array.from({ length: ASSIGNED_PLANS }, (_, i) =>
+  buildAssignedPlan(i),
+);
+
+const assignedPersons = assignedPlans.map((a) => a.person);
+const assignedPlanholders = assignedPlans.map((a) => a.planholder);
+
+/* ==================== Territories and chapel branches ==================== */
+//
+// Up here with the bulk block, and above `personSeed`, for the same reason it
+// is: this block BUILDS people — a head per territory and a manager per chapel
+// — and they have to exist before the array they are spread into is declared.
+//
+// A chapel is not a branch. A branch sells plans and collects on them; a chapel
+// renders the service the plan was bought for. The two are grouped by the same
+// territories and meet nowhere else, which is why they are separate tables that
+// share one foreign key.
+//
+// The chapels come in two lists, and the split is the source data's own. The
+// reference drop gives the company-owned network in full and says so ("all of
+// this is not franchise"); the franchised chapels are not in it at all. They are
+// reachable only through `RefMortuary`, whose FR rows name chapel codes that
+// appear nowhere in the owned list — ROSARI, TAGUIG, SANPED, GENSAN and the rest
+// of Mindanao. Those codes are the franchise network, and `FRANCHISE_CHAPELS`
+// below is them. See that block for what is derived and what is given.
+
+/** `[code, description]`, in the order the source system lists them. */
+const TERRITORIES: [string, string][] = [
+  ["BT", "BICOL TERRITORY"],
+  ["CLBZT", "CALABARZON"],
+  ["CLT1", "CENTRAL LUZON TERRITORY 1"],
+  ["CLT2", "CENTRAL LUZON TERRITORY 2"],
+  ["CVT", "CAGAYAN VALLEY TERRITORY"],
+  ["GME", "GREATER MANILA EAST"],
+  ["MCET", "MINDANAO CENTRAL EAST TERRITORY"],
+  ["MMRPT", "MIMAROPA"],
+  ["VET", "VISAYAS EAST TERRITORY"],
+  ["VCT", "VISAYAS CENTRAL TERRITORY"],
+  ["VWT1", "VISAYAS WEST TERRITORY1"],
+  ["NCT1", "NATIONAL CAPITAL TERRITORY1"],
+  ["NCT2", "NATIONAL CAPITAL TERRITORY2"],
+];
+
+/** `[chapelCode, chapelDesc, territoryCode, barangay, city, province, zipCode]`. */
+type ChapelRow = [string, string, string, string, string, string, number];
+
+/**
+ * The company-owned chapels.
+ *
+ * The first three columns are the source system's own; the address is filled in
+ * against the real place each chapel is named for. Barangay is the chapel's own
+ * district where its NAME says which one it is ("IRIGA - SAN MIGUEL", "CUBAO",
+ * "BOGO - PANDAN") and "Poblacion" for the provincial towns where it does not —
+ * which is where a town's chapel usually stands anyway.
+ *
+ * GME, MCET and NCT2 have no chapels in this list. That is the source data, not
+ * an omission: the company's OWN network has not reached them. GME and MCET are
+ * covered by franchises instead — see {@link FRANCHISE_CHAPELS} — and NCT2 by
+ * neither, so it stays the territory the dashboard has to show empty.
+ */
+const CHAPELS: ChapelRow[] = [
+  ["ALABAT", "ALABAT", "CLBZT", "Poblacion", "Alabat", "Quezon", 4333],
+  ["ALAMIN", "ALAMINOS", "CLT2", "Poblacion", "Alaminos City", "Pangasinan", 2404],
+  ["ANGELE", "ANGELES", "CLT1", "Balibago", "Angeles City", "Pampanga", 2009],
+  ["ANTIPO", "ANTIPOLO", "NCT1", "San Roque", "Antipolo City", "Rizal", 1870],
+  ["APARRI", "APARRI", "CVT", "Poblacion", "Aparri", "Cagayan", 3515],
+  ["ARANET", "ARANETA", "NCT1", "Cubao", "Quezon City", "Metro Manila", 1109],
+  ["ATIMON", "ATIMONAN", "CLBZT", "Poblacion", "Atimonan", "Quezon", 4331],
+  ["BACOLO", "BACOLOD", "VWT1", "Villamonte", "Bacolod City", "Negros Occidental", 6100],
+  ["BAIS", "BAIS", "VWT1", "Poblacion", "Bais City", "Negros Oriental", 6206],
+  ["BALANG", "BALANGA", "CLT1", "Poblacion", "Balanga City", "Bataan", 2100],
+  ["BANTAY", "BANTAYAN", "VCT", "Poblacion", "Bantayan", "Cebu", 6052],
+  ["BATANG", "SAN JOSE, BATANGAS", "CLBZT", "Poblacion", "San Jose", "Batangas", 4227],
+  ["BAYAMB", "BAYAMBANG", "CLT2", "Poblacion", "Bayambang", "Pangasinan", 2423],
+  ["BAYAWA", "BAYAWAN", "VWT1", "Poblacion", "Bayawan City", "Negros Oriental", 6221],
+  ["BAYBAY", "BAYBAY", "VET", "Poblacion", "Baybay City", "Leyte", 6521],
+  ["BAYOMB", "BAYOMBONG", "CVT", "Poblacion", "Bayombong", "Nueva Vizcaya", 3700],
+  ["BINAN", "BIÑAN", "MMRPT", "Poblacion", "Biñan City", "Laguna", 4024],
+  ["BINANC", "BIÑAN CANLALAY", "MMRPT", "Canlalay", "Biñan City", "Laguna", 4024],
+  ["BINANG", "BINANGONAN", "NCT1", "Calumpang", "Binangonan", "Rizal", 1940],
+  ["BOAC", "BOAC", "CLBZT", "Poblacion", "Boac", "Marinduque", 4900],
+  ["BOGO", "BOGO", "VCT", "Poblacion", "Bogo City", "Cebu", 6010],
+  ["BOGOPA", "BOGO - PANDAN", "VCT", "Pandan", "Bogo City", "Cebu", 6010],
+  ["BORONG", "BORONGAN", "VET", "Poblacion", "Borongan City", "Eastern Samar", 6800],
+  ["BROOKE", "BROOKE`S POINT", "MMRPT", "Poblacion", "Brooke's Point", "Palawan", 5303],
+  ["BULAN", "BULAN", "BT", "Poblacion", "Bulan", "Sorsogon", 4706],
+  ["CABANA", "CABANATUAN", "CLT1", "Poblacion", "Cabanatuan City", "Nueva Ecija", 3100],
+  ["CABARR", "CABARROGUIS", "CVT", "Poblacion", "Cabarroguis", "Quirino", 3400],
+  ["CABUYA", "CABUYAO", "MMRPT", "Poblacion", "Cabuyao City", "Laguna", 4025],
+  ["CADIZ", "CADIZ", "VWT1", "Poblacion", "Cadiz City", "Negros Occidental", 6121],
+  ["CALAML", "CALAMBA", "MMRPT", "Poblacion", "Calamba City", "Laguna", 4027],
+  ["CALAPA", "CALAPAN", "MMRPT", "Poblacion", "Calapan City", "Oriental Mindoro", 5200],
+  ["CALAPB", "CALAPAN, BAYANAN", "MMRPT", "Bayanan", "Calapan City", "Oriental Mindoro", 5200],
+  ["CALBAY", "CALBAYOG", "VET", "Poblacion", "Calbayog City", "Samar", 6710],
+  ["CAMILI", "CAMILING", "CLT2", "Poblacion", "Camiling", "Tarlac", 2306],
+  ["CARLNO", "SAN CARLOS, NEGROS OCCIDENTAL", "VWT1", "Poblacion", "San Carlos City", "Negros Occidental", 6127],
+  ["CARMEN", "CARMEN", "VCT", "Poblacion", "Carmen", "Cebu", 6005],
+  ["CATARM", "CATARMAN", "VET", "Poblacion", "Catarman", "Northern Samar", 6400],
+  ["CATBAL", "CATBALOGAN", "VET", "Poblacion", "Catbalogan City", "Samar", 6700],
+  ["CAUAYA", "CAUAYAN", "CVT", "Poblacion", "Cauayan City", "Isabela", 3305],
+  ["CEBUMG", "CEBU MEGA", "VCT", "Mabolo", "Cebu City", "Cebu", 6000],
+  ["CEBUS", "CEBU LARGE", "VCT", "Guadalupe", "Cebu City", "Cebu", 6000],
+  ["CENBUL", "BALIUAG", "CLT1", "Poblacion", "Baliuag", "Bulacan", 3006],
+  ["COGEO", "COGEO", "NCT1", "San Jose", "Antipolo City", "Rizal", 1870],
+  ["COMMON", "COMMONWEALTH", "NCT1", "Commonwealth", "Quezon City", "Metro Manila", 1121],
+  ["CRUZMA", "STA. CRUZ, MARINDUQUE", "CLBZT", "Poblacion", "Sta. Cruz", "Marinduque", 4902],
+  ["CRUZZA", "STA. CRUZ, ZAMBALES", "CLT1", "Poblacion", "Sta. Cruz", "Zambales", 2213],
+  ["CUBAO", "CUBAO", "NCT1", "Cubao", "Quezon City", "Metro Manila", 1109],
+  ["DALAGU", "DALAGUETE", "VCT", "Poblacion", "Dalaguete", "Cebu", 6022],
+  ["DANAO", "DANAO", "VCT", "Poblacion", "Danao City", "Cebu", 6004],
+  ["DINALU", "DINALUPIHAN", "CLT1", "Poblacion", "Dinalupihan", "Bataan", 2110],
+  ["DONSOL", "DONSOL", "BT", "Poblacion", "Donsol", "Sorsogon", 4715],
+  ["DUMAGU", "DUMAGUETE", "VWT1", "Poblacion", "Dumaguete City", "Negros Oriental", 6200],
+  ["ESCALA", "ESCALANTE", "VWT1", "Poblacion", "Escalante City", "Negros Occidental", 6124],
+  ["GAPAN", "GAPAN", "CLT1", "Poblacion", "Gapan City", "Nueva Ecija", 3105],
+  ["GATTAR", "GATTARAN", "CVT", "Poblacion", "Gattaran", "Cagayan", 3508],
+  ["GUAGUA", "GUAGUA", "CLT1", "Poblacion", "Guagua", "Pampanga", 2003],
+  ["GUIHUL", "GUIHULNGAN", "VWT1", "Poblacion", "Guihulngan City", "Negros Oriental", 6214],
+  ["GUIMBA", "GUIMBA", "CLT1", "Poblacion", "Guimba", "Nueva Ecija", 3115],
+  ["GUINTO", "GUIGUINTO", "CLT1", "Poblacion", "Guiguinto", "Bulacan", 3015],
+  ["GUMACA", "GUMACA", "CLBZT", "Poblacion", "Gumaca", "Quezon", 4307],
+  ["HILONG", "HILONGOS", "VET", "Poblacion", "Hilongos", "Leyte", 6524],
+  ["IBAZAM", "IBA ZAMBALES", "CLT1", "Poblacion", "Iba", "Zambales", 2201],
+  ["ILAGAN", "ILAGAN", "CVT", "Poblacion", "Ilagan City", "Isabela", 3300],
+  ["ILDEFO", "SAN ILDEFONSO", "CLT1", "Poblacion", "San Ildefonso", "Bulacan", 3010],
+  ["INFANT", "INFANTA", "MMRPT", "Poblacion", "Infanta", "Quezon", 4336],
+  ["IRIGAS", "IRIGA - SAN MIGUEL", "BT", "San Miguel", "Iriga City", "Camarines Sur", 4431],
+  ["JAGNA", "JAGNA", "VCT", "Poblacion", "Jagna", "Bohol", 6308],
+  ["JOSEDE", "SAN JOSE, DEL MONTE", "CLT1", "Tungkong Mangga", "San Jose del Monte City", "Bulacan", 3023],
+  ["JOSENU", "SAN JOSE, NUEVA ECIJA", "CLT1", "Poblacion", "San Jose City", "Nueva Ecija", 3121],
+  ["KABANK", "KABANKALAN", "VWT1", "Poblacion", "Kabankalan City", "Negros Occidental", 6111],
+  ["LALOMA", "LA LOMA", "NCT1", "La Loma", "Quezon City", "Metro Manila", 1114],
+  ["LEGASP", "LEGASPI", "BT", "Poblacion", "Legazpi City", "Albay", 4500],
+  ["LIPA", "LIPA", "CLBZT", "Poblacion", "Lipa City", "Batangas", 4217],
+  ["LOPEZ", "LOPEZ", "CLBZT", "Poblacion", "Lopez", "Quezon", 4316],
+  ["MAASIN", "MAASIN", "VET", "Poblacion", "Maasin City", "Southern Leyte", 6600],
+  ["MABALA", "MABALACAT", "CLT1", "Poblacion", "Mabalacat City", "Pampanga", 2010],
+  ["MALABO", "MALABON", "NCT1", "Concepcion", "Malabon City", "Metro Manila", 1470],
+  ["MAMBUR", "MAMBURAO, OCCIDENTAL MINDORO", "MMRPT", "Poblacion", "Mamburao", "Occidental Mindoro", 5106],
+  ["MANDAU", "MANDAUE", "VCT", "Centro", "Mandaue City", "Cebu", 6014],
+  ["MANGAL", "DAGUPAN", "CLT2", "Poblacion Oeste", "Dagupan City", "Pangasinan", 2400],
+  ["MARIKI", "MARIKINA", "NCT1", "Sto. Niño", "Marikina City", "Metro Manila", 1800],
+  ["MASBAT", "MASBATE", "BT", "Poblacion", "Masbate City", "Masbate", 5400],
+  ["MAYON", "MAYON", "NCT1", "Sta. Teresita", "Quezon City", "Metro Manila", 1114],
+  ["MEXICO", "MEXICO", "CLT1", "Poblacion", "Mexico", "Pampanga", 2021],
+  ["MEYCAU", "MEYCAUAYAN", "CLT1", "Poblacion", "Meycauayan City", "Bulacan", 3020],
+  ["MOALBO", "MOALBOAL", "VCT", "Poblacion", "Moalboal", "Cebu", 6032],
+  ["MONTAL", "MONTALBAN", "NCT1", "San Jose", "Rodriguez", "Rizal", 1860],
+  ["NAGA", "NAGA TABUCO", "BT", "Tabuco", "Naga City", "Camarines Sur", 4400],
+  ["NARRA", "NARRA", "MMRPT", "Poblacion", "Narra", "Palawan", 5303],
+  ["NAVAL", "NAVAL", "VET", "Poblacion", "Naval", "Biliran", 6560],
+  ["NOVALI", "NOVALICHES", "NCT1", "Novaliches", "Quezon City", "Metro Manila", 1123],
+  ["OLONGA", "OLONGAPO", "CLT1", "East Tapinac", "Olongapo City", "Zambales", 2200],
+  ["ORMOC", "ORMOC", "VET", "Poblacion", "Ormoc City", "Leyte", 6541],
+  ["PALAWA", "PUERTO PRINCESA", "MMRPT", "San Pedro", "Puerto Princesa City", "Palawan", 5300],
+  ["PALOMP", "PALOMPON", "VET", "Poblacion", "Palompon", "Leyte", 6538],
+  ["PANIQU", "PANIQUI", "CLT2", "Poblacion", "Paniqui", "Tarlac", 2307],
+  ["PINAPA", "PINAMALAYAN, PAPANDAYAN", "MMRPT", "Papandayan", "Pinamalayan", "Oriental Mindoro", 5208],
+  ["POLANG", "POLANGUI", "BT", "Poblacion", "Polangui", "Albay", 4506],
+  ["PONTEV", "PONTEVEDRA", "VWT1", "Poblacion", "Pontevedra", "Negros Occidental", 6105],
+  ["PUERTO", "PUERTO PRINCESA- BALTAN", "MMRPT", "Bancao-Bancao", "Puerto Princesa City", "Palawan", 5300],
+  ["QUEZAV", "QUEZON  AVE.", "NCT1", "Paligsahan", "Quezon City", "Metro Manila", 1103],
+  ["ROMBLO", "ROMBLON", "CLBZT", "Poblacion", "Romblon", "Romblon", 5500],
+  ["ROOSEV", "ROOSEVELT", "NCT1", "San Antonio", "Quezon City", "Metro Manila", 1105],
+  ["ROXMIN", "ROXAS, OR. MINDORO", "MMRPT", "Poblacion", "Roxas", "Oriental Mindoro", 5203],
+  ["SAMPAL", "SAMPALOC", "NCT1", "Sampaloc", "Manila", "Metro Manila", 1008],
+  ["SANCAR", "SAN CARLOS, PANGASINAN", "CLT2", "Poblacion", "San Carlos City", "Pangasinan", 2420],
+  ["SANJOS", "SAN JOSE OCCIDENTAL", "MMRPT", "Poblacion", "San Jose", "Occidental Mindoro", 5100],
+  ["SANMIG", "SAN MIGUEL", "CLT1", "Poblacion", "San Miguel", "Bulacan", 3011],
+  ["SCOUTC", "SCOUT CHUATOCO", "NCT1", "Roxas", "Quezon City", "Metro Manila", 1103],
+  ["SIPALA", "SIPALAY", "VWT1", "Poblacion", "Sipalay City", "Negros Occidental", 6113],
+  ["SOGOD", "SOGOD", "VET", "Poblacion", "Sogod", "Southern Leyte", 6606],
+  ["SORSOG", "SORSOGON", "BT", "Poblacion", "Sorsogon City", "Sorsogon", 4700],
+  ["STACRU", "STA. CRUZ, LAGUNA", "MMRPT", "Poblacion", "Sta. Cruz", "Laguna", 4009],
+  ["STAMAR", "STA. MARIA BULACAN", "CLT1", "Poblacion", "Sta. Maria", "Bulacan", 3022],
+  ["STOMAS", "STO. TOMAS PAMPANGA", "CLT1", "Poblacion", "Sto. Tomas", "Pampanga", 2020],
+  ["SUBIC", "SUBIC", "CLT1", "Poblacion", "Subic", "Zambales", 2209],
+  ["TACLOB", "TACLOBAN MEGA", "VET", "Marasbaras", "Tacloban City", "Leyte", 6500],
+  ["TACLOS", "TACLOBAN LARGE", "VET", "Sagkahan", "Tacloban City", "Leyte", 6500],
+  ["TAGBIL", "TAGBILARAN", "VCT", "Cogon", "Tagbilaran City", "Bohol", 6300],
+  ["TAGBIM", "TAGBILARAN MEGA", "VCT", "Dao", "Tagbilaran City", "Bohol", 6300],
+  ["TAGKAW", "TAGKAWAYAN", "CLBZT", "Poblacion", "Tagkawayan", "Quezon", 4321],
+  ["TALIBO", "TALIBON", "VCT", "Poblacion", "Talibon", "Bohol", 6325],
+  ["TALISA", "TALISAY", "VCT", "Poblacion", "Talisay City", "Cebu", 6045],
+  ["TANAY", "TANAY", "NCT1", "Poblacion", "Tanay", "Rizal", 1980],
+  ["TARLAC", "TARLAC", "CLT2", "San Nicolas", "Tarlac City", "Tarlac", 2300],
+  ["TAYABA", "TAYABAS", "CLBZT", "Poblacion", "Tayabas City", "Quezon", 4327],
+  ["TOLEDO", "TOLEDO", "VCT", "Poblacion", "Toledo City", "Cebu", 6038],
+  ["TUBIGO", "TUBIGON", "VCT", "Poblacion", "Tubigon", "Bohol", 6329],
+  ["TUGUEG", "TUGUEGARAO", "CVT", "Centro", "Tuguegarao City", "Cagayan", 3500],
+  ["URDANE", "URDANETA", "CLT2", "Poblacion", "Urdaneta City", "Pangasinan", 2428],
+  ["VALENZ", "VALENZUELA", "NCT1", "Malinta", "Valenzuela City", "Metro Manila", 1440],
+  ["VICTOR", "VICTORIA", "MMRPT", "Poblacion", "Victoria", "Oriental Mindoro", 5205],
+];
+
+/**
+ * The franchised chapels — `[…ChapelRow, isSystemCapable]`.
+ *
+ * WHERE THESE COME FROM, because none of them is in the chapel reference list.
+ * The `RefMortuary` drop has two classes of row, and its FR rows point at chapel
+ * codes the owned list does not carry: ROSARI, TAGUIG, SANPED, GENSAN, TACURO,
+ * LUPON, CAGAYA, MALAYB, GINGOO. A franchised funeral home has to operate out of
+ * somewhere, the owned list is explicitly the not-franchise one, and these codes
+ * are what is left — so they are the franchise network, and each row below
+ * exists because a mortuary names it.
+ *
+ * WHAT IS GIVEN AND WHAT IS DERIVED. The codes are the source's. The names and
+ * addresses are read off the mortuaries that name them — "SAN GUILLERMO FUNERAL
+ * PARLOR - CDO" against CAGAYA, "VILLANUEVA FUNERAL HOMES - MALAYBALAY" against
+ * MALAYB — which is why every one of them lands on a real Philippine city rather
+ * than a guess.
+ *
+ * THE TERRITORY IS THE ONE JUDGEMENT CALL. Mortuary codes carry a territory
+ * prefix (MC / MD / MET are Mindanao, CLBZ is Calabarzon, GMW is Greater Manila
+ * West) and most of them map straight onto a territory that exists. GMW does
+ * NOT: there is no Greater Manila West in the territory table. TAGUIG and SANPED
+ * are put under GME, which is the nearest thing to it and was itself carrying no
+ * chapels at all. If a GMWT territory turns up, those two rows move and nothing
+ * else does.
+ *
+ * `isSystemCapable` is the flag with no source column behind it — see
+ * `ChapelBranchRecord.isSystemCapable`. Four of the nine are marked false, which
+ * is the point of having them: those are the franchises whose plan holders a
+ * processor has to key in by hand.
+ */
+const FRANCHISE_CHAPELS: [...ChapelRow, boolean][] = [
+  ["ROSARI", "ROSARIO", "CLBZT", "Poblacion", "Rosario", "Batangas", 4225, true],
+  ["TAGUIG", "TAGUIG", "GME", "Ususan", "Taguig City", "Metro Manila", 1630, true],
+  ["SANPED", "SAN PEDRO", "GME", "Poblacion", "San Pedro City", "Laguna", 4023, false],
+  ["GENSAN", "GENERAL SANTOS", "MCET", "Lagao", "General Santos City", "South Cotabato", 9500, true],
+  ["TACURO", "TACURONG", "MCET", "Poblacion", "Tacurong City", "Sultan Kudarat", 9800, false],
+  ["LUPON", "LUPON", "MCET", "Poblacion", "Lupon", "Davao Oriental", 8207, false],
+  ["CAGAYA", "CAGAYAN DE ORO", "MCET", "Carmen", "Cagayan de Oro City", "Misamis Oriental", 9000, true],
+  ["MALAYB", "MALAYBALAY", "MCET", "Poblacion", "Malaybalay City", "Bukidnon", 8700, false],
+  ["GINGOO", "GINGOOG", "MCET", "Poblacion", "Gingoog City", "Misamis Oriental", 9014, true],
+];
+
+/** Streets a chapel stands on, cycled by index — every town has one of these. */
+const CHAPEL_STREET = ["Rizal St.", "Bonifacio St.", "Mabini St.", "Quezon Ave.", "Magsaysay Ave.", "Del Pilar St.", "Burgos St.", "National Highway"];
+
+// Deliberately different pools from the bulk claims' — the people who RUN the
+// chapels should not read as the same cast as the people being buried by them.
+// Lengths are mutually prime with 132 so the three parts do not fall into step.
+const STAFF_FIRST = ["Alfonso", "Belinda", "Cesar", "Dolores", "Eduardo", "Fe", "Gerardo", "Herminia", "Isagani", "Josefa", "Leonardo", "Marissa", "Norberto", "Olivia", "Prospero", "Rosalinda", "Teodoro"];
+const STAFF_MIDDLE = ["Abad", "Bituin", "Custodio", "Dimayuga", "Espino", "Fajardo", "Guzman", "Hidalgo", "Ilagan", "Javier"];
+const STAFF_LAST = ["Bagtas", "Caluag", "Dizon", "Eusebio", "Fortich", "Gabriel", "Hernandez", "Isidro", "Jacinto", "Kalaw", "Lagman", "Montano", "Nepomuceno"];
+
+const pad = (n: number, width: number) => String(n).padStart(width, "0");
+
+/**
+ * One member of chapel/territory staff. `seed` drives every varying field, so
+ * the same person comes back on every reload.
+ */
+function buildStaffPerson(
+  personId: string,
+  seed: number,
+  placeOfBirth: string,
+): PersonRecord {
+  const female = seed % 2 === 0;
+  return {
+    personId,
+    lastName: STAFF_LAST[seed % STAFF_LAST.length],
+    firstName: STAFF_FIRST[seed % STAFF_FIRST.length],
+    middleName: STAFF_MIDDLE[seed % STAFF_MIDDLE.length],
+    dateOfBirth: `19${60 + (seed % 20)}-${pad((seed % 12) + 1, 2)}-${pad((seed % 28) + 1, 2)}`,
+    placeOfBirth,
+    genderAtBirth: female ? "Female" : "Male",
+    preferredGender: female ? "Female" : "Male",
+    civilStatus: seed % 3 === 0 ? "Married" : seed % 3 === 1 ? "Widowed" : "Single",
+    height: String(155 + (seed % 22)),
+    weight: String(52 + (seed % 28)),
+    auditUser: AUDIT.user,
+    auditDate: AUDIT.date,
+    addresses: [],
+  };
+}
+
+/** The territory heads — one person per territory, `Territory.TerritoryHead`. */
+const territoryPersons: PersonRecord[] = TERRITORIES.map(([, description], i) =>
+  // Named after the territory they head rather than a city, since a territory
+  // is a region and not a place anyone is born in.
+  buildStaffPerson(`P-2${pad(i + 1, 2)}`, i * 5 + 3, description),
+);
+
+export const territorySeed: TerritoryRecord[] = TERRITORIES.map(
+  ([territoryCode, description], i) => ({
+    territoryCode,
+    description,
+    territoryHead: `P-2${pad(i + 1, 2)}`,
+    isActive: true,
+    auditUser: AUDIT.user,
+    auditDate: AUDIT.date,
+  }),
+);
+
+/**
+ * A chapel and everything it owns: its address, its contact number and the
+ * person managing it. Built together because the chapel row is only three
+ * foreign keys and a name — the rest of what the UI shows lives in these.
+ */
+function buildChapel(
+  [chapelCode, chapelDesc, territoryCode, barangay, city, province, zipCode]: ChapelRow,
+  index: number,
+  franchise?: { isSystemCapable: boolean },
+) {
+  const seq = index + 1;
+  const addressId = 2000 + seq;
+  const contactId = `CT-2${pad(seq, 3)}`;
+  const chapelMngr = `P-3${pad(seq, 3)}`;
+
+  const chapel: ChapelBranchRecord = {
+    chapelCode,
+    chapelDesc,
+    addressId,
+    chapelMngr,
+    contactId,
+    territoryCode,
+    isFranchise: franchise !== undefined,
+    // Only ever written on a franchise. An owned chapel is on the system by
+    // definition, and a column that says so on all 132 of them says nothing.
+    ...(franchise && !franchise.isSystemCapable
+      ? { isSystemCapable: false }
+      : {}),
+    isActive: true,
+    auditUser: AUDIT.user,
+    auditDate: AUDIT.date,
+  };
+
+  // No `personId`: this address belongs to the chapel, and is reached through
+  // `ChapelBranch.addressId` rather than through anybody's person record.
+  const address: AddressRecord = {
+    addressId,
+    addressType: "Chapel",
+    addressNo: String(10 + (seq % 90)),
+    street: CHAPEL_STREET[seq % CHAPEL_STREET.length],
+    barangay,
+    city,
+    province,
+    zipCode,
+    auditUser: AUDIT.user,
+    auditDate: AUDIT.date,
+  };
+
+  // Held against the manager, who is the person the number reaches — the source
+  // `ContactInfo` row is owned by a person, never by a place.
+  const contact: ContactInfoRecord = {
+    contactId,
+    personId: chapelMngr,
+    contactType: "mobile",
+    contactDetails: `09${17 + (seq % 5)} ${pad(200 + (seq % 700), 3)} ${pad((seq * 37) % 10000, 4)}`,
+    isActive: true,
+    auditUser: AUDIT.user,
+    auditDate: AUDIT.date,
+  };
+
+  return {
+    chapel,
+    address,
+    contact,
+    manager: buildStaffPerson(chapelMngr, seq, city),
+  };
+}
+
+// The franchises are numbered on from the owned ones rather than in a range of
+// their own, so a chapel's manager, address and contact ids stay one unbroken
+// run — the ids mean nothing beyond being unique, and two schemes would only
+// invite someone to read something into which range a chapel fell in.
+const chapels = [
+  ...CHAPELS.map((row, i) => buildChapel(row, i)),
+  ...FRANCHISE_CHAPELS.map(
+    ([code, desc, territory, barangay, city, province, zip, isSystemCapable], i) =>
+      buildChapel(
+        [code, desc, territory, barangay, city, province, zip],
+        CHAPELS.length + i,
+        { isSystemCapable },
+      ),
+  ),
+];
+
+export const chapelBranchSeed: ChapelBranchRecord[] = chapels.map((c) => c.chapel);
+const chapelPersons = chapels.map((c) => c.manager);
+const chapelAddresses = chapels.map((c) => c.address);
+const chapelContacts = chapels.map((c) => c.contact);
+
 /* ================================ Person ================================ */
 
 export const personSeed: PersonRecord[] = [
@@ -325,6 +862,11 @@ export const personSeed: PersonRecord[] = [
   { personId: "P-045", lastName: "Villaflor", firstName: "Purificacion", middleName: "Reyes", dateOfBirth: "1941-06-02", placeOfBirth: "Tarlac City", genderAtBirth: "Female", preferredGender: "Female", civilStatus: "Widowed", height: "152", weight: "50", auditUser: AUDIT.user, auditDate: AUDIT.date, addresses: [] },
   // The deceased behind the bulk claims — see "Bulk claim volume" above.
   ...bulkPersons,
+  // The holders of the assigned plans — alive, and not the ones being buried.
+  ...assignedPersons,
+  // The people who run the network: a head per territory, a manager per chapel.
+  ...territoryPersons,
+  ...chapelPersons,
 ];
 
 /* ================================ Address ================================ */
@@ -358,6 +900,9 @@ export const addressSeed: AddressRecord[] = [
   { addressId: 23, personId: "P-041", addressType: "Home", addressNo: "88", street: "Kalayaan Ave.", barangay: "Central", city: "Quezon City", province: "Metro Manila", zipCode: 1100, auditUser: AUDIT.user, auditDate: AUDIT.date },
   { addressId: 24, personId: "P-041", addressType: "Office", addressNo: "21F One Corporate Center", street: "Julia Vargas Ave.", barangay: "San Antonio", city: "Pasig City", province: "Metro Manila", zipCode: 1605, auditUser: AUDIT.user, auditDate: AUDIT.date },
   { addressId: 25, personId: "P-042", addressType: "Home", addressNo: "88", street: "Kalayaan Ave.", barangay: "Central", city: "Quezon City", province: "Metro Manila", zipCode: 1100, auditUser: AUDIT.user, auditDate: AUDIT.date },
+  // Where each chapel stands. Numbered from 2001 so the block stays clear of
+  // the hand-written rows above, and owned by no one — see `buildChapel`.
+  ...chapelAddresses,
 ];
 
 /* ============================== ContactInfo ============================== */
@@ -398,38 +943,68 @@ export const contactSeed: ContactInfoRecord[] = [
   { contactId: "CT-0031", personId: "P-041", contactType: "email", contactDetails: "corazon.almeda@gmail.com", isActive: true, auditUser: AUDIT.user, auditDate: AUDIT.date },
   { contactId: "CT-0032", personId: "P-042", contactType: "mobile", contactDetails: "0918 555 0142", isActive: true, auditUser: AUDIT.user, auditDate: AUDIT.date },
   { contactId: "CT-0033", personId: "P-042", contactType: "email", contactDetails: "rodolfo.almeda@gmail.com", isActive: true, auditUser: AUDIT.user, auditDate: AUDIT.date },
+  // One number per chapel, held against its manager.
+  ...chapelContacts,
 ];
 
 /* ============================== Planholder ============================== */
 
+// ACCOUNT AND TERMINATION STATUS, and why most of these read `FP` / `NT`.
+//
+// A plan may only be serviced and terminated once its account is fully paid and
+// its termination status is neither FR nor RP — the service-payable rule, which
+// `Planholder.canBeServiced` enforces. Nearly every plan holder here is
+// deceased, and by the time a chapel's payable is raised the death benefit has
+// closed their account out: `FP`, ledger paid in full, nothing terminated yet.
+//
+// The exceptions are the interesting rows, and each is one on purpose:
+//
+//   LP  the account lapsed and never reached fully paid — the plan is not ready
+//       to be serviced at all. These are the same rows that lapsed before, so
+//       every story told in the comments below still holds.
+//   FR  fully paid ROP, and RP return of premium — the plan was handed back.
+//       Not serviceable either, and this is the ROP DISCREPANCY the branch has
+//       to answer for. L20000234A and L18000890G carry them.
+//   DC  denied claim, on the one plan whose death claim was in fact denied.
+//
+// `dueDate` is left where it was on the fully-paid rows. A settled account has
+// no next due date, but the column is the last one that was billed rather than
+// one that is still owed, and blanking it would lose that.
 export const planholderSeed: PlanholderRecord[] = [
-  { lpaNo: "L21000456B", personId: "P-001", ...planFigures("B5M10", 52), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-01", effectivityDate: "2021-05-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
-  { lpaNo: "L19000567C", personId: "P-002", ...planFigures("A5M", 40), accountClass: "R", acctStatCode: "LP", termiStatCode: "", dueDate: "2026-03-15", effectivityDate: "2019-02-15", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-02-15", ...PH_AUDIT },
-  { lpaNo: "L25000123I", personId: "P-003", ...planFigures("RA5M5", 9), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-10", effectivityDate: "2025-09-10", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-10", ...PH_AUDIT },
-  { lpaNo: "L23000012H", personId: "P-004", ...planFigures("NF5M4", 30), accountClass: "R", acctStatCode: "LP", termiStatCode: "", dueDate: "2026-04-20", effectivityDate: "2023-01-20", isServiceOnly: false, riDate: "2024-06-20", lastPaymentDate: "2026-03-20", ...PH_AUDIT },
-  { lpaNo: "L26000901M", personId: "P-005", ...planFigures("C5M8", 5), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-01", effectivityDate: "2026-02-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
-  { lpaNo: "L20000234A", personId: "P-006", ...planFigures("RC5M4", 58), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-05", effectivityDate: "2020-08-05", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-05", ...PH_AUDIT },
-  { lpaNo: "L24000345D", personId: "P-007", ...planFigures("D5M9", 27), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-15", effectivityDate: "2024-03-15", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-15", ...PH_AUDIT },
-  { lpaNo: "L25000678E", personId: "P-008", ...planFigures("RF5M8", 8), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-20", effectivityDate: "2025-11-20", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-20", ...PH_AUDIT },
-  { lpaNo: "L22000333L", personId: "P-009", ...planFigures("RD5M5", 38), accountClass: "R", acctStatCode: "LP", termiStatCode: "", dueDate: "2026-05-10", effectivityDate: "2022-06-10", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-04-10", ...PH_AUDIT },
-  { lpaNo: "L26000789F", personId: "P-010", ...planFigures("B5M10", 6), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-05", effectivityDate: "2026-01-05", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-05", ...PH_AUDIT },
-  { lpaNo: "L18000890G", personId: "P-011", ...planFigures("LG7M13", 60), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-01", effectivityDate: "2018-04-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
-  { lpaNo: "L21000111J", personId: "P-012", ...planFigures("A5M", 45), accountClass: "R", acctStatCode: "LP", termiStatCode: "", dueDate: "2026-06-30", effectivityDate: "2021-09-30", isServiceOnly: false, riDate: "2023-01-30", lastPaymentDate: "2026-05-30", ...PH_AUDIT },
-  { lpaNo: "L25000444M", personId: "P-013", ...planFigures("RA5M5", 6), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-01", effectivityDate: "2025-12-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
-  { lpaNo: "L20000222K", personId: "P-014", ...planFigures("RC5M4", 60), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-14", effectivityDate: "2020-02-14", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-14", ...PH_AUDIT },
-  { lpaNo: "L26000555N", personId: "P-015", ...planFigures("F5MDS", 4), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-20", effectivityDate: "2026-03-20", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-20", ...PH_AUDIT },
+  { lpaNo: "L21000456B", personId: "P-001", ...paidInFull("B5M10"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-01", effectivityDate: "2021-05-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
+  { lpaNo: "L19000567C", personId: "P-002", ...planFigures("A5M", 40), accountClass: "R", acctStatCode: "LP", termiStatCode: "NT", dueDate: "2026-03-15", effectivityDate: "2019-02-15", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-02-15", ...PH_AUDIT },
+  { lpaNo: "L25000123I", personId: "P-003", ...paidInFull("RA5M5"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-10", effectivityDate: "2025-09-10", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-10", ...PH_AUDIT },
+  { lpaNo: "L23000012H", personId: "P-004", ...planFigures("NF5M4", 30), accountClass: "R", acctStatCode: "LP", termiStatCode: "NT", dueDate: "2026-04-20", effectivityDate: "2023-01-20", isServiceOnly: false, riDate: "2024-06-20", lastPaymentDate: "2026-03-20", ...PH_AUDIT },
+  { lpaNo: "L26000901M", personId: "P-005", ...paidInFull("C5M8"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-01", effectivityDate: "2026-02-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
+  // Returned as premium — fully paid ROP. Not serviceable; the chapel's payable
+  // against it is held as an ROP discrepancy.
+  { lpaNo: "L20000234A", personId: "P-006", ...paidInFull("RC5M4"), accountClass: "R", acctStatCode: "FP", termiStatCode: "FR", dueDate: "2026-08-05", effectivityDate: "2020-08-05", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-05", ...PH_AUDIT },
+  { lpaNo: "L24000345D", personId: "P-007", ...paidInFull("D5M9"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-15", effectivityDate: "2024-03-15", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-15", ...PH_AUDIT },
+  { lpaNo: "L25000678E", personId: "P-008", ...paidInFull("RF5M8"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-20", effectivityDate: "2025-11-20", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-20", ...PH_AUDIT },
+  { lpaNo: "L22000333L", personId: "P-009", ...planFigures("RD5M5", 38), accountClass: "R", acctStatCode: "LP", termiStatCode: "NT", dueDate: "2026-05-10", effectivityDate: "2022-06-10", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-04-10", ...PH_AUDIT },
+  { lpaNo: "L26000789F", personId: "P-010", ...paidInFull("B5M10"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-05", effectivityDate: "2026-01-05", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-05", ...PH_AUDIT },
+  // The second ROP, this one a straight return of premium.
+  { lpaNo: "L18000890G", personId: "P-011", ...paidInFull("LG7M13"), accountClass: "R", acctStatCode: "FP", termiStatCode: "RP", dueDate: "2026-08-01", effectivityDate: "2018-04-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
+  { lpaNo: "L21000111J", personId: "P-012", ...planFigures("A5M", 45), accountClass: "R", acctStatCode: "LP", termiStatCode: "NT", dueDate: "2026-06-30", effectivityDate: "2021-09-30", isServiceOnly: false, riDate: "2023-01-30", lastPaymentDate: "2026-05-30", ...PH_AUDIT },
+  { lpaNo: "L25000444M", personId: "P-013", ...paidInFull("RA5M5"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-01", effectivityDate: "2025-12-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
+  { lpaNo: "L20000222K", personId: "P-014", ...paidInFull("RC5M4"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-14", effectivityDate: "2020-02-14", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-14", ...PH_AUDIT },
+  { lpaNo: "L26000555N", personId: "P-015", ...paidInFull("F5MDS"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-20", effectivityDate: "2026-03-20", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-20", ...PH_AUDIT },
   // Plan holders behind the endorsed ("For Approval") death claims below.
-  { lpaNo: "L26000601P", personId: "P-031", ...planFigures("A5M", 24), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-01", effectivityDate: "2024-05-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
-  { lpaNo: "L26000602Q", personId: "P-032", ...planFigures("RC5M4", 30), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-05", effectivityDate: "2023-06-05", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-05", ...PH_AUDIT },
-  { lpaNo: "L26000603R", personId: "P-033", ...planFigures("B5M10", 40), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-10", effectivityDate: "2022-03-10", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-10", ...PH_AUDIT },
-  { lpaNo: "L26000604S", personId: "P-034", ...planFigures("D5M9", 33), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-15", effectivityDate: "2023-09-15", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-15", ...PH_AUDIT },
-  { lpaNo: "L26000605T", personId: "P-035", ...planFigures("RF5M8", 20), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-20", effectivityDate: "2024-11-20", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-20", ...PH_AUDIT },
+  { lpaNo: "L26000601P", personId: "P-031", ...paidInFull("A5M"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-01", effectivityDate: "2024-05-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
+  { lpaNo: "L26000602Q", personId: "P-032", ...paidInFull("RC5M4"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-05", effectivityDate: "2023-06-05", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-05", ...PH_AUDIT },
+  { lpaNo: "L26000603R", personId: "P-033", ...paidInFull("B5M10"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-10", effectivityDate: "2022-03-10", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-10", ...PH_AUDIT },
+  { lpaNo: "L26000604S", personId: "P-034", ...paidInFull("D5M9"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-15", effectivityDate: "2023-09-15", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-15", ...PH_AUDIT },
+  { lpaNo: "L26000605T", personId: "P-035", ...paidInFull("RF5M8"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-20", effectivityDate: "2024-11-20", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-20", ...PH_AUDIT },
   // Second plans — the same person on more than one LPA. A plan holder buying
   // another plan is ordinary, and these are what the "Other Plans" section on
   // the plan holder page lists.
-  { lpaNo: "L22000777U", personId: "P-001", ...planFigures("A5M", 44), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-01", effectivityDate: "2022-07-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
-  { lpaNo: "L24000888V", personId: "P-004", ...planFigures("C5M8", 26), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-10", effectivityDate: "2024-02-10", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-10", ...PH_AUDIT },
-  { lpaNo: "L26000999W", personId: "P-011", ...planFigures("RA5M5", 7), accountClass: "R", acctStatCode: "LP", termiStatCode: "", dueDate: "2026-06-05", effectivityDate: "2025-12-05", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-05-05", ...PH_AUDIT },
+  //
+  // NO DEATH CLAIM ON ANY OF THE THREE, which is why they alone are still being
+  // collected on: their holders died, but only the plans WITH a claim filed
+  // against them have been settled and become serviceable.
+  { lpaNo: "L22000777U", personId: "P-001", ...planFigures("A5M", 44), accountClass: "R", acctStatCode: "AC", termiStatCode: "NT", dueDate: "2026-08-01", effectivityDate: "2022-07-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
+  { lpaNo: "L24000888V", personId: "P-004", ...planFigures("C5M8", 26), accountClass: "R", acctStatCode: "AC", termiStatCode: "NT", dueDate: "2026-08-10", effectivityDate: "2024-02-10", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-10", ...PH_AUDIT },
+  { lpaNo: "L26000999W", personId: "P-011", ...planFigures("RA5M5", 7), accountClass: "R", acctStatCode: "LP", termiStatCode: "NT", dueDate: "2026-06-05", effectivityDate: "2025-12-05", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-05-05", ...PH_AUDIT },
   // ── A plan holder worth opening ──
   //
   // Every other hand-written plan holder demonstrates ONE thing: a lapsed
@@ -441,14 +1016,59 @@ export const planholderSeed: PlanholderRecord[] = [
   // main plan carries four beneficiaries and six claims spanning all five
   // phases; she died on 06 Jul 2026, so a death claim is open on each plan —
   // pending, endorsed and denied, one apiece. Start at L20000700X.
-  { lpaNo: "L20000700X", personId: "P-041", ...planFigures("RA5M5", 58), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-15", effectivityDate: "2020-06-15", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-15", ...PH_AUDIT },
-  { lpaNo: "L23000701Y", personId: "P-041", ...planFigures("C5M8", 41), accountClass: "R", acctStatCode: "AC", termiStatCode: "", dueDate: "2026-08-01", effectivityDate: "2023-03-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
+  { lpaNo: "L20000700X", personId: "P-041", ...paidInFull("RA5M5"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-15", effectivityDate: "2020-06-15", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-15", ...PH_AUDIT },
+  { lpaNo: "L23000701Y", personId: "P-041", ...paidInFull("C5M8"), accountClass: "R", acctStatCode: "FP", termiStatCode: "NT", dueDate: "2026-08-01", effectivityDate: "2023-03-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
   // The third plan lapsed and was reinstated once before lapsing again — which
-  // is why the death claim filed against it below was denied.
-  { lpaNo: "L18000702Z", personId: "P-041", ...planFigures("A5M", 45), accountClass: "R", acctStatCode: "LP", termiStatCode: "", dueDate: "2026-02-01", effectivityDate: "2018-11-01", isServiceOnly: false, riDate: "2021-02-01", lastPaymentDate: "2026-01-01", ...PH_AUDIT },
+  // is why the death claim filed against it below was denied, and why its
+  // termination status is `DC` where her other two read `NT`. Nothing will be
+  // serviced against this plan: the account never reached fully paid.
+  { lpaNo: "L18000702Z", personId: "P-041", ...planFigures("A5M", 45), accountClass: "R", acctStatCode: "LP", termiStatCode: "DC", dueDate: "2026-02-01", effectivityDate: "2018-11-01", isServiceOnly: false, riDate: "2021-02-01", lastPaymentDate: "2026-01-01", ...PH_AUDIT },
+  // ── The hand-written ASSIGNED plan — `SA` ──
+  //
+  // Rodolfo Almeda (P-042) is alive and holds this plan. It was used to bury
+  // somebody else: his mother-in-law Purificacion Villaflor (P-045), who held no
+  // plan of her own. That is what `SA` — SERVICED - ASSIGNED — means.
+  //
+  // THE REST OF THE ASSIGNED PLANS ARE GENERATED, in the `SA` block further
+  // down, and this one is kept among them because it is the only one made of
+  // people who already exist here: two persons, a relationship on file, and an
+  // address behind each. It is the row to open when the question is what an
+  // assigned service looks like when everything around it is real.
+  //
+  // FULLY PAID AND NOT AN ROP, like the generated ones and for the same reason:
+  // the only thing unusual about it should be who was buried.
+  { lpaNo: "L24000703A", personId: "P-042", ...paidInFull("C5M8"), accountClass: "R", acctStatCode: "FP", termiStatCode: "SA", dueDate: "2026-08-01", effectivityDate: "2024-02-01", isServiceOnly: false, riDate: null, lastPaymentDate: "2026-07-01", ...PH_AUDIT },
   // The plans behind the bulk claims — see "Bulk claim volume" above.
   ...bulkPlanholders,
+  // The assigned plans — `SA`, one per billing code and then some. See the
+  // block that builds them.
+  ...assignedPlanholders,
 ];
+
+/**
+ * Who each assigned plan was spent on — LPA to the name on the endorsement.
+ *
+ * The map `billing-seed` reads when it puts these plans onto billings. Declared
+ * down here rather than beside the block that builds them because of the one
+ * hand-written entry: Rodolfo's plan names a person who is already in this seed,
+ * and `personSeed` has to exist before their name can be read out of it.
+ *
+ * A NAME AND NOT A PERSON ID, because that is the shape of the column it ends up
+ * in — see `IcisBillingProcessedRecord.deceasedName`.
+ */
+export const assignedDeceasedByLpa: Record<string, string> = {
+  // The hand-written one, and the reason it is worth keeping among the
+  // generated: two people who already exist here, with a relationship on file.
+  // Rodolfo Almeda's plan, used to bury his mother-in-law Purificacion — the
+  // same Purificacion who is Corazon's mother on the showcase record.
+  L24000703A: (() => {
+    const p = personSeed.find((x) => x.personId === "P-045");
+    return p ? [p.firstName, p.middleName, p.lastName].filter(Boolean).join(" ") : "";
+  })(),
+  ...Object.fromEntries(
+    assignedPlans.map((a) => [a.planholder.lpaNo, a.deceasedName]),
+  ),
+};
 
 /* ============================== Beneficiary ============================== */
 
@@ -567,34 +1187,34 @@ export const claimRequestSeed: ClaimRequestRecord[] = [
 // ClaimNo = territory + claim code (DC) + 2-digit year + 6-digit sequence.
 
 export const claimsHdrDCSeed: ClaimsHdrDCRecord[] = [
-  { claimNo: "NCT2-2DC26009785", claimRequest: "CLQCITY2026CAB000001", auditUser: PROCESSOR, auditDate: "2026-04-18T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-04-19T09:00:00", benefits: "CAB" },
-  { claimNo: "VW1-2DC26009786", claimRequest: "CLCEBU2026CAB000002", auditUser: PROCESSOR, auditDate: "2026-05-02T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
-  { claimNo: "NCT2-2DC26009787", claimRequest: "CLMANILA2026CAB000003", auditUser: PROCESSOR, auditDate: "2026-05-19T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
-  { claimNo: "MIMAROPA2DC26009788", claimRequest: "CLBATANGAS2026ECAB000004", auditUser: PROCESSOR, auditDate: "2026-05-04T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ECAB" },
-  { claimNo: "VW1-2DC26009789", claimRequest: "CLILOILO2026CAB000005", auditUser: PROCESSOR, auditDate: "2026-03-28T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
-  { claimNo: "NL1DC26009790", claimRequest: "CLSANFER2026CAB000006", auditUser: PROCESSOR, auditDate: "2026-04-05T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
-  { claimNo: "NCT2-2DC26009791", claimRequest: "CLMANILA2026CAB000007", auditUser: PROCESSOR, auditDate: "2026-04-22T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
-  { claimNo: "MIMAROPA2DC26009792", claimRequest: "CLNAGA2026CAB000008", auditUser: PROCESSOR, auditDate: "2026-05-01T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
-  { claimNo: "MIMAROPA2DC26009793", claimRequest: "CLLUCENA2026USB000009", auditUser: PROCESSOR, auditDate: "2026-05-08T09:00:00", isQuitClaim: false, isVerified: false, benefits: "USB" },
-  { claimNo: "NL1DC26009794", claimRequest: "CLVIGAN2026CAB000010", auditUser: PROCESSOR, auditDate: "2026-05-11T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
-  { claimNo: "NL1DC26009795", claimRequest: "CLANGELES2026CAB000011", auditUser: PROCESSOR, auditDate: "2026-05-16T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
-  { claimNo: "MW1DC26009796", claimRequest: "CLDAVAO2026ADB000012", auditUser: PROCESSOR, auditDate: "2026-05-13T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ADB" },
-  { claimNo: "NL1DC26009797", claimRequest: "CLBAGUIO2026ADB000013", auditUser: PROCESSOR, auditDate: "2026-04-27T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ADB" },
-  { claimNo: "MW1DC26009798", claimRequest: "CLCDO2026ADB000014", auditUser: PROCESSOR, auditDate: "2026-05-06T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ADB" },
-  { claimNo: "VW1-2DC26009799", claimRequest: "CLTACLOBAN2026ADB000015", auditUser: PROCESSOR, auditDate: "2026-05-20T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ADB" },
+  { claimNo: "NCT1DC26009785", claimRequest: "CLQCITY2026CAB000001", auditUser: PROCESSOR, auditDate: "2026-04-18T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-04-19T09:00:00", benefits: "CAB" },
+  { claimNo: "VCTDC26009786", claimRequest: "CLCEBU2026CAB000002", auditUser: PROCESSOR, auditDate: "2026-05-02T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
+  { claimNo: "NCT2DC26009787", claimRequest: "CLMANILA2026CAB000003", auditUser: PROCESSOR, auditDate: "2026-05-19T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
+  { claimNo: "CLBZTDC26009788", claimRequest: "CLBATANGAS2026ECAB000004", auditUser: PROCESSOR, auditDate: "2026-05-04T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ECAB" },
+  { claimNo: "VWT1DC26009789", claimRequest: "CLILOILO2026CAB000005", auditUser: PROCESSOR, auditDate: "2026-03-28T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
+  { claimNo: "CLT1DC26009790", claimRequest: "CLSANFER2026CAB000006", auditUser: PROCESSOR, auditDate: "2026-04-05T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
+  { claimNo: "NCT2DC26009791", claimRequest: "CLMANILA2026CAB000007", auditUser: PROCESSOR, auditDate: "2026-04-22T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
+  { claimNo: "BTDC26009792", claimRequest: "CLNAGA2026CAB000008", auditUser: PROCESSOR, auditDate: "2026-05-01T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
+  { claimNo: "CLBZTDC26009793", claimRequest: "CLLUCENA2026USB000009", auditUser: PROCESSOR, auditDate: "2026-05-08T09:00:00", isQuitClaim: false, isVerified: false, benefits: "USB" },
+  { claimNo: "CLT2DC26009794", claimRequest: "CLVIGAN2026CAB000010", auditUser: PROCESSOR, auditDate: "2026-05-11T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
+  { claimNo: "CLT1DC26009795", claimRequest: "CLANGELES2026CAB000011", auditUser: PROCESSOR, auditDate: "2026-05-16T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
+  { claimNo: "MCETDC26009796", claimRequest: "CLDAVAO2026ADB000012", auditUser: PROCESSOR, auditDate: "2026-05-13T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ADB" },
+  { claimNo: "CLT2DC26009797", claimRequest: "CLBAGUIO2026ADB000013", auditUser: PROCESSOR, auditDate: "2026-04-27T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ADB" },
+  { claimNo: "MCETDC26009798", claimRequest: "CLCDO2026ADB000014", auditUser: PROCESSOR, auditDate: "2026-05-06T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ADB" },
+  { claimNo: "VETDC26009799", claimRequest: "CLTACLOBAN2026ADB000015", auditUser: PROCESSOR, auditDate: "2026-05-20T09:00:00", isQuitClaim: false, isVerified: false, benefits: "ADB" },
   // Verified & endorsed to the supervisor — awaiting approval (status FA on the request).
-  { claimNo: "NCT2-2DC26009800", claimRequest: "CLQCITY2026CAB000016", auditUser: PROCESSOR, auditDate: "2026-06-10T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-06-11T09:00:00", benefits: "CAB" },
-  { claimNo: "VW1-2DC26009801", claimRequest: "CLCEBU2026CAB000017", auditUser: PROCESSOR, auditDate: "2026-06-18T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-06-19T09:00:00", benefits: "CAB" },
-  { claimNo: "NCT2-2DC26009802", claimRequest: "CLMANILA2026ECAB000018", auditUser: PROCESSOR, auditDate: "2026-06-25T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-06-26T09:00:00", benefits: "ECAB" },
-  { claimNo: "MW1DC26009803", claimRequest: "CLDAVAO2026ADB000019", auditUser: PROCESSOR, auditDate: "2026-07-02T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-07-03T09:00:00", benefits: "ADB" },
-  { claimNo: "VW1-2DC26009804", claimRequest: "CLILOILO2026CAB000020", auditUser: PROCESSOR, auditDate: "2026-07-08T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-07-09T09:00:00", benefits: "CAB" },
+  { claimNo: "NCT1DC26009800", claimRequest: "CLQCITY2026CAB000016", auditUser: PROCESSOR, auditDate: "2026-06-10T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-06-11T09:00:00", benefits: "CAB" },
+  { claimNo: "VCTDC26009801", claimRequest: "CLCEBU2026CAB000017", auditUser: PROCESSOR, auditDate: "2026-06-18T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-06-19T09:00:00", benefits: "CAB" },
+  { claimNo: "NCT2DC26009802", claimRequest: "CLMANILA2026ECAB000018", auditUser: PROCESSOR, auditDate: "2026-06-25T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-06-26T09:00:00", benefits: "ECAB" },
+  { claimNo: "MCETDC26009803", claimRequest: "CLDAVAO2026ADB000019", auditUser: PROCESSOR, auditDate: "2026-07-02T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-07-03T09:00:00", benefits: "ADB" },
+  { claimNo: "VWT1DC26009804", claimRequest: "CLILOILO2026CAB000020", auditUser: PROCESSOR, auditDate: "2026-07-08T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-07-09T09:00:00", benefits: "CAB" },
   // The showcase plan holder's three death claims. The pending one carries a
   // header too — not because a processor has opened it, but because that is
   // what joins the request to its payee (see `payeeRecordsForRequest`); it is
   // unverified, and the UI shows the reference until a claim no is issued.
-  { claimNo: "NCT2-2DC26009810", claimRequest: "CLQCITY2026CAB000406", auditUser: PROCESSOR, auditDate: "2026-07-14T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
-  { claimNo: "NCT2-2DC26009811", claimRequest: "CLQCITY2026CAB000407", auditUser: PROCESSOR, auditDate: "2026-07-15T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-07-16T10:15:00", benefits: "CAB" },
-  { claimNo: "NCT2-2DC26009812", claimRequest: "CLQCITY2026USB000409", auditUser: "Diana Lim", auditDate: "2026-07-16T09:30:00", isQuitClaim: false, isVerified: true, verifiedBy: "Diana Lim", verifiedDate: "2026-07-17T08:40:00", benefits: "USB" },
+  { claimNo: "NCT1DC26009810", claimRequest: "CLQCITY2026CAB000406", auditUser: PROCESSOR, auditDate: "2026-07-14T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
+  { claimNo: "NCT1DC26009811", claimRequest: "CLQCITY2026CAB000407", auditUser: PROCESSOR, auditDate: "2026-07-15T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-07-16T10:15:00", benefits: "CAB" },
+  { claimNo: "NCT1DC26009812", claimRequest: "CLQCITY2026USB000409", auditUser: "Diana Lim", auditDate: "2026-07-16T09:30:00", isQuitClaim: false, isVerified: true, verifiedBy: "Diana Lim", verifiedDate: "2026-07-17T08:40:00", benefits: "USB" },
   // Headers for the bulk claims past "pending" — the ones with a claim no.
   ...bulkHeaders,
 ];
@@ -604,33 +1224,33 @@ export const claimsHdrDCSeed: ClaimsHdrDCRecord[] = [
 // One payee row per death claim — the person(s) claiming that ClaimNo. A claim
 // can name a second (joint) payee via payeeTwoId.
 export const claimsPayeeSeed: ClaimsPayeeRecord[] = [
-  { idx: 1, claimNo: "NCT2-2DC26009785", payeeOneId: "P-016", payeeTwoId: "P-028", amount: 125000, relation: "Spouse", isOnHold: false },
-  { idx: 2, claimNo: "VW1-2DC26009786", payeeOneId: "P-018", amount: 56000, relation: "Child", isOnHold: false },
-  { idx: 3, claimNo: "NCT2-2DC26009787", payeeOneId: "P-017", amount: 165000, relation: "Spouse", isOnHold: true, remarks: "Payment held — awaiting valid ID of claimant." },
-  { idx: 4, claimNo: "MIMAROPA2DC26009788", payeeOneId: "P-019", amount: 105000, relation: "Child", isOnHold: false },
-  { idx: 5, claimNo: "VW1-2DC26009789", payeeOneId: "P-020", amount: 85000, relation: "Spouse", isOnHold: false },
-  { idx: 6, claimNo: "NL1DC26009790", payeeOneId: "P-021", amount: 60000, relation: "Child", isOnHold: false },
-  { idx: 7, claimNo: "NCT2-2DC26009791", payeeOneId: "P-022", amount: 100000, relation: "Spouse", isOnHold: false },
-  { idx: 8, claimNo: "MIMAROPA2DC26009792", payeeOneId: "P-023", amount: 125000, relation: "Spouse", isOnHold: false },
-  { idx: 9, claimNo: "MIMAROPA2DC26009793", payeeOneId: "P-024", amount: 57000, relation: "Child", isOnHold: false },
-  { idx: 10, claimNo: "NL1DC26009794", payeeOneId: "P-025", amount: 56000, relation: "Child", isOnHold: false },
-  { idx: 11, claimNo: "NL1DC26009795", payeeOneId: "P-026", amount: 85000, relation: "Spouse", isOnHold: false },
-  { idx: 12, claimNo: "MW1DC26009796", payeeOneId: "P-027", payeeTwoId: "P-029", amount: 80000, relation: "Parent", isOnHold: true, remarks: "Payout on hold pending settlement of prior dismemberment claims." },
-  { idx: 13, claimNo: "NL1DC26009797", payeeOneId: "P-028", amount: 60000, relation: "Child", isOnHold: false },
-  { idx: 14, claimNo: "MW1DC26009798", payeeOneId: "P-029", amount: 165000, relation: "Parent", isOnHold: false },
-  { idx: 15, claimNo: "VW1-2DC26009799", payeeOneId: "P-030", amount: 12500, relation: "Parent", isOnHold: false },
+  { idx: 1, claimNo: "NCT1DC26009785", payeeOneId: "P-016", payeeTwoId: "P-028", amount: 125000, relation: "Spouse", isOnHold: false },
+  { idx: 2, claimNo: "VCTDC26009786", payeeOneId: "P-018", amount: 56000, relation: "Child", isOnHold: false },
+  { idx: 3, claimNo: "NCT2DC26009787", payeeOneId: "P-017", amount: 165000, relation: "Spouse", isOnHold: true, remarks: "Payment held — awaiting valid ID of claimant." },
+  { idx: 4, claimNo: "CLBZTDC26009788", payeeOneId: "P-019", amount: 105000, relation: "Child", isOnHold: false },
+  { idx: 5, claimNo: "VWT1DC26009789", payeeOneId: "P-020", amount: 85000, relation: "Spouse", isOnHold: false },
+  { idx: 6, claimNo: "CLT1DC26009790", payeeOneId: "P-021", amount: 60000, relation: "Child", isOnHold: false },
+  { idx: 7, claimNo: "NCT2DC26009791", payeeOneId: "P-022", amount: 100000, relation: "Spouse", isOnHold: false },
+  { idx: 8, claimNo: "BTDC26009792", payeeOneId: "P-023", amount: 125000, relation: "Spouse", isOnHold: false },
+  { idx: 9, claimNo: "CLBZTDC26009793", payeeOneId: "P-024", amount: 57000, relation: "Child", isOnHold: false },
+  { idx: 10, claimNo: "CLT2DC26009794", payeeOneId: "P-025", amount: 56000, relation: "Child", isOnHold: false },
+  { idx: 11, claimNo: "CLT1DC26009795", payeeOneId: "P-026", amount: 85000, relation: "Spouse", isOnHold: false },
+  { idx: 12, claimNo: "MCETDC26009796", payeeOneId: "P-027", payeeTwoId: "P-029", amount: 80000, relation: "Parent", isOnHold: true, remarks: "Payout on hold pending settlement of prior dismemberment claims." },
+  { idx: 13, claimNo: "CLT2DC26009797", payeeOneId: "P-028", amount: 60000, relation: "Child", isOnHold: false },
+  { idx: 14, claimNo: "MCETDC26009798", payeeOneId: "P-029", amount: 165000, relation: "Parent", isOnHold: false },
+  { idx: 15, claimNo: "VETDC26009799", payeeOneId: "P-030", amount: 12500, relation: "Parent", isOnHold: false },
   // Payees on the endorsed (For Approval) death claims.
-  { idx: 16, claimNo: "NCT2-2DC26009800", payeeOneId: "P-016", amount: 56000, relation: "Spouse", isOnHold: false },
-  { idx: 17, claimNo: "VW1-2DC26009801", payeeOneId: "P-018", amount: 85000, relation: "Child", isOnHold: false },
-  { idx: 18, claimNo: "NCT2-2DC26009802", payeeOneId: "P-022", amount: 125000, relation: "Spouse", isOnHold: false },
-  { idx: 19, claimNo: "MW1DC26009803", payeeOneId: "P-027", amount: 60000, relation: "Parent", isOnHold: false },
-  { idx: 20, claimNo: "VW1-2DC26009804", payeeOneId: "P-020", amount: 100000, relation: "Spouse", isOnHold: false },
+  { idx: 16, claimNo: "NCT1DC26009800", payeeOneId: "P-016", amount: 56000, relation: "Spouse", isOnHold: false },
+  { idx: 17, claimNo: "VCTDC26009801", payeeOneId: "P-018", amount: 85000, relation: "Child", isOnHold: false },
+  { idx: 18, claimNo: "NCT2DC26009802", payeeOneId: "P-022", amount: 125000, relation: "Spouse", isOnHold: false },
+  { idx: 19, claimNo: "MCETDC26009803", payeeOneId: "P-027", amount: 60000, relation: "Parent", isOnHold: false },
+  { idx: 20, claimNo: "VWT1DC26009804", payeeOneId: "P-020", amount: 100000, relation: "Spouse", isOnHold: false },
   // The showcase plan holder's claims. The main plan is claimed JOINTLY by the
   // widower and the elder child — the two-payee case — and the denied claim on
   // the lapsed plan is on hold with the reason on the record.
-  { idx: 21, claimNo: "NCT2-2DC26009810", payeeOneId: "P-042", payeeTwoId: "P-043", amount: 165000, relation: "Spouse", isOnHold: false },
-  { idx: 22, claimNo: "NCT2-2DC26009811", payeeOneId: "P-042", amount: 80000, relation: "Spouse", isOnHold: false },
-  { idx: 23, claimNo: "NCT2-2DC26009812", payeeOneId: "P-043", amount: 56000, relation: "Child", isOnHold: true, remarks: "Plan lapsed as of due date 01 Feb 2026 — claim denied, release suspended." },
+  { idx: 21, claimNo: "NCT1DC26009810", payeeOneId: "P-042", payeeTwoId: "P-043", amount: 165000, relation: "Spouse", isOnHold: false },
+  { idx: 22, claimNo: "NCT1DC26009811", payeeOneId: "P-042", amount: 80000, relation: "Spouse", isOnHold: false },
+  { idx: 23, claimNo: "NCT1DC26009812", payeeOneId: "P-043", amount: 56000, relation: "Child", isOnHold: true, remarks: "Plan lapsed as of due date 01 Feb 2026 — claim denied, release suspended." },
 ];
 
 /* ========================= RefPayoutChannel ========================= */
@@ -756,8 +1376,8 @@ export const planholderRemarkSeed: PlanholderRemarkRecord[] = [
   { idx: 9, lpaNo: "L20000700X", value: "Plan issued 15 Jun 2020 under RA5M5. First installment collected on the same day.", auditUser: "Carla Uy", auditDate: "2020-06-15T09:20:00" },
   { idx: 10, lpaNo: "L20000700X", value: "Beneficiary added: Miguel V. Almeda (Child), 12 Aug 2024. Plan now carries four beneficiaries.", auditUser: "Carla Uy", auditDate: "2024-08-12T10:20:00" },
   { idx: 11, lpaNo: "L20000700X", value: "Mailing address changed to the office address on file, 03 Feb 2025, at the plan holder's request.", auditUser: "Benjie Ramos", auditDate: "2025-02-03T15:10:00" },
-  { idx: 12, lpaNo: "L20000700X", value: "Installment for Jul 2026 collected 15 Jul 2026. Account current, 58 of 60 installments paid.", auditUser: "Diana Lim", auditDate: "2026-07-15T11:05:00" },
-  { idx: 13, lpaNo: "L20000700X", value: "Plan holder reported deceased 06 Jul 2026. Collection stopped pending the death claim.", auditUser: PROCESSOR, auditDate: "2026-07-14T08:10:00" },
+  { idx: 12, lpaNo: "L20000700X", value: "Installment for Jul 2026 collected 15 Jul 2026. Account current, 58 of 60 installments paid at that date.", auditUser: "Diana Lim", auditDate: "2026-07-15T11:05:00" },
+  { idx: 13, lpaNo: "L20000700X", value: "Plan holder reported deceased 06 Jul 2026. Collection stopped and the remaining balance closed out against the death benefit; account now fully paid.", auditUser: PROCESSOR, auditDate: "2026-07-14T08:10:00" },
   { idx: 14, lpaNo: "L23000701Y", value: "Second plan issued 01 Mar 2023 under C5M8, same plan holder as L20000700X.", auditUser: "Carla Uy", auditDate: "2023-03-01T09:00:00" },
   { idx: 15, lpaNo: "L18000702Z", value: "Account lapsed for non-payment; reinstated 01 Feb 2021 after arrears were settled.", auditUser: "Diana Lim", auditDate: "2021-02-01T14:00:00" },
   { idx: 16, lpaNo: "L18000702Z", value: "No collection posted since 01 Jan 2026. Account lapsed again as of due date 01 Feb 2026.", auditUser: "Benjie Ramos", auditDate: "2026-02-02T08:30:00" },
@@ -775,23 +1395,562 @@ export const planholderNoteSeed: PlanholderNoteRecord[] = [
 ];
 
 /* ================================ Branch ================================ */
+//
+// `territoryCode` points at `territorySeed`, which is declared with the chapel
+// branches near the top of this file. Every branch is placed in the territory
+// its city actually falls under — a branch and a chapel in the same province
+// answer to the same territory, and the service-payables screens read both.
 
 export const branchSeed: BranchRecord[] = [
   { branchCode: "ESTORE", territoryCode: "NCT2", regionCode: "NCR", description: "E-Store Branch", address: "Makati City, Metro Manila", contactNo: "(02) 8888 0000", email: "estore@stpeter.com.ph" },
-  { branchCode: "QCITY", territoryCode: "NCT2", regionCode: "NCR", description: "Quezon City Branch", address: "Quezon City, Metro Manila", contactNo: "(02) 8888 0001", email: "qcity@stpeter.com.ph" },
-  { branchCode: "MANILA", territoryCode: "NCT1", regionCode: "NCR", description: "Manila Branch", address: "Manila, Metro Manila", contactNo: "(02) 8888 0002", email: "manila@stpeter.com.ph" },
-  { branchCode: "CEBU", territoryCode: "VW1", regionCode: "R7", description: "Cebu City Branch", address: "Cebu City, Cebu", contactNo: "(032) 253 0003", email: "cebu@stpeter.com.ph" },
-  { branchCode: "BATANGAS", territoryCode: "STL2", regionCode: "R4A", description: "Batangas City Branch", address: "Batangas City, Batangas", contactNo: "(043) 300 0004", email: "batangas@stpeter.com.ph" },
-  { branchCode: "DAVAO", territoryCode: "MW1", regionCode: "R11", description: "Davao City Branch", address: "Davao City, Davao del Sur", contactNo: "(082) 300 0005", email: "davao@stpeter.com.ph" },
-  { branchCode: "ILOILO", territoryCode: "VW1", regionCode: "R6", description: "Iloilo City Branch", address: "Iloilo City, Iloilo", contactNo: "(033) 300 0006", email: "iloilo@stpeter.com.ph" },
-  { branchCode: "SANFER", territoryCode: "NL1", regionCode: "R3", description: "San Fernando Branch", address: "San Fernando, Pampanga", contactNo: "(045) 300 0007", email: "sanfer@stpeter.com.ph" },
-  { branchCode: "BAGUIO", territoryCode: "NL1", regionCode: "CAR", description: "Baguio City Branch", address: "Baguio City, Benguet", contactNo: "(074) 300 0008", email: "baguio@stpeter.com.ph" },
-  { branchCode: "NAGA", territoryCode: "STL3", regionCode: "R5", description: "Naga City Branch", address: "Naga City, Camarines Sur", contactNo: "(054) 300 0009", email: "naga@stpeter.com.ph" },
-  { branchCode: "LUCENA", territoryCode: "STL2", regionCode: "R4A", description: "Lucena City Branch", address: "Lucena City, Quezon", contactNo: "(042) 300 0010", email: "lucena@stpeter.com.ph" },
-  { branchCode: "VIGAN", territoryCode: "NL2", regionCode: "R1", description: "Vigan Branch", address: "Vigan, Ilocos Sur", contactNo: "(077) 300 0011", email: "vigan@stpeter.com.ph" },
-  { branchCode: "CDO", territoryCode: "MW1", regionCode: "R10", description: "Cagayan de Oro Branch", address: "Cagayan de Oro, Misamis Oriental", contactNo: "(088) 300 0012", email: "cdo@stpeter.com.ph" },
-  { branchCode: "ANGELES", territoryCode: "NL1", regionCode: "R3", description: "Angeles City Branch", address: "Angeles City, Pampanga", contactNo: "(045) 300 0013", email: "angeles@stpeter.com.ph" },
-  { branchCode: "TACLOBAN", territoryCode: "VW2", regionCode: "R8", description: "Tacloban City Branch", address: "Tacloban City, Leyte", contactNo: "(053) 300 0014", email: "tacloban@stpeter.com.ph" },
+  { branchCode: "QCITY", territoryCode: "NCT1", regionCode: "NCR", description: "Quezon City Branch", address: "Quezon City, Metro Manila", contactNo: "(02) 8888 0001", email: "qcity@stpeter.com.ph" },
+  { branchCode: "MANILA", territoryCode: "NCT2", regionCode: "NCR", description: "Manila Branch", address: "Manila, Metro Manila", contactNo: "(02) 8888 0002", email: "manila@stpeter.com.ph" },
+  { branchCode: "CEBU", territoryCode: "VCT", regionCode: "R7", description: "Cebu City Branch", address: "Cebu City, Cebu", contactNo: "(032) 253 0003", email: "cebu@stpeter.com.ph" },
+  { branchCode: "BATANGAS", territoryCode: "CLBZT", regionCode: "R4A", description: "Batangas City Branch", address: "Batangas City, Batangas", contactNo: "(043) 300 0004", email: "batangas@stpeter.com.ph" },
+  { branchCode: "DAVAO", territoryCode: "MCET", regionCode: "R11", description: "Davao City Branch", address: "Davao City, Davao del Sur", contactNo: "(082) 300 0005", email: "davao@stpeter.com.ph" },
+  { branchCode: "ILOILO", territoryCode: "VWT1", regionCode: "R6", description: "Iloilo City Branch", address: "Iloilo City, Iloilo", contactNo: "(033) 300 0006", email: "iloilo@stpeter.com.ph" },
+  { branchCode: "SANFER", territoryCode: "CLT1", regionCode: "R3", description: "San Fernando Branch", address: "San Fernando, Pampanga", contactNo: "(045) 300 0007", email: "sanfer@stpeter.com.ph" },
+  { branchCode: "BAGUIO", territoryCode: "CLT2", regionCode: "CAR", description: "Baguio City Branch", address: "Baguio City, Benguet", contactNo: "(074) 300 0008", email: "baguio@stpeter.com.ph" },
+  { branchCode: "NAGA", territoryCode: "BT", regionCode: "R5", description: "Naga City Branch", address: "Naga City, Camarines Sur", contactNo: "(054) 300 0009", email: "naga@stpeter.com.ph" },
+  { branchCode: "LUCENA", territoryCode: "CLBZT", regionCode: "R4A", description: "Lucena City Branch", address: "Lucena City, Quezon", contactNo: "(042) 300 0010", email: "lucena@stpeter.com.ph" },
+  { branchCode: "VIGAN", territoryCode: "CLT2", regionCode: "R1", description: "Vigan Branch", address: "Vigan, Ilocos Sur", contactNo: "(077) 300 0011", email: "vigan@stpeter.com.ph" },
+  { branchCode: "CDO", territoryCode: "MCET", regionCode: "R10", description: "Cagayan de Oro Branch", address: "Cagayan de Oro, Misamis Oriental", contactNo: "(088) 300 0012", email: "cdo@stpeter.com.ph" },
+  { branchCode: "ANGELES", territoryCode: "CLT1", regionCode: "R3", description: "Angeles City Branch", address: "Angeles City, Pampanga", contactNo: "(045) 300 0013", email: "angeles@stpeter.com.ph" },
+  { branchCode: "TACLOBAN", territoryCode: "VET", regionCode: "R8", description: "Tacloban City Branch", address: "Tacloban City, Leyte", contactNo: "(053) 300 0014", email: "tacloban@stpeter.com.ph" },
+];
+
+/* =========================== RefAccountStatus =========================== */
+//
+// Where a plan's ACCOUNT stands. Verbatim from the reference data; the sentence
+// -case labels the UI prints live on `ACCOUNT_STATUS_LABELS` in `models.ts`.
+
+export const refAccountStatusSeed: RefAccountStatusRecord[] = [
+  { acctStatCode: "AC", description: "ACTIVE" },
+  { acctStatCode: "DN", description: "DENIED" },
+  { acctStatCode: "FP", description: "FULLY PAID" },
+  { acctStatCode: "LA", description: "LE APPLICATION" },
+  { acctStatCode: "LP", description: "LAPSED" },
+  { acctStatCode: "NS", description: "NEW SALES" },
+  { acctStatCode: "RI", description: "REINSTATED" },
+];
+
+/* ============================= RefTermiStat ============================= */
+//
+// What became of the PLAN. Verbatim from the reference data — including the two
+// oddities it carries, which are left exactly as given rather than tidied: "UF"
+// is written "USB- ONE FULLY PAID PLAN FROM FP ACCOUNT" with the space on the
+// wrong side of the dash, and "CT" runs two things together with a slash.
+
+export const refTermiStatSeed: RefTermiStatRecord[] = [
+  { termiStatCode: "AR", description: "ACTIVE ROP" },
+  { termiStatCode: "CA", description: "CASH SURRENDER FROM AC ACCOUNT" },
+  { termiStatCode: "CB", description: "CASH BENEFIT" },
+  { termiStatCode: "CF", description: "CASH SURRENDER FROM FP ACCOUNT" },
+  { termiStatCode: "CT", description: "CANCELLED/FORFEITED PLAN TERMINATION VALUE" },
+  { termiStatCode: "CU", description: "CANCELLED LOAN" },
+  { termiStatCode: "DC", description: "DENIED CLAIM" },
+  { termiStatCode: "FR", description: "FULLY PAID ROP" },
+  { termiStatCode: "NT", description: "NOT YET TERMINATED" },
+  { termiStatCode: "RD", description: "ST. PETER ACE PROGRAM" },
+  { termiStatCode: "RP", description: "RETURN OF PREMIUM" },
+  { termiStatCode: "SA", description: "SERVICED - ASSIGNED" },
+  { termiStatCode: "SP", description: "SERVICED - PLANHOLDER" },
+  { termiStatCode: "TP", description: "TERMINATED PLAN" },
+  { termiStatCode: "TR", description: "TRANSFERRED ROP" },
+  { termiStatCode: "UA", description: "USB - ONE FULLY PAID PLAN FROM AC ACCOUNT" },
+  { termiStatCode: "UC", description: "USB - CONTINUE PAYMENT" },
+  { termiStatCode: "UF", description: "USB- ONE FULLY PAID PLAN FROM FP ACCOUNT" },
+  { termiStatCode: "UP", description: "USB - ONE FULLY PAID PLAN" },
+  { termiStatCode: "UR", description: "USB - CREMATION PLAN" },
+  { termiStatCode: "UT", description: "USB - TERMINATION VALUE OR 70%" },
+];
+
+/* ============================== RefMortuary ============================== */
+//
+// The funeral homes a service payable is raised against — the WHOLE table this
+// time: 424 rows, 206 company-owned and 218 franchised, in the source's own
+// order rather than split into two blocks. The 2026-08-25 drop replaced the
+// thirty-seven-row extract this seed was built on, and it is loaded verbatim:
+// nothing below is normalised, corrected or inferred, down to the spelling
+// ("ST. PETER CHAPEL - …" with the space that the earlier extract did not have).
+//
+// THE `branchCode` COLUMN HOLDS CHAPEL CODES. See `RefMortuaryRecord` — every
+// value in it is a `ChapelBranch.chapelCode`, under the source's own column
+// name.
+//
+// THE TWO ODD ROWS OF THE OLD EXTRACT ARE ANSWERED BY THIS ONE, which is the
+// argument for taking a reference table whole rather than in pieces:
+//
+//   BT1-1   "ADEA MEMORIAL HOMES - CAPALONGA" came with no chapel column at all
+//           and its `branchCode` was left empty. It names JOSEPA here.
+//   SLI1-02 was listed twice, once for VICTORIA and once for PINAMALAYAN, and a
+//           primary key cannot name two rows — PINAMALAYAN was left out rather
+//           than given an invented code. It has its own row now, SLI1-07.
+//
+// 116 OF THE CHAPEL CODES STILL DO NOT RESOLVE, and they are left exactly as
+// they are. Two kinds, the same two as before: NEAR MISSES of a chapel that is
+// on file (IRIGA against IRIGAS, STA.MA against STAMAR), where one side of the
+// pair is a typing slip and which one is not this layer's call; and PLACES WITH
+// NO CHAPEL ROW AT ALL — BAGUIO, CEBU, ILOILO, DAVAO, LUPON, GENSAN and the rest
+// of the franchise network. The chapel reference drop is explicitly the
+// company-OWNED list ("all of this is not franchise"), so the mortuary table was
+// always going to cover ground the chapel table does not.
+// `db.getUnresolvedMortuaryChapels` computes that list rather than repeating it
+// here.
+//
+// WHAT DID NOT FOLLOW FROM THE BIGGER TABLE: the chapel network. The nine
+// franchise chapels in `FRANCHISE_CHAPELS` were derived from the fourteen FR
+// rows the old extract carried, and deriving one for each of the 218 FR rows
+// here would nearly double the network off inference rather than off data —
+// see that block. The unresolved codes stay unresolved until a chapel drop
+// names them.
+
+export const refMortuarySeed: RefMortuaryRecord[] = [
+  { mortCode: "BT1-00", mortuary: "Z.R. BUFETE MEMORIAL HOMES", branchCode: "NAGA", mortClass: "FR" },
+  { mortCode: "BT1-01", mortuary: "ST. PETER CHAPEL - IRIGA SAN MIGUEL", branchCode: "IRIGA", mortClass: "OW" },
+  { mortCode: "BT1-02", mortuary: "CARAMOAN FUNERAL HOMES", branchCode: "NAGA", mortClass: "FR" },
+  { mortCode: "BT1-03", mortuary: "T. SALLES MEMORIAL HOME - OCAMPO", branchCode: "NAGA", mortClass: "FR" },
+  { mortCode: "BT1-1", mortuary: "ADEA MEMORIAL HOMES - CAPALONGA", branchCode: "JOSEPA", mortClass: "FR" },
+  { mortCode: "BT2-02", mortuary: "ST. PETER CHAPEL - POLANGUI", branchCode: "POLANG", mortClass: "OW" },
+  { mortCode: "BT2-03", mortuary: "CATAYTAY FUNERAL SERVICES (TICAO)", branchCode: "MASBAT", mortClass: "FR" },
+  { mortCode: "BT2-1", mortuary: "ST. PETER CHAPEL - LEGASPI", branchCode: "LEGASP", mortClass: "OW" },
+  { mortCode: "BT3-00", mortuary: "ST. PETER CHAPEL - SORSOGON", branchCode: "SORSOG", mortClass: "OW" },
+  { mortCode: "BT3-01", mortuary: "ST. PETER CHAPEL - MASBATE", branchCode: "MASBAT", mortClass: "OW" },
+  { mortCode: "BT3-1", mortuary: "ST. PETER CHAPEL - BULAN", branchCode: "BULAN", mortClass: "OW" },
+  { mortCode: "CL1-1-1", mortuary: "ST. PETER CHAPEL - STA. MARIA", branchCode: "STA.MA", mortClass: "OW" },
+  { mortCode: "CL1-1-2", mortuary: "ST. PETER CHAPEL - MABALACAT", branchCode: "ANGELE", mortClass: "OW" },
+  { mortCode: "CL1-2-00", mortuary: "ST. PETER CHAPEL - GUAGUA", branchCode: "LUBAO", mortClass: "OW" },
+  { mortCode: "CL1-2-01", mortuary: "ST. PETER CHAPEL - STO. TOMAS, PAMPANGA", branchCode: "SANFER", mortClass: "OW" },
+  { mortCode: "CL1-2-02", mortuary: "ST. PETER CHAPEL - IBA ZAMBALES", branchCode: "CRUZZA", mortClass: "OW" },
+  { mortCode: "CL1-2-1", mortuary: "ST. PETER CHAPEL - MEXICO", branchCode: "SANFER", mortClass: "OW" },
+  { mortCode: "CL1-3-00", mortuary: "ST. PETER CHAPEL - SUBIC", branchCode: "CRUZZA", mortClass: "OW" },
+  { mortCode: "CL1-3-02", mortuary: "ST. PETER CHAPEL - OLONGAPO", branchCode: "CRUZZA", mortClass: "OW" },
+  { mortCode: "CL1-3-1", mortuary: "ST. PETER CHAPEL - DINALUPIHAN", branchCode: "DINALU", mortClass: "OW" },
+  { mortCode: "CL1-4-00", mortuary: "ST. PETER CHAPEL - CABANATUAN", branchCode: "CABANA", mortClass: "OW" },
+  { mortCode: "CL1-4-00A", mortuary: "ST. PETER CHAPEL - CABANATUAN", branchCode: "CABANA", mortClass: "FR" },
+  { mortCode: "CL1-4-01", mortuary: "ST. PETER CHAPEL - GAPAN", branchCode: "CABANA", mortClass: "OW" },
+  { mortCode: "CL1-4-1", mortuary: "ST. PETER CHAPEL - GUIMBA", branchCode: "TALAVE", mortClass: "OW" },
+  { mortCode: "CL2-1-00", mortuary: "ST. PETER CHAPEL - PANIQUI", branchCode: "PANIQU", mortClass: "OW" },
+  { mortCode: "CL2-1-1", mortuary: "ST. PETER CHAPEL - CAMILING", branchCode: "CAMILI", mortClass: "OW" },
+  { mortCode: "CL2-2-00", mortuary: "ST. PETER CHAPEL - URDANETA", branchCode: "URDANE", mortClass: "OW" },
+  { mortCode: "CL2-2-1", mortuary: "ST. PETER CHAPEL - BAYAMBANG", branchCode: "SNCARL", mortClass: "OW" },
+  { mortCode: "CLAIMS-00", mortuary: "NO BILLING MORTUARY", branchCode: "MAIN O", mortClass: "OW" },
+  { mortCode: "CLBZ1-01", mortuary: "ST. PETER CHAPEL - TAYABAS", branchCode: "LUCBAN", mortClass: "OW" },
+  { mortCode: "CLBZ3-00", mortuary: "PNA HOLY ROSARY FUNERAL HOMES", branchCode: "ROSARI", mortClass: "FR" },
+  { mortCode: "CLBZ3-03", mortuary: "ST. PETER CHAPEL - LIPA", branchCode: "LIPA", mortClass: "OW" },
+  { mortCode: "CLBZ3-04", mortuary: "ROMY`S FUNERAL SERVICES", branchCode: "NASUGB", mortClass: "FR" },
+  { mortCode: "CLBZ3-1", mortuary: "ASERON FUNERAL PARLOR", branchCode: "BATANG", mortClass: "FR" },
+  { mortCode: "CV1-1", mortuary: "ST. PETER CHAPEL - APARRI", branchCode: "APARRI", mortClass: "OW" },
+  { mortCode: "CV2-1", mortuary: "ST. PETER CHAPEL - CABARROGUIS", branchCode: "DIFFUN", mortClass: "OW" },
+  { mortCode: "GM1-05", mortuary: "FUNERARIA L. A. VASQUEZ", branchCode: "LAS PI", mortClass: "FR" },
+  { mortCode: "GM2-18", mortuary: "ST. PETER CHAPEL - ANTIPOLO", branchCode: "ANTIPO", mortClass: "OW" },
+  { mortCode: "GM2-19", mortuary: "ST. PETER CHAPEL - TANAY", branchCode: "TANAY", mortClass: "OW" },
+  { mortCode: "GM3-04", mortuary: "ST. BARTOLOME FUNERAL HOMES", branchCode: "DASMAR", mortClass: "FR" },
+  { mortCode: "GM3-31", mortuary: "TOLENTINO PARADISE FUNERAL SERVICES", branchCode: "IMUS", mortClass: "FR" },
+  { mortCode: "GM3-47", mortuary: "ST. PETER CHAPEL - GMA", branchCode: "GMA", mortClass: "OW" },
+  { mortCode: "GM3-52", mortuary: "ST. PETER CHAPEL - TRECE", branchCode: "TRECE", mortClass: "OW" },
+  { mortCode: "GM3-57", mortuary: "ST. PETER CHAPEL - TRECE(INDANG)", branchCode: "TRECE", mortClass: "OW" },
+  { mortCode: "GM4-05", mortuary: "ST. PETER CHAPEL - BALIUAG", branchCode: "CENBUL", mortClass: "OW" },
+  { mortCode: "GM4-06", mortuary: "ST. PETER CHAPEL - MEYCAUAYAN", branchCode: "MEYCAU", mortClass: "OW" },
+  { mortCode: "GM4-07", mortuary: "ST. PETER CHAPEL - SAN MIGUEL", branchCode: "SANMIG", mortClass: "OW" },
+  { mortCode: "GM4-08", mortuary: "ST. PETER CHAPEL - PUERTO PRINCESA", branchCode: "ROXAPA", mortClass: "OW" },
+  { mortCode: "GME1-1", mortuary: "ST. PETER CHAPEL - VALENZUELA", branchCode: "VALENZ", mortClass: "OW" },
+  { mortCode: "GME2-00", mortuary: "ST. PETER CHAPEL - BINANGONAN", branchCode: "BINANG", mortClass: "OW" },
+  { mortCode: "GME2-01", mortuary: "ST. PETER CHAPEL - MARIKINA", branchCode: "MARIKI", mortClass: "OW" },
+  { mortCode: "GME2-1", mortuary: "ST. PETER CHAPEL - MONTALBAN", branchCode: "MONTAL", mortClass: "OW" },
+  { mortCode: "GME3-00", mortuary: "BERNADETTE MEMORIAL CHAPEL & FUNERAL SERVICES", branchCode: "MANDAL", mortClass: "FR" },
+  { mortCode: "GME3-02", mortuary: "ST. PETER CHAPEL - SAN JOSE DEL MONTE", branchCode: "KALOO3", mortClass: "OW" },
+  { mortCode: "GME3-03", mortuary: "ST. PETER CHAPEL - COMMONWEALTH", branchCode: "COMMON", mortClass: "OW" },
+  { mortCode: "GME3-04", mortuary: "ST. PETER CHAPEL - MAYON", branchCode: "QUEZAV", mortClass: "OW" },
+  { mortCode: "GME3-05", mortuary: "FOREST HILL FUNERAL HOMES AND SERVICES, INC.", branchCode: "NOVALI", mortClass: "OW" },
+  { mortCode: "GME3-1", mortuary: "PAGULAYAN MEMORIAL HOMES", branchCode: "CAUAYA", mortClass: "FR" },
+  { mortCode: "GME4-00", mortuary: "E. SOLIVIO FUNERAL HOMES - SAN VICENTE", branchCode: "ROXAPA", mortClass: "FR" },
+  { mortCode: "GME4-01", mortuary: "VPS FUNERAL HOMES", branchCode: "ROXPAL", mortClass: "FR" },
+  { mortCode: "GME4-02", mortuary: "ST. PETER CHAPEL - NARRA PALAWAN", branchCode: "NARRA", mortClass: "OW" },
+  { mortCode: "GME4-03", mortuary: "E. SOLIVIO FUNERAL HOMES - TAYTAY", branchCode: "ROXAPA", mortClass: "FR" },
+  { mortCode: "GMW1-01", mortuary: "NCI LA FUNERARIA REAL INC.", branchCode: "TAGUIG", mortClass: "FR" },
+  { mortCode: "GMW1-03", mortuary: "EL JEN MEMORIAL SERVICES (FORMERLY SYMPATHY)", branchCode: "BACOOR", mortClass: "FR" },
+  { mortCode: "GMW1-04", mortuary: "ST. PETER CHAPEL - NAIA3", branchCode: "TAGUIG", mortClass: "OW" },
+  { mortCode: "GMW1-1", mortuary: "OUR LADY OF LORETO FUNERAL SERVICE", branchCode: "TAGUIG", mortClass: "FR" },
+  { mortCode: "GMW2-01", mortuary: "AOC-ROSARIO FUNERAL HOMES", branchCode: "SANPED", mortClass: "FR" },
+  { mortCode: "GMW2-03", mortuary: "LA FUNERARIA TOTIE", branchCode: "BACOWE", mortClass: "FR" },
+  { mortCode: "GMW2-04", mortuary: "VILLA-BABAS FUNERAL HOMES", branchCode: "IPIL", mortClass: "FR" },
+  { mortCode: "GMW2-1", mortuary: "FUNERARIA MALAYA", branchCode: "PASAY", mortClass: "FR" },
+  { mortCode: "GMW3-00", mortuary: "SUGATAN-GARCES FUNERAL SERVICE", branchCode: "CAVITE", mortClass: "FR" },
+  { mortCode: "GMW3-01", mortuary: "FUNERARIA C. ROCILLO", branchCode: "ALFONS", mortClass: "FR" },
+  { mortCode: "GMW3-05", mortuary: "JULIUS LIMJUCO FUNERAL HOMES", branchCode: "CRUZLA", mortClass: "FR" },
+  { mortCode: "GMW3-06", mortuary: "HILL VALLEY FUNERAL HOME", branchCode: "ALFONS", mortClass: "FR" },
+  { mortCode: "GMW3-07", mortuary: "ST. PETER CHAPEL - BIÑAN, CANLALAY", branchCode: "BINANL", mortClass: "OW" },
+  { mortCode: "GMW3-1", mortuary: "JOHN PAUL II FUNERAL HOMES", branchCode: "STAROS", mortClass: "FR" },
+  { mortCode: "GMW4-00", mortuary: "ST. PETER CHAPEL - GEN. TRIAS", branchCode: "TRECE", mortClass: "OW" },
+  { mortCode: "GMW4-1", mortuary: "REVELATION'S FUNERAL PARLOR", branchCode: "ALFONS", mortClass: "FR" },
+  { mortCode: "HOM", mortuary: "ST. PETER MEMORIAL CHAPEL", branchCode: "SPMCQA", mortClass: "OW" },
+  { mortCode: "HOMA", mortuary: "ST. PETER MEMORIAL CHAPEL", branchCode: "SPMCQA", mortClass: "FR" },
+  { mortCode: "IR2-00", mortuary: "ST. PETER CHAPEL - VIGAN", branchCode: "VIGAN", mortClass: "OW" },
+  { mortCode: "IR2-1", mortuary: "ST. PETER CHAPEL - LAOAG", branchCode: "LAOAG", mortClass: "OW" },
+  { mortCode: "IR3-00", mortuary: "ST. PETER CHAPEL - BAGUIO MEGA", branchCode: "BAGUIO", mortClass: "OW" },
+  { mortCode: "IR3-1", mortuary: "ST. PETER CHAPEL - BAGUIO", branchCode: "BAGUIO", mortClass: "OW" },
+  { mortCode: "MC2-1", mortuary: "ST. PETER CHAPEL - DIGOS SAN JOSE", branchCode: "DIGOS", mortClass: "OW" },
+  { mortCode: "MC3-01", mortuary: "FUNERARIA VILLA HAGORILES - GLAN", branchCode: "GENSAN", mortClass: "FR" },
+  { mortCode: "MC3-02", mortuary: "ST. PETER CHAPEL - GENSAN MEGA", branchCode: "GENSAN", mortClass: "OW" },
+  { mortCode: "MC3-03", mortuary: "IAN TORREDA FUNERAL HOMES - ANTIPAS", branchCode: "KABACA", mortClass: "FR" },
+  { mortCode: "MC3-04", mortuary: "ABAO FUNERAL PARLOR", branchCode: "GENSAN", mortClass: "FR" },
+  { mortCode: "MC3-1", mortuary: "ST. PETER CHAPEL - GENSAN", branchCode: "GSCPIO", mortClass: "OW" },
+  { mortCode: "MC4-01", mortuary: "ST. PETER CHAPELS PANABO", branchCode: "PANABO", mortClass: "OW" },
+  { mortCode: "MD1-09", mortuary: "PADILLA FUNERAL HOME", branchCode: "LUPON", mortClass: "FR" },
+  { mortCode: "MD1-17", mortuary: "SAINT TOMAS FUNERAL HOME (FORMERLY ST. THOMAS FUNERAL HOMES)", branchCode: "LUPON", mortClass: "FR" },
+  { mortCode: "MD1-20", mortuary: "PABILONA FUNERAL PARLOR - MONTEVISTA", branchCode: "NABUNT", mortClass: "FR" },
+  { mortCode: "MD1-22", mortuary: "MANGAGOY FUNERAL  HOMES", branchCode: "MANGAG", mortClass: "FR" },
+  { mortCode: "MD1-25", mortuary: "PADILLA PAMONGCALES FUNERAL", branchCode: "LUPON", mortClass: "FR" },
+  { mortCode: "MD1-26", mortuary: "ST. PETER CHAPEL - BUTUAN", branchCode: "BUTUAN", mortClass: "OW" },
+  { mortCode: "MD1-27", mortuary: "ST. PETER CHAPEL - TAGUM", branchCode: "TAGUM", mortClass: "OW" },
+  { mortCode: "MD1-29", mortuary: "ST. PETER CHAPEL - TANDAG", branchCode: "TANDAG", mortClass: "OW" },
+  { mortCode: "MD1-33", mortuary: "ST. PETER CHAPEL - MATI", branchCode: "LUPON", mortClass: "OW" },
+  { mortCode: "MD1-36", mortuary: "PADILLA FUNERAL HOME", branchCode: "LUPON", mortClass: "FR" },
+  { mortCode: "MD1-38", mortuary: "PABILONA FUNERAL PARLOR - NABUNTURAN", branchCode: "NABUNT", mortClass: "FR" },
+  { mortCode: "MD1-39", mortuary: "TORREDA FUNERAL CHAPEL - BAGANGA", branchCode: "LUPON", mortClass: "FR" },
+  { mortCode: "MD2-05", mortuary: "TORREDA FUNERAL HOMES - KIDAPAWAN", branchCode: "KIDAPA", mortClass: "FR" },
+  { mortCode: "MD2-07", mortuary: "ELISA FUNERAL HOME", branchCode: "MIDSAY", mortClass: "FR" },
+  { mortCode: "MD2-11", mortuary: "ALLEN FUNERAL HOME", branchCode: "KORONA", mortClass: "FR" },
+  { mortCode: "MD2-12", mortuary: "FUNERARIA VILLA HAGORILES - ISULAN", branchCode: "TACURO", mortClass: "FR" },
+  { mortCode: "MD2-13", mortuary: "FUNERARIA VILLA HAGORILES - TACURONG", branchCode: "TACURO", mortClass: "FR" },
+  { mortCode: "MD2-14", mortuary: "VILLA FUNERAL HOMES - PANABO", branchCode: "PANABO", mortClass: "FR" },
+  { mortCode: "MD2-20", mortuary: "STA. MARIA FUNERAL HOME", branchCode: "GENSAN", mortClass: "FR" },
+  { mortCode: "MD2-29", mortuary: "AMOROSO FUNERAL PARLOR", branchCode: "KORONA", mortClass: "FR" },
+  { mortCode: "MD2-41", mortuary: "VILLA SIASON FUNERAL HOME", branchCode: "MIDSAY", mortClass: "FR" },
+  { mortCode: "MD2-53", mortuary: "ST. PETER CHAPEL - MIDSAYAP", branchCode: "MIDSAY", mortClass: "OW" },
+  { mortCode: "MD2-55", mortuary: "VILLA JUSA FUNERAL HOMES", branchCode: "MARAMA", mortClass: "FR" },
+  { mortCode: "MD2-56", mortuary: "MONTANO FUNERAL PARLOR", branchCode: "PANABO", mortClass: "FR" },
+  { mortCode: "MD2-60", mortuary: "ANITA V. FUNERAL HOMES", branchCode: "GENSAN", mortClass: "FR" },
+  { mortCode: "MD2-65", mortuary: "ST. PETER CHAPEL - DIGOS RIZAL", branchCode: "DIGOS", mortClass: "OW" },
+  { mortCode: "MD2-68", mortuary: "PALMES FUNERAL HOMES", branchCode: "GENSAN", mortClass: "FR" },
+  { mortCode: "MD2-72", mortuary: "ST. PETER CHAPEL - TORIL", branchCode: "TORIL", mortClass: "OW" },
+  { mortCode: "MD2-73", mortuary: "ST. PETER CHAPEL - GENSAN", branchCode: "GENSAN", mortClass: "OW" },
+  { mortCode: "MD2-84", mortuary: "ST. PETER CHAPEL - CALINAN", branchCode: "CALINA", mortClass: "OW" },
+  { mortCode: "MD2-86", mortuary: "ST. PETER CHAPEL - DAVAO, PANACAN", branchCode: "DAVAO", mortClass: "OW" },
+  { mortCode: "MD3-01", mortuary: "EVERLASTING PEACE FUNERAL HOMES", branchCode: "CAGAYA", mortClass: "FR" },
+  { mortCode: "MD3-02", mortuary: "EVERLASTING PEACE FUNERAL CHAPEL - MANOLO", branchCode: "MALAYB", mortClass: "FR" },
+  { mortCode: "MD3-06", mortuary: "PADILLA FUNERAL HOME", branchCode: "BALING", mortClass: "FR" },
+  { mortCode: "MD3-10", mortuary: "SAN GUILLERMO FUNERAL PARLOR - CDO", branchCode: "CAGAYA", mortClass: "FR" },
+  { mortCode: "MD3-19", mortuary: "SAN GUILLERMO FUNERAL PARLOR - ILIGAN", branchCode: "ILIGAN", mortClass: "FR" },
+  { mortCode: "MD3-23", mortuary: "VILLANUEVA FUNERAL HOMES - MALAYBALAY", branchCode: "MALAYB", mortClass: "FR" },
+  { mortCode: "MD3-24", mortuary: "EVERLASTING PEACE FUNERAL HOMES", branchCode: "GINGOO", mortClass: "FR" },
+  { mortCode: "MD3-26", mortuary: "VILLANUEVA FUNERAL HOMES - VALENCIA", branchCode: "VALENC", mortClass: "FR" },
+  { mortCode: "MD3-27", mortuary: "LOPEZ FUNERAL HOMES", branchCode: "CAGAYE", mortClass: "FR" },
+  { mortCode: "MD3-28", mortuary: "SAN GUILLERMO FUNERAL PARLOR - GINGOOG", branchCode: "GINGOO", mortClass: "FR" },
+  { mortCode: "MD4-06", mortuary: "FUNERARIA CELERIAN - AURORA", branchCode: "PAGADI", mortClass: "FR" },
+  { mortCode: "MD4-08", mortuary: "RIVERA FUNERAL HOMES - OZAMIS", branchCode: "OZAMIS", mortClass: "FR" },
+  { mortCode: "MD4-19", mortuary: "BASILAN MEMORIAL HOMES", branchCode: "ZAMBOA", mortClass: "FR" },
+  { mortCode: "MD4-28", mortuary: "GAMALINDA HAMOY FUNERAL HOMES", branchCode: "DIPOLO", mortClass: "FR" },
+  { mortCode: "MD4-36", mortuary: "ST. PETER CHAPEL - PAGADIAN", branchCode: "PAGADI", mortClass: "OW" },
+  { mortCode: "MD4-38", mortuary: "R. VILLA-BABAS FUNERAL HOMES", branchCode: "IPIL", mortClass: "FR" },
+  { mortCode: "MD4-44", mortuary: "RIVERA FUNERAL HOMES", branchCode: "PAGADI", mortClass: "FR" },
+  { mortCode: "MD4-47", mortuary: "SOL YU GAMALINDA FUNERAL HOME - LILOY", branchCode: "IPIL", mortClass: "FR" },
+  { mortCode: "MD4-48", mortuary: "CELERIAN FUNERAL HOMES", branchCode: "OZAMIS", mortClass: "FR" },
+  { mortCode: "MD4-50", mortuary: "ST. PETER CHAPEL - ZAMBOANGA", branchCode: "ZAMBOA", mortClass: "OW" },
+  { mortCode: "MD4-51", mortuary: "RIVERA FUNERAL HOMES - DIPOLOG", branchCode: "DIPOLO", mortClass: "FR" },
+  { mortCode: "MD4-60", mortuary: "ST. PETER CHAPEL - IPIL", branchCode: "IPIL", mortClass: "OW" },
+  { mortCode: "ME1-00", mortuary: "ST. PETER CHAPEL - BUTUAN", branchCode: "BUTUWE", mortClass: "OW" },
+  { mortCode: "ME1-1", mortuary: "ST. PETER CHAPEL - BUTUAN MEGA", branchCode: "BUTUWE", mortClass: "OW" },
+  { mortCode: "MET1-00", mortuary: "ST. PETER CHAPEL - SAN FRANCISCO", branchCode: "SANFRA", mortClass: "OW" },
+  { mortCode: "MET1-03", mortuary: "ST. PETER CHAPEL - SURIGAO", branchCode: "SURIGA", mortClass: "OW" },
+  { mortCode: "MET1-04", mortuary: "ST. PETER CHAPEL - BUTUAN MEGA", branchCode: "BUTUAN", mortClass: "OW" },
+  { mortCode: "MET1-04A", mortuary: "ST. PETER CHAPEL - BUTUAN MEGA", branchCode: "BUTUAN", mortClass: "FR" },
+  { mortCode: "MET2-1", mortuary: "ST. PETER CHAPEL - LUPON", branchCode: "LUPON", mortClass: "OW" },
+  { mortCode: "MET3-00", mortuary: "ST. PETER CHAPEL - KORONADAL", branchCode: "KORONA", mortClass: "OW" },
+  { mortCode: "MET3-02", mortuary: "IAN TORREDA FUNERAL HOMES - KABACAN", branchCode: "KABACA", mortClass: "FR" },
+  { mortCode: "MET3-03", mortuary: "JUANICO FUNERAL PARLOR", branchCode: "GENSAN", mortClass: "FR" },
+  { mortCode: "MET3-04", mortuary: "TORREDA FUNERAL HOMES - MAKILALA", branchCode: "KIDAPA", mortClass: "FR" },
+  { mortCode: "MET3-05", mortuary: "ST. PETER CHAPEL - MALITA", branchCode: "MALITA", mortClass: "OW" },
+  { mortCode: "MET3-1", mortuary: "VILLA ELISA FUNERAL HOME", branchCode: "MIDSAY", mortClass: "FR" },
+  { mortCode: "MET4-01", mortuary: "FUNERARIA VILLA HAGORILES - KULAMAN", branchCode: "TACURO", mortClass: "FR" },
+  { mortCode: "MET4-02", mortuary: "FUNERARIA VILLA HAGORILES - LEBAK", branchCode: "MIDSAY", mortClass: "FR" },
+  { mortCode: "MET4-03", mortuary: "VILLA ALADINA CASKET FACTORY AND FUNERAL SERVICES", branchCode: "TACURO", mortClass: "FR" },
+  { mortCode: "MET4-1", mortuary: "PARANG FUNERAL SERVICES", branchCode: "COTABA", mortClass: "FR" },
+  { mortCode: "MIMAROPA1-00", mortuary: "ST. PETER CHAPEL - SAN JOSE, OCC. MINDORO", branchCode: "JOSEOM", mortClass: "OW" },
+  { mortCode: "MIMAROPA1-01", mortuary: "ST. PETER CHAPEL - PINAMALAYAN PAPANDAYAN", branchCode: "PINAMA", mortClass: "OW" },
+  { mortCode: "MIMAROPA1-1", mortuary: "ST. PETER CHAPEL - MAMBURAO", branchCode: "MAMBUR", mortClass: "OW" },
+  { mortCode: "MIMAROPA2-00", mortuary: "ST. PETER CHAPEL - BROOKES POINT", branchCode: "NARRA", mortClass: "OW" },
+  { mortCode: "MIMAROPA2-01", mortuary: "ST. PETER CHAPEL - PUERTO PRINCESA BALTAN", branchCode: "ROXAPA", mortClass: "OW" },
+  { mortCode: "MIMAROPA2-3", mortuary: "ABELYN SOLIVIO FUNERAL HOMES", branchCode: "ROXAPA", mortClass: "FR" },
+  { mortCode: "MIMAROPA3-00", mortuary: "ST. PETER CHAPEL - CABUYAO", branchCode: "STAROS", mortClass: "OW" },
+  { mortCode: "MIMAROPA3-1", mortuary: "ST. PETER CHAPEL - CALAMBA", branchCode: "CALAML", mortClass: "OW" },
+  { mortCode: "MIMAROPA4-00", mortuary: "ST. PETER CHAPEL - STA. CRUZ, LAGUNA", branchCode: "CRUZLA", mortClass: "OW" },
+  { mortCode: "MIMAROPA4-01", mortuary: "RODOLFO SUTAREZ FUNERAL SERVICES", branchCode: "INFANT", mortClass: "FR" },
+  { mortCode: "MN2-1", mortuary: "ST. PETER CHAPEL - CDO", branchCode: "CAGAYA", mortClass: "OW" },
+  { mortCode: "MO-00", mortuary: "ST. PETER MEMORIAL CHAPEL HO - CREMATION", branchCode: "HO", mortClass: "FR" },
+  { mortCode: "MW3-1", mortuary: "ST. PETER CHAPEL - ZAMBOANGA", branchCode: "ZAMBOE", mortClass: "OW" },
+  { mortCode: "MWT1-00", mortuary: "SAN GUILLERMO FUNERAL PARLOR - MEDINA", branchCode: "GINGOO", mortClass: "FR" },
+  { mortCode: "MWT1-01", mortuary: "ST. PETER CHAPEL - CAMIGUIN", branchCode: "GINGOO", mortClass: "OW" },
+  { mortCode: "MWT1-03", mortuary: "ST. PETER CHAPEL - MARAMAG", branchCode: "MARAMA", mortClass: "OW" },
+  { mortCode: "MWT1-1", mortuary: "EVERLASTING PEACE FUNERAL CHAPEL - TAGOLOAN", branchCode: "CAGAYE", mortClass: "FR" },
+  { mortCode: "MWT2-00", mortuary: "ST. PETER CHAPEL - ALUBIJID", branchCode: "CAGAYA", mortClass: "OW" },
+  { mortCode: "MWT2-01", mortuary: "ST. PETER CHAPEL - MARANDING", branchCode: "OZAMIS", mortClass: "OW" },
+  { mortCode: "MWT2-02", mortuary: "ST. PETER CHAPEL - ILIGAN MEGA", branchCode: "ILIGAN", mortClass: "OW" },
+  { mortCode: "MWT2-1", mortuary: "ST. PETER CHAPEL - OROQUIETA", branchCode: "OROQUI", mortClass: "OW" },
+  { mortCode: "MWT3-02", mortuary: "ST. PETER CHAPEL - TANGUB", branchCode: "OZAMIS", mortClass: "OW" },
+  { mortCode: "MWT3-03", mortuary: "FUNERARIA CELERIAN - MOLAVE", branchCode: "PAGADI", mortClass: "FR" },
+  { mortCode: "MWT3-04", mortuary: "FUNERARIA CELERIAN - SAN MIGUEL", branchCode: "PAGADI", mortClass: "FR" },
+  { mortCode: "MWT3-05", mortuary: "FUNERARIA CELERIAN - MARGOSATUBIG", branchCode: "PAGADI", mortClass: "FR" },
+  { mortCode: "MWT3-1", mortuary: "ST. PETER CHAPEL - BUUG", branchCode: "CAGAYE", mortClass: "OW" },
+  { mortCode: "NCT1-1-1", mortuary: "ST. PETER CHAPEL - ARANETA", branchCode: "STA.ME", mortClass: "OW" },
+  { mortCode: "NCT1-1-2", mortuary: "ST. PETER CHAPEL - SAMPALOC", branchCode: "SAMPAL", mortClass: "OW" },
+  { mortCode: "NCT1-1-2A", mortuary: "ST. PETER CHAPEL - SAMPALOC", branchCode: "SAMPAL", mortClass: "FR" },
+  { mortCode: "NCT1-3-00", mortuary: "ST. PETER CHAPEL - CUBAO", branchCode: "CUBAO", mortClass: "OW" },
+  { mortCode: "NCT1-3-1", mortuary: "ST. PETER CHAPEL - LA LOMA", branchCode: "QUEZAV", mortClass: "OW" },
+  { mortCode: "NCT1-3-2", mortuary: "ST. PETER CHAPEL - ROOSEVELT", branchCode: "ROOSEV", mortClass: "OW" },
+  { mortCode: "NCT1-3-3", mortuary: "ST. PETER MEMORIAL CHAPELS - SCOUTC", branchCode: "SPMCQA", mortClass: "OW" },
+  { mortCode: "NCT1-4-1", mortuary: "ST. PETER CHAPEL - COGEO", branchCode: "COGEO", mortClass: "OW" },
+  { mortCode: "NCT2-1-01", mortuary: "ST. PETER CHAPEL - MALABON", branchCode: "KALOOK", mortClass: "OW" },
+  { mortCode: "NCT2-2-1", mortuary: "ST. PETER CHAPEL - LAS PIÑAS", branchCode: "LAS PI", mortClass: "OW" },
+  { mortCode: "NCT2-3-00", mortuary: "ST. PETER CHAPEL - BACOOR", branchCode: "BACOWE", mortClass: "OW" },
+  { mortCode: "NCT2-4-00", mortuary: "ST. PETER CHAPEL - KAWIT", branchCode: "CAVITE", mortClass: "OW" },
+  { mortCode: "NCT2-4-01", mortuary: "ST. PETER CHAPEL - DASMARIÑAS", branchCode: "DASMAR", mortClass: "OW" },
+  { mortCode: "NCT2-4-02", mortuary: "ST. PETER CHAPEL - SILANG", branchCode: "ALFONS", mortClass: "OW" },
+  { mortCode: "NCT3-1-0", mortuary: "ST. PETER MEMORIAL CHAPELS - PARANAQUE", branchCode: "PARANA", mortClass: "OW" },
+  { mortCode: "NCT3-2-00", mortuary: "ST. PETER CHAPEL - IMUS", branchCode: "IMUS", mortClass: "OW" },
+  { mortCode: "NL1-63", mortuary: "NEW FUNERARIA CARINO", branchCode: "DAGUPA", mortClass: "FR" },
+  { mortCode: "NL1-68", mortuary: "PIMENTEL FUNERAL HOMES", branchCode: "SFLU", mortClass: "FR" },
+  { mortCode: "NL1-69", mortuary: "FUNERARIA LLAMAS", branchCode: "DAGUPA", mortClass: "FR" },
+  { mortCode: "NL1-79", mortuary: "FUNERARIA ROSARIO", branchCode: "SFLU", mortClass: "FR" },
+  { mortCode: "NL1-81", mortuary: "ST. PETER CHAPEL - CANDON", branchCode: "CANDON", mortClass: "OW" },
+  { mortCode: "NL2-29", mortuary: "LABRADOR FUNERAL PARLOR", branchCode: "CABANA", mortClass: "FR" },
+  { mortCode: "NL2-30", mortuary: "FUNERARIA OANDASAN", branchCode: "TUGUEG", mortClass: "FR" },
+  { mortCode: "NL2-31", mortuary: "ST. PETER CHAPEL - TUGUEGARAO", branchCode: "TUGUEG", mortClass: "OW" },
+  { mortCode: "NL3-33", mortuary: "STA. TERESA FUNERAL HOME", branchCode: "CRUZZA", mortClass: "FR" },
+  { mortCode: "NL3-43", mortuary: "FUNERARIA BALUYOT - SUBIC", branchCode: "CRUZZA", mortClass: "FR" },
+  { mortCode: "NL3-46", mortuary: "OLONGAPO MEMORIAL CHAPEL", branchCode: "CRUZZA", mortClass: "FR" },
+  { mortCode: "NL3-47", mortuary: "ST. PETER CHAPEL - TARLAC", branchCode: "TARLAC", mortClass: "OW" },
+  { mortCode: "NL3-53", mortuary: "ST. PETER CHAPEL - MANGALDAN", branchCode: "DAGUPA", mortClass: "OW" },
+  { mortCode: "NL3-54", mortuary: "ST. PETER CHAPEL - BALANGA", branchCode: "BALANG", mortClass: "OW" },
+  { mortCode: "NL3-55", mortuary: "ST. PETER CHAPEL - ANGELES", branchCode: "ANGELE", mortClass: "OW" },
+  { mortCode: "NL3-56", mortuary: "ST. PETER CHAPEL - ZAMBALES", branchCode: "IBAZAM", mortClass: "OW" },
+  { mortCode: "NLC1-00", mortuary: "RPM GOOD SHEPHERD MEMORIAL SERVICES", branchCode: "MALOLO", mortClass: "FR" },
+  { mortCode: "NLC1-01", mortuary: "LA CONSOLACION FUNERAL HOMES", branchCode: "CABANA", mortClass: "FR" },
+  { mortCode: "NLC1-03", mortuary: "ST. PETER CHAPEL - SAN JOSE, NUEVA ECIJA", branchCode: "JOSNUE", mortClass: "OW" },
+  { mortCode: "NLC1-05", mortuary: "LADORES FUNERAL SERVICE", branchCode: "CABANA", mortClass: "FR" },
+  { mortCode: "NLC1-06", mortuary: "RBN FUNERAL CHAPELS & SERVICES-STA. ROSA BRANCH", branchCode: "CABANA", mortClass: "FR" },
+  { mortCode: "NLC1-09", mortuary: "ST. PETER CHAPEL - SAN ILDEFONSO", branchCode: "SANMIG", mortClass: "OW" },
+  { mortCode: "NLC1-1", mortuary: "CALUAG FUNERAL HOMES", branchCode: "CABANA", mortClass: "FR" },
+  { mortCode: "NLC1-11", mortuary: "ST. PETER CHAPEL - GUIGUINTO", branchCode: "MALOLO", mortClass: "OW" },
+  { mortCode: "NLC1-13", mortuary: "ESTRELLA - FAUSTINO FUNERAL SERVICES", branchCode: "CABANA", mortClass: "FR" },
+  { mortCode: "NLC1-14", mortuary: "RBN FUNERAL AND CHAPEL SERVICES - CABANATUAN", branchCode: "CABANA", mortClass: "FR" },
+  { mortCode: "NLC2-00", mortuary: "728 FUNERAL SERVICES", branchCode: "ANGELE", mortClass: "FR" },
+  { mortCode: "NLC2-01", mortuary: "HILLSIDE CHAPEL AND MEMORIAL SERVICES (FORMERLY GREENHILLS)", branchCode: "MARIVE", mortClass: "FR" },
+  { mortCode: "NLC2-02", mortuary: "FUNERARIA BALUYOT - MORONG", branchCode: "BALANG", mortClass: "FR" },
+  { mortCode: "NLC2-03", mortuary: "FUNERARIA BALUYOT - ORANI", branchCode: "BALANG", mortClass: "FR" },
+  { mortCode: "NLC2-04", mortuary: "SJB FUNERAL HOME - SAN MARCELINO", branchCode: "CRUZZA", mortClass: "FR" },
+  { mortCode: "NLC2-05", mortuary: "SJB FUNERAL HOME - SAN FELIPE", branchCode: "CRUZZA", mortClass: "FR" },
+  { mortCode: "NLC2-06", mortuary: "STA. TERESA FUNERAL HOME", branchCode: "ANGELE", mortClass: "FR" },
+  { mortCode: "NLC2-07", mortuary: "STA. MONICA MEMORIAL SERVICE-BABO SACAN PORAC BRANCH", branchCode: "ANGELE", mortClass: "FR" },
+  { mortCode: "NLC2-08", mortuary: "PANDACAQUI FUNERAL SERVICES", branchCode: "ANGELE", mortClass: "FR" },
+  { mortCode: "NLC2-10", mortuary: "RODRIGUEZ FUNERAL SERVICE", branchCode: "SANFER", mortClass: "FR" },
+  { mortCode: "NLC2-11", mortuary: "BLUE CROSS FUNERAL SERVICES", branchCode: "TALAVE", mortClass: "FR" },
+  { mortCode: "NLC2-12", mortuary: "CARLO MEMORIAL HOMES", branchCode: "JOSNUE", mortClass: "FR" },
+  { mortCode: "NLC4-1", mortuary: "FUNERARIA BALUYOT - OLONGAPO", branchCode: "CRUZZA", mortClass: "FR" },
+  { mortCode: "NLE1-00", mortuary: "ST. PETER CHAPEL - BAYOMBONG", branchCode: "SOLANO", mortClass: "OW" },
+  { mortCode: "NLE1-02", mortuary: "Funeraria Managuelod", branchCode: "CAUAYA", mortClass: "FR" },
+  { mortCode: "NLE1-03", mortuary: "ST. PETER CHAPEL - CAUAYAN", branchCode: "CAUAYA", mortClass: "OW" },
+  { mortCode: "NLE1-04", mortuary: "ST. PETER CHAPEL - GATTARAN", branchCode: "GATTAR", mortClass: "OW" },
+  { mortCode: "NLE1-06", mortuary: "EDGAR V. CADIZ FUNERAL HOMES - SANTIAGO", branchCode: "SANTIA", mortClass: "FR" },
+  { mortCode: "NLE1-1", mortuary: "RM RONDON FUNERAL SERVICES", branchCode: "TUGUEG", mortClass: "FR" },
+  { mortCode: "NLE2-00", mortuary: "ST. BERNABE FUNERAL HOMES", branchCode: "SANTIA", mortClass: "FR" },
+  { mortCode: "NLE2-01", mortuary: "ST. ANN FUNERAL HOMES", branchCode: "SANTIA", mortClass: "FR" },
+  { mortCode: "NLE2-02", mortuary: "ST. PETER CHAPEL - ILAGAN", branchCode: "ILAGAN", mortClass: "OW" },
+  { mortCode: "NLE2-1", mortuary: "EDGAR V. CADIZ FUNERAL HOMES - JONES", branchCode: "SANTIA", mortClass: "FR" },
+  { mortCode: "NLW1-01", mortuary: "BOBOT FELIX FUNERAL HOMES", branchCode: "CANDON", mortClass: "FR" },
+  { mortCode: "NLW1-02", mortuary: "VERA DIOS MEMORIAL HOMES", branchCode: "LAOAG", mortClass: "FR" },
+  { mortCode: "NLW1-03", mortuary: "ST. PETER CHAPEL - ABRA", branchCode: "ABRA", mortClass: "OW" },
+  { mortCode: "NLW2-00", mortuary: "ST. PETER CHAPEL - SAN FERNANDO, LA UNION", branchCode: "SFLU", mortClass: "OW" },
+  { mortCode: "NLW2-1", mortuary: "ST. PETER CHAPEL - BAUANG", branchCode: "SFLU", mortClass: "OW" },
+  { mortCode: "NLW3-00", mortuary: "FUNERARIA SAGUN-RIVERA", branchCode: "ALAMIN", mortClass: "FR" },
+  { mortCode: "NLW3-02", mortuary: "ST. PETER CHAPEL - SAN CARLOS, PANGASINAN", branchCode: "SNCARL", mortClass: "OW" },
+  { mortCode: "NLW3-03", mortuary: "FUNERARIA JESS - BUGALLON", branchCode: "DAGUPA", mortClass: "FR" },
+  { mortCode: "NLW3-04", mortuary: "ST. PETER CHAPEL - ALAMINOS", branchCode: "ALAMIN", mortClass: "OW" },
+  { mortCode: "NLW3-05", mortuary: "BALLIGI FUNERAL HOMES", branchCode: "DAGUPA", mortClass: "FR" },
+  { mortCode: "NLW3-06", mortuary: "NITO FUNERAL HOMES", branchCode: "DAGUPA", mortClass: "FR" },
+  { mortCode: "NLW3-07", mortuary: "FUNERARIA JESS - STA. BARBARA", branchCode: "DAGUPA", mortClass: "FR" },
+  { mortCode: "NLW3-1", mortuary: "FUNERARIA ESCAÑO", branchCode: "DAGUPA", mortClass: "FR" },
+  { mortCode: "SL1-09", mortuary: "SUTAREZ FUNERAL HOMES - SAN PABLO", branchCode: "SANPAB", mortClass: "FR" },
+  { mortCode: "SL1-44", mortuary: "KINGSOLOMON FUNERAL INC.", branchCode: "NASUGB", mortClass: "FR" },
+  { mortCode: "SL1-46", mortuary: "ST. PETER CHAPEL - INFANTA", branchCode: "INFANT", mortClass: "OW" },
+  { mortCode: "SL1-48", mortuary: "ST. PETER CHAPEL - BATANGAS", branchCode: "BATANG", mortClass: "OW" },
+  { mortCode: "SL1-49", mortuary: "ST. PETER CHAPEL - TANAUAN", branchCode: "TANAUA", mortClass: "OW" },
+  { mortCode: "SL1-49A", mortuary: "ST. PETER CHAPEL - TANAUAN", branchCode: "TANAUA", mortClass: "FR" },
+  { mortCode: "SL2-01", mortuary: "FUNERARIA MINDORO", branchCode: "CALAPA", mortClass: "FR" },
+  { mortCode: "SL2-03", mortuary: "FUNERARIA MINDORO", branchCode: "PINAMA", mortClass: "FR" },
+  { mortCode: "SL2-08", mortuary: "FUNERARIA SAN JOSE", branchCode: "SNJOSE", mortClass: "FR" },
+  { mortCode: "SL2-09", mortuary: "OCCIDENTAL MINDORO FUNERAL SERVICES - SABLAYAN", branchCode: "MAMBUR", mortClass: "FR" },
+  { mortCode: "SL2-10", mortuary: "OCCIDENTAL MINDORO FUNERAL SERVICES - MAMBURAO", branchCode: "MAMBUR", mortClass: "FR" },
+  { mortCode: "SL2-12", mortuary: "S. MARASIGAN JR. FUNERAL SERVICES", branchCode: "PINAMA", mortClass: "FR" },
+  { mortCode: "SL2-43", mortuary: "MT. CARMEL FUNERAL SERVICE", branchCode: "ODIONG", mortClass: "FR" },
+  { mortCode: "SL2-48", mortuary: "Little Angel Funeral Homes", branchCode: "ODIONG", mortClass: "FR" },
+  { mortCode: "SL2-51", mortuary: "FUNERARIA SOLIVIO (FORMERLY J. SOLIVIO FUNERAL HOMES)", branchCode: "ROXAPA", mortClass: "FR" },
+  { mortCode: "SL2-52", mortuary: "ST. PETER CHAPEL - CALAPAN", branchCode: "CALAPA", mortClass: "OW" },
+  { mortCode: "SL2-53", mortuary: "ST. PETER CHAPEL - BOAC", branchCode: "BOAC", mortClass: "OW" },
+  { mortCode: "SL2-54", mortuary: "ST. PETER CHAPEL - ROXAS, OR. MINDORO", branchCode: "BONGAB", mortClass: "OW" },
+  { mortCode: "SL3-03", mortuary: "ABELLA FUNERAL HOMES - LUCENA", branchCode: "LUCENA", mortClass: "FR" },
+  { mortCode: "SL3-07", mortuary: "FUNERARIA MACALELON", branchCode: "LUCENA", mortClass: "FR" },
+  { mortCode: "SL3-08", mortuary: "FUNERARIA GEN. LUNA", branchCode: "CATANA", mortClass: "FR" },
+  { mortCode: "SL3-09", mortuary: "S. SUTAREZ FUNERAL HOMES", branchCode: "CATANA", mortClass: "FR" },
+  { mortCode: "SL3-11", mortuary: "FUNERARIA SUTAREZ", branchCode: "ATIMON", mortClass: "FR" },
+  { mortCode: "SL3-12", mortuary: "FUNERARIA ABELLA", branchCode: "GUMACA", mortClass: "FR" },
+  { mortCode: "SL3-15", mortuary: "SUTAREZ FUNERAL HOMES - CALAUAG", branchCode: "LOPEZ", mortClass: "FR" },
+  { mortCode: "SL3-18", mortuary: "ADEA MEMORIAL HOMES - TALOBATIB", branchCode: "LABO", mortClass: "FR" },
+  { mortCode: "SL3-19", mortuary: "DIVINE MEMORIAL SERVICES", branchCode: "DAET", mortClass: "FR" },
+  { mortCode: "SL3-20", mortuary: "ST. PETER CHAPEL - GUMACA", branchCode: "GUMACA", mortClass: "OW" },
+  { mortCode: "SL3-30", mortuary: "M.B. BECINA FUNERAL HOMES OPC", branchCode: "CANDEL", mortClass: "FR" },
+  { mortCode: "SL3-41", mortuary: "ST. PETER CHAPEL - ATIMONAN", branchCode: "ATIMON", mortClass: "OW" },
+  { mortCode: "SL3-45", mortuary: "ST. PETER CHAPEL - LOPEZ", branchCode: "LOPEZ", mortClass: "OW" },
+  { mortCode: "SL3-49", mortuary: "ABELLA FUNERAL HOMES - AGDANGAN", branchCode: "CATANA", mortClass: "FR" },
+  { mortCode: "SL3-50", mortuary: "ABELLA FUNERAL HOMES - GUMACA", branchCode: "GUMACA", mortClass: "FR" },
+  { mortCode: "SL3-53", mortuary: "FUNERARIA MACALELON - MACALELON", branchCode: "ATIMON", mortClass: "FR" },
+  { mortCode: "SL3-57", mortuary: "ST. PETER CHAPEL - MAUBAN", branchCode: "LUCBAN", mortClass: "OW" },
+  { mortCode: "SL4-01", mortuary: "ST. PETER CHAPEL - NAGA", branchCode: "NAGA", mortClass: "OW" },
+  { mortCode: "SL4A-03", mortuary: "T. SALLES MEMORIAL HOME - SIPOCOT", branchCode: "SIPOCO", mortClass: "FR" },
+  { mortCode: "SL4A-05", mortuary: "ST. PHILIP AND JAMES FUNERAL HOMES", branchCode: "NAGA", mortClass: "FR" },
+  { mortCode: "SL4A-06", mortuary: "MARY-MAR FUNERAL HOMES", branchCode: "NAGA", mortClass: "FR" },
+  { mortCode: "SL4A-07", mortuary: "ST. PETER CHAPEL - IRIGA", branchCode: "IRIGA", mortClass: "OW" },
+  { mortCode: "SL4B-03", mortuary: "ST. PETER CHAPEL - TABACO", branchCode: "TABACO", mortClass: "OW" },
+  { mortCode: "SL4B-06", mortuary: "FUNERARIA BUGTONG-BORBE", branchCode: "VIRAC", mortClass: "FR" },
+  { mortCode: "SL4B-08", mortuary: "ABIOG FUNERAL HOMES", branchCode: "NAGA", mortClass: "FR" },
+  { mortCode: "SLB1-00", mortuary: "SAAVEDRA MEMORIAL HOMES", branchCode: "NAGA", mortClass: "FR" },
+  { mortCode: "SLB1-04", mortuary: "NUESTRA SEÑORA DE SALVACION - SORSOGON", branchCode: "SORSOG", mortClass: "FR" },
+  { mortCode: "SLB1-05", mortuary: "TRES VIRTUDES FUNERARIA", branchCode: "MASBAT", mortClass: "FR" },
+  { mortCode: "SLB1-06", mortuary: "ST. PETER CHAPEL - DONSOL", branchCode: "GUINOB", mortClass: "OW" },
+  { mortCode: "SLB1-07", mortuary: "ST. PETER CHAPEL - PILAR", branchCode: "GUINOB", mortClass: "OW" },
+  { mortCode: "SLB1-08", mortuary: "J. L. ESPIRITU FUNERAL SERVICE - SAN FERNANDO", branchCode: "LIBMAN", mortClass: "FR" },
+  { mortCode: "SLB1-09", mortuary: "PILI MEMORIAL HOMES", branchCode: "NAGA", mortClass: "FR" },
+  { mortCode: "SLB1-1", mortuary: "ADEA MEMORIAL HOMES - J. PANGANIBAN", branchCode: "JOSEPA", mortClass: "FR" },
+  { mortCode: "SLB1-11", mortuary: "CATAYTAY FUNERAL SERVICES (AROROY)", branchCode: "MASBAT", mortClass: "FR" },
+  { mortCode: "SLB2-01", mortuary: "J. L. ESPIRITU FUNERAL SERVICE - PASACAO", branchCode: "LIBMAN", mortClass: "FR" },
+  { mortCode: "SLB2-02", mortuary: "ADEA MEMORIAL HOMES - STA. ELENA", branchCode: "JOSEPA", mortClass: "FR" },
+  { mortCode: "SLB2-03", mortuary: "ST. PETER CHAPEL - TABUCO NAGA", branchCode: "NAGA", mortClass: "OW" },
+  { mortCode: "SLB2-04", mortuary: "T. SALLES MEMORIAL HOME - LIBMANAN", branchCode: "LIBMAN", mortClass: "FR" },
+  { mortCode: "SLI1-00", mortuary: "F. MARASIGAN FUNERAL SERVICES", branchCode: "BONGAB", mortClass: "FR" },
+  { mortCode: "SLI1-02", mortuary: "ST. PETER CHAPEL - VICTORIA", branchCode: "VICTOR", mortClass: "OW" },
+  { mortCode: "SLI1-03", mortuary: "FUNERARIA  R. DIMATULAC", branchCode: "BONGAB", mortClass: "FR" },
+  { mortCode: "SLI1-05", mortuary: "OCCIDENTAL MINDORO FUNERAL SERVICES - SAN JOSE", branchCode: "JOSEOM", mortClass: "FR" },
+  { mortCode: "SLI1-06", mortuary: "FUNERARIA MINDORO - GLORIA", branchCode: "PINAMA", mortClass: "FR" },
+  { mortCode: "SLI1-07", mortuary: "ST. PETER CHAPEL - PINAMALAYAN", branchCode: "PINAMA", mortClass: "OW" },
+  { mortCode: "SLI1-1", mortuary: "ST. PETER CHAPEL - STA. CRUZ, MARINDUQUE", branchCode: "BOAC", mortClass: "OW" },
+  { mortCode: "SLM1-00", mortuary: "CAGUIMBAL FUNERAL SERVICES", branchCode: "ROSARI", mortClass: "FR" },
+  { mortCode: "SLM1-01", mortuary: "DULCE FUNERAL HOME", branchCode: "TANAUA", mortClass: "FR" },
+  { mortCode: "SLM1-02", mortuary: "ST. PETER CHAPEL - ROMBLON", branchCode: "ODIONG", mortClass: "OW" },
+  { mortCode: "SLM1-03", mortuary: "TRIPLE J FUNERAL SERVICES", branchCode: "ODIONG", mortClass: "FR" },
+  { mortCode: "SLM1-04", mortuary: "KING SOLOMON FUNERAL PARLOR - LEMERY", branchCode: "BATANG", mortClass: "FR" },
+  { mortCode: "SLM1-05", mortuary: "TDIG FUNERAL HOMES", branchCode: "ODIONG", mortClass: "FR" },
+  { mortCode: "SLM1-07", mortuary: "ST. BARTOLOME FUNERAL HOMES", branchCode: "ODIONG", mortClass: "FR" },
+  { mortCode: "SLM1-1", mortuary: "HOLY ROSARY FUNERAL HOMES", branchCode: "ROSARI", mortClass: "FR" },
+  { mortCode: "SLM2-00", mortuary: "JORIE BALUBAYAN BECINA MEMORIAL SERVICES", branchCode: "CRUZLA", mortClass: "FR" },
+  { mortCode: "SLM2-01", mortuary: "BANTING FUNERAL HOMES", branchCode: "CRUZLA", mortClass: "FR" },
+  { mortCode: "SLM2-02", mortuary: "TANARTE FUNERAL HOMES", branchCode: "SANPAB", mortClass: "FR" },
+  { mortCode: "SLM2-04", mortuary: "FUNERARIA TAYABAS", branchCode: "CRUZLA", mortClass: "FR" },
+  { mortCode: "SLM2-1", mortuary: "CORONADO-MONREAL FUNERAL CHAPEL", branchCode: "SANPAB", mortClass: "FR" },
+  { mortCode: "SLM3-01", mortuary: "M. F. BARRIOS FUNERAL HOME", branchCode: "CATANA", mortClass: "FR" },
+  { mortCode: "SLM3-03", mortuary: "M.G. SUTAREZ FUNERAL HOMES", branchCode: "CATANA", mortClass: "FR" },
+  { mortCode: "SLM3-04", mortuary: "SUTAREZ - PEÑAFLORIDA FUNERAL HOMES", branchCode: "CATANA", mortClass: "FR" },
+  { mortCode: "SLM3-05", mortuary: "FUNERARIA MACALELON - PITOGO", branchCode: "AGDANG", mortClass: "FR" },
+  { mortCode: "SLM3-06", mortuary: "LESCANO FUNERAL HOMES", branchCode: "CANDEL", mortClass: "FR" },
+  { mortCode: "SLM4-01", mortuary: "ST. PETER CHAPEL - TAGKAWAYAN", branchCode: "LOPEZ", mortClass: "OW" },
+  { mortCode: "SLM4-02", mortuary: "SUTAREZ FUNERAL HOMES - GUINAYANGAN", branchCode: "LOPEZ", mortClass: "FR" },
+  { mortCode: "SLM4-03", mortuary: "ABELLA FUNERAL HOMES - PAGBILAO", branchCode: "ATIMON", mortClass: "FR" },
+  { mortCode: "SLM4-1", mortuary: "ST. PETER CHAPEL - ALABAT", branchCode: "ATIMON", mortClass: "OW" },
+  { mortCode: "VC1-1", mortuary: "ST. PETER CHAPEL - MANDAUE MEGA", branchCode: "LAPU-L", mortClass: "OW" },
+  { mortCode: "VC1-1A", mortuary: "ST. PETER CHAPEL - MANDAUE MEGA", branchCode: "LAPU-L", mortClass: "FR" },
+  { mortCode: "VC2-00", mortuary: "ST. PETER CHAPEL - TALISAY", branchCode: "TALISA", mortClass: "OW" },
+  { mortCode: "VC2-1", mortuary: "ST. PETER CHAPEL - DALAGUETE", branchCode: "CARCAR", mortClass: "OW" },
+  { mortCode: "VE1-00", mortuary: "ST. PETER CHAPEL - TACLOBAN", branchCode: "TACLOS", mortClass: "OW" },
+  { mortCode: "VE1-1", mortuary: "ST. PETER CHAPEL - TACLOBAN MEGA", branchCode: "TACLOS", mortClass: "OW" },
+  { mortCode: "VE2-1", mortuary: "ST. PETER CHAPEL - BAYBAY", branchCode: "BAYBAY", mortClass: "OW" },
+  { mortCode: "VER1-01", mortuary: "ST. PETER CHAPEL-BORONGAN", branchCode: "BORONG", mortClass: "OW" },
+  { mortCode: "VER1-02", mortuary: "SALVACION FUNERAL SERVICES", branchCode: "CALBAY", mortClass: "FR" },
+  { mortCode: "VER1-03", mortuary: "FUNERARIA DEL ROSARIO - TAFT", branchCode: "BORONG", mortClass: "FR" },
+  { mortCode: "VER1-04", mortuary: "J BONIFES FUNERAL SERVICES", branchCode: "BORONG", mortClass: "FR" },
+  { mortCode: "VER2-01", mortuary: "DODONG AMORA FUNERAL HOMES", branchCode: "SOGOD", mortClass: "FR" },
+  { mortCode: "VET1-00", mortuary: "GUIUAN FUNERAL SERVICES", branchCode: "BORONG", mortClass: "FR" },
+  { mortCode: "VET1-1", mortuary: "ST. PETER CHAPEL - CADIZ", branchCode: "ESCALA", mortClass: "OW" },
+  { mortCode: "VET2-00", mortuary: "ST. PETER CHAPEL - PALOMPON", branchCode: "PALOMP", mortClass: "OW" },
+  { mortCode: "VET2-01", mortuary: "ST. PETER CHAPEL - TACLOBAN MEGA", branchCode: "TACLOB", mortClass: "OW" },
+  { mortCode: "VET2-02", mortuary: "ST. PETER CHAPEL - HILONGOS", branchCode: "BAYBAY", mortClass: "OW" },
+  { mortCode: "VET2-1", mortuary: "BABAC FUNERAL HOME - SAN DIONISIO", branchCode: "PASSI", mortClass: "FR" },
+  { mortCode: "VET3-00", mortuary: "MOTHER OF PERPETUAL HELP FUNERAL HOMES", branchCode: "CARCAR", mortClass: "FR" },
+  { mortCode: "VET3-01", mortuary: "ST. PETER CHAPEL - CEBU MEGA", branchCode: "CEBU", mortClass: "OW" },
+  { mortCode: "VS1-02", mortuary: "MANTILLA FUNERAL HOMES", branchCode: "SOGOD", mortClass: "FR" },
+  { mortCode: "VS1-41", mortuary: "FUNERARIA DEL ROSARIO - PALAPAG", branchCode: "CATARM", mortClass: "FR" },
+  { mortCode: "VS1-49", mortuary: "BARCELO FUNERAL HOMES", branchCode: "TACLOB", mortClass: "FR" },
+  { mortCode: "VS1-52", mortuary: "ST. PETER CHAPEL - TACLOBAN", branchCode: "TACLOB", mortClass: "OW" },
+  { mortCode: "VS1-55", mortuary: "ST. PETER CHAPEL - ORMOC", branchCode: "ORMOC", mortClass: "OW" },
+  { mortCode: "VS1-56", mortuary: "ST. PETER CHAPEL - MAASIN", branchCode: "MAASIN", mortClass: "OW" },
+  { mortCode: "VS1-59", mortuary: "ST. PETER CHAPEL - NAVAL", branchCode: "NAVAL", mortClass: "OW" },
+  { mortCode: "VS1-60", mortuary: "ST. PETER CHAPEL - CATBALOGAN", branchCode: "CATBAL", mortClass: "OW" },
+  { mortCode: "VS1-61", mortuary: "ST. PETER CHAPEL - SOGOD", branchCode: "SOGOD", mortClass: "OW" },
+  { mortCode: "VS1-62", mortuary: "ST. PETER CHAPEL - CALBAYOG", branchCode: "CALBAY", mortClass: "OW" },
+  { mortCode: "VS1-63", mortuary: "SAN JOSE FUNERALS", branchCode: "SOGOD", mortClass: "FR" },
+  { mortCode: "VS2-01", mortuary: "ST. PETER CHAPEL - CEBU", branchCode: "CEBU", mortClass: "OW" },
+  { mortCode: "VS2-03", mortuary: "ST. PETER CHAPEL - TOLEDO", branchCode: "TOLEDO", mortClass: "OW" },
+  { mortCode: "VS2-05", mortuary: "ST. PETER CHAPEL - CARCAR", branchCode: "CARCAR", mortClass: "OW" },
+  { mortCode: "VS2-07", mortuary: "ST. PETER CHAPEL - BOGO", branchCode: "BOGO", mortClass: "OW" },
+  { mortCode: "VS2-08", mortuary: "ST. PETER CHAPEL - BANTAYAN", branchCode: "BOGO", mortClass: "OW" },
+  { mortCode: "VS2-10", mortuary: "HOLY FUNERAL HOMES", branchCode: "TOLEDO", mortClass: "FR" },
+  { mortCode: "VS2-14", mortuary: "MANIPIS FUNERAL HOMES", branchCode: "DANAO", mortClass: "FR" },
+  { mortCode: "VS2-20", mortuary: "ST. PETER CHAPEL - DANAO", branchCode: "DANAO", mortClass: "OW" },
+  { mortCode: "VS2-22", mortuary: "ST. PETER CHAPEL - MOALBOAL", branchCode: "TOLEDO", mortClass: "OW" },
+  { mortCode: "VS2-23", mortuary: "ST. PETER CHAPEL - DAAN BANTAYAN", branchCode: "DANAO", mortClass: "OW" },
+  { mortCode: "VS2-24", mortuary: "ST. PETER CHAPEL - CARCAR MEGA", branchCode: "CARCAR", mortClass: "OW" },
+  { mortCode: "VS3-07", mortuary: "FUNERARIA DE AGNOBIS", branchCode: "DUMAGU", mortClass: "FR" },
+  { mortCode: "VS3-19", mortuary: "SIATON FUNERAL HOMES", branchCode: "DUMAGU", mortClass: "FR" },
+  { mortCode: "VS3-20", mortuary: "ST. PETER CHAPEL - DUMAGUETE", branchCode: "DUMAGU", mortClass: "OW" },
+  { mortCode: "VS3-21", mortuary: "ST. PETER CHAPEL - TAGBILARAN", branchCode: "TAGBIL", mortClass: "OW" },
+  { mortCode: "VS3-22", mortuary: "ST. PETER CHAPEL - CARMEN", branchCode: "TUBIGO", mortClass: "OW" },
+  { mortCode: "VS3-24", mortuary: "ST. PETER CHAPEL - TALIBON", branchCode: "TALIBO", mortClass: "OW" },
+  { mortCode: "VS3-25", mortuary: "ST. PETER CHAPEL - JAGNA", branchCode: "TAGBIL", mortClass: "OW" },
+  { mortCode: "VS3-25A", mortuary: "ST. PETER CHAPEL - JAGNA", branchCode: "TAGBIL", mortClass: "FR" },
+  { mortCode: "VS3-26", mortuary: "ST. PETER CHAPEL - BAYAWAN", branchCode: "DUMAGU", mortClass: "OW" },
+  { mortCode: "VS3-27", mortuary: "ST. PETER CHAPEL - TUBIGON", branchCode: "TUBIGO", mortClass: "OW" },
+  { mortCode: "VS3-28", mortuary: "AYA MEMORIAL CHAPELS, INC.", branchCode: "ESCALA", mortClass: "FR" },
+  { mortCode: "VS4-18", mortuary: "JOSE DE OTOY SOLIVIO, JR. FUNERAL HOMES", branchCode: "ILOILO", mortClass: "FR" },
+  { mortCode: "VS4-61", mortuary: "BABAC FUNERAL HOME - BAROTAC VIEJO", branchCode: "SARA", mortClass: "FR" },
+  { mortCode: "VS4-63", mortuary: "ST. PETER CHAPEL - KABANKALAN", branchCode: "KABANK", mortClass: "OW" },
+  { mortCode: "VS4-64", mortuary: "ST. PETER CHAPEL - BACOLOD", branchCode: "BACOLO", mortClass: "OW" },
+  { mortCode: "VS4-66", mortuary: "ST. PETER CHAPEL - ANTIQUE", branchCode: "JOSEAN", mortClass: "OW" },
+  { mortCode: "VS4-67", mortuary: "ST. PETER CHAPEL - ILOILO", branchCode: "ILOILO", mortClass: "OW" },
+  { mortCode: "VS4-68", mortuary: "ST. PETER CHAPEL - ROXAS", branchCode: "ROXAKA", mortClass: "OW" },
+  { mortCode: "VS4-70", mortuary: "ST. PETER CHAPEL - KALIBO", branchCode: "KALIBO", mortClass: "OW" },
+  { mortCode: "VW1-1-00", mortuary: "ST. PETER CHAPEL - PONTEVEDRA", branchCode: "HINIGA", mortClass: "OW" },
+  { mortCode: "VW1-1-1", mortuary: "ST. PETER CHAPEL - BACOLOD", branchCode: "BACALI", mortClass: "OW" },
+  { mortCode: "VW1-2-1", mortuary: "ST. PETER CHAPEL - BAIS", branchCode: "TANJAY", mortClass: "OW" },
+  { mortCode: "VW2-1-00", mortuary: "ST. PETER CHAPEL - ILOILO MANDURIAO", branchCode: "ILOILO", mortClass: "OW" },
+  { mortCode: "VW2-1-1", mortuary: "ST. PETER CHAPEL - BALASAN", branchCode: "SARA", mortClass: "OW" },
+  { mortCode: "VWT1-00", mortuary: "ST. PETER CHAPEL - ESCALANTE", branchCode: "ESCALA", mortClass: "OW" },
+  { mortCode: "VWT1-01", mortuary: "ST. PETER CHAPEL - SAN CARLOS, NEGROS", branchCode: "CARLNO", mortClass: "OW" },
+  { mortCode: "VWT1-02", mortuary: "ST. PETER CHAPEL - GUIHULNGAN", branchCode: "CARLNO", mortClass: "OW" },
+  { mortCode: "VWT1-03", mortuary: "ST. PETER CHAPEL - SIPALAY", branchCode: "KABANK", mortClass: "OW" },
+  { mortCode: "VWT1-1", mortuary: "ST. PETER CHAPEL - CATARMAN", branchCode: "CATARM", mortClass: "OW" },
+  { mortCode: "VWT3-00", mortuary: "ST. PETER CHAPEL - GUIMARAS", branchCode: "ILOILO", mortClass: "OW" },
+  { mortCode: "VWT3-1", mortuary: "ST. PETER CHAPEL - PASSI", branchCode: "PASSI", mortClass: "OW" },
+  { mortCode: "VWT4-1", mortuary: "ST. PETER CHAPEL - IBAJAY", branchCode: "KALIBO", mortClass: "OW" },
+];
+
+/* ========================== RefCreditOfService ========================== */
+//
+// THE ROWS LANDED ON 2026-08-25, and there are four of them. This table was
+// empty from the 2026-08-17 structure drop until then — the table was known, its
+// values were not, and this layer does not invent codes for a reference list
+// whose values are quoted back at the source system.
+//
+// THE VALUE IS ITS OWN ID, and that is the one judgement call. The drop gives
+// four VALUES and no codes, and `RefCreditOfService` has both columns; putting
+// "1"/"2"/"3"/"4" in the key would be exactly the invention the empty seed was
+// avoiding. So the id is the value — which is also what gets written to
+// `TblClaimsSP.CreditOfService`, a text column, so nothing is lost. If real
+// codes turn up, this is the one place they go in.
+
+export const refCreditOfServiceSeed: RefCreditOfServiceRecord[] = [
+  { creditOfServiceId: "1ST POINT", creditOfServiceDesc: "1ST POINT", auditUser: AUDIT.user, auditDate: AUDIT.date },
+  { creditOfServiceId: "2ND POINT", creditOfServiceDesc: "2ND POINT", auditUser: AUDIT.user, auditDate: AUDIT.date },
+  { creditOfServiceId: "CREM ONLY", creditOfServiceDesc: "CREM ONLY", auditUser: AUDIT.user, auditDate: AUDIT.date },
+  { creditOfServiceId: "REGULAR", creditOfServiceDesc: "REGULAR", auditUser: AUDIT.user, auditDate: AUDIT.date },
 ];
 
 /* ============================== RefPayClass ============================== */

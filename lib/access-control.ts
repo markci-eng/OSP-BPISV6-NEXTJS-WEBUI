@@ -49,6 +49,7 @@ const ROLE_ROUTES: Record<UserRole, string[]> = {
     "/loan",
     "/accounts-maintenance",
     "/stl-approval",
+    "/user-access-management",
   ],
   bm: ["/approvals"],
   stl: ["/approvals", "/stl-approval"],

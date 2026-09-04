@@ -19,6 +19,7 @@ import {
 } from "react-icons/lu";
 import { StaticCard } from "osp-ui-kit";
 import { RowItem } from "@/components/info-card/row-item";
+import { isAccountInGoodStanding } from "../../../data";
 import { GroupLabel } from "../../components/group-label";
 import { InfoLabel } from "../../components/info-label";
 import { SectionTitle } from "../../components/section-title";
@@ -113,7 +114,10 @@ function Pill({
 /* ------------------------------ item builders ------------------------------ */
 
 function summaryItems(planholder: Planholder): DetailItem[] {
-  const isActive = planholder.accountStatus === "AC";
+  // Good standing rather than "is it AC": a fully paid account is the best one
+  // a plan reaches, and reading it as amber would say the opposite.
+  const isActive = isAccountInGoodStanding(planholder.accountStatus);
+  const accountStatus = planholder.accountStatusLabel;
   const isWithin = planholder.contestability === "within";
 
   return [
@@ -125,11 +129,11 @@ function summaryItems(planholder: Planholder): DetailItem[] {
     {
       label: "Account Status",
       value: isActive ? (
-        <Pill tone="green">Active</Pill>
+        <Pill tone="green">{accountStatus}</Pill>
       ) : (
-        <Pill tone="amber">Lapsed</Pill>
+        <Pill tone="amber">{accountStatus}</Pill>
       ),
-      text: isActive ? "Active" : "Lapsed",
+      text: accountStatus,
       tone: isActive ? "green.600" : "orange.600",
     },
     {

@@ -37,6 +37,13 @@ export const toaster = createToaster({
  * clipped by it — the drawers in this area are full-height with `overflow:
  * hidden`, and an in-tree toast would be cut off by the first one it opened
  * under.
+ *
+ * NEVER MOUNT IT INSIDE `Page.Root`. That component walks its children looking
+ * for `Page.ToolContent` and `Page.MainContent` and renders those two alone —
+ * anything else is silently dropped, with no error and no warning. A toaster put
+ * there does not fail loudly; it simply never draws, and every `toaster.create`
+ * in the page goes nowhere. Render it as a SIBLING of `Page.Root`, inside a
+ * fragment.
  */
 export const ClaimsToaster = () => (
   <Portal>

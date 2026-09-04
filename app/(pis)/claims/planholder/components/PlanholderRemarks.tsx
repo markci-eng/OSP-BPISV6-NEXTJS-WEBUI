@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Flex, Textarea, VStack } from "@chakra-ui/react";
+import { Flex, Textarea, VStack } from "@chakra-ui/react";
 import { LuPlus } from "react-icons/lu";
-import { BottomQuickActions } from "osp-ui-kit";
 import {
+  BottomQuickActions,
   PrimaryMdButton,
   SecondaryMdButton,
   TertiarySmButton,
-} from "st-peter-ui";
-import { PlanholderSectionHeader } from "./PlanholderSectionHeader";
+} from "osp-ui-kit";
+import { RemarksPanel } from "../../components/remarks-panel";
 
 const ALL_SECTIONS = [
   {
@@ -28,10 +28,30 @@ const ALL_SECTIONS = [
 
 /**
  * Remarks and Notes — read-only text panels, each one its own section under its
- * own heading (the claims `SectionTitle`, via PlanholderSectionHeader). They
- * used to share a swipeable tab strip; stacking them means both are readable at
- * a glance without a pager, and they line up with every other section on the
- * page.
+ * own heading. They used to share a swipeable tab strip; stacking them means
+ * both are readable at a glance without a pager, and they line up with every
+ * other section on the page.
+ *
+ * EACH SECTION IS `RemarksPanel` NOW (2026-08-27), the claims area's own, and
+ * this file is what is left once that is taken out: which two sections there
+ * are, and the sheet that writes a note. The heading and the bordered read-only
+ * panel were built here first — every other screen that wanted a trail has been
+ * copying them out of this file since, and the service record had two such
+ * copies going in different directions before they were pulled together. This
+ * component is now one of the callers rather than the original.
+ *
+ * NOTHING ABOUT THE SECTIONS CHANGED in the move, which was checked rather than
+ * assumed: the panel is `SectionTitle` over the same textarea with the same
+ * values, and the heading here was `PlanholderSectionHeader` — which IS
+ * `SectionTitle`, plus a count pill neither of these sections passes. Measured
+ * before and after: same 5 rows, same 114px, same #fafafa on the same #e4e4e7.
+ *
+ * WHAT THIS STILL OWNS is the pair. Remarks and Notes are rendered together
+ * because on a CLAIM they belong to the same thing — the claim's own trail and
+ * the processor's notes on it. Where the two belong to different things they
+ * cannot be one block, which is why the service record reaches for the panel
+ * directly and puts its remarks under the plan holder and its notes below the
+ * form.
  *
  * Notes takes an "Add Note" button in its heading when the caller passes
  * `onAddNote` — writing a note is the caller's business, since only it knows
@@ -78,34 +98,28 @@ export function PlanholderRemarks({
     // the sections around them rather than as one block.
     <VStack align="stretch" gap={6}>
       {sections.map((section) => (
-        <Box key={section.key}>
-          <PlanholderSectionHeader
-            title={section.label}
-            subtitle={section.subtitle}
-            action={
-              section.key === "notes" && onAddNote ? (
-                // Ghost, not solid: a heading control should stay quiet next to
-                // the section's own content. Same slot and weight as the
-                // library's "History" header action.
-                <TertiarySmButton onClick={() => setAddOpen(true)}>
-                  <LuPlus /> Add Note
-                </TertiarySmButton>
-              ) : undefined
-            }
-          />
-          <Textarea
-            value={values[section.key]}
-            readOnly
-            placeholder={section.empty}
-            rows={5}
-            resize="none"
-            bg="gray.50"
-            color="gray.700"
-            borderColor="gray.200"
-            cursor="default"
-            _focusVisible={{ borderColor: "gray.300", boxShadow: "none" }}
-          />
-        </Box>
+        <RemarksPanel
+          key={section.key}
+          title={section.label}
+          subtitle={section.subtitle}
+          value={values[section.key]}
+          empty={section.empty}
+          action={
+            section.key === "notes" && onAddNote ? (
+              // Ghost, not solid: a heading control should stay quiet next to
+              // the section's own content. Same slot and weight as the
+              // library's "History" header action.
+              //
+              // FROM `osp-ui-kit` and no longer from `st-peter-ui`, which this
+              // project does not import from any more. The same component
+              // either way — checked against the rendered button rather than
+              // taken on trust: same class, same 32px, same 12px label.
+              <TertiarySmButton onClick={() => setAddOpen(true)}>
+                <LuPlus /> Add Note
+              </TertiarySmButton>
+            ) : undefined
+          }
+        />
       ))}
 
       {/* Write a note — the same sheet the claim's "More" button opens

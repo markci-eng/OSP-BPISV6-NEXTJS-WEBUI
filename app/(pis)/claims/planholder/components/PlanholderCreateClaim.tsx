@@ -91,7 +91,7 @@ export function PlanholderCreateClaim({ lpaNo }: { lpaNo: string }) {
                 value={request.reference}
                 onClick={() =>
                   router.push(
-                    `/claims/death/create/${encodeURIComponent(
+                    `/claims/death-claim/death/create/${encodeURIComponent(
                       request.reference,
                     )}`,
                   )

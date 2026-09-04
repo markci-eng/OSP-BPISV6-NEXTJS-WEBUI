@@ -51,7 +51,7 @@ export function PlanholderPayments({ lpaNo }: PlanholderPaymentsProps) {
    * agree; the phone's list is what shows in the meantime.
    */
   const isDesktop =
-    useBreakpointValue({ base: false, lg: true }, { ssr: false }) ?? false;
+    useBreakpointValue({ base: false, lg: true }) ?? false;
 
   // The full-list drawer, opened from "View all" — the row list's overflow, and
   // so the phone's only.

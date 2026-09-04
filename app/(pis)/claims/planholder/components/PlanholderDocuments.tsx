@@ -203,7 +203,7 @@ export function PlanholderDocuments({
    * of its own; see the same flag in `PlanholderClaimRequests`.
    */
   const isRail =
-    useBreakpointValue({ base: false, xl: true }, { ssr: false }) ?? false;
+    useBreakpointValue({ base: false, xl: true }) ?? false;
 
   const count = documents.length;
   // Stacked, five rows and a "View all" into the list drawer — a fixed preview,

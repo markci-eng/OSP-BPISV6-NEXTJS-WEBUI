@@ -370,7 +370,7 @@ export function PlanholderClaimRequests({
    * client render agree.
    */
   const isRail =
-    useBreakpointValue({ base: false, xl: true }, { ssr: false }) ?? false;
+    useBreakpointValue({ base: false, xl: true }) ?? false;
 
   // The claim currently open in the side drawer, held by REFERENCE rather than
   // as a snapshot: acting on a claim from inside the drawer (endorsing it, say)

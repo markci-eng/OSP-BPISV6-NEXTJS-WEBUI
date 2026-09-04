@@ -106,7 +106,7 @@ export default function ClaimsPlanholderPage() {
    * `false` until measured, so the server and the first client render agree.
    */
   const isDesktop =
-    useBreakpointValue({ base: false, xl: true }, { ssr: false }) ?? false;
+    useBreakpointValue({ base: false, xl: true }) ?? false;
 
   // The claim the page is showing INSTEAD of the profile, held by reference
   // rather than as a snapshot: acting on it writes to the store, and looking it

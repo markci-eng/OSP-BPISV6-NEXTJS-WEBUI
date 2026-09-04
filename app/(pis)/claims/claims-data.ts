@@ -12,6 +12,7 @@ import {
   formatAgeOfDeath,
   formatFiledDate,
   fullYearsBetween,
+  isAccountInGoodStanding,
   toFullName,
   toSurnameFirst,
   type ClaimKind,
@@ -955,8 +956,8 @@ export function getOtherPlansForPerson(
       lpaNo: p.lpaNo,
       planDesc: p.planDesc,
       planCode: p.planCode,
-      isActive: p.accountStatus === "AC",
-      statusLabel: p.accountStatus === "AC" ? "Active" : "Lapsed",
+      isActive: isAccountInGoodStanding(p.accountStatus),
+      statusLabel: p.accountStatusLabel,
       effectivity: formatFiledDate(p.effectivityDate.toISOString()),
     }));
 }

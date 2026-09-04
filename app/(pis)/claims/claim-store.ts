@@ -146,7 +146,7 @@ let nextSequence = (() => {
 /**
  * Build a claim no the same way the source system does: the branch's territory
  * code, the "DC" claim code, a 2-digit year and a 6-digit sequence — e.g.
- * "MW1DC26009805" for a Davao (territory MW1) claim opened in 2026.
+ * "MCETDC26009805" for a Davao (territory MCET) claim opened in 2026.
  */
 function generateClaimNo(branchCode: string, createdAt: Date): string {
   const territory = db.getBranch(branchCode)?.territoryCode ?? branchCode;
