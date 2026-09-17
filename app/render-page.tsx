@@ -41,9 +41,11 @@ const ROLES_WITHOUT_CHATBOT = new Set(["claims"]);
 const HIDE_CHATBOT_CSS = `.chatbot-fab { display: none !important; }`;
 
 const appUser: AppUser = {
+  id: "1234",
+  status: "active",
   email: "joycemb@stpeter.com.ph",
-  name: "Joyce Basilio-Ramos",
-  role: "Branch Manager",
+  displayName: "Joyce Basilio-Ramos",
+  position: "Branch Manager",
   avatarUrl:
     "https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no",
 };
