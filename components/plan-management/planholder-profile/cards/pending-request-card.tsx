@@ -1,24 +1,44 @@
-import { OSPBadge } from "osp-ui-kit";
+import { OSPBadge, type OSPBadgeProps } from "osp-ui-kit";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import {
   LuRefreshCw,
   LuArrowLeftRight,
+  LuFileText,
+  LuReceiptText,
   LuReplace,
   LuTrendingUpDown,
   LuChevronRight,
 } from "react-icons/lu";
 
-type RequestType =
+/**
+ * What raised the request.
+ *
+ * NOT PLAN-MANAGEMENT'S ALONE SINCE 2026-09-16. The first four were the whole
+ * union while this card was only drawn on the plan-management profile; the
+ * CLAIMS profile draws it too now, and what it puts on the card is a death claim
+ * or a service payable. Widening is additive — every existing caller passes one
+ * of the original four and nothing about them changes — and it is the
+ * alternative to a second card that looks identical with two strings different.
+ *
+ * ADD A KIND HERE AND GIVE IT AN ICON in {@link typeIcon}, which is a total
+ * `Record` and will not compile without one. That is deliberate: the history
+ * drawer's icon switch degrades silently to a document glyph, and this one
+ * should not.
+ */
+export type RequestType =
   | "Reinstatement"
   | "Change of Mode"
   | "Transfer of Rights"
-  | "Returned of Premium";
+  | "Returned of Premium"
+  // Claims
+  | "Death Claim"
+  | "Service Payable";
 
-type RequestStatus = "Pending" | "In Progress" | "Approved" | "Denied";
+export type RequestStatus = "Pending" | "In Progress" | "Approved" | "Denied";
 
-interface ProgressCardProps {
+export interface ProgressCardProps {
   current: number;
   total: number;
   title: string;
@@ -28,6 +48,19 @@ interface ProgressCardProps {
   status: RequestStatus;
   date: string;
   onClick?: () => void;
+  /**
+   * Whether pressing the card also routes to `/transaction/{transactionId}`.
+   *
+   * ON BY DEFAULT, so every caller that existed before this prop behaves exactly
+   * as it did: the card calls `onClick` and then navigates.
+   *
+   * THE CLAIMS PROFILE TURNS IT OFF. A request there goes to one of two places
+   * depending on what raised it — a claim opens in place beside the plan holder,
+   * a service payable routes to its own queue — and only the page knows which.
+   * A card that navigated on its own as well would take the reader somewhere on
+   * the way to wherever the page was sending them.
+   */
+  navigateOnClick?: boolean;
 }
 
 const typeIcon: Record<RequestType, React.ReactNode> = {
@@ -35,6 +68,24 @@ const typeIcon: Record<RequestType, React.ReactNode> = {
   "Change of Mode": <LuReplace size={15} />,
   "Transfer of Rights": <LuArrowLeftRight size={15} />,
   "Returned of Premium": <LuTrendingUpDown size={15} />,
+  "Death Claim": <LuFileText size={15} />,
+  "Service Payable": <LuReceiptText size={15} />,
+};
+
+/**
+ * Which badge each status gets.
+ *
+ * IT USED TO BE `type="warning"`, HARD-CODED — every card wore the amber of a
+ * pending request whatever its status said, so an approved one read as
+ * outstanding. It went unnoticed because the only caller filters to `Pending`
+ * before it renders anything (see `sections/pending-requests`), which is also
+ * why fixing it changes nothing on the screens that existed before today.
+ */
+const statusBadge: Record<RequestStatus, OSPBadgeProps["type"]> = {
+  Pending: "warning",
+  "In Progress": "info",
+  Approved: "success",
+  Denied: "danger",
 };
 
 const statusStyle: Record<
@@ -106,13 +157,16 @@ export function ProgressCard({
   status,
   date,
   onClick,
+  navigateOnClick = true,
 }: ProgressCardProps) {
   const router = useRouter();
   const style = statusStyle[status];
 
   function handleClick() {
     onClick?.();
-    router.push(`/transaction/${transactionId}`);
+    // See {@link ProgressCardProps.navigateOnClick} — on unless a caller that
+    // routes for itself turns it off.
+    if (navigateOnClick) router.push(`/transaction/${transactionId}`);
   }
 
   return (
@@ -175,7 +229,9 @@ export function ProgressCard({
               {status}
             </Text>
           </Flex> */}
-          <OSPBadge type="warning">{status}</OSPBadge>
+          {/* TYPED BY THE STATUS, not always "warning" — see
+              {@link statusBadge}, where what that was hiding is written down. */}
+          <OSPBadge type={statusBadge[status]}>{status}</OSPBadge>
         </Flex>
 
         {/* Step track */}

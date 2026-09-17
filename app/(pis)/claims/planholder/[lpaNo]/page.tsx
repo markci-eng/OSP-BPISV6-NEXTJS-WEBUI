@@ -10,20 +10,24 @@ import {
   Text,
   useBreakpointValue,
 } from "@chakra-ui/react";
-import { LuUserX } from "react-icons/lu";
+import { LuReceipt, LuUsers, LuUserX } from "react-icons/lu";
 import { Page } from "osp-ui-kit";
 import { useClaimStore } from "../../claim-store";
 import {
   getClaimRequests,
   getPlanholder,
+  getPlanholderBeneficiaries,
+  getPlanholderPayments,
   getPlanholderRemarks,
 } from "../../claims-data";
+import { SectionCard } from "../../components/section-card";
+import { SectionLauncher, SectionPopup } from "../../components/section-popup";
 import { PlanholderClaimDetail } from "../components/PlanholderClaimDetail";
 import { PlanholderSwapSkeleton } from "../components/PlanholderSwapSkeleton";
 import { PlanholderProfileHeader } from "../components/PlanholderProfileHeader";
 import { PlanholderInfoCard } from "../components/PlanholderInfoCard";
 import { PlanholderRemarks } from "../components/PlanholderRemarks";
-import { PlanholderClaimRequests } from "../components/PlanholderClaimRequests";
+import { PlanholderPendingRequests } from "../components/PlanholderPendingRequests";
 import { PlanholderDocuments } from "../components/PlanholderDocuments";
 import { PlanholderPayments } from "../components/PlanholderPayments";
 import { PlanholderBeneficiaries } from "../components/PlanholderBeneficiaries";
@@ -131,6 +135,14 @@ export default function ClaimsPlanholderPage() {
   const swapTimer = useRef<number | null>(null);
 
   /**
+   * Which of the two LOOK-UPS is open over the page — the payment ledger, the
+   * declared beneficiaries, or neither.
+   *
+   * See the launchers below for why they are pop-ups here and not sections.
+   */
+  const [popup, setPopup] = useState<"payments" | "beneficiaries" | null>(null);
+
+  /**
    * Open a claim, or (with `null`) go back to the profile.
    *
    * The placeholder is only for the DESKTOP swap. Below `xl` the same tap opens
@@ -162,6 +174,21 @@ export default function ClaimsPlanholderPage() {
    */
   const claimSheetUp = isDesktop && openClaimRef !== null;
 
+  /**
+   * What the two launchers say before they are opened.
+   *
+   * Read on every render rather than held in state, the same as the death
+   * claim's: both come out of the mock data layer synchronously, and a number
+   * cached here would go stale the moment a receipt or a beneficiary was added
+   * behind one of the pop-ups.
+   */
+  const paymentCount = planholder
+    ? getPlanholderPayments(planholder.lpaNo).length
+    : 0;
+  const beneficiaryCount = planholder
+    ? getPlanholderBeneficiaries(planholder.lpaNo).length
+    : 0;
+
   // A swap left mid-flight — navigating away, or the claim opened from a list
   // that unmounts — must not call back into a page that is gone.
   useEffect(
@@ -175,7 +202,16 @@ export default function ClaimsPlanholderPage() {
     <Page.Root
       subtitle="Claims"
       title="Planholder Profile"
-      description="Explore the plan holder's details, claims, and documents."
+      // IT NO LONGER ENUMERATES "CLAIMS" (2026-09-16). The description listed
+      // the page's sections, and one of them has stopped being claims-only —
+      // the rail carries REQUESTS now, of which a claim is one kind. A header
+      // naming a section that no longer goes by that name is the kind of
+      // sentence that outlives its reason.
+      //
+      // `subtitle` is still the area, because that is what the route is under
+      // and what every other header in this area says; it names where the page
+      // LIVES, not who is allowed to read it.
+      description="Explore the plan holder's details, requests, and documents."
       // Phone only, the same as the dashboard and the create form: a desktop
       // has the sidebar and the browser's own back button, and the arrow beside
       // the title says nothing the page does not.
@@ -263,6 +299,17 @@ export default function ClaimsPlanholderPage() {
                 // width — a row of nowrap labels, a table — would push the whole
                 // column past the phone's screen rather than scroll inside
                 // itself, as it does today outside a grid.
+                // THE READING COLUMN LEADS, and the rail stands beside it.
+                //
+                // IT WAS FLIPPED TO RAIL-FIRST FOR AN HOUR (2026-09-16) to match
+                // `/claims/death-claim` and the service payables conveyor, which
+                // are both `<rail> minmax(0, 1fr)` — and reverted at the user's
+                // word. Noted because the argument for the flip was a real one
+                // and will come round again: those two screens are CONVEYORS,
+                // where the rail is the queue's control surface and is read
+                // before the work. This page is a PROFILE — it is looked up, the
+                // plan holder is the subject, and the rail is what to reach for
+                // once you have found them.
                 templateColumns={{
                   base: "minmax(0, 1fr)",
                   xl: "minmax(0, 1fr) 380px",
@@ -278,24 +325,23 @@ export default function ClaimsPlanholderPage() {
                 css={SWAP_FADE}
               >
                 {/* The record: who they are, what has been said, what has been
-                    paid, who benefits, what else they hold.
+                    paid, who benefits, what is on file, what else they hold.
 
                     `display: contents` up to `xl` is what lets this page be two
                     columns without reordering the phone. Stacked, the wrapper
                     disappears and its sections become children of the grid
                     itself, so `order` can interleave them with the rail's — the
-                    phone keeps summary, remarks, CLAIMS, DOCUMENTS, payments,
-                    beneficiaries, other plans, exactly as before. From `xl` the
-                    wrapper is a real box again, the orders stop applying, and
-                    each column stacks its own. */}
+                    phone reads summary, remarks, REQUESTS, the two look-ups,
+                    documents, other plans. From `xl` the wrapper is a real box
+                    again, the orders stop applying, and each column stacks its
+                    own — which is why the DOM order here already matches. */}
                 <Box display={{ base: "contents", xl: "block" }}>
                   {/* Who this is. In the left column rather than across both,
                       so it is the width of the summary that follows it — and,
                       more to the point, so the rail starts at the TOP of the
-                      page: a claim request and the folder are the two things
-                      worth reaching from anywhere, and a full-width header
-                      above them would push them a header's height down before
-                      they could be seen at all. */}
+                      page: a pending request is the thing worth reaching from
+                      anywhere, and a full-width header above it would push it a
+                      header's height down before it could be seen at all. */}
                   <Box order={0}>
                     <PlanholderProfileHeader planholder={planholder} />
                   </Box>
@@ -304,19 +350,92 @@ export default function ClaimsPlanholderPage() {
                     <PlanholderInfoCard planholder={planholder} asDetails />
                   </Box>
 
+                  {/* IN A CARD, THE DEATH CLAIM'S (user, 2026-09-16: "place
+                      the remarks into a card similar with the death claim").
+                      It was a bare band — a heading and a scroll box, with the
+                      heading doing the dividing — between the plan details card
+                      above it and the launcher cards below. A section with no
+                      edge between two that have one reads as content that has
+                      fallen out of the card above. Same for the folder further
+                      down; see `SectionCard`, whose own note this change
+                      supersedes. */}
                   <Box mt={4} order={2}>
-                    <PlanholderRemarks
-                      remarks={getPlanholderRemarks(planholder.lpaNo)}
-                      showNotes={false}
-                    />
+                    <SectionCard>
+                      <PlanholderRemarks
+                        remarks={getPlanholderRemarks(planholder.lpaNo)}
+                        showNotes={false}
+                      />
+                    </SectionCard>
                   </Box>
 
+                  {/* THE TWO LOOK-UPS, BEHIND BUTTONS (user, 2026-09-16:
+                      "make the payment and beneficiary same as the death claim
+                      design"). Both stood here as full sections — a paged
+                      ledger of four columns and a list of beneficiary cards —
+                      which is a lot of column spent on the two things nobody
+                      opens this profile to read. Neither decides anything; they
+                      are consulted, occasionally, and deliberately.
+
+                      So each is a card that says how many rows are behind it
+                      and opens the section over the page. The SECTIONS are
+                      unchanged — `PlanholderPayments` and
+                      `PlanholderBeneficiaries` render inside the pop-ups below,
+                      exactly as they do on the death claim. */}
+                  <Box mt={4} order={5}>
+                    <Box
+                      display="grid"
+                      gridTemplateColumns="repeat(auto-fit, minmax(min(240px, 100%), 1fr))"
+                      gap={3}
+                    >
+                      <SectionLauncher
+                        Icon={LuReceipt}
+                        title="Payments"
+                        subtitle="Official receipts on record"
+                        count={paymentCount}
+                        onClick={() => setPopup("payments")}
+                      />
+                      <SectionLauncher
+                        Icon={LuUsers}
+                        title="Beneficiaries"
+                        subtitle="Declared on this plan"
+                        count={beneficiaryCount}
+                        onClick={() => setPopup("beneficiaries")}
+                      />
+                    </Box>
+                  </Box>
+
+                  {/* THE FOLDER, MOVED OUT OF THE RAIL (user, 2026-09-16:
+                      "move the document into the left-section"). It sat under
+                      Pending Request(s) as the rail's second section, which put
+                      a list of files in a 380px column next to the record they
+                      belong to — and made the rail's height a budget two
+                      sections had to divide.
+
+                      NO DEFICIENCIES TAB. `withDeficiencies` is deliberately
+                      off, as it always has been here: a deficiency is what a
+                      REQUEST is short of, and which documents are outstanding
+                      depends on which kind of request is asking. A plan
+                      holder's folder is a record, and a record has nothing to
+                      be deficient against — the claim view and the service
+                      record each carry their own.
+
+                      CAPPED, BECAUSE THE SECTION READS THE VIEWPORT. From `xl`
+                      it believes it is in a rail and lists every document
+                      rather than five behind a "View all", expecting the bound
+                      a rail would have given it. This is that bound — the same
+                      420px the death claim gives the same section for the same
+                      reason. */}
                   <Box mt={4} order={6}>
-                    <PlanholderPayments lpaNo={planholder.lpaNo} />
-                  </Box>
-
-                  <Box mt={4} order={7}>
-                    <PlanholderBeneficiaries lpaNo={planholder.lpaNo} />
+                    <SectionCard>
+                      <Box
+                        display={{ xl: "flex" }}
+                        flexDirection="column"
+                        maxH={{ xl: "420px" }}
+                        minH={{ xl: 0 }}
+                      >
+                        <PlanholderDocuments personId={planholder.personId} />
+                      </Box>
+                    </SectionCard>
                   </Box>
 
                   {/* Renders nothing when the person holds no other plan, so the
@@ -325,35 +444,36 @@ export default function ClaimsPlanholderPage() {
                     <PlanholderOtherPlans
                       personId={planholder.personId}
                       currentLpaNo={planholder.lpaNo}
+                      // The card is drawn INSIDE this one, not around it — see
+                      // the prop. Everything else in the column is carded at
+                      // the call site.
+                      carded
                     />
                   </Box>
                 </Box>
 
-                {/* The work: the claims filed against this plan, and the folder
-                    of documents they are decided on. Everything else on this
-                    page is looked up; these two are acted on — a request opened,
-                    a file added — so on a desktop they stop being two stops down
-                    a long scroll and stand in a column that follows it. */}
+                {/* The work: the requests running against this plan, and the
+                    ways in to another one. Everything else on this page is
+                    looked up; these are acted on — a request opened, a plan
+                    searched for — so on a desktop they stop being a stop down a
+                    long scroll and stand in a column that follows it.
+                    THE FOLDER USED TO BE HERE TOO, and is now the left column's
+                    last section; see the note on it there.
+
+                    NO HEIGHT CEILING ANY MORE. The rail was capped at one
+                    screenful with `overflow: hidden`, and the cap was a BUDGET:
+                    the folder was the shrinkable section, and what the screen
+                    could not give it became a scroll inside its own list. With
+                    the folder gone, every section left is fixed — a field, a
+                    row of buttons, a one-card deck — so there is nothing to
+                    divide, and a cap over fixed content can only crop it. */}
                 <Box
                   display={{ base: "contents", xl: "flex" }}
                   flexDirection="column"
                   position={{ xl: "sticky" }}
+                  // The shell's header takes 64px above the scrollport and this
+                  // sits 8px into it.
                   top={{ xl: "8px" }}
-                  // A CEILING, not a height: one screenful is the most the rail
-                  // may take, and short sections leave it shorter than that
-                  // rather than padding themselves out to reach it. The shell's
-                  // header takes 64px above the scrollport and this sits 8px
-                  // into it.
-                  //
-                  // The rail used to scroll ITSELF past that height, which put
-                  // the two things worth reaching — a claim request, the folder
-                  // — behind a scroll of a column that is already pinned. Now
-                  // the ceiling is a budget the sections divide between them
-                  // and each scrolls its own ITEMS inside its share, so both
-                  // headings stay on screen and how many rows are under them is
-                  // whatever the device is tall enough for.
-                  maxH={{ xl: "calc(100vh - 88px)" }}
-                  overflow={{ xl: "hidden" }}
                 >
                   {/* The way to ANOTHER plan holder, above the actions for this
                       one — the same field the dashboard carries, so the search
@@ -377,13 +497,23 @@ export default function ClaimsPlanholderPage() {
                       No top margin: both columns start at the grid's top edge,
                       and a margin here would offset one of them by itself —
                       which is what keeps this level with the top of the profile
-                      card beside it. */}
+                      card beside it.
+
+                      IN THE COLUMN'S CARD (user, 2026-09-16). The field stood
+                      bare on the page's background at the top of the rail, with
+                      the profile card level with it across the gutter — the one
+                      thing on either column that was not on a surface. The card
+                      is drawn here and not in `PlanholderQuickSearch`, which is
+                      shared with the dashboard and answers to that page's
+                      rhythm, not this one's. */}
                   <Box
                     order={2}
                     display={{ base: "none", xl: "block" }}
                     flexShrink={0}
                   >
-                    <PlanholderQuickSearch />
+                    <SectionCard>
+                      <PlanholderQuickSearch />
+                    </SectionCard>
                   </Box>
 
                   {/* The plan's actions, at the top of the work column. On a
@@ -417,42 +547,71 @@ export default function ClaimsPlanholderPage() {
                   <Box
                     mt={4}
                     order={4}
-                    // Flex in its own right, not just a flex ITEM: the section
-                    // inside sizes itself against this box, and a block parent
-                    // gives it no height to size against — it would grow to fit
-                    // every card and be clipped by the rail instead of
-                    // scrolling its own list.
-                    display={{ xl: "flex" }}
-                    flexDirection="column"
-                    flex={{ xl: "0 1 auto" }}
-                    minH={{ xl: 0 }}
-                  >
-                    <PlanholderClaimRequests
-                      lpaNo={planholder.lpaNo}
-                      // In the rail the list does NOT open a drawer — it hands
-                      // the claim up here and the page swaps to it. Below `xl`
-                      // this still fires, and setting it is harmless: the
-                      // swapped view is gated on `isDesktop`, so the drawer the
-                      // list opened is what is seen.
-                      onSelect={(claim) => swapTo(claim.reference)}
-                    />
-                  </Box>
-
-                  <Box
-                    mt={4}
-                    order={5}
-                    display={{ xl: "flex" }}
-                    flexDirection="column"
-                    flex={{ xl: "0 1 auto" }}
-                    minH={{ xl: 0 }}
-                    // The rail's last section: the margin below it is the gap
-                    // to the bottom of the screenful, not to another section.
+                    // FIXED, SINCE THE SECTION BECAME A DECK (2026-09-16). It
+                    // was `0 1 auto` with a `minH: 0` — shrink, never grow —
+                    // because the section inside was a scrolling LIST and the
+                    // rail's job was to decide how much of it was on screen.
+                    // Pending Request(s) shows one card at a time now, so its
+                    // height is the same on every plan and there is nothing to
+                    // take away; leaving it shrinkable would crop the single
+                    // card instead, which a deck cannot scroll back.
+                    flex={{ xl: "0 0 auto" }}
+                    // The rail's last section now: the margin below it is the
+                    // gap to the bottom of the column, not to another section.
                     pb={{ xl: 1 }}
                   >
-                    <PlanholderDocuments personId={planholder.personId} />
+                    {/* PENDING REQUEST(S), NOT CLAIM REQUESTS (user,
+                        2026-09-16: "our planholder profile will be view now by
+                        Death Claim and Service so we need to make it dynamic…
+                        the request would be claims and others").
+
+                        The section that stood here listed CLAIMS, which was the
+                        right question while the claims area was the only way in
+                        to this profile. A service payables processor opens the
+                        same plan holder off the conveyor and arrives with a
+                        different one: not "what claims exist" but "is anything
+                        already running against this plan". See
+                        `planholder-requests`, where both sources are read into
+                        one list. */}
+                    <PlanholderPendingRequests
+                      lpaNo={planholder.lpaNo}
+                      // A CLAIM STILL SWAPS IN PLACE — the one behaviour worth
+                      // keeping from the section this replaced. In the rail the
+                      // claim goes into the main column beside the plan holder
+                      // rather than over it. Anything that is not a claim
+                      // carries its own `href` and is routed to, because this
+                      // page has no view for it.
+                      onSelectClaim={(request) => {
+                        if (request.claim) swapTo(request.claim.reference);
+                      }}
+                    />
                   </Box>
                 </Box>
               </Grid>
+
+              {/* THE TWO LOOK-UPS' POP-UPS, always mounted with `open` driving
+                  them — never `{popup === "payments" && <SectionPopup/>}`. A
+                  dialog mounted at the moment it opens has left this app with
+                  the page behind it unclickable.
+
+                  The sections inside are the same ones that stood in the column
+                  until today, handed the same prop; only where they are drawn
+                  has changed. */}
+              <SectionPopup
+                title="Payments"
+                open={popup === "payments"}
+                onClose={() => setPopup(null)}
+              >
+                <PlanholderPayments lpaNo={planholder.lpaNo} />
+              </SectionPopup>
+
+              <SectionPopup
+                title="Beneficiaries"
+                open={popup === "beneficiaries"}
+                onClose={() => setPopup(null)}
+              >
+                <PlanholderBeneficiaries lpaNo={planholder.lpaNo} />
+              </SectionPopup>
             </>
           ) : (
             <PlanholderNotFound lpaNo={lpaNo} />

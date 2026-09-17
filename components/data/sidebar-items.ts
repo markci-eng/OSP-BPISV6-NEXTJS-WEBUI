@@ -29,6 +29,8 @@ import {
   RiFileCheckLine,
   RiHome4Fill,
   RiHome4Line,
+  RiToolsFill,
+  RiToolsLine,
   RiUser2Fill,
   RiUser2Line,
 } from "react-icons/ri";
@@ -174,9 +176,20 @@ export const SideBarItemsBranch: NavItem[] = [
   {
     icon: HiOutlineShieldCheck,
     activeIcon: HiShieldCheck,
-    label: "User Access Management",
+    label: "Access Group Management",
     displayName: "Access",
-    href: "/user-access-management",
+    subItems: [
+      {
+        label: "Access Groups",
+        href: "/role-access-management/access-groups",
+        displayName: "Groups",
+      },
+      {
+        label: "User Assignment",
+        href: "/role-access-management/user-assignment",
+        displayName: "Assign",
+      },
+    ],
   },
 
   // {
@@ -269,6 +282,24 @@ export const SideBarItemsEKolekta: NavItem[] = [
   },
 ];
 
+/*
+ * THE ORDER ON SCREEN IS `bottomNavOrder`, NOT THE ORDER OF THIS ARRAY, and the
+ * two disagreed here for months without showing it.
+ *
+ * `AppLayout` sorts the items it is given — `(a.bottomNavOrder ?? Infinity) -
+ * (b.bottomNavOrder ?? Infinity)` — and it sorts IN PLACE, so the array exported
+ * from this module is reordered by the first render and the desktop rail draws
+ * that order too. A reader editing this file would move an entry up, see nothing
+ * change, and have no way of knowing why.
+ *
+ * SO EVERY ITEM CARRIES ONE, INCLUDING APPROVALS, which has no bottom nav entry
+ * of its own. Without a number it sorted at Infinity, which is the only reason it
+ * sat at the foot of the rail — an accident that the moment anything else lost
+ * its number would have been two items fighting over last place.
+ *
+ * The array is written in the order the numbers produce, so the file reads the
+ * way the screen does.
+ */
 export const SideBarItemsClaims: NavItem[] = [
   {
     icon: RiHome4Line,
@@ -279,36 +310,24 @@ export const SideBarItemsClaims: NavItem[] = [
     bottomNavOrder: 1,
   },
   {
-    icon: RiUser2Line,
-    activeIcon: RiUser2Fill,
-    label: "Approvals",
-    href: "/claims/approvals",
-  },
-  {
-    icon: RiUser2Line,
-    activeIcon: RiUser2Fill,
-    label: "Planholder Profile",
-    href: "/claims/planholder-profile",
-    bottomNav: true,
-    bottomNavOrder: 3,
-    displayName: "Planholder",
-  },
-  {
-    // Death, WOI and Dismemberment are the three natures of a death claim, so
-    // they are one group rather than three siblings. The parent has no `href`
-    // of its own — the kit treats an item with `subItems` as an accordion and
-    // sends the mobile bottom-nav tab to the first sub-item, "Death".
+    // ONE ENTRY, NOT A GROUP. Death, WOI and Dismemberment are the three
+    // natures of a death claim, and they were three sub-items here — an
+    // accordion over one built screen and two "coming soon" stubs.
+    //
+    // THE NATURE IS A FILTER, NOT A DESTINATION, which is what makes the group
+    // redundant rather than merely early. The page serves one claim at a time
+    // out of a priority queue, and which nature that claim is belongs to the
+    // list it was drawn from: `NatureSelect` sits on the toolbar of the claim
+    // pop-up, and `isNatureBuilt` is what says a nature has no module yet. A
+    // route per nature asked the same question a second time, in a place where
+    // two of the three answers were a sentence apologising for themselves.
     icon: LiaHandHoldingUsdSolid,
     activeIcon: FaHandHoldingUsd,
     label: "Death Claim",
     displayName: "Death",
+    href: "/claims/death-claim",
     bottomNav: true,
     bottomNavOrder: 2,
-    subItems: [
-      { label: "Death", href: "/claims/death-claim/death" },
-      { label: "WOI", href: "/claims/death-claim/woi" },
-      { label: "Dismemberment", href: "/claims/death-claim/dismemberment" },
-    ],
   },
   {
     // ONE ENTRY, NOT A GROUP — unlike Death Claim above, and deliberately.
@@ -324,7 +343,64 @@ export const SideBarItemsClaims: NavItem[] = [
     href: "/claims/service-payables",
     bottomNav: true,
     displayName: "Service",
+    bottomNavOrder: 3,
+  },
+  {
+    // NUMBERED THOUGH IT HAS NO BOTTOM NAV ENTRY — see the note above. The
+    // number is what orders the DESKTOP rail; `bottomNav` is what decides
+    // whether a phone also gets a tab for it, and these two facts share one
+    // field. Without this, Approvals sorts at Infinity and the entry below it
+    // could never reach the foot of the list.
+    icon: RiUser2Line,
+    activeIcon: RiUser2Fill,
+    label: "Approvals",
+    href: "/claims/approvals",
     bottomNavOrder: 4,
+  },
+  {
+    // LAST IN THE RAIL (user, 2026-09-14: "make the planholder at the bottom").
+    //
+    // It is the odd one out among these entries and the order now says so: the
+    // other four are QUEUES OF WORK — a dashboard over them, then claims,
+    // payables and approvals, in the sequence a claim passes through. The plan
+    // holder profile is a LOOK-UP: opened when a caller asks about somebody,
+    // not worked through, and mostly reached from the record that names them
+    // rather than from this rail at all.
+    //
+    // THE PHONE'S BOTTOM BAR MOVES WITH IT — one field orders both, so it goes
+    // from third of the four tabs to last. That is the right answer there for
+    // the same reason it is here, and the alternative is worse than either
+    // order: a look-up sitting third on the phone and fifth on the desktop is
+    // the same rail teaching two different maps to one user.
+    icon: RiUser2Line,
+    activeIcon: RiUser2Fill,
+    label: "Planholder Profile",
+    href: "/claims/planholder-profile",
+    bottomNav: true,
+    bottomNavOrder: 5,
+    displayName: "Planholder",
+  },
+  {
+    // BELOW THE PLANHOLDER, AND IT DOES NOT CONTRADICT "MAKE THE PLANHOLDER AT
+    // THE BOTTOM" (user, 2026-09-14) — because that instruction was about the
+    // rail of WORK, and this entry has no `bottomNav`.
+    //
+    // The phone is the half that instruction was really about, and the phone
+    // never sees this: its tabs are the `bottomNav` items, so Planholder is
+    // still the last one there. On the desktop rail it now sits sixth, which is
+    // where setup belongs — the five above it are places a claim is worked or
+    // looked up, and this is where the rules those five obey are edited.
+    //
+    // A CATEGORY, NOT A TASK, unlike every other entry here. Territory
+    // assignment is the only view in it today; the reference tables that follow
+    // it (nature codes, holiday calendars, rate tables) become views inside the
+    // same page rather than entries of their own, so this rail stops growing at
+    // six.
+    icon: RiToolsLine,
+    activeIcon: RiToolsFill,
+    label: "Utilities",
+    href: "/claims/utilities",
+    bottomNavOrder: 6,
   },
 ];
 

@@ -875,10 +875,11 @@ export class PisDatabase {
   /**
    * The people who put billings through.
    *
-   * STAND-IN, and the one table this layer has no version of at all: there are
-   * no users here. It is exposed all the same because a picker has to be able to
-   * list a processor who has nothing at the stage being looked at, and that
-   * cannot be read off the billings. See `PROCESSORS`.
+   * THE REAL SERVICE PAYABLES DESK since 2026-09-14, though still not a TABLE:
+   * this layer has no users, so the three are a list rather than rows with ids.
+   * It is exposed all the same because a picker has to be able to list a
+   * processor who has nothing at the stage being looked at, and that cannot be
+   * read off the billings. See `PROCESSORS`.
    */
   getProcessors(): string[] {
     return PROCESSORS;

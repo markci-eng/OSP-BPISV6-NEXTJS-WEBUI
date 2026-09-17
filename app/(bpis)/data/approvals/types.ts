@@ -6,7 +6,8 @@ export type ApprovalView =
   | "reassignment-doc"
   | "drs"
   | "movement-employees"
-  | "reassignment-sa2";
+  | "reassignment-sa2"
+  | "user-assignment";
 
 export interface BaseApproval {
   status: ApprovalStatus;
@@ -45,6 +46,29 @@ export interface SA2Reassignment extends BaseApproval {
   fromManager: string;
   toManager: string;
   branch: string;
+  date: string;
+}
+
+/**
+ * A request to change the access groups a user holds.
+ *
+ * Assignment is not applied when it is made: what the user will hold is the
+ * union of `requestedGroups`, and only once this row is approved. The group
+ * codes are the policy service's own `AccessGroupCode`s, comma-separated
+ * because the table filters and sorts them as text.
+ */
+export interface UserAssignmentRequest extends BaseApproval {
+  id: string;
+  user: string;
+  memberCode: string;
+  position: string;
+  branch: string;
+  /** Groups the user holds today. */
+  currentGroups: string;
+  /** Groups they would hold once approved. */
+  requestedGroups: string;
+  /** Permissions gained and lost by the change, e.g. "+21 / −0". */
+  permissionEffect: string;
   date: string;
 }
 

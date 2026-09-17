@@ -15,90 +15,52 @@ import {
 import { LuChevronRight, LuFileText, LuPlus } from "react-icons/lu";
 import { toast } from "sonner";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { EmptyStateCard, useMessageDialog } from "osp-ui-kit";
-import { TertiarySmButton } from "st-peter-ui";
+// `TertiarySmButton` FROM THE KIT, not from `st-peter-ui`, which this file was
+// still reaching into — the legacy package CLAUDE.md says application code must
+// not import from. Same component, same button; it survives only as a
+// transitive dependency of three other packages.
+import {
+  EmptyStateCard,
+  TertiarySmButton,
+  useMessageDialog,
+} from "osp-ui-kit";
 import {
   getDocumentTypes,
   getPlanholderDocuments,
   type DocumentType,
   type PlanholderDocument,
 } from "../../claims-data";
+import { DocumentFolder } from "../../components/document-folder";
 import { ScrollFade } from "../../components/scroll-fade";
 import { PlanholderSectionHeader } from "./PlanholderSectionHeader";
 import { PlanholderDocumentDrawer } from "./PlanholderDocumentDrawer";
 import { PlanholderDocumentListDrawer } from "./PlanholderDocumentListDrawer";
 import { DocumentRow } from "./DocumentRow";
 import { DocumentDeficiencyRow } from "./DocumentDeficiencyRow";
+import { DIALOG_SHEET_CSS } from "./dialog-sheet";
 
 /** Rows shown inline before "View all" opens the full-list drawer. */
 const COLLAPSED_LIMIT = 5;
 
-/** Which list the section is showing, when it has two. */
-type DocumentTab = "documents" | "deficiencies";
+// THE TABBED HEADING MOVED OUT, ALL OF IT (user, 2026-09-17: "make the service
+// payables used the same components"). It was `TabPill` drawn into a heading row
+// here and an identical one in `ServiceRecordDocuments`; now both render
+// `DocumentFolder`, which owns the row, the counts, the switch and the empty
+// states. The pill itself had already moved to the claims components folder on
+// 2026-09-11 for the same reason — this is the rest of it following.
+//
+// A SIDE-BY-SIDE LAYOUT WAS TRIED AND TAKEN BACK, worth recording so it is not
+// tried a third time. This section serves two very different spaces: a card
+// across the death claim's reading column, and the plan holder profile's claim
+// rail at 380px. Two columns never fitted the second at all — 180px a column is
+// a document name truncated to a few characters — and in the first they cost
+// the rows the width they need.
 
-/**
- * One tab of the two-list heading — the section's title AND its switch.
- *
- * Deliberately not a title with tabs under it. The section is called Documents
- * and its first tab would be called Documents; naming the same thing twice,
- * eighteen pixels apart, says there are two things there. So the tabs ARE the
- * heading: whichever is on reads as the title of what is under it, and the one
- * beside it is where the rest of the section went. It also saves the line the
- * subtitle used, which in a rail is a row of the list.
- */
-function TabPill({
-  label,
-  count,
-  active,
-  onClick,
-}: {
-  label: string;
-  count: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <Box
-      role="tab"
-      aria-selected={active}
-      tabIndex={0}
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      flexShrink={0}
-      px={2.5}
-      py="5px"
-      borderRadius="lg"
-      borderWidth="1px"
-      cursor="pointer"
-      transition="all 0.15s ease"
-      bg={active ? "#f4faf6" : "white"}
-      borderColor={active ? BRAND_COLORS.darkGreen : "gray.200"}
-      _hover={{ borderColor: active ? BRAND_COLORS.darkGreen : "gray.300" }}
-    >
-      <Text
-        fontSize="xs"
-        fontWeight="600"
-        lineHeight="1.3"
-        whiteSpace="nowrap"
-        color={active ? BRAND_COLORS.darkGreen : "gray.600"}
-      >
-        {label}
-        {/* The count rides inside the pill rather than in a badge of its own:
-            two pills, two badges and an Add button come to more controls than
-            a 380px rail has room for, and the number is what a reader is
-            checking the tab for anyway. */}
-        <Text as="span" ml={1.5} color={active ? "green.600" : "gray.400"}>
-          {count}
-        </Text>
-      </Text>
-    </Box>
-  );
-}
+// THE HEADING'S PILL MOVED OUT (2026-09-11) — `../../components/tab-pill`, the
+// claims components folder, unchanged in every pixel. The service record's
+// documents section took the same two-list heading, and a pill drawn in two
+// files is a pill that drifts. The argument for a tab that IS the title went
+// with it.
 
 /**
  * The rows' container: a scroll box bounded by the rail's height on a desktop,
@@ -142,6 +104,15 @@ interface PlanholderDocumentsProps {
    * has nothing to be deficient against.
    */
   withDeficiencies?: boolean;
+  /**
+   * Open this section's sheets — the type picker, the document detail and the
+   * full list — as CENTRED DIALOGS rather than sheets from the bottom edge.
+   *
+   * Passed straight down to all three, so they cannot disagree: a full-height
+   * list opening out of a centred picker would read as having left the dialog
+   * behind. See the twin prop on the payee sheets.
+   */
+  asDialog?: boolean;
 }
 
 /**
@@ -162,6 +133,7 @@ export function PlanholderDocuments({
   personId,
   onSelect,
   withDeficiencies = false,
+  asDialog = false,
 }: PlanholderDocumentsProps) {
   const { messageBox } = useMessageDialog();
 
@@ -192,10 +164,9 @@ export function PlanholderDocuments({
     (t) => !uploadedCodes.has(t.code),
   );
 
-  // Which of the two lists is showing. Only ever "deficiencies" when the
-  // section was asked for both.
-  const [tab, setTab] = useState<DocumentTab>("documents");
-  const onDeficiencies = withDeficiencies && tab === "deficiencies";
+  // WHICH LIST IS SHOWING IS `DocumentFolder`'S, and nothing outside it needs
+  // to know: no tick on this screen points into the folder the way the service
+  // record's Deficient box does. So the tabs are left uncontrolled.
 
   /**
    * Whether this is in the profile's side rail rather than stacked down the
@@ -269,6 +240,73 @@ export function PlanholderDocuments({
     toast.success(`${type.name} added`, { description: file.name });
   };
 
+  /** The documents list itself — the same rows in both layouts. */
+  const documentsList = (
+    <>
+      {/* In the rail the rows scroll inside the height they were given;
+          stacked, the plain stack is as tall as its five rows. A row is swiped
+          left to remove, so the scroller is deliberately the only thing that
+          moves vertically — `ScrollFade` contains its own overscroll and never
+          hands the gesture back to the page. */}
+      <ListFrame isRail={isRail}>
+        <VStack align="stretch" gap={2}>
+          {visible.map((doc) => (
+            <DocumentRow
+              key={doc.id}
+              document={doc}
+              onClick={() => handleSelect(doc)}
+              onRequestRemove={() => handleRemove(doc)}
+            />
+          ))}
+        </VStack>
+      </ListFrame>
+
+      {/* Overflow lives in a dedicated list drawer (infinite scroll + its own
+          Add button), so the row's swipe-to-remove is never fighting a
+          horizontal pager. */}
+      {hidden > 0 && (
+        <Flex justify="center" pt={3}>
+          <Button
+            variant="ghost"
+            size="xs"
+            borderRadius="full"
+            color="gray.600"
+            onClick={() => setListOpen(true)}
+          >
+            View all {count}
+            <LuChevronRight size={13} />
+          </Button>
+        </Flex>
+      )}
+    </>
+  );
+
+  /** The deficiency list — the same frame, so the two behave alike. */
+  const deficiencyList = (
+    <ListFrame isRail={isRail}>
+      <VStack align="stretch" gap={2}>
+        {availableTypes.map((type) => (
+          <DocumentDeficiencyRow
+            key={type.code}
+            type={type}
+            onUpload={() => handlePickType(type)}
+          />
+        ))}
+      </VStack>
+    </ListFrame>
+  );
+
+  /** The copy each column stands in for when it has nothing in it. */
+  const documentsEmpty = {
+    // The shared empty state — see the note in `PlanholderClaimRequests`.
+    title: "No documents yet",
+    description: "Documents filed for this plan holder will appear here.",
+  };
+  const deficienciesEmpty = {
+    title: "Nothing outstanding",
+    description: "Every document type on file has a file for this plan holder.",
+  };
+
   return (
     // In the rail this is a COLUMN that flexes — see the note on the same
     // wrapper in `PlanholderClaimRequests`. Stacked, none of it applies.
@@ -278,53 +316,8 @@ export function PlanholderDocuments({
       flex={{ xl: "1 1 auto" }}
       minH={{ xl: 0 }}
     >
-      {/* One heading or the other — never a heading AND a tab saying the same
-          word. See {@link TabPill}.
-
-          Add Document is in the same place either way: the far right of the
-          heading row, ghost, matching the other section-heading controls (Add
-          Note, Add Payee). It adds from BOTH tabs — the type picker it opens
-          lists exactly what the Deficiencies tab lists. */}
-      {withDeficiencies ? (
-        <Flex
-          role="tablist"
-          align="center"
-          justify="space-between"
-          gap={2}
-          mb={3}
-          flexShrink={0}
-        >
-          <Flex gap={1.5} minW={0}>
-            <TabPill
-              label="Documents"
-              count={count}
-              active={!onDeficiencies}
-              onClick={() => setTab("documents")}
-            />
-            <TabPill
-              label="Deficiencies"
-              count={availableTypes.length}
-              active={onDeficiencies}
-              onClick={() => setTab("deficiencies")}
-            />
-          </Flex>
-          <TertiarySmButton onClick={() => setTypePickerOpen(true)}>
-            <LuPlus /> Add
-          </TertiarySmButton>
-        </Flex>
-      ) : (
-        <PlanholderSectionHeader
-          title="Documents"
-          subtitle="Files on record for this plan holder"
-          action={
-            <TertiarySmButton onClick={() => setTypePickerOpen(true)}>
-              <LuPlus /> Add Document
-            </TertiarySmButton>
-          }
-        />
-      )}
-
-      {/* Hidden input driving step 2 of the add flow. */}
+      {/* Hidden input driving step 2 of the add flow. Above the section so the
+          two branches below do not each have to carry it. */}
       <input
         ref={fileInputRef}
         type="file"
@@ -332,79 +325,73 @@ export function PlanholderDocuments({
         onChange={handleFileChosen}
       />
 
-      <Box
-        display={{ xl: "flex" }}
-        flexDirection="column"
-        flex={{ xl: "1 1 auto" }}
-        minH={{ xl: 0 }}
-      >
-        {onDeficiencies ? (
-          availableTypes.length === 0 ? (
-            <EmptyStateCard
-              title="Nothing outstanding"
-              description="Every document type on file has a file for this plan holder."
-            />
-          ) : (
-            // The same frame the documents list uses, so switching tabs changes
-            // what is listed and not how the section behaves.
-            <ListFrame isRail={isRail}>
-              <VStack align="stretch" gap={2}>
-                {availableTypes.map((type) => (
-                  <DocumentDeficiencyRow
-                    key={type.code}
-                    type={type}
-                    onUpload={() => handlePickType(type)}
-                  />
-                ))}
-              </VStack>
-            </ListFrame>
-          )
-        ) : count === 0 ? (
-          // The shared empty state — see the note in `PlanholderClaimRequests`.
-          <EmptyStateCard
-            title="No documents yet"
-            description="Documents filed for this plan holder will appear here."
-          />
-        ) : (
-          <>
-            {/* In the rail the rows scroll inside the height they were given;
-                stacked, the plain stack is as tall as its five rows. A row is
-                swiped left to remove, so the scroller is deliberately the only
-                thing that moves vertically — `ScrollFade` contains its own
-                overscroll and never hands the gesture back to the page. */}
-            <ListFrame isRail={isRail}>
-              <VStack align="stretch" gap={2}>
-                {visible.map((doc) => (
-                  <DocumentRow
-                    key={doc.id}
-                    document={doc}
-                    onClick={() => handleSelect(doc)}
-                    onRequestRemove={() => handleRemove(doc)}
-                  />
-                ))}
-              </VStack>
-            </ListFrame>
+      {withDeficiencies ? (
+        /* THE SHARED FOLDER — the same component the service record's documents
+           section renders (user, 2026-09-17: "make the service payables used
+           the same components"). The tabbed heading, the counts on the pills,
+           the switch and the empty states all live there.
 
-            {/* Overflow lives in a dedicated list drawer (infinite scroll +
-                its own Add button), so the row's swipe-to-remove is never
-                fighting a horizontal pager. */}
-            {hidden > 0 && (
-              <Flex justify="center" pt={3}>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  borderRadius="full"
-                  color="gray.600"
-                  onClick={() => setListOpen(true)}
-                >
-                  View all {count}
-                  <LuChevronRight size={13} />
-                </Button>
-              </Flex>
+           THE SAME ADD ON BOTH TABS, which is where this differs from the
+           service record's folder and is the honest answer here: the type
+           picker it opens lists exactly what the Deficiencies tab lists, so
+           there is only one act to offer. On the service record a deficiency is
+           RAISED by hand, which is a second act and a second button. */
+        <DocumentFolder
+          documents={{
+            count,
+            action: (
+              <TertiarySmButton onClick={() => setTypePickerOpen(true)}>
+                <LuPlus /> Add
+              </TertiarySmButton>
+            ),
+            isEmpty: count === 0,
+            empty: documentsEmpty,
+            children: documentsList,
+          }}
+          deficiencies={{
+            count: availableTypes.length,
+            action: (
+              <TertiarySmButton onClick={() => setTypePickerOpen(true)}>
+                <LuPlus /> Add
+              </TertiarySmButton>
+            ),
+            isEmpty: availableTypes.length === 0,
+            empty: deficienciesEmpty,
+            children: deficiencyList,
+          }}
+        />
+      ) : (
+        /* ONE LIST, AND SO A PLAIN HEADING. A section called Documents whose
+           only tab is also called Documents would name the same thing twice —
+           see `TabPill`. The profile's folder is a record, and a record has
+           nothing to be deficient against. */
+        <>
+          <PlanholderSectionHeader
+            title="Documents"
+            subtitle="Files on record for this plan holder"
+            action={
+              <TertiarySmButton onClick={() => setTypePickerOpen(true)}>
+                <LuPlus /> Add Document
+              </TertiarySmButton>
+            }
+          />
+          <Box
+            display={{ xl: "flex" }}
+            flexDirection="column"
+            flex={{ xl: "1 1 auto" }}
+            minH={{ xl: 0 }}
+          >
+            {count === 0 ? (
+              <EmptyStateCard
+                title={documentsEmpty.title}
+                description={documentsEmpty.description}
+              />
+            ) : (
+              documentsList
             )}
-          </>
-        )}
-      </Box>
+          </Box>
+        </>
+      )}
 
       {/* Full-list drawer — the whole list with infinite scroll; opens the
           document on tap, removes on swipe, and can add without closing. */}
@@ -415,6 +402,7 @@ export function PlanholderDocuments({
         onSelect={handleSelect}
         onRequestRemove={handleRemove}
         onAdd={() => setTypePickerOpen(true)}
+        asDialog={asDialog}
       />
 
       <PlanholderDocumentDrawer
@@ -427,6 +415,7 @@ export function PlanholderDocuments({
           // confirmation leaves the user where they were.
           if (await handleRemove(selected)) setSelected(null);
         }}
+        asDialog={asDialog}
       />
 
       {/* Step 1 — pick the document type, then the file dialog opens. */}
@@ -437,14 +426,29 @@ export function PlanholderDocuments({
       >
         <Portal>
           <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
-          <Drawer.Positioner>
+          <Drawer.Positioner
+            alignItems={asDialog ? "center" : undefined}
+            justifyContent={asDialog ? "center" : undefined}
+            p={asDialog ? 3 : undefined}
+          >
             <Drawer.Content
-              roundedTop="2xl"
-              maxH="70vh"
+              borderRadius={asDialog ? "xl" : undefined}
+              roundedTop={asDialog ? undefined : "2xl"}
+              w={asDialog ? "full" : undefined}
+              maxW={
+                asDialog
+                  ? { base: "calc(100dvw - 24px)", md: "560px" }
+                  : undefined
+              }
+              maxH={asDialog ? { base: "88dvh", md: "82vh" } : "70vh"}
+              css={asDialog ? DIALOG_SHEET_CSS : undefined}
               overflow="hidden"
               display="flex"
               flexDirection="column"
             >
+              {/* The drag handle is the sheet's — a grab bar on a centred
+                  dialog offers a gesture that does nothing there. */}
+              {!asDialog && (
               <Box pt={3} pb={1} display="flex" justifyContent="center">
                 <Box
                   w="36px"
@@ -454,6 +458,7 @@ export function PlanholderDocuments({
                   opacity={0.7}
                 />
               </Box>
+              )}
               <Drawer.Header
                 pt={2}
                 pb={3}

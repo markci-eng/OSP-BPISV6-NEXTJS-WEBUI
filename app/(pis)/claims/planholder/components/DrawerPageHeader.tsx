@@ -1,6 +1,8 @@
 "use client";
 
-import { Box, Drawer, Flex, Text } from "@chakra-ui/react";
+import { Box, Drawer, Flex, Text,
+  CloseButton,
+} from "@chakra-ui/react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 
 /**
@@ -105,6 +107,7 @@ export function DrawerPageHeader({
   onBack,
   toolContent,
   asPage = false,
+  dismiss = "back",
 }: {
   title: React.ReactNode;
   description?: React.ReactNode;
@@ -112,6 +115,16 @@ export function DrawerPageHeader({
   toolContent?: React.ReactNode;
   /** Render outside a drawer — plain heading text, no `Drawer.Title`. */
   asPage?: boolean;
+  /**
+   * How the sheet is left: a back chevron on the leading edge, or a close cross
+   * on the trailing one.
+   *
+   * "back" is the drawer's own — a full-height sheet stacked over a page reads
+   * as somewhere you went, and you go back from it. "close" is for the same
+   * content shown as a CENTRED dialog, which reads as something laid over the
+   * page rather than a place; a chevron there points at nothing.
+   */
+  dismiss?: "back" | "close";
 }) {
   const heading = (
     <Text
@@ -143,9 +156,9 @@ export function DrawerPageHeader({
       _dark={{ borderColor: "whiteAlpha.200" }}
     >
       <Flex align="center" gap={2}>
-        <BackButton onBack={onBack} />
+        {dismiss === "back" && <BackButton onBack={onBack} />}
 
-        <Box flex="1" minW={0}>
+        <Box flex="1" minW={0} pl={dismiss === "close" ? 2 : 0}>
           {asPage ? heading : <Drawer.Title asChild>{heading}</Drawer.Title>}
           {description && (
             <Text fontSize="12.5px" color="fg.muted" mt="2px" truncate>
@@ -155,6 +168,10 @@ export function DrawerPageHeader({
         </Box>
 
         {toolContent && <Box mr={3}>{toolContent}</Box>}
+
+        {dismiss === "close" && (
+          <CloseButton size="sm" onClick={onBack} aria-label="Close" />
+        )}
       </Flex>
     </Box>
   );

@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Box, Drawer, Flex, Portal, Text, VStack } from "@chakra-ui/react";
+import { Box, Drawer, Flex, Portal, Text, VStack,
+  CloseButton,
+} from "@chakra-ui/react";
 import { LuChevronLeft, LuFolderOpen, LuPlus } from "react-icons/lu";
 import { TertiarySmButton } from "st-peter-ui";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import type { PlanholderDocument } from "../../claims-data";
 import { DocumentRow } from "./DocumentRow";
+import { DIALOG_SHEET_CSS } from "./dialog-sheet";
 
 /** Documents loaded per batch as the user scrolls to the bottom. */
 const BATCH_SIZE = 15;
@@ -21,6 +24,15 @@ interface PlanholderDocumentListDrawerProps {
   onRequestRemove: (doc: PlanholderDocument) => Promise<boolean>;
   /** Start the add-document flow (owned by the parent, so it works from here). */
   onAdd: () => void;
+  /**
+   * Show this as a CENTRED DIALOG rather than a sheet from the bottom edge.
+   *
+   * Same content, different presentation — see the twin prop on the payee
+   * sheets. Sliding up from the bottom is a phone's gesture; on
+   * `/claims/death-claim` the folder is one card in a column and its sheets
+   * should arrive the way that page's others do.
+   */
+  asDialog?: boolean;
 }
 
 /**
@@ -37,6 +49,7 @@ export function PlanholderDocumentListDrawer({
   onSelect,
   onRequestRemove,
   onAdd,
+  asDialog = false,
 }: PlanholderDocumentListDrawerProps) {
   // How many rows are currently rendered; grows as the sentinel scrolls in.
   const [limit, setLimit] = useState(BATCH_SIZE);
@@ -79,13 +92,24 @@ export function PlanholderDocumentListDrawer({
     >
       <Portal>
         <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
-        <Drawer.Positioner>
+        <Drawer.Positioner
+          alignItems={asDialog ? "center" : undefined}
+          justifyContent={asDialog ? "center" : undefined}
+          p={asDialog ? 3 : undefined}
+        >
           <Drawer.Content
             display="flex"
             flexDirection="column"
-            h="100dvh"
-            maxH="100dvh"
-            borderRadius={0}
+            h={asDialog ? "auto" : "100dvh"}
+            maxH={asDialog ? { base: "88dvh", md: "82vh" } : "100dvh"}
+            w={asDialog ? "full" : undefined}
+            maxW={
+              asDialog
+                ? { base: "calc(100dvw - 24px)", md: "640px" }
+                : undefined
+            }
+            css={asDialog ? DIALOG_SHEET_CSS : undefined}
+            borderRadius={asDialog ? "xl" : 0}
             overflow="hidden"
           >
             <Drawer.Header
@@ -98,7 +122,10 @@ export function PlanholderDocumentListDrawer({
             >
               <Flex align="center" gap={2} minW={0}>
                 {/* Back — green chevron, soft green hover (matches the payee
-                    drawer chrome). */}
+                    drawer chrome). Sheet only: a chevron in the corner of a
+                    centred dialog points at nothing, so that gets the cross at
+                    the far end instead. */}
+                {!asDialog && (
                 <Flex
                   as="button"
                   align="center"
@@ -119,6 +146,7 @@ export function PlanholderDocumentListDrawer({
                 >
                   <LuChevronLeft size={20} strokeWidth={2.5} />
                 </Flex>
+                )}
                 <Box minW={0}>
                   <Drawer.Title>
                     <Text fontWeight="bold" color={BRAND_COLORS.darkGreen} truncate>
@@ -132,9 +160,14 @@ export function PlanholderDocumentListDrawer({
               </Flex>
               {/* Same ghost control as the section heading it was opened
                   from, so the action reads as one thing in both places. */}
-              <TertiarySmButton onClick={onAdd}>
-                <LuPlus /> Add Document
-              </TertiarySmButton>
+              <Flex align="center" gap={2} flexShrink={0}>
+                <TertiarySmButton onClick={onAdd}>
+                  <LuPlus /> Add Document
+                </TertiarySmButton>
+                {asDialog && (
+                  <CloseButton size="sm" onClick={onClose} aria-label="Close" />
+                )}
+              </Flex>
             </Drawer.Header>
 
             <Drawer.Body ref={scrollRef} py={5} overflowY="auto">

@@ -1,17 +1,11 @@
 "use client";
 import { Box, Flex, IconButton, Text } from "@chakra-ui/react";
-import { AppHeaderActions, useDemoAuth, useSidebarToggle } from "osp-ui-kit";
+import { AppHeaderActions, useSidebarToggle } from "osp-ui-kit";
 import { LuMenu } from "react-icons/lu";
-import { useEffect } from "react";
 
 /* ── MOBILE HOME HEADER (login-page style, scrolls with content) ── */
 export const DashboardHeaderMobile = () => {
   const toggleSidebar = useSidebarToggle();
-
-  const { login } = useDemoAuth();
-  useEffect(() => {
-    login();
-  }, [login]);
 
   return (
     <Box

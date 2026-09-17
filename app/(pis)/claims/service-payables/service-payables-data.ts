@@ -76,8 +76,11 @@ import {
 } from "../../data";
 import {
   countTerminated,
+  getClosedFranchiseEntry,
   getCompliedDeficiency,
   getCreatedBilling,
+  getFranchiseBilling,
+  getFranchiseBillings,
   getManualServices,
   getResolvedDiscrepancy,
   getApprovedBilling,
@@ -128,6 +131,30 @@ export const BILLING_STAGES: BillingStage[] = [
   "verified",
   "approved",
 ];
+
+/**
+ * The stages WORKED ON THIS SCREEN — every stage except `verified`.
+ *
+ * APPROVAL LEFT THE CONVEYOR (user, 2026-09-15). A verified billing is one
+ * waiting for a supervisor's decision, and that decision is now made on
+ * `/claims/approvals` beside the death claims awaiting the same person. So the
+ * stage strip offers Process, Verify and Endorse, and the queue between the
+ * second and the third is reached from the Approvals page instead.
+ *
+ * THE STAGE ITSELF IS UNTOUCHED, and that distinction is the whole reason this
+ * is a second array rather than a shorter {@link BILLING_STAGES}. Verifying a
+ * billing still moves it to `verified`; billings still SIT there; approving one
+ * still moves it to `approved` and into For Endorsement below. Nothing about the
+ * pipeline changed — only which screen works that one step of it. Drop
+ * `verified` from the model and the Approvals page's service queue would be
+ * reading an empty stage.
+ *
+ * This is the gating point `StageSwitch` was written to expect; see the note at
+ * the top of `conveyor/stage-switch`.
+ */
+export const CONVEYOR_STAGES: BillingStage[] = BILLING_STAGES.filter(
+  (stage) => stage !== "verified",
+);
 
 export const BILLING_STAGE_LABELS: Record<BillingStage, string> = {
   "for-process": "For Process",
@@ -845,6 +872,30 @@ export interface ServiceBilling {
    */
   isManualFranchise: boolean;
   /**
+   * This billing was RAISED BY HAND against a mortuary — the paper franchise's,
+   * and the only billing here that was not derived from something on file.
+   *
+   * WHAT IT CHANGES, and it is only ever these three things:
+   *
+   *   THE IDENTIFIER   {@link billingCode} is a local key and not a CIS code —
+   *                    see `franchiseBillingCode`. Nothing may print it as one.
+   *   COMPLETION       the billing leaves For Process when the processor CLOSES
+   *                    it, not when its accounts run out. The accounts appear
+   *                    one at a time as they are typed, so "all of them are
+   *                    terminated" is true after the first.
+   *   ENTRY            plan holders are added to it by hand, which is what
+   *                    `canAddManualService` has always described.
+   *
+   * Everything else — the record, the discrepancy check, the termination, the
+   * three queues after this one — is identical, which is the rule the user gave
+   * on 2026-08-24: only the ENTRY differs.
+   *
+   * IT IMPLIES {@link isManualFranchise} AND {@link isFranchise}, and is not
+   * derived from them. Those two are read off the CHAPEL, and a paper
+   * franchise's mortuary may resolve to no chapel at all.
+   */
+  isPaperFranchise: boolean;
+  /**
    * The billing has been endorsed to accounting and can no longer be reopened.
    * See {@link isEndorsedToAccounting}.
    */
@@ -941,7 +992,7 @@ export interface TerritorySummary {
  * has been put through. See {@link isProcessorStage}.
  */
 export interface ProcessorSummary {
-  /** The name as it is stamped on the billing, e.g. "MARITES BELIESTA". */
+  /** The name as it is stamped on the billing, e.g. "JACKIE PANES". */
   processor: string;
   /**
    * Billings at this stage with this name on them.
@@ -1535,31 +1586,45 @@ const services: ServiceRecord[] = (() => {
  *                   billing code says it is a franchise (see
  *                   {@link FRANCHISE_CODE_SUFFIX}) and that is the whole of it.
  *
- *   ON PAPER        cannot use the system at all, and therefore HAS NO BILLING
- *                   CODE. There is nothing to derive one from: no endorsement,
- *                   no request, no period on file. The processor searches the
- *                   MORTUARY CODE in the franchise module, mints a billing
- *                   number directly, and keys the plan holders in one at a time
- *                   off the hard copies the franchise submitted.
+ *   ON PAPER        cannot use the system at all, and therefore HAS NO CIS
+ *                   BILLING CODE. There is nothing to derive one from: no
+ *                   endorsement, no request, no period on file. The processor
+ *                   picks the MORTUARY, mints a billing number directly, and
+ *                   keys the plan holders in one at a time off the hard copies
+ *                   the franchise submitted.
  *
- * THE SECOND ONE IS NOT WORKED HERE. This workspace is picked through by
- * territory and then by billing code, and a paper franchise has neither in a
- * form this screen could offer — a row for one would be an entry with no code,
- * inviting the wrong process.
+ * THE SECOND ONE IS WORKED HERE NOW (2026-09-15), on the conveyor, and the
+ * whole of what was added is the ENTRY — which is the whole of what the rules
+ * say differs. `FranchiseIntakeDialog` raises the billing, the rail grows an Add
+ * Planholder button, and the foot of the rail grows a Close. Everything from the
+ * record onwards is the screen an owned chapel's service already goes through.
  *
- * WHAT WAS HERE UNTIL NOW: an empty billing per paper franchise per period,
- * seeded into the For Process list so its plan holders could be keyed in from
- * the workspace. That was built on the assumption that a paper franchise's
- * billing is the same object as everyone else's, only empty. It is not — it has
- * no code — so the seeding is gone and the entries with it.
+ * WHAT THAT MEANT IN PRACTICE IS WORTH RECORDING, because it was almost nothing:
+ * the discrepancy check, the deficiency on an unresolved plan number, the
+ * pricing, the record, the termination and the three queues after this one all
+ * work on a keyed-in account without a line written for them. `addManualService`
+ * and its dialog were adopted unchanged after months of being unreachable. What
+ * genuinely had to fork is in ONE place — the completion rule below — and the
+ * two things on the page that assumed a billing always has accounts.
  *
- * The machinery those entries used is NOT gone: `addManualService`, its dialog,
- * and the rule in `canAddManualService` that plan holders may only be keyed in
- * once a billing number exists. That order is exactly the one the franchise
- * module needs — number first, then plan holders one at a time — so it waits
- * here rather than being rewritten from scratch. What that module has to add is
- * a billing identified by its NUMBER rather than by a code, and a mortuary
- * search to mint it against.
+ * IT STILL HAS NO CODE, and the local key it is held under is not one: see
+ * `franchiseBillingCode` in the store, which mints `FR:BT1-01:1SEP26` from the
+ * mortuary and the cut. Every map in this module keys on `billingCode`, so the
+ * billing needs a handle; what it must never do is print that handle where a CIS
+ * code is meant. `ServiceBilling.isPaperFranchise` is what says which kind of
+ * identifier a billing carries.
+ *
+ * WHAT WAS HERE BEFORE EITHER OF THOSE: an empty billing per paper franchise per
+ * period, SEEDED into the For Process list. That was built on the assumption
+ * that a paper franchise's billing is the same object as everyone else's, only
+ * empty — and the thing actually wrong with it was not the emptiness but that
+ * nobody had raised it. A billing exists because a processor made it, which is
+ * what the intake now does.
+ *
+ * The machinery the seeded entries used was kept through all of it and is what
+ * this is built on: `addManualService`, its dialog, and the rule in
+ * `canAddManualService` that plan holders may only be keyed in once a billing
+ * number exists — number first, then plan holders one at a time.
  */
 
 /**
@@ -1602,7 +1667,10 @@ function toManualServiceRecord(manual: ManualService): ServiceRecord {
     db.getBranchesByTerritory(chapel?.territoryCode ?? "")[0]?.branchCode ||
     "";
 
-  const blank: PersonName = { firstName: "", lastName: manual.endorsedName };
+  // The name the franchise wrote, composed the way every comparison in this
+  // module expects it — "First Last". The two parts are what is STORED; this is
+  // only how they are read out.
+  const endorsedName = toFullName(manual.deceased);
   const manualCSPCode = cspCodeFor(planholder?.planDesc ?? "");
 
   return {
@@ -1622,11 +1690,20 @@ function toManualServiceRecord(manual: ManualService): ServiceRecord {
     creditOfService: "",
     chapelCode: manual.chapelCode,
     lpaNo: manual.lpaNo,
-    // Falls back to the endorsed name when the plan does not resolve, so the row
-    // still says who the franchise buried rather than rendering blank.
-    deceased: name ?? blank,
-    planholder: name ?? blank,
-    endorsedName: manual.endorsedName,
+    // THE TYPED NAME IS THE DECEASED, always — not a fallback for when the plan
+    // number fails to resolve (user, 2026-09-17: "the input written here is the
+    // one would be in the form"). The service record's Deceased Lastname and
+    // Firstname open with exactly what the processor keyed off the franchise's
+    // paperwork, because the franchise's paperwork is the only record of who
+    // was buried. The plan on file names the PLAN HOLDER, which is a different
+    // person often enough to matter and is the whole reason the two are
+    // compared.
+    deceased: manual.deceased,
+    // The plan holder stays the plan holder: read off the plan when the number
+    // resolves, and only then falls back to the typed name so an unresolved row
+    // still says something rather than rendering blank.
+    planholder: name ?? manual.deceased,
+    endorsedName,
     isFranchise: chapel?.isFranchise ?? true,
     isManual: true,
     planCode: planholder?.planCode ?? "",
@@ -1653,7 +1730,7 @@ function toManualServiceRecord(manual: ManualService): ServiceRecord {
     trxPoint: manual.chapelCode,
     discrepancy: discrepancyFor(
       planholder,
-      manual.endorsedName,
+      endorsedName,
       onFileName,
       manual.addedAtISO,
     ),
@@ -1709,6 +1786,29 @@ export function getServiceBillings(): ServiceBilling[] {
     groups.get(service.billingCode)?.push(service);
   }
 
+  // THE PAPER FRANCHISE'S OWN BILLINGS, raised by hand against a mortuary this
+  // session. Taken here, after the headers and BEFORE the accounts, for the
+  // reason the headers are taken first: this is what says the billing EXISTS.
+  //
+  // AND IT IS RAISED EMPTY. That is not an edge case to be tolerated, it is the
+  // ordinary first state of one — the number is minted before a single plan
+  // holder is keyed in, because a terminated plan has to be posted against
+  // something. A billing invisible until its first account arrived would be
+  // invisible during exactly the window this path opens in.
+  //
+  // NO HEADER ROW AND NO CHAPEL TO READ ONE OFF, so the company is the module's
+  // own: nothing was endorsed through the system, and there is one company.
+  for (const franchise of getFranchiseBillings()) {
+    meta.set(franchise.billingCode, {
+      chapelCode: franchise.chapelCode,
+      period: franchise.period,
+      company: BILLING_COMPANY,
+    });
+    if (!groups.has(franchise.billingCode)) {
+      groups.set(franchise.billingCode, []);
+    }
+  }
+
   // Plan holders keyed in by hand go on the billing they were keyed in against,
   // which is the whole of what a manual franchise's endorsement amounts to. They
   // are never held: the processor has the paperwork in front of them, so there
@@ -1719,24 +1819,26 @@ export function getServiceBillings(): ServiceBilling[] {
   // system, and the reason this creates the group rather than only adding to it.
   for (const manual of getManualServices()) {
     const row = toManualServiceRecord(manual);
-    meta.set(manual.billingCode, {
-      chapelCode: row.chapelCode,
-      period: row.reportPeriod,
-      // A paper franchise's billing has no header row to read a company off —
-      // it was never endorsed through the system. There is one company.
-      company:
-        db.getBillingHdr(manual.billingCode)?.company ?? BILLING_COMPANY,
-    });
+    // ONLY WHERE THE BILLING HAS NOT ALREADY SAID WHAT IT IS. This used to write
+    // unconditionally, which was harmless while a manual row's own chapel and
+    // period were the only source there was — and is not, now that a franchise
+    // billing carries both as fields. A row keyed in against it must not be able
+    // to move the billing to another period by having a service date read one
+    // day either side of a cut boundary.
+    if (!meta.has(manual.billingCode)) {
+      meta.set(manual.billingCode, {
+        chapelCode: row.chapelCode,
+        period: row.reportPeriod,
+        // A paper franchise's billing has no header row to read a company off —
+        // it was never endorsed through the system. There is one company.
+        company:
+          db.getBillingHdr(manual.billingCode)?.company ?? BILLING_COMPANY,
+      });
+    }
     const group = groups.get(manual.billingCode);
     if (group) group.push(row);
     else groups.set(manual.billingCode, [row]);
   }
-
-  // NO EMPTY BILLING FOR A PAPER FRANCHISE, which is where one used to be
-  // seeded — one per chapel per period, so the workspace had somewhere to key
-  // its plan holders in. A paper franchise has no billing code at all, so there
-  // was nothing for those rows to be; see the note at the top of "the franchise
-  // path". They are created by number in the franchise module instead.
 
   const billings: ServiceBilling[] = [];
   let billedIndex = 0;
@@ -1750,6 +1852,13 @@ export function getServiceBillings(): ServiceBilling[] {
     const seeded = groups.get(billingCode)!;
     const { chapelCode, period, company } = meta.get(billingCode)!;
     const chapel = db.getChapel(chapelCode);
+
+    /**
+     * Raised by hand against a mortuary, rather than derived from anything —
+     * see {@link ServiceBilling.isPaperFranchise}. Read once here because three
+     * separate decisions below turn on it.
+     */
+    const franchise = getFranchiseBilling(billingCode);
 
     // THE MORTUARY THIS BILLING IS RAISED AGAINST, which is what prices every
     // service on it — a rate is a term of the mortuary's contract, so the same
@@ -1838,6 +1947,25 @@ export function getServiceBillings(): ServiceBilling[] {
     let stage: BillingStage = "for-process";
     let billingNo: string | undefined;
     let processedBy: string | undefined;
+
+    /**
+     * WHETHER THE BILLING'S WORK IS DONE, on file.
+     *
+     * READ OFF `dateProcessed` AND NOT OFF THE ROW'S EXISTENCE (2026-09-17).
+     * That shorthand held only while an unworked billing had no row: every
+     * billing carries its number from the start now — see the note on the
+     * column — so "has a row" would say the whole file is processed and For
+     * Process would be empty.
+     *
+     * The two signatures come after processing and are read as proof of it, so
+     * a row signed but somehow missing its processed date still counts. They
+     * cannot disagree in the seed; the `??` is for data that is not this seed's.
+     */
+    const workedOnFile = Boolean(
+      onFile &&
+        (onFile.dateProcessed || onFile.dateVerified || onFile.dateApproved),
+    );
+
     // A billing that is past For Process has had every billable plan terminated
     // — that is the rule that got it there — so one that was billed before this
     // session reports its plans terminated rather than the zero the (empty)
@@ -1846,25 +1974,39 @@ export function getServiceBillings(): ServiceBilling[] {
     // of a historical billing's accounts were terminated turns on the
     // discrepancy rule that lives in THIS module, so the data layer cannot
     // honestly say.
-    const terminatedCount = onFile
+    //
+    // A NUMBERED-BUT-UNWORKED BILLING IS NOT ONE OF THOSE. Its accounts are
+    // counted from the store like any other billing being worked now, which is
+    // what keeps its progress honest as a processor terminates down it.
+    const terminatedCount = workedOnFile
       ? billable.length
       : countTerminated(billable.map((s) => s.id));
 
     if (onFile) {
-      // WHERE IT HAS GOT TO IS TWO SIGNATURES, not a status column: verified and
-      // approved are people and dates on the row. Read in reverse order, because
-      // an approved billing is also a verified one.
+      billingNo = onFile.billingNo;
+      // Blank on a billing nobody has processed yet — see the seed. Normalised
+      // so every reader's `processedBy &&` guard behaves the same way it did
+      // when the field was simply absent.
+      processedBy = onFile.processedBy || undefined;
+    } else {
+      billingNo = created?.billingNo;
+      processedBy = created?.processedBy;
+    }
+
+    if (onFile && workedOnFile) {
+      // WHERE IT HAS GOT TO IS THREE DATES, not a status column: processed,
+      // verified and approved are dates on the row. Read in reverse order,
+      // because an approved billing is also a verified one.
       stage = onFile.dateApproved
         ? "approved"
         : onFile.dateVerified
           ? "verified"
           : "processed";
-      billingNo = onFile.billingNo;
-      processedBy = onFile.processedBy;
     } else {
-      billingNo = created?.billingNo;
-      processedBy = created?.processedBy;
-
+      // STILL BEING WORKED — whether it was raised in this session or arrived
+      // numbered on file. The rule below is the same either way, which is the
+      // point of the branch being shared.
+      //
       // A billing leaves "For Process" when its WORK is done, not when its
       // number is issued — and the difference matters, because the number is
       // what makes the rest of the work possible.
@@ -1901,7 +2043,34 @@ export function getServiceBillings(): ServiceBilling[] {
       // held by a discrepancy, so there is no work to have finished; it stays
       // here until one of them is cleared, which is the same rule read from the
       // other end.
+      // A PAPER FRANCHISE COMPLETES WHEN THE PROCESSOR SAYS SO, and it is the
+      // one billing here whose completion cannot be computed.
+      //
+      // The rule below asks whether every plan that can be terminated has been,
+      // and it can ask that because the data KNOWS how many there are — they
+      // arrived through the system with the endorsement. Nothing arrives for a
+      // paper franchise. Its accounts come into being one at a time as a
+      // processor types them off the hard copies, so the count is whatever has
+      // been keyed in so far and "all of them are terminated" is TRUE THE MOMENT
+      // THE FIRST ONE IS. Read that way, the billing would leave For Process
+      // after a single sheet with the rest of the stack still on the desk.
+      //
+      // WHAT IS MISSING IS NOT A DIFFERENT RULE BUT A FINAL LIST. So the
+      // processor closes the ENTRY — see `closeFranchiseEntry` — and from that
+      // moment the ordinary rule is asked of a list that can no longer grow, and
+      // it is exactly as true here as it is anywhere else.
+      //
+      // IT BRIEFLY MEANT COMPLETION ITSELF, and that was wrong in a way the user
+      // caught immediately (2026-09-15: "what the close billing does? it should
+      // be clickable if that was the locking of billing"). One act meaning both
+      // "no more accounts" and "the billing is done" could only be offered once
+      // every account was terminated — which is AFTER the only moment a lock is
+      // any use.
+      const entryStillOpen =
+        Boolean(franchise) && !getClosedFranchiseEntry(billingCode);
+
       const complete =
+        !entryStillOpen &&
         Boolean(billingNo) &&
         billable.length > 0 &&
         terminatedCount === billable.length;
@@ -1950,14 +2119,27 @@ export function getServiceBillings(): ServiceBilling[] {
       billingCode,
       billingNo,
       chapelCode,
-      chapelDesc: chapel?.chapelDesc ?? chapelCode,
+      // THE MORTUARY NAMES A PAPER FRANCHISE'S BILLING, because the mortuary is
+      // what was billed. Its `RefMortuary.branchCode` names a chapel and for a
+      // franchise row that often does not resolve — one row has none at all —
+      // so reading the chapel first would leave the billing anonymous on every
+      // screen that shows it. A franchisee is known by its funeral home.
+      chapelDesc: franchise
+        ? franchise.mortuaryName || chapel?.chapelDesc || billingCode
+        : (chapel?.chapelDesc ?? chapelCode),
       territoryCode: chapel?.territoryCode ?? "",
       period,
       periodLabel: periodLabel(period),
       company,
       stage,
-      isFranchise: chapel?.isFranchise ?? false,
-      isManualFranchise: chapel?.isManualFranchise ?? false,
+      // BOTH TRUE FOR A PAPER FRANCHISE WHATEVER THE CHAPEL SAYS. These two are
+      // read off the chapel, and a paper franchise's mortuary may resolve to no
+      // chapel — which would leave a hand-raised franchise billing reporting
+      // itself as a company-owned chapel's.
+      isFranchise: Boolean(franchise) || (chapel?.isFranchise ?? false),
+      isManualFranchise:
+        Boolean(franchise) || (chapel?.isManualFranchise ?? false),
+      isPaperFranchise: Boolean(franchise),
       isEndorsed: isEndorsedToAccounting(stage),
       services: billable,
       deficient,
@@ -2045,6 +2227,100 @@ export function getBillingMortCode(billingCode: string): string {
     ""
   );
 }
+
+/**
+ * WHETHER A DISCREPANCY STILL STOPS A PLAN BEING TERMINATED — off since
+ * 2026-09-15, at the user's instruction: "remove the view and send for now. then
+ * add the terminate button since what if that it is not yet terminated."
+ *
+ * WHAT IT TURNS OFF, in the two places that read it and nowhere else:
+ *
+ *   `terminationBlocker`  a discrepancy no longer refuses the termination.
+ *   `RecordActions`       the View · Send pair no longer replaces Terminate.
+ *
+ * THE RULE IT SUSPENDS was confirmed twice (2026-08-24 and again on the 25th): a
+ * discrepancy is an account that violates the rules and SHOULD NOT HAVE BEEN
+ * SERVED, so it is the one thing that holds a plan, and the only move offered is
+ * to tell the branch. That reasoning is not wrong — it is stranded. The module
+ * that corrects a discrepancy does not exist, so a discrepant account currently
+ * has no route to being anything else: the notice records that somebody was
+ * told, and then the account sits there for ever with no button that can finish
+ * it. A screen whose only offer is to send the same notice again is not a
+ * workflow.
+ *
+ * WHAT IS DELIBERATELY NOT CHANGED, and the thing to watch. A discrepant service
+ * is still held OUT of `ServiceBilling.services`, out of `totalCSP` and out of
+ * the completion denominator — see `getServiceBillings`. So terminating one now
+ * posts a `TblClaimsSP` row for an account the billing does not count. That is a
+ * real inconsistency and it is left standing on purpose: moving those services
+ * back into the money is a decision about what the company PAYS, not about which
+ * buttons a screen offers, and nobody has taken it.
+ *
+ * A CONSTANT RATHER THAN THE TWO EDITS: the button and the rule behind it have
+ * to agree, and they are in different files. Flip this and both come back.
+ */
+export const DISCREPANCY_HOLDS_TERMINATION = false;
+
+/* ============================ who runs the chapel =========================== */
+
+/**
+ * WHO RUNS THE CHAPEL A BILLING IS FOR (user, 2026-09-15: "add an identifier for
+ * franchisee and own chapel. it is also searchable").
+ *
+ * THREE VALUES AND NOT TWO, because the module already treats them as three and
+ * the difference is the one a reader most needs: a franchise ON the system bills
+ * exactly as a company-owned chapel does, and a franchise ON PAPER is the one
+ * whose accounts were typed in by hand against a billing somebody raised. Folding
+ * the two franchises together would hide the distinction the whole franchise path
+ * exists around.
+ *
+ * DERIVED, NEVER STORED. Both flags are already on the billing; this is a way of
+ * asking them once so that every screen showing the identifier shows the same
+ * one. See `ServiceBilling.isPaperFranchise`.
+ */
+export type BillingKind = "owned" | "franchise" | "paper-franchise";
+
+export function billingKind(billing: ServiceBilling): BillingKind {
+  if (billing.isPaperFranchise) return "paper-franchise";
+  return billing.isFranchise ? "franchise" : "owned";
+}
+
+/** The identifier as a row shows it. */
+export const BILLING_KIND_LABEL: Record<BillingKind, string> = {
+  owned: "Company-owned",
+  franchise: "Franchise",
+  "paper-franchise": "Franchise · paper",
+};
+
+/**
+ * The identifier at its shortest — `RefMortuary.Class`'s own two letters, plus a
+ * mark for the paper kind, which that column has no value for.
+ *
+ * THE SOURCE'S CODES RATHER THAN INVENTED ONES: FR and OW are what the reference
+ * table records and what somebody reading a report off the old system already
+ * knows. See `MortuaryClass`.
+ */
+export const BILLING_KIND_CODE: Record<BillingKind, string> = {
+  owned: "OW",
+  franchise: "FR",
+  "paper-franchise": "FR-P",
+};
+
+/**
+ * What typing in the search box will find the identifier by — every word
+ * somebody might reasonably reach for, not just the one the row prints.
+ *
+ * "OWNED" AND "COMPANY" BOTH, and "PAPER" and "MANUAL" both, because a search
+ * term is what the reader has in their head rather than what the label settled
+ * on. The cost of a synonym that nobody types is nothing; the cost of a missing
+ * one is a reader concluding there are no franchise billings.
+ */
+export const BILLING_KIND_TERMS: Record<BillingKind, string> = {
+  owned: "OW OWNED COMPANY COMPANY-OWNED",
+  franchise: "FR FRANCHISE FRANCHISED FRANCHISEE",
+  "paper-franchise":
+    "FR-P FR FRANCHISE FRANCHISED FRANCHISEE PAPER MANUAL ON PAPER",
+};
 
 /**
  * Every service on a billing, billable first and held last.
@@ -2148,7 +2424,7 @@ export function getBillingsByProcessor(
 
 /** One person as the staff picker lists them. */
 export interface ProcessorOption {
-  /** The name as it is stamped on the billing, e.g. "MARITES BELIESTA". */
+  /** The name as it is stamped on the billing, e.g. "JACKIE PANES". */
   processor: string;
   /** Billings this person has at the stage being worked. */
   billingCount: number;

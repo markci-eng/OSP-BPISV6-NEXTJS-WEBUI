@@ -21,6 +21,7 @@ import {
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { RowItem } from "@/components/info-card/row-item";
 import type { PlanholderDocument } from "../../claims-data";
+import { DIALOG_SHEET_CSS } from "./dialog-sheet";
 
 /** The document actions — no handlers wired yet; here to show the layout. */
 const ACTIONS = [
@@ -40,6 +41,15 @@ interface PlanholderDocumentDrawerProps {
    * removing; omit to hide the button.
    */
   onRemove?: () => void;
+  /**
+   * Show this as a CENTRED DIALOG rather than a sheet from the bottom edge.
+   *
+   * Same content, different presentation — see the twin prop on the payee
+   * sheets. Sliding up from the bottom is a phone's gesture; on
+   * `/claims/death-claim` the folder is one card in a column and its sheets
+   * should arrive the way that page's others do.
+   */
+  asDialog?: boolean;
 }
 
 /**
@@ -52,6 +62,7 @@ export function PlanholderDocumentDrawer({
   open,
   onClose,
   onRemove,
+  asDialog = false,
 }: PlanholderDocumentDrawerProps) {
   // Safety net: Chakra v3 (zag-js) can leave `pointer-events: none` / `data-inert`
   // stuck on <body> after a modal closes, freezing the page. Restore it.
@@ -79,14 +90,29 @@ export function PlanholderDocumentDrawer({
     >
       <Portal>
         <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
-        <Drawer.Positioner>
+        <Drawer.Positioner
+          alignItems={asDialog ? "center" : undefined}
+          justifyContent={asDialog ? "center" : undefined}
+          p={asDialog ? 3 : undefined}
+        >
           <Drawer.Content
-            roundedTop="2xl"
-            maxH="80vh"
+            borderRadius={asDialog ? "xl" : undefined}
+            roundedTop={asDialog ? undefined : "2xl"}
+            w={asDialog ? "full" : undefined}
+            maxW={
+              asDialog
+                ? { base: "calc(100dvw - 24px)", md: "640px" }
+                : undefined
+            }
+            maxH={asDialog ? { base: "88dvh", md: "82vh" } : "80vh"}
+            css={asDialog ? DIALOG_SHEET_CSS : undefined}
             overflow="hidden"
             display="flex"
             flexDirection="column"
           >
+            {/* The drag handle is the sheet's — a grab bar on a centred dialog
+                offers a gesture that does nothing there. */}
+            {!asDialog && (
             <Box pt={3} pb={1} display="flex" justifyContent="center">
               <Box
                 w="36px"
@@ -96,6 +122,7 @@ export function PlanholderDocumentDrawer({
                 opacity={0.7}
               />
             </Box>
+            )}
 
             <Drawer.Header
               pt={2}

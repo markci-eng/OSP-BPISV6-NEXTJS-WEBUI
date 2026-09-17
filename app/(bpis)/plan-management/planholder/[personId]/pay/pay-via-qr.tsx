@@ -11,7 +11,6 @@ import {
   STANDARD_SPACING,
 } from "@/lib/theme/standard-design-tokens";
 import { Page, QrScreen } from "osp-ui-kit";
-import { useDemoAuth } from "osp-ui-kit";
 
 type PayViaQrProps = {
   personId: string;
@@ -93,11 +92,6 @@ export default function PayViaQr({
     () => `PAY|${lpaNumber}|${personId}|${Math.round(computedAmount)}`,
     [lpaNumber, personId, computedAmount],
   );
-
-  const { login } = useDemoAuth();
-  useEffect(() => {
-    login();
-  }, [login]);
 
   if (screen === "loading" || screen === "success") {
     return (

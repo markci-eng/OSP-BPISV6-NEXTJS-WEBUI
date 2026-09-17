@@ -363,7 +363,7 @@ export function ProcessorWorkspace({
    *
    * IT USED TO BE A DEAD END. Working a staff member's pile to the bottom — the
    * ordinary and desirable outcome — left a panel reading "Nothing here under
-   * GRACE T. FERNANDEZ" over an empty column, and the only way on was the picker
+   * JOHN REY TAGADTAD" over an empty column, and the only way on was the picker
    * two controls up the rail. The screen answered a job finished by saying
    * nothing was there, which is true and useless: what somebody who has just
    * cleared a pile wants is the next pile.

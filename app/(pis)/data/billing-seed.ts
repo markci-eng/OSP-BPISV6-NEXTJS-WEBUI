@@ -182,24 +182,38 @@ const SEEDED_BILLING_BASE = 4000;
 const BILLED_STAGE_LADDER = [0, 0, 1, 0, 0, 2, 0, 1];
 
 /**
- * STAND-IN: the processors who put billings through.
+ * The processors who put billings through — the REAL service payables desk
+ * (user, 2026-09-14).
  *
- * There is no user table in this data layer and the seed records exactly one
- * name — `PROCESSOR` in `seed.ts`, which is also the signed-in user the
- * service-payables store stamps on anything created this session. One name would
- * collapse the dashboard's whole per-processor grouping into a single row, so
- * four more stand beside it.
+ * IT WAS FIVE INVENTED NAMES until then: the signed-in user plus four stand-ins
+ * that existed only so the dashboard's per-processor grouping had more than one
+ * row to draw. These three are the actual team, and they are the same three the
+ * territory ladders are assigned to — `ROSTER.SERVICE_PAYABLE` in
+ * `app/(pis)/claims/utilities/territory-assignment-store.ts`. A name stamped on
+ * a billing and a name holding the territory that billing came from are now the
+ * same person, which is the whole reason to prefer the real list: the invented
+ * one could never line up with an assignment.
  *
- * The signed-in user is kept FIRST and kept in the pool, so a billing created
+ * DEATH CLAIM STAFF ARE DELIBERATELY ABSENT. The roster splits the department in
+ * two and a person belongs to one side of it; MARITES BELIESTA processed
+ * billings here only because she was the one name this data layer had, and she
+ * is on the claims team. The signed-in user moved with this list rather than
+ * against it — see `PROCESSOR` in `seed.ts`.
+ *
+ * THE SIGNED-IN USER IS KEPT FIRST and kept in the pool, so a billing created
  * and completed this session lands in a group that already exists rather than
  * opening one of its own.
+ *
+ * THREE IS THE FLOOR, not a number with room under it: the deal below offsets
+ * processor, verifier and approver by 0, 1 and 2 so that no billing is verified
+ * or approved by the person who processed it. At three that is exact and every
+ * role is a different name; at two the offsets would wrap onto each other and
+ * the arrangement this data must not show would appear on every row.
  */
 export const PROCESSORS = [
-  "MARITES BELIESTA",
-  "ROLANDO A. SANTOS",
-  "JOCELYN M. DIMAANO",
-  "ARNEL P. VILLANUEVA",
-  "GRACE T. FERNANDEZ",
+  "JACKIE PANES",
+  "JOHN MICHAEL GAZA",
+  "JOHN REY TAGADTAD",
 ];
 
 /* ============================== demo overload ============================== */
@@ -1169,13 +1183,22 @@ export function buildBillingTables(db: PisDatabase): BillingTables {
 }
 
 /**
- * The billings that were created BEFORE this session — one `TblClaimsBilling`
- * row each, with the signatures they have collected so far.
+ * EVERY billing on file, each with its number — `TblClaimsBilling`, one row per
+ * chapel-period, carrying whatever the billing has collected so far.
  *
- * A chapel-period whose services are recent enough to still be in the paperwork
- * gets no row at all, and that absence IS the For Process queue.
+ * ALL OF THEM ARE NUMBERED NOW (user, 2026-09-17: "our data would now has a
+ * billing number"). It used to write rows ONLY for periods old enough to have
+ * been billed, and the absence of a row WAS the For Process queue — so a
+ * processor looking down the list of billings saw a column of billing codes with
+ * the occasional number in it, because most of the file had no number to show.
  *
- * The three signed states are dealt from {@link BILLED_STAGE_LADDER} rather than
+ * WHAT CARRIES THE QUEUE INSTEAD IS {@link ClaimsBillingRecord.dateProcessed},
+ * which is blank here for anything still to be worked. That is the honest shape
+ * anyway: a billing is NUMBERED before it is processed, because terminating a
+ * plan has to post it against a number. The row's mere existence never meant
+ * "finished" in the business, only in this seed.
+ *
+ * THE THREE SIGNED STATES are dealt from {@link BILLED_STAGE_LADDER} rather than
  * being drawn from anything: a billed period is processed, verified or approved,
  * and there is nothing on file that decides which.
  *
@@ -1204,15 +1227,22 @@ function alreadyBilled(
     return (latest - closedAt) / 86_400_000 <= BILLING_LAG_DAYS;
   };
 
-  // Newest period first, which is also the order the queue is worked in — so the
-  // numbers run backwards through the file the way a sequence actually does.
-  const codes = [...hdrByCode.keys()]
-    .filter((code) => !isRecent(periodByCode.get(code)!))
-    .sort((a, b) =>
-      periodKey(periodByCode.get(b)!).localeCompare(
-        periodKey(periodByCode.get(a)!),
-      ),
-    );
+  // OLDEST PERIODS FIRST FOR NUMBERING, so a billing's number says when it was
+  // raised: the oldest billing in the file carries the lowest number, and the
+  // one still waiting to be worked carries the highest. Sorting the other way
+  // — which is what this did while only billed periods were numbered — now
+  // reads backwards, because the unworked periods would take the low numbers.
+  //
+  // THE LADDER STILL COUNTS OVER THE BILLED ONES ONLY, so which historical
+  // billings are verified or approved does not shift when an unworked period is
+  // added to the file. `billedIndex` is that separate count.
+  const codes = [...hdrByCode.keys()].sort((a, b) =>
+    periodKey(periodByCode.get(a)!).localeCompare(
+      periodKey(periodByCode.get(b)!),
+    ),
+  );
+
+  let billedIndex = -1;
 
   return codes.map((billingCode, index) => {
     const period = periodByCode.get(billingCode)!;
@@ -1220,9 +1250,20 @@ function alreadyBilled(
     const sequence = SEEDED_BILLING_BASE + index + 1;
     const billingNo = `B${String(period.year).slice(-2)}${String(sequence).padStart(6, "0")}`;
 
+    /**
+     * STILL TO BE WORKED — the For Process queue, and the rows that are new to
+     * this table. They carry their NUMBER and the date the CIS upload put them
+     * here, and nothing else: no processor, no processed date, no signatures.
+     * Everything after the number is something somebody has yet to do.
+     */
+    const worked = !isRecent(period);
+    if (worked) billedIndex += 1;
+
     // Where this billing has got to — see {@link BILLED_STAGE_LADDER}, which
     // also has why the three are not evenly spread.
-    const stage = BILLED_STAGE_LADDER[index % BILLED_STAGE_LADDER.length];
+    const stage = worked
+      ? BILLED_STAGE_LADDER[billedIndex % BILLED_STAGE_LADDER.length]
+      : -1;
 
     // WHO PUT IT THROUGH — dealt round the list rather than hashed off the code
     // (2026-08-26). It was `hash(billingCode) % PROCESSORS.length`, and a hash
@@ -1241,9 +1282,14 @@ function alreadyBilled(
     // The three roles are offset from one deal so they can never collide: a
     // billing verified or approved by the person who processed it is the one
     // arrangement this data must not show.
-    const processedBy = PROCESSORS[index % PROCESSORS.length];
-    const verifier = PROCESSORS[(index + 1) % PROCESSORS.length];
-    const approver = PROCESSORS[(index + 2) % PROCESSORS.length];
+    //
+    // DEALT OVER THE WORKED BILLINGS, not over every row in the table. The
+    // unworked ones have nobody on them at all — nobody has processed them —
+    // and counting them in the deal would skip names and put the load back out
+    // of balance, which is the thing this replaced a hash to fix.
+    const processedBy = worked ? PROCESSORS[billedIndex % PROCESSORS.length] : "";
+    const verifier = PROCESSORS[(billedIndex + 1) % PROCESSORS.length];
+    const approver = PROCESSORS[(billedIndex + 2) % PROCESSORS.length];
 
     // The chapel's designated mortuary, which is the one a billing for it is
     // raised against.
@@ -1274,6 +1320,10 @@ function alreadyBilled(
       dateVerified: stage >= 1 ? daysAfter(closedISO, 5) : "",
       approvedBy: stage >= 2 ? approver : "",
       dateApproved: stage >= 2 ? daysAfter(closedISO, 8) : "",
+      // FINISHED, OR NOT YET — the line between For Process and everything past
+      // it. Three days after the cut closed, which puts it between the upload
+      // that raised the billing and the verification that follows it.
+      dateProcessed: worked ? daysAfter(closedISO, 3) : "",
       cisBillingNo: billingCode,
       cisUploadDate: daysAfter(closedISO, 2),
       company: BILLING_COMPANY,

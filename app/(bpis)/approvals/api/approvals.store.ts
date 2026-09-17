@@ -11,6 +11,7 @@ const store: Record<ApprovalView, any[]> = {
   drs: [...approvalConfig.drs.data],
   "movement-employees": [...approvalConfig["movement-employees"].data],
   "reassignment-sa2": [...approvalConfig["reassignment-sa2"].data],
+  "user-assignment": [...approvalConfig["user-assignment"].data],
 };
 
 export function readApprovals(view: ApprovalView): any[] {
@@ -19,4 +20,13 @@ export function readApprovals(view: ApprovalView): any[] {
 
 export function writeApprovals(view: ApprovalView, rows: any[]): void {
   store[view] = rows;
+}
+
+/**
+ * Files a new request at the top of a queue, where a reviewer meets it first —
+ * these lists are read newest-decision-first, and a request that landed behind
+ * twenty settled rows would be missed.
+ */
+export function enqueueApproval(view: ApprovalView, row: any): void {
+  store[view] = [row, ...store[view]];
 }

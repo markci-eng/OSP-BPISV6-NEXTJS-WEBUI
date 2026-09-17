@@ -7,6 +7,7 @@ import {
   type ReassignmentRequest,
   type SA2Reassignment,
   type EmployeeMovement,
+  type UserAssignmentRequest,
   mapDRSToDepositAndPayments,
 } from "@/app/(bpis)/data/approvals/types";
 
@@ -14,6 +15,7 @@ import {
   REASSIGNMENT_DATA,
   SA2_DATA,
   MOVEMENT_DATA,
+  USER_ASSIGNMENT_DATA,
   depositDtlList,
   depositHdrList,
   drsList,
@@ -23,6 +25,7 @@ import { reassignmentColumns } from "@/app/(bpis)/data/approvals/columns/reassig
 import { movementColumns } from "@/app/(bpis)/data/approvals/columns/movement-columns";
 import { sa2Columns } from "@/app/(bpis)/data/approvals/columns/sa2-columns";
 import { drsColumns } from "@/app/(bpis)/data/approvals/columns/drs-columns";
+import { userAssignmentColumns } from "@/app/(bpis)/data/approvals/columns/user-assignment-columns";
 
 const DRS_DATA = mapDRSToDepositAndPayments(
   drsList,
@@ -225,6 +228,56 @@ export const approvalConfig: Record<ApprovalView, ApprovalConfig> = {
         fromManager: "From Manager",
         toManager: "To Manager",
         branch: "Branch",
+        date: "Effective Date",
+        requestDate: "Request Date",
+        requester: "Requester",
+        status: "Status",
+      },
+    },
+  },
+
+  "user-assignment": {
+    title: "User Assignment",
+    description: "Review access group assignments.",
+    data: USER_ASSIGNMENT_DATA,
+    columns: userAssignmentColumns as ColumnDef<any, any>[],
+    getRowId: (row: UserAssignmentRequest) => row.id,
+
+    detailFields: [
+      { key: "id", label: "Request ID" },
+      { key: "user", label: "User" },
+      { key: "memberCode", label: "Member Code" },
+      { key: "position", label: "Position" },
+      { key: "branch", label: "Branch" },
+      { key: "currentGroups", label: "Current Groups" },
+      { key: "requestedGroups", label: "Requested Groups" },
+      { key: "permissionEffect", label: "Permission Effect" },
+      { key: "date", label: "Effective Date" },
+      { key: "requestDate", label: "Request Date", mandatory: true },
+      { key: "requester", label: "Requester", mandatory: true },
+      { key: "status", label: "Status", mandatory: true },
+    ],
+
+    mobile: {
+      primaryField: "user",
+      secondaryField: "requestedGroups",
+      badgeField: "status",
+      visibleFields: [
+        "memberCode",
+        "currentGroups",
+        "permissionEffect",
+        "requestDate",
+        "requester",
+      ],
+      labelMap: {
+        id: "Request ID",
+        user: "User",
+        memberCode: "Member Code",
+        position: "Position",
+        branch: "Branch",
+        currentGroups: "Current Groups",
+        requestedGroups: "Requested Groups",
+        permissionEffect: "Permission Effect",
         date: "Effective Date",
         requestDate: "Request Date",
         requester: "Requester",

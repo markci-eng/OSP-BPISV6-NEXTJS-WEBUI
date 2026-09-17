@@ -64,7 +64,6 @@ import {
   AppHeaderActions,
   Card,
   StaticCard,
-  useDemoAuth,
   useSidebarToggle,
 } from "osp-ui-kit";
 
@@ -469,12 +468,7 @@ export default function Dashboard() {
   });
 
   const name = "Mark Cristian";
-  const { login } = useDemoAuth();
   const toggleSidebar = useSidebarToggle();
-
-  useEffect(() => {
-    login();
-  }, [login]);
 
   return (
     <Box

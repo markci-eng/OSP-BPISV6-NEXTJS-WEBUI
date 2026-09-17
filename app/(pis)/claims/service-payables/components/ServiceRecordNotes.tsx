@@ -4,21 +4,35 @@
 // own heading between the record and its documents.
 //
 // THE DEATH CLAIM'S NOTES SECTION, one screen over (`PlanholderRemarks`, as the
-// claim detail renders it): the same heading, the same subtitle, the same "Add
-// Note" in the heading's action slot, the same read-only panel with "No notes on
-// file." in it, and the same sheet to write one. A processor who has used that
-// screen should not have to learn this one.
+// claim column renders it): the same heading, the same "Add Note" in its action
+// slot, the same read-only panel with "No notes on file." in it, and the same
+// dialog to write one in. A processor who has used that screen should not have to
+// learn this one.
 //
-// THE SECTION ITSELF IS `RemarksPanel` NOW (2026-08-27), in the claims
-// components folder, and this file is what is left once that is taken out: where
-// the notes come from, the button that writes one, and the two overlays it opens
-// in. It was drawn by hand here for a while — `SectionTitle` and a textarea
-// carrying the claim's values, copied — because `PlanholderRemarks` renders
-// REMARKS AND NOTES as a PAIR, which a service record cannot use: its remarks
-// are the plan holder's and sit under their card, its notes are the processor's
-// and sit here. The copy stopped being a copy the moment the Remarks section
-// wanted the same panel — see the note on `RemarksPanel`, which that component
-// now renders too.
+// THE SECTION IS `PlanholderRemarks` ITSELF NOW (user, 2026-09-11: "same as the
+// design of the component of the death claim"), and this file is what is left
+// once that is taken out: where the notes come from, and what is said when one is
+// written.
+//
+// IT WAS THE SAME DESIGN BY HAND BEFORE, WHICH IS THE PROBLEM. This file drew
+// `RemarksPanel` with a Notes title and an Add Note button, and then owned two
+// overlays to write the note in — a centred `ModalForm` on a desktop and the
+// kit's sheet on a phone. The claim's section is the same panel and one centred
+// dialog at every width. Two files, one design, and they had already drifted in
+// the one place a user would notice: which box the form arrives in.
+//
+// WHAT `showRemarks={false}` IS FOR. `PlanholderRemarks` renders REMARKS AND
+// NOTES as a pair, and a service record cannot use the pair — its remarks are the
+// PLAN HOLDER's and sit under their card, its notes are the processor's and sit
+// here. That flag is exactly the case the death claim's own column has, which is
+// why this is a call to the claim's component rather than a copy of it.
+//
+// WHAT WAS GIVEN UP is the phone sheet, which came up from the bottom edge where
+// a thumb is (user-confirmed 2026-08-26, when this section owned both overlays).
+// `asDialog` is centred at every width; on a handset it is a box at
+// `100dvw - 24px`, which is the box the claim's processors already write notes in
+// on the same handsets. One design across the two screens was the ask, and this
+// is the half of it that had to give.
 //
 // IT IS NOT INSIDE THE FORM, and that is deliberate rather than incidental. The
 // service record is a real `<form>` whose submit button is Terminate; a
@@ -32,30 +46,9 @@
 // fact, which is when somebody has finally found out why the amount had to be
 // typed over.
 
-import { useState } from "react";
-import {
-  Box,
-  Button,
-  Flex,
-  Textarea,
-  VStack,
-  useBreakpointValue,
-} from "@chakra-ui/react";
-import { LuPlus } from "react-icons/lu";
-import {
-  BottomQuickActions,
-  ModalForm,
-  ModalFormField,
-  PrimaryMdButton,
-  SecondaryMdButton,
-  TertiarySmButton,
-} from "osp-ui-kit";
-import { RemarksPanel } from "../../components/remarks-panel";
 import { toaster } from "../../components/toaster";
-import {
-  addServiceNote,
-  getServiceNotes,
-} from "../service-payables-store";
+import { PlanholderRemarks } from "../../planholder/components/PlanholderRemarks";
+import { addServiceNote, getServiceNotes } from "../service-payables-store";
 import type { ServiceRecord } from "../service-payables-data";
 
 export interface ServiceRecordNotesProps {
@@ -68,185 +61,35 @@ export function ServiceRecordNotes({ service }: ServiceRecordNotesProps) {
   // the order it is read in.
   const notes = getServiceNotes(service.id);
 
-  const [addOpen, setAddOpen] = useState(false);
-  const [draft, setDraft] = useState("");
-
-  /**
-   * WHERE THE ADD-NOTE FORM OPENS: a centred modal on anything that is not a
-   * phone, the kit's sheet on a phone (user-confirmed 2026-08-26).
-   *
-   * A sheet is a phone pattern. `BottomQuickActions` comes up from the bottom
-   * edge where a thumb is, which is exactly right on a handset and reads as a
-   * drawer sliding in from the side on a desktop — a lot of travel, and the
-   * focus landing at the far edge of a wide screen, for one textarea and two
-   * buttons. A centred box puts the one thing being answered in the middle of
-   * where the reader is already looking.
-   *
-   * MEASURED HERE RATHER THAN HANDED DOWN, which is the opposite of what
-   * `ServiceRecordDocuments` does with its `isDesktop` — and for a reason. That
-   * prop answers "page or drawer", which turns over at the WORKSPACE's `xl`;
-   * this asks "phone or not", which is `md`. A tablet is the case that separates
-   * them: it reads the drawer layout and it is not a phone, so it gets the
-   * centred box. Borrowing the other flag would have given it the sheet.
-   *
-   * `?? false` because the hook answers `undefined` on the server and on the
-   * first client render. Falling back to the sheet costs nothing here — both
-   * overlays start closed, so nothing is on screen to flash.
-   */
-  const isPhone = !(useBreakpointValue({ base: false, md: true }) ?? false);
-
-  const closeAdd = () => {
-    setAddOpen(false);
-    setDraft("");
-  };
-
-  const saveNote = () => {
-    const note = draft.trim();
-    if (!note) return;
-    addServiceNote(service.id, note);
-    closeAdd();
-    toaster.create({
-      type: "success",
-      title: "Note added",
-      description: `${service.lpaNo} · recorded in this session only`,
-    });
-  };
-
   return (
-    <Box>
-      {/* THE SHARED PANEL — see `RemarksPanel`, which is this section's heading
-          and its bordered read-only body, and the Remarks section above the
-          form as well. It was built by hand here first, out of `SectionTitle`
-          and a textarea with the claim's own values copied onto it; the moment
-          the Remarks section wanted the same thing, the copy became the second
-          of three and went into the claims components folder. */}
-      <RemarksPanel
-        title="Notes"
-        subtitle="Internal notes on record"
-        // ONE TO A LINE, where remarks are separated by a blank one: a note is
-        // a short line in a running log, and a blank line between each would
-        // make five of them a page.
-        value={notes.join("\n")}
-        empty="No notes on file."
-        action={
-          // Ghost, not solid: a heading control should stay quiet next to the
-          // section's own content — the claim's Notes heading uses this one.
-          //
-          // `type="button"` even out here. This section sits outside the record
-          // form today, and the day somebody moves it inside is the day an
-          // untyped button starts terminating plans. It costs one attribute.
-          <TertiarySmButton type="button" onClick={() => setAddOpen(true)}>
-            <LuPlus /> Add Note
-          </TertiarySmButton>
-        }
-      />
-
-      {/* TWO OVERLAYS, BOTH ALWAYS MOUNTED, and at most one of them open — see
-          {@link isPhone} for which.
-
-          NEITHER IS MOUNTED CONDITIONALLY, which is the part that matters. An
-          overlay unmounted while it is closing can leave `pointer-events: none`
-          on <body> and strand the whole page unclickable; rendering one or the
-          other on a breakpoint would do exactly that to anyone who resizes with
-          the form open. Both stand, `open` decides, and crossing the breakpoint
-          mid-write is an ordinary close on one and an ordinary open on the
-          other. THE DRAFT IS SHARED STATE, so what was typed survives that. */}
-
-      {/* Not a phone: a centred box. `ModalForm` is this module's own — the
-          create-billing dialog is the same component — so a processor meets one
-          kind of modal here and not two.
-
-          `confirmation={false}`: the kit otherwise asks "discard?" on the way
-          out. That guard is worth it for a billing, which mints a number quoted
-          outside this system; for one textarea it is a second dialog in front of
-          a decision nobody agonises over, and the note can be typed again. */}
-      <ModalForm
-        open={addOpen && !isPhone}
-        onOpenChange={(details) => {
-          if (!details.open) closeAdd();
-        }}
-        title="Add Note"
-        description="Kept with this service record — not part of the billing."
-        confirmation={false}
-        footer={
-          // The create-billing dialog's footer exactly: reversed from `sm` so
-          // the primary sits on the right, stacked full-width below that.
-          <Flex
-            w="full"
-            gap={3}
-            gridColumn={{ base: "span 2", sm: "span 1" }}
-            direction={{ base: "column", sm: "row-reverse" }}
-          >
-            <Button
-              type="button"
-              onClick={saveNote}
-              disabled={draft.trim().length === 0}
-              w={{ base: "full", sm: "auto" }}
-            >
-              Add
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeAdd}
-              w={{ base: "full", sm: "auto" }}
-            >
-              Cancel
-            </Button>
-          </Flex>
-        }
-      >
-        <ModalFormField fullWidth>
-          <Textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Write the note…"
-            rows={6}
-            resize="none"
-            bg="white"
-            autoFocus
-          />
-        </ModalFormField>
-      </ModalForm>
-
-      {/* A phone: the kit's sheet, which is what the claim's Add Note opens —
-          up from the bottom edge where a thumb is, drag to dismiss. Passing
-          children puts this form in its body in place of the usual action
-          list. */}
-      <BottomQuickActions
-        open={addOpen && isPhone}
-        onOpenChange={(next) => {
-          if (!next) closeAdd();
-        }}
-        title="Add Note"
-        subtitle="Kept with this service record — not part of the billing."
-      >
-        <VStack align="stretch" gap={3}>
-          <Textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Write the note…"
-            rows={6}
-            resize="none"
-            bg="white"
-            autoFocus
-          />
-          {/* One row at every width — Cancel on the left, Add on the right. */}
-          <Flex align="center" justify="space-between" gap={3}>
-            <SecondaryMdButton type="button" onClick={closeAdd}>
-              Cancel
-            </SecondaryMdButton>
-            <PrimaryMdButton
-              type="button"
-              onClick={saveNote}
-              disabled={draft.trim().length === 0}
-            >
-              Add
-            </PrimaryMdButton>
-          </Flex>
-        </VStack>
-      </BottomQuickActions>
-    </Box>
+    <PlanholderRemarks
+      // Notes only. The remarks this record shows belong to the PLAN HOLDER and
+      // are a section of their own above the form — see the note at the top.
+      showRemarks={false}
+      // NO SUBTITLE, which is the claim column's own call: "Notes" over
+      // "Internal notes on record" is the same word twice, and the panel says
+      // what it holds when it is empty.
+      showSubtitles={false}
+      // A centred dialog rather than the kit's sheet — the claim's gesture.
+      asDialog
+      // ONE TO A LINE, where remarks are separated by a blank one: a note is a
+      // short line in a running log, and a blank line between each would make
+      // five of them a page. The claim joins its own with a blank line because
+      // a claim note is a paragraph; these are not.
+      notes={notes.join("\n")}
+      onAddNote={(text) => {
+        addServiceNote(service.id, text);
+        // THE MODULE'S OWN TOASTER, not the claim's `sonner` — this screen's
+        // toasts are the claims toaster's, and the note that a write lives only
+        // in this session is a fact about THIS store rather than about the
+        // panel that collected the text.
+        toaster.create({
+          type: "success",
+          title: "Note added",
+          description: `${service.lpaNo} · recorded in this session only`,
+        });
+      }}
+    />
   );
 }
 

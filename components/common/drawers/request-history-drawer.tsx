@@ -13,6 +13,7 @@ import {
 import { Body, Small, OSPBadge } from "osp-ui-kit";
 import {
   LuFileCheck,
+  LuReceiptText,
   LuReplace,
   LuTrendingUpDown,
   LuFileText,
@@ -32,6 +33,13 @@ const typeIcon = (type: RequestHistoryItem["type"]) => {
       return <LuTrendingUpDown />;
     case "Change of Mode":
       return <LuReplace />;
+    // Claims — the drawer is opened from that profile too since 2026-09-16.
+    // A death claim keeps the document glyph the `default` would have given it;
+    // it is listed explicitly so the next kind added is not assumed to be one.
+    case "Death Claim":
+      return <LuFileText />;
+    case "Service Payable":
+      return <LuReceiptText />;
     default:
       return <LuFileText />;
   }

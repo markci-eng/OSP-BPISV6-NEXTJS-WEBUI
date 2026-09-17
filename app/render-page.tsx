@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { NotifyInstall } from "@splpi/estore-shared-components";
-import { AppLayout } from "osp-ui-kit";
+import { AppLayout, AppUser } from "osp-ui-kit";
 import { OspNavigationProvider } from "@/components/navigation/osp-nav-provider";
 import {
   SideBarItemsAMD,
@@ -40,6 +40,14 @@ const ROLES_WITHOUT_CHATBOT = new Set(["claims"]);
  */
 const HIDE_CHATBOT_CSS = `.chatbot-fab { display: none !important; }`;
 
+const appUser: AppUser = {
+  email: "joycemb@stpeter.com.ph",
+  name: "Joyce Basilio-Ramos",
+  role: "Branch Manager",
+  avatarUrl:
+    "https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no",
+};
+
 export function RenderPage({
   children,
   userRole,
@@ -70,6 +78,7 @@ export function RenderPage({
           notifications={Notifications}
           appName={userRole === "sales-agent" ? "eKolekta" : "One St. Peter"}
           appSubtitle="Life Plan Operations"
+          user={appUser}
         >
           {children}
         </AppLayout>

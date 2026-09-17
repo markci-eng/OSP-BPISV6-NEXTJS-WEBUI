@@ -28,6 +28,7 @@
 import type { KeyboardEventHandler } from "react";
 import { Box, Flex, IconButton, Input, type FlexProps } from "@chakra-ui/react";
 import { LuSearch, LuX } from "react-icons/lu";
+import { SURFACE_RADIUS } from "./section-card";
 
 /**
  * The two sizes, kept in one place because the parts have to agree.
@@ -103,7 +104,10 @@ export function SearchBar({
       align="center"
       border="1px solid"
       borderColor="gray.200"
-      borderRadius="lg"
+      // The area's one corner — this field is nearly always drawn INSIDE a
+      // card, and an 8px field inside a 5px card reads as rounder than the
+      // thing holding it. See `SURFACE_RADIUS`.
+      borderRadius={SURFACE_RADIUS}
       bg="white"
       // A floor rather than a height, as the original has it. It matches the
       // input's own height at this size, so the two agree instead of one

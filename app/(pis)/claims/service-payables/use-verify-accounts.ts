@@ -20,7 +20,9 @@ import { toaster } from "../components/toaster";
 import { formatCSP, type ServiceBilling, type ServiceRecord } from "./service-payables-data";
 import {
   approveBilling,
+  endorseBilling,
   getApprovedBilling,
+  getEndorsedBilling,
   getVerifiedAccount,
   getVerifiedBilling,
   verifyBilling,
@@ -297,6 +299,71 @@ export function useApproveBillings() {
       type: "success",
       title: `${count} approved`,
       description: `${formatCSP(total)} · on to For Endorsement`,
+    });
+
+    return true;
+  };
+}
+
+/**
+ * Whether a billing can be ENDORSED — it is at the endorsement stage and carries
+ * no endorsement yet.
+ *
+ * {@link canApproveBilling}'s shape one stage on, and short for the same reason:
+ * the accounts were read and signed two stages back, and an endorser is not
+ * being asked to do any of it again. What reaches this queue is a billing an
+ * approver has already passed.
+ */
+export function canEndorseBilling(billing: ServiceBilling): boolean {
+  return (
+    billing.stage === "approved" && !getEndorsedBilling(billing.billingCode)
+  );
+}
+
+/**
+ * Returns a function that endorses a billing, after asking.
+ *
+ * THE LAST OF THE FOUR SIGNATURES, and the only one whose billing does not go
+ * anywhere next: verifying sends it to For Approval, approving sends it to For
+ * Endorsement, and this sends it OUT — to accounting, and off this module's
+ * desks. So the dialog says where it goes and that it will not come back, which
+ * is the fact a mis-click here gets wrong.
+ *
+ * IT REPLACED A BUTTON THAT WROTE NOTHING (user, 2026-09-14: "instead of Next
+ * billing, Endorse is the name of the button"). For Endorsement had no act
+ * described, so the conveyor offered "Next billing" — a pager that stepped over
+ * the billing and left it exactly where it was, to be served again on the next
+ * restart. A button named after an act has to perform it, and the act it is
+ * named after is this one.
+ */
+export function useEndorseBilling() {
+  const { messageBox } = useMessageDialog();
+
+  return async (billing: ServiceBilling): Promise<boolean> => {
+    if (!canEndorseBilling(billing)) return false;
+
+    const where = billing.billingNo ?? billing.billingCode;
+    const accounts = `${billing.services.length} ${
+      billing.services.length === 1 ? "account" : "accounts"
+    }`;
+
+    const proceed = await messageBox({
+      title: "ENDORSE THIS BILLING?",
+      message:
+        `${where} — ${accounts}, ${formatCSP(billing.totalCSP)} — will be endorsed to accounting. ` +
+        `It leaves For Endorsement, and this is the last stage it passes through here.`,
+      confirmText: "Endorse",
+      cancelText: "Cancel",
+      variant: "confirmation",
+    });
+    if (!proceed) return false;
+
+    endorseBilling(billing.billingCode);
+
+    toaster.create({
+      type: "success",
+      title: `${where} endorsed`,
+      description: `${billing.chapelDesc} · endorsed to accounting`,
     });
 
     return true;

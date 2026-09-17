@@ -18,13 +18,11 @@ import {
   Clock,
   FileText,
   MessageSquare,
-  Printer,
   X,
   XCircle,
 } from "lucide-react";
 
 import type { ApprovalConfig } from "../config/approval-config";
-import { DRSPrintModal } from "./DRSPrintModal";
 
 type ApprovalDetailContentProps = {
   row: any;
@@ -38,7 +36,7 @@ function getNestedValue(row: any, path: string) {
 }
 
 function getApprovalStatus(row: any) {
-  return row.drs?.status ?? row.status;
+  return row.status;
 }
 
 function renderDetailValue(row: any, key: string) {
@@ -212,11 +210,9 @@ export function ApprovalDetailContent({
   onDeny,
 }: ApprovalDetailContentProps) {
   const [remarks, setRemarks] = React.useState("");
-  const [drsPrintOpen, setDrsPrintOpen] = React.useState(false);
 
   const status = getApprovalStatus(row);
   const isPending = status === "Pending";
-  const isDRSApproval = config.detailLayout === "drs-print";
 
   const primaryField = config.detailFields[0];
   const primaryValue = primaryField
@@ -284,20 +280,6 @@ export function ApprovalDetailContent({
             );
           })}
         </Box>
-
-        {isDRSApproval && (
-          <Box mt={4} pt={4} borderTopWidth="1px" borderColor="border.muted">
-            <Button
-              variant="outline"
-              size="sm"
-              borderRadius="full"
-              onClick={() => setDrsPrintOpen(true)}
-            >
-              <Printer size={14} />
-              View / Print DRS
-            </Button>
-          </Box>
-        )}
       </SectionCard>
 
       <SectionCard title="Remarks" icon={<MessageSquare size={13} />}>
@@ -306,7 +288,9 @@ export function ApprovalDetailContent({
           onChange={(e) => setRemarks(e.target.value)}
           placeholder={
             isPending
-              ? "Add remarks before approving or rejecting..."
+              ? config.canDeny
+                ? "Add remarks before approving or denying..."
+                : "Add remarks before approving..."
               : "No remarks added."
           }
           minH="80px"
@@ -333,16 +317,21 @@ export function ApprovalDetailContent({
             py={3}
             zIndex={1}
           >
-            <Button
-              flex="1"
-              variant="outline"
-              colorPalette="red"
-              borderRadius="full"
-              onClick={() => onDeny?.(row, remarks)}
-            >
-              <X size={15} />
-              Deny
-            </Button>
+            {/* ONLY WHERE THE QUEUE HAS A DENIAL — see `ApprovalConfig.canDeny`.
+                With it gone, Approve keeps its `flex="1"` and takes the whole
+                bar, which is the honest shape for a one-answer decision. */}
+            {config.canDeny && (
+              <Button
+                flex="1"
+                variant="outline"
+                colorPalette="red"
+                borderRadius="full"
+                onClick={() => onDeny?.(row, remarks)}
+              >
+                <X size={15} />
+                Deny
+              </Button>
+            )}
 
             <Button
               flex="1"
@@ -368,14 +357,6 @@ export function ApprovalDetailContent({
             This request has been {String(status).toLowerCase()}.
           </Text>
         </Box>
-      )}
-
-      {isDRSApproval && (
-        <DRSPrintModal
-          open={drsPrintOpen}
-          onClose={() => setDrsPrintOpen(false)}
-          row={row}
-        />
       )}
     </VStack>
   );

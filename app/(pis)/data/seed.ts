@@ -45,7 +45,21 @@ import {
 } from "./models";
 
 const AUDIT = { user: "system", date: "2026-01-01T00:00:00" };
-const PROCESSOR = "MARITES BELIESTA";
+
+/**
+ * The signed-in service payables processor.
+ *
+ * MOVED OFF MARITES BELIESTA (user, 2026-09-14), who is on the DEATH CLAIM team
+ * in the real roster and was stamping payables work only because theirs was the
+ * one name this data layer had. This is the first of `PROCESSORS` in
+ * `billing-seed.ts` — the person signed in has to be on the team whose queue
+ * they are working, and first so a billing completed this session joins a group
+ * the dashboard already shows.
+ *
+ * Three places say who "you" are and they must agree: here, `CREATED_BY` in
+ * `service-payables-store.ts`, and `ACTING_USER` in `service-documents-store.ts`.
+ */
+const PROCESSOR = "JACKIE PANES";
 
 // Plan holder rows were loaded by the migration, not by a user, and say so.
 // Declared up here with the other audit stamps rather than beside

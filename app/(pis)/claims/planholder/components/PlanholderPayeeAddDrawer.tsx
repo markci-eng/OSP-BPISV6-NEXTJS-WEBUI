@@ -26,6 +26,7 @@ import {
 } from "../../claims-data";
 import { DrawerPageHeader } from "./DrawerPageHeader";
 import { PayoutChannelSection } from "./PayoutChannelSection";
+import { DIALOG_SHEET_CSS } from "./dialog-sheet";
 
 /**
  * What the form collects.
@@ -63,6 +64,20 @@ interface PlanholderPayeeAddDrawerProps {
   onClose: () => void;
   /** The claim the payee is being named on — shown as the drawer's subtitle. */
   claimNo?: string;
+  /**
+   * Show this as a CENTRED DIALOG rather than a full-height sheet.
+   *
+   * Same content, different presentation. The drawer is right where this opens
+   * over a page you were reading and takes you somewhere — the claim detail's
+   * own use. On `/claims/death-claim` the payee list is one section of a
+   * column, and its add form and its detail should arrive the way the payments
+   * and beneficiaries look-ups do on that page: a sheet laid over the middle of
+   * the screen, sized to what is in it, closed with a cross.
+   *
+   * A prop rather than a second component, because only the chrome differs —
+   * the form, its validation and everything it saves are the same either way.
+   */
+  asDialog?: boolean;
   /**
    * Save the form.
    *
@@ -232,6 +247,7 @@ export function PlanholderPayeeAddDrawer({
   onClose,
   claimNo,
   onSave,
+  asDialog = false,
 }: PlanholderPayeeAddDrawerProps) {
   const relationOptions = useMemo(() => getBeneficiaryRelationOptions(), []);
   const channelOptions = useMemo(() => getPayoutChannelOptions(), []);
@@ -277,13 +293,27 @@ export function PlanholderPayeeAddDrawer({
     >
       <Portal>
         <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
-        <Drawer.Positioner>
+        <Drawer.Positioner
+          alignItems={asDialog ? "center" : undefined}
+          justifyContent={asDialog ? "center" : undefined}
+          p={asDialog ? 3 : undefined}
+        >
           <Drawer.Content
             display="flex"
             flexDirection="column"
-            h="100dvh"
-            maxH="100dvh"
-            borderRadius={0}
+            // A full-height sheet, or a centred one sized to its content — see
+            // `asDialog`. The dialog's numbers are `SectionPopup`'s, so the
+            // three sheets on that page are the same size and corner.
+            h={asDialog ? "auto" : "100dvh"}
+            maxH={asDialog ? { base: "88dvh", md: "82vh" } : "100dvh"}
+            w={asDialog ? "full" : undefined}
+            maxW={
+              asDialog
+                ? { base: "calc(100dvw - 24px)", md: "840px" }
+                : undefined
+            }
+            css={asDialog ? DIALOG_SHEET_CSS : undefined}
+            borderRadius={asDialog ? "xl" : 0}
             overflow="hidden"
           >
             {/* The same page-style bar the claim detail drawer carries — this
@@ -292,6 +322,7 @@ export function PlanholderPayeeAddDrawer({
               title="Add Payee"
               description={claimNo ?? "Named on this claim"}
               onBack={onClose}
+              dismiss={asDialog ? "close" : "back"}
             />
 
             <Drawer.Body py={5} overflowY="auto">

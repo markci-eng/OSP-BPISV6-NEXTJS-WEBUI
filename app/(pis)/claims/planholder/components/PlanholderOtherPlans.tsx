@@ -7,6 +7,7 @@ import {
   getOtherPlansForPerson,
   type PlanholderOtherPlan,
 } from "../../claims-data";
+import { SectionCard } from "../../components/section-card";
 import { PlanholderSectionHeader } from "./PlanholderSectionHeader";
 import { OtherPlanRow } from "./OtherPlanRow";
 
@@ -17,6 +18,18 @@ interface PlanholderOtherPlansProps {
   personId?: string;
   /** The plan being viewed — excluded from the list. */
   currentLpaNo?: string;
+  /**
+   * Draw the section inside the column's card, the same as Remarks and the
+   * folder above it.
+   *
+   * THE CARD IS DECIDED BY THE COLUMN, and everywhere else in this area the
+   * column draws it at the call site — see the note on {@link SectionCard}. It
+   * cannot here: this section renders NOTHING on a person who holds one plan,
+   * and a card wrapped around it from outside would survive as an empty card at
+   * the bottom of the page. Only this component knows whether there is anything
+   * to card, so the caller asks for it and the component decides where.
+   */
+  carded?: boolean;
 }
 
 /**
@@ -35,6 +48,7 @@ interface PlanholderOtherPlansProps {
 export function PlanholderOtherPlans({
   personId,
   currentLpaNo,
+  carded = false,
 }: PlanholderOtherPlansProps) {
   const router = useRouter();
 
@@ -51,11 +65,8 @@ export function PlanholderOtherPlans({
   // plan. See the note above: there is no empty state here by design.
   if (plans.length === 0) return null;
 
-  return (
-    // Owns its top margin, unlike the sections above: the page cannot wrap this
-    // in a spacing Box, because that Box's margin would survive as a phantom
-    // gap on the plans where this section renders nothing.
-    <Box mt={4}>
+  const body = (
+    <>
       <PlanholderSectionHeader
         title="Other Plans"
         subtitle="Other plans held by this person"
@@ -73,6 +84,16 @@ export function PlanholderOtherPlans({
           />
         ))}
       </VStack>
+    </>
+  );
+
+  return (
+    // Owns its top margin, unlike the sections above: the page cannot wrap this
+    // in a spacing Box, because that Box's margin would survive as a phantom
+    // gap on the plans where this section renders nothing. The card inside it
+    // is there for the same reason — see `carded`.
+    <Box mt={4}>
+      {carded ? <SectionCard>{body}</SectionCard> : body}
     </Box>
   );
 }

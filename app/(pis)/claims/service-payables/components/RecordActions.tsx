@@ -133,6 +133,7 @@ import { db, formatFiledDate } from "../../../data";
 import { ActionButtonRow } from "../../components/action-button-row";
 import { toaster } from "../../components/toaster";
 import {
+  DISCREPANCY_HOLDS_TERMINATION,
   DISCREPANCY_KIND_LABELS,
   type ServiceBilling,
   type ServiceRecord,
@@ -213,6 +214,19 @@ export interface RecordActionsProps {
    *                  billing's act — the endorsement has not been described yet
    *                  (user, 2026-08-27). The record is a pure reading, exactly
    *                  as approval's was before its button was put back here.
+   *   `"read"`       NOTHING, and for a different reason from the two above:
+   *                  those are stages whose act has not been described, this is
+   *                  a record that is not at the stage the screen is showing.
+   *                  A billing opened out of one of the conveyor's lists — an
+   *                  endorsed one, say — is READ in the queue a processor
+   *                  happens to be standing in, and every act this block could
+   *                  draw would be that queue's act applied to a document that
+   *                  left it. See `reading` on the conveyor page.
+   *
+   *                  IT IS NOT `"endorse"` REUSED. The two render the same
+   *                  nothing today, and naming this one after a stage would tie
+   *                  "a record being read out of a list" to whatever For
+   *                  Endorsement grows a button for.
    *
    * WHEN THE ENDORSEMENT IS DESCRIBED, this is one of the two places it belongs
    * — the other being the foot of `BillingAccordionCard` — and the approve
@@ -223,7 +237,7 @@ export interface RecordActionsProps {
    * a handful of booleans is a way to end up with a screen offering none of them
    * or all of them.
    */
-  action?: "terminate" | "verify" | "approve" | "endorse";
+  action?: "terminate" | "verify" | "approve" | "endorse" | "read";
   /**
    * The accounts TICKED IN THE RAIL, which the Verify button signs instead of
    * the open one (user, 2026-09-03).
@@ -261,6 +275,117 @@ export interface RecordActionsProps {
    * the verifier left it, which is the rule the card's own table follows.
    */
   onVerified?: () => void;
+  /**
+   * Told when an APPROVAL landed, and only on success.
+   *
+   * `onVerified`'s counterpart one stage on, and added for the conveyor
+   * (2026-09-11). The workspace this block was written for needed no such
+   * callback: approving moves the billing out of the queue, its list loses it,
+   * and the page's own effect closes the record — the note beside the button
+   * says so. A page that serves ONE billing has no list to lose it from, so it
+   * has to be told, or the next billing arrives without the beat that says one
+   * thing was replaced by another.
+   *
+   * Optional, and the archived screens pass nothing. They still behave exactly
+   * as they did.
+   */
+  onApproved?: () => void;
+  /**
+   * WHICH HALF OF THIS BLOCK TO DRAW — added for the conveyor (2026-09-11),
+   * where the two halves live in different columns.
+   *
+   *   `all`      both, in one block. Every caller before the conveyor, and the
+   *              default, so the archived screens are untouched.
+   *   `lookups`  Loan Details and SOA only — the two things that READ. They
+   *              stay in the rail because they are consulted WHILE working down
+   *              the accounts, and a lookup that moved to the foot of a
+   *              3,600px record would be a lookup nobody finds.
+   *   `commit`   everything that WRITES, and everything that explains why it
+   *              cannot: the stage's button, the discrepancy's View/Send pair
+   *              that stands in its place, and the captions under it. This half
+   *              goes to the last row of the record, because that is where the
+   *              decision is actually taken.
+   *
+   * THE SPLIT IS BY WHAT A CONTROL DOES, not by where it happens to fit. A
+   * reading and a commit are different kinds of act, and once they are in two
+   * columns the line has to be drawn somewhere defensible.
+   *
+   * ONE COMPONENT STILL DECIDES WHAT MAY BE DONE. Rendering it twice with two
+   * values is not two sources of truth: every rule about discrepancies,
+   * deficiencies, locks and stages is still asked and answered here once.
+   */
+  show?: "all" | "lookups" | "commit";
+  /**
+   * The explanatory lines UNDER the commit — "terminated into B26…", "waiting on
+   * 1 requirement", "has no billing number yet", the verifier's signature line.
+   *
+   * OFF ON THE CONVEYOR (user, 2026-09-11: "remove all the warning below the
+   * left section so the height would not be affected"), and the reason is the
+   * rail rather than the sentences. Each of these appears and disappears with
+   * the ACCOUNT — one plan is terminated, the next is not; one is short a
+   * document, the next is not — so the block under the button changed height
+   * every time the conveyor brought the next account, and a `position: sticky`
+   * column that changes height re-pins as you work. On a screen whose whole
+   * point is that the next account arrives in the same place, the furniture
+   * moving underneath it is the one thing that must not happen.
+   *
+   * NOTHING IS LOST THAT THE SCREEN DOES NOT SAY TWICE. The lock is visible —
+   * the form's fields are read-only and the button reads "Terminated"; the
+   * outstanding requirement is on the Deficiency list in the record, which is
+   * where it is worked; and the billing always has a number now that
+   * `useAutoBilling` mints one, so that last line cannot fire at all.
+   *
+   * On by default: the archived workspaces have a rail that is not a conveyor,
+   * where an account is opened deliberately and stays put.
+   */
+  captions?: boolean;
+  /**
+   * The smaller lookup buttons — the death claim's rail size (user,
+   * 2026-09-11: "make this the same size as the buttons of the death claim").
+   *
+   * ONLY THE HEIGHT. They stay two across at the rail's full width, which is
+   * what the user asked for and is right: two buttons have room for their
+   * labels beside an icon, where the claim's rail fits three to a row and needs
+   * every cell it can get. What was out of step was the SIZE — a 32px button
+   * here against a 26px one there, in two rails a processor uses in the same
+   * sitting.
+   */
+  compact?: boolean;
+  /**
+   * Another commit stands UNDER this block, and it is the larger of the two — so
+   * this one is drawn as an outline button and gives the solid fill to it (user,
+   * 2026-09-11: "the verified account would be a outline button then the verified
+   * billing would be the primary button").
+   *
+   * IT IS A REAL ORDER, NOT A PREFERENCE ABOUT COLOUR. For Verification has two
+   * signatures on one screen and they are not peers: signing an ACCOUNT is done
+   * once per plan holder and changes nothing outside the billing, while Verify
+   * Billing is the act that ends the visit and sends the document to For
+   * Approval. Two solid greens in one column said they were the same size of
+   * decision, and the one the eye landed on first was the smaller.
+   *
+   * IT ALSO FIXES WHAT THE FILLED BUTTON WAS SAYING WHEN IT WAS DEAD. Once the
+   * open account is signed the button reads "Verified" and is disabled — so the
+   * strongest mark in the rail was a green block for something already done,
+   * sitting above the live control the verifier actually needed next.
+   *
+   * ONLY THE VERIFY BRANCH HONOURS IT, because that is the only stage where two
+   * commits share a column: Terminate is alone on For Process, Approve is alone
+   * on For Approval (its own button is IN this block), and For Endorsement has
+   * no commit at all. A caller that passes this on any other stage would be
+   * asking for a screen with no primary action, so those branches ignore it.
+   *
+   * THE TERMINATE BRANCH HONOURED IT FOR ONE AFTERNOON (2026-09-15), for a paper
+   * franchise's Close Entry, and it was a misreading twice over: that act is a
+   * LOCK on which accounts exist rather than a rival commit, and it comes and
+   * goes while the record is on screen — so the flag changed under a mounted
+   * button and the styling did not follow. Close Entry is drawn as an outline
+   * beside Add Planholder now, and this branch is filled, always.
+   *
+   * Off by default — the archived workspaces put Verify Billing on the billing's
+   * own card, a column away, where nothing is competing with it.
+   */
+  subordinate?: boolean;
 }
 
 /*
@@ -279,6 +404,11 @@ export function RecordActions({
   action = "terminate",
   selection = [],
   onVerified,
+  onApproved,
+  show = "all",
+  captions = true,
+  compact = false,
+  subordinate = false,
 }: RecordActionsProps) {
   const { messageBox } = useMessageDialog();
 
@@ -301,6 +431,12 @@ export function RecordActions({
    * kind, until the endorsement is described. See {@link RecordActionsProps.action}.
    */
   const endorsing = action === "endorse";
+  /**
+   * The record is being READ off a list rather than worked at a stage — see
+   * {@link RecordActionsProps.action}. Grouped with the endorsement branch
+   * below, which is the other one that offers nothing.
+   */
+  const readingOnly = action === "read";
   const approveBilling = useApproveBilling();
   const verifyAccounts = useVerifyAccounts();
 
@@ -434,26 +570,59 @@ export function RecordActions({
       showCancel: false,
     });
 
+  /** See {@link RecordActionsProps.show}. */
+  const drawLookups = show !== "commit";
+  const drawCommit = show !== "lookups";
+
   return (
-    <Box>
+    // THE COMMIT'S OWN TOP MARGIN IS THE LOOKUPS' GAP. Each of the three
+    // buttons carries `mt={2}` to sit clear of the row above it; drawn on their
+    // own that row is not there, and the margin becomes a stray line of nothing
+    // at the top of the block. Zeroed on whatever lands first rather than
+    // unpicked from three buttons, so the `all` layout stays exactly as it was.
+    <Box
+      css={
+        drawLookups ? undefined : { "& > :first-child": { marginTop: 0 } }
+      }
+    >
       {/* Two across, and the row takes the rail's full width rather than the
           component's 420px default — at 340px the default never binds, and
           saying so keeps the two buttons the same width as the picker above and
           the button below. */}
-      <ActionButtonRow
-        columns={2}
-        maxW="100%"
-        actions={[
-          {
-            label: "Loan Details",
-            icon: LuHandCoins,
-            onClick: openLoanDetails,
-          },
-          { label: "SOA", icon: LuReceiptText, onClick: onOpenSoa },
-        ]}
-      />
+      {drawLookups && (
+        <ActionButtonRow
+          columns={2}
+          maxW="100%"
+          compact={compact}
+          actions={[
+            {
+              label: "Loan Details",
+              icon: LuHandCoins,
+              onClick: openLoanDetails,
+            },
+            { label: "SOA", icon: LuReceiptText, onClick: onOpenSoa },
+          ]}
+        />
+      )}
 
-      {discrepancy ? (
+      {/* THE VIEW · SEND PAIR IS OFF (user, 2026-09-15: "remove the view and
+          send for now. then add the terminate button since what if that it is
+          not yet terminated") — so a discrepant account falls through to the
+          ordinary commit below and CAN be terminated.
+
+          WHY IT WAS THERE, because the reasoning still stands and is only
+          stranded: a discrepancy is an account that should never have been
+          served, and the only answer is a correction made outside this module.
+          The module that makes it does not exist, so the pair had become the
+          only thing this screen could offer such an account — for ever. A
+          workflow whose single move is to resend the same notice is not one.
+
+          THE CONDITION IS KEPT, BEHIND THE FLAG, because the rule was confirmed
+          twice and is waiting rather than overturned. See
+          {@link DISCREPANCY_HOLDS_TERMINATION}, which also carries the warning
+          that goes with this: a terminated discrepant account is still OFF the
+          billing's total. */}
+      {!drawCommit ? null : DISCREPANCY_HOLDS_TERMINATION && discrepancy ? (
         /* HELD BY A DISCREPANCY, and the two moves that exist for one are READ
            IT and TELL SOMEBODY (user-confirmed 2026-08-25).
 
@@ -470,7 +639,10 @@ export function RecordActions({
            the old screen carried, pointed at the thing that actually holds a
            service. */
         <>
-          <Flex gap={2} mt={2}>
+          {/* The gap is the LOOKUPS' — so it goes when they do. Split across two
+              columns this pair is the first thing in its block, and a top margin
+              there would be a stray line of nothing above the only control. */}
+          <Flex gap={2} mt={drawLookups ? 2 : 0}>
             <Button
               flex="1"
               minW={0}
@@ -531,10 +703,12 @@ export function RecordActions({
            screen: the billing is created one screen back. So the button stays
            where it is, unpressable, and the line under it says what is missing. */
         <>
-          {endorsing ? (
-            /* A PURE READING. The billing is approved; what happens to it next
-               has not been decided, so this block offers nothing rather than
-               guessing at it. See {@link RecordActionsProps.action}. */
+          {endorsing || readingOnly ? (
+            /* A PURE READING, from either of the two directions that produce
+               one: For Endorsement, whose act has not been described, and a
+               record opened out of a list, which is not at this stage at all.
+               Both offer nothing rather than guessing at it. See
+               {@link RecordActionsProps.action}. */
             null
           ) : approving ? (
             /* THE BILLING'S APPROVAL, FROM INSIDE ONE OF ITS ACCOUNTS (user,
@@ -569,9 +743,15 @@ export function RecordActions({
                 color="white"
                 borderRadius="lg"
                 _hover={{ bg: BRAND_COLORS.darkGreen }}
-                onClick={() => void approveBilling(billing)}
+                onClick={async () => {
+                  if (await approveBilling(billing)) onApproved?.();
+                }}
               >
-                <LuCircleCheck size={14} />
+                {/* NO ICON (user, 2026-09-14: "remove the icons in the
+                    buttons"). A tick beside the word Approve says the word
+                    again, and the rail's commits are now plain labels
+                    throughout — Terminate never had one, and Verify Billing
+                    never had one. See the verify branch below. */}
                 {`Approve ${billing.billingNo ?? billing.billingCode}`}
               </Button>
             )
@@ -596,10 +776,43 @@ export function RecordActions({
               <Button
                 w="full"
                 mt={2}
-                bg={BRAND_COLORS.primaryGreen}
-                color="white"
                 borderRadius="lg"
-                _hover={{ bg: BRAND_COLORS.darkGreen }}
+                // OUTLINE WHEN THE BILLING'S OWN SIGNATURE IS UNDER IT — see
+                // {@link RecordActionsProps.subordinate}, where the order of the
+                // two acts is argued.
+                //
+                // THE KIT'S OUTLINE, AND SO THE KIT'S GREEN (user, 2026-09-11:
+                // "the outline button would be the same as the osp-uikit which
+                // the same color of the green"). It was drawn in gray first —
+                // the hairline the lookups above it use — and gray says
+                // "secondary control", where `SecondaryMdButton` says
+                // "secondary ACTION": label and border both in #109448, which is
+                // `primaryGreen` and the exact colour measured off the kit's own
+                // button (rgb(16, 148, 72)). A signature is an act, and the
+                // outline that means an act in this design system is the green
+                // one.
+                //
+                // THE COLOURS ARE THE KIT'S, THE GEOMETRY IS THE RAIL'S. The
+                // kit's button is a fixed 40px with a 5px corner and 14px/400
+                // type; every button in this column is `lg`-cornered and sized
+                // by `compact` to the death claim's rail. Borrowing the whole
+                // component would have made the one green-outlined button the
+                // one button in the rail that is a different shape.
+                {...(subordinate
+                  ? {
+                      variant: "outline" as const,
+                      bg: "white",
+                      borderColor: BRAND_COLORS.primaryGreen,
+                      color: BRAND_COLORS.primaryGreen,
+                      // The green wash this app hovers green-edged things with
+                      // — the document rows and the chapel rows already use it.
+                      _hover: { bg: "#f4faf6" },
+                    }
+                  : {
+                      bg: BRAND_COLORS.primaryGreen,
+                      color: "white",
+                      _hover: { bg: BRAND_COLORS.darkGreen },
+                    })}
                 // NOTHING TICKED, NOTHING TO SIGN — which is now the ONE reason
                 // this button is dead, and it covers the two that used to be
                 // separate. An account already signed has no tick box, so it
@@ -610,7 +823,12 @@ export function RecordActions({
                 disabled={selectedCount === 0}
                 onClick={() => void signOff()}
               >
-                <LuCircleCheck size={14} />
+                {/* NO ICON (user, 2026-09-14: "remove the icons in the
+                    buttons"). The tick was doing least of all on this one: the
+                    button already says Verified in the past tense once the
+                    account is signed, so the glyph beside it was the same fact
+                    a third time — after the word and after the mark on the
+                    row. */}
                 {/* IT NAMES ITS SUBJECT. A selection wider than the record on
                     screen is counted, because a bare "Verify Account" over four
                     ticks would be the one control here saying the wrong thing
@@ -635,7 +853,7 @@ export function RecordActions({
                   with, and the reason the button above is disabled. A verifier
                   coming back to a half-done billing reads this to find out
                   whether the account was theirs. */}
-              {verified && (
+              {captions && verified && (
                 <Flex align="flex-start" gap={1.5} color="gray.500" mt={2}>
                   <Box color={BRAND_COLORS.primaryGreen} flexShrink={0} mt="2px">
                     <LuCircleCheck size={12} />
@@ -657,9 +875,24 @@ export function RecordActions({
               form={SERVICE_RECORD_FORM_ID}
               w="full"
               mt={2}
+              borderRadius="lg"
+              // ALWAYS THE FILLED BUTTON, and `subordinate` is deliberately not
+              // read here — see {@link RecordActionsProps.subordinate}, which
+              // says why only the verify branch honours it.
+              //
+              // IT BRIEFLY DID, for a paper franchise's Close Entry (2026-09-15),
+              // and both halves of that were wrong. Close Entry is a LOCK on the
+              // list of accounts, not a second commit competing with this one, so
+              // there was never a decision here to be the smaller half of. And
+              // the flag flipped WHILE THE BUTTON WAS ON SCREEN — closing the
+              // entry takes the lock away — which left the element rendering with
+              // the style it first mounted with: an outline Terminate standing
+              // alone in the column with nothing to be subordinate to.
+              //
+              // The rail's rule is simpler for it: the green fill is the COMMIT,
+              // and the entry controls around it are outlines.
               bg={BRAND_COLORS.primaryGreen}
               color="white"
-              borderRadius="lg"
               _hover={{ bg: BRAND_COLORS.darkGreen }}
               disabled={!created || locked}
             >
@@ -684,7 +917,7 @@ export function RecordActions({
               this is what answers "why can I not edit any of these fields". It
               gives way once the account is signed off, the line above having
               taken over the space with the newer of the two facts. */}
-          {locked && !verified && (
+          {captions && locked && !verified && (
             <Flex align="flex-start" gap={1.5} color="gray.500" mt={2}>
               <Box color={BRAND_COLORS.primaryGreen} flexShrink={0} mt="2px">
                 <LuCircleCheck size={12} />
@@ -712,7 +945,7 @@ export function RecordActions({
               is short something — a document chased after the termination, which
               is the ordinary case and the reason a deficiency never held the
               plan in the first place. */}
-          {outstanding > 0 && (
+          {captions && outstanding > 0 && (
             <Flex align="flex-start" gap={1.5} color="gray.500" mt={2}>
               <Box color="#b45309" flexShrink={0} mt="2px">
                 <LuTriangleAlert size={12} />
@@ -731,7 +964,7 @@ export function RecordActions({
               is the one thing worse than a control that half works — and every
               other state on this screen already explains itself, so this one
               does too. Nothing is written under the button when it works. */}
-          {!created && (
+          {captions && !created && (
             <Flex align="flex-start" gap={1.5} color="gray.500" mt={2}>
               <Box color="#b45309" flexShrink={0} mt="2px">
                 <LuTriangleAlert size={12} />

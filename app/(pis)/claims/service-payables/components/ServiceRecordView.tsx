@@ -23,17 +23,18 @@
 // the page is at — so the swap moves what is in the main column and leaves the
 // user's place in the rail intact.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Checkbox, Flex, Grid, GridItem, Text } from "@chakra-ui/react";
 import { useMessageDialog } from "osp-ui-kit";
 import { db } from "../../../data";
 import { FieldLabel } from "../../components/field-label";
-import { RemarksPanel } from "../../components/remarks-panel";
+import { SectionCard } from "../../components/section-card";
 import { SectionTitle } from "../../components/section-title";
 import {
   BackButton,
   DrawerPageHeader,
 } from "../../planholder/components/DrawerPageHeader";
+import { PlanholderRemarks } from "../../planholder/components/PlanholderRemarks";
 import {
   deceasedName,
   formatCSP,
@@ -60,6 +61,7 @@ import {
   STACKED_LIST_MAX_HEIGHT,
   WORKSPACE_GRID,
   railListBox,
+  scrollDetailIntoView,
   workspaceRail,
 } from "../workspace-layout";
 import { ChapelPicker } from "./ChapelPicker";
@@ -69,6 +71,8 @@ import {
   PlanholderServiceList,
 } from "./PlanholderServiceList";
 import { RecordActions } from "./RecordActions";
+import { RecordLookups } from "./RecordLookups";
+import { type DocumentTab } from "../../components/document-folder";
 import { ServiceRecordDocuments } from "./ServiceRecordDocuments";
 import { ServiceRecordForm } from "./ServiceRecordForm";
 import { ServiceRecordNotes } from "./ServiceRecordNotes";
@@ -142,7 +146,7 @@ export interface ServiceRecordViewProps {
    * account that termination created. Defaulted to the first, so the page that
    * has always opened this view keeps the button it has always had.
    */
-  action?: "terminate" | "verify" | "approve" | "endorse";
+  action?: "terminate" | "verify" | "approve" | "endorse" | "read";
   /**
    * Which identifier the chapel picker reads its billings by — handed to
    * `ChapelPicker`, where it is documented.
@@ -164,7 +168,7 @@ export interface ServiceRecordViewProps {
    * the second queue had a record to open.
    *
    * A NAME AND NOT A CODE. It is read as the end of a sentence — "Back to
-   * GRACE T. FERNANDEZ" — so it takes whatever the queue calls that place on its
+   * JOHN REY TAGADTAD" — so it takes whatever the queue calls that place on its
    * own screen, and the caller is the only thing that knows it.
    */
   backTo?: string;
@@ -246,6 +250,24 @@ export function ServiceRecordView({
 
   /** The Statement of Account overlay, opened from the rail. */
   const [soaOpen, setSoaOpen] = useState(false);
+
+  /**
+   * The folder's open list, and where the folder IS — the conveyor's own pair,
+   * for the Deficient tick on the form. See `showDeficiencies` below, and the
+   * page's copy of this, which is the same three lines for the same reason: the
+   * tick and the list it points at are in two different components, so the one
+   * that holds both has to do the pointing.
+   */
+  const [docsTab, setDocsTab] = useState<DocumentTab>("documents");
+  const documentsRef = useRef<HTMLDivElement>(null);
+
+  /** Open the deficiency list and go to it — the Deficient tick's press. */
+  const showDeficiencies = () => {
+    setDocsTab("deficiencies");
+    // Animated, the conveyor's own. It stops where the page ends — there is
+    // no reserve under the folder; see `workspace-layout`.
+    scrollDetailIntoView(documentsRef.current, { smooth: true });
+  };
 
   /* --------------------- signing off more than one account --------------------- */
 
@@ -528,7 +550,7 @@ export function ServiceRecordView({
                       different rows.
 
                       A STAFF NAME FITS WHERE A TERRITORY DID NOT: the longest
-                      in the file — "ROLANDO A. SANTOS" — is well inside the cap,
+                      in the file — "JOHN MICHAEL GAZA" — is well inside the cap,
                       so the queue that made this label matter is the one that
                       never has to truncate it. The longest territories still
                       clip — and they share the row with an identifier again,
@@ -670,6 +692,9 @@ export function ServiceRecordView({
             billing={billing}
             onOpenSoa={() => setSoaOpen(true)}
             locked={locked}
+            // COMMIT ONLY — Loan Details and SOA are cards in the record column
+            // now. See `RecordLookups`, and the conveyor's copy of this.
+            show="commit"
             action={action}
             // What the rail has gathered, and what to forget once it is signed.
             // Empty on every queue but For Verification, where the block falls
@@ -690,8 +715,11 @@ export function ServiceRecordView({
           its range — see {@link MAIN_COLUMN_TAIL}. That is not academic here:
           this rail is the tall one, and the first thing it loses off the top is
           the way back out of the record. */}
+      {/* A STACK OF CARDS, the claim column's rhythm — the conveyor's record
+          column took it on 2026-09-11 and this is the same column a stage back,
+          rendered into a drawer as well as a page. See the note there. */}
       <GridItem css={asPage ? MAIN_COLUMN_TAIL : STACKED_ITEM}>
-        <Flex direction="column" gap={7}>
+        <Flex direction="column" gap={5}>
           {/* Who it is for, then what they are owed. In that order because the
               form is checked AGAINST the plan holder — the dates, the plan and
               the contestability above it are what a processor reads before
@@ -704,8 +732,10 @@ export function ServiceRecordView({
           {/* THE PLAN'S OWN TRAIL — what has happened to the ACCOUNT: issued,
               collected, lapsed, reinstated, transferred. It sat as a run of
               plain lines at the foot of the card above until now; it is the
-              claims area's shared `RemarksPanel` here, which is the section the
-              death claim has always drawn a trail in (user, 2026-08-27).
+              claim column's own section here — `PlanholderRemarks` with the
+              notes half switched off, which is the call the death claim makes
+              (user, 2026-08-27, and the same component rather than the panel
+              underneath it since 2026-09-11).
 
               DIRECTLY UNDER THE CARD, and not down beside Notes where the claim
               keeps its own pair. On a claim both belong to the claim, so they
@@ -713,34 +743,60 @@ export function ServiceRecordView({
               HOLDER's, which is what the card above is, while the notes below
               are the processor's own working notes on this service. Pairing
               them would say they were two halves of one record. */}
-          <RemarksPanel
-            title="Remarks"
-            subtitle="Remarks on record"
-            value={planRemarks}
-            empty="No remarks on file."
-          />
+          <SectionCard>
+            <PlanholderRemarks
+              remarks={planRemarks}
+              showNotes={false}
+              showSubtitles={false}
+            />
+          </SectionCard>
 
-          <ServiceRecordForm
-            service={service}
-            billing={billing}
-            onSave={handleSave}
-            locked={locked}
-            /* Which queue the record was opened from — the heading and the
-               Deficient tick turn on it. See the prop's own note. */
-            action={action}
-          />
+          <SectionCard>
+            <ServiceRecordForm
+              service={service}
+              billing={billing}
+              onSave={handleSave}
+              locked={locked}
+              /* Which queue the record was opened from — the heading turns on
+                 it. See the prop's own note. */
+              action={action}
+              /* The Deficient tick opens the folder's deficiency list and
+                 scrolls to it — the conveyor's own wiring, kept in step here so
+                 the same tick does the same thing in the drawer. */
+              onShowDeficiencies={showDeficiencies}
+            />
+          </SectionCard>
+
+          {/* THE TWO LOOK-UPS, in the death claim's own place in the column —
+              after the record they are consulted about, before the notes and
+              the folder. See `RecordLookups`. */}
+          <RecordLookups lpaNo={service.lpaNo} />
 
           {/* BETWEEN THE RECORD AND ITS DOCUMENTS, which is where the claim
               puts its own Notes: after the block of fields that IS the record
               and before the paperwork attached to it. Its own section, and not
               a block inside the form — see the note at the top of
               `ServiceRecordNotes` for why that distinction is load-bearing. */}
-          <ServiceRecordNotes service={service} />
+          <SectionCard>
+            <ServiceRecordNotes service={service} />
+          </SectionCard>
 
           {/* `asPage` IS the answer to "is this the two-column page or the
               drawer", so it is told rather than left to work it out from a
-              media query of its own — see the prop's note. */}
-          <ServiceRecordDocuments service={service} isDesktop={asPage} />
+              media query of its own — see the prop's note.
+
+              The box around it carries the ref the Deficient tick scrolls to;
+              `SectionCard` takes none. */}
+          <Box ref={documentsRef}>
+            <SectionCard>
+              <ServiceRecordDocuments
+                service={service}
+                isDesktop={asPage}
+                tab={docsTab}
+                onTabChange={setDocsTab}
+              />
+            </SectionCard>
+          </Box>
         </Flex>
       </GridItem>
 

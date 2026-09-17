@@ -5,6 +5,7 @@ import type {
   StaffLeaderboardEntry,
   MonthlyProcessYear,
 } from "@/app/(bpis)/data/dashboard/types";
+import { getStaff } from "./utilities/territory-assignment-store";
 
 export const processOverview: ProcessOverview = {
   newRequests: 28,
@@ -35,18 +36,39 @@ export const quotaAndCollections: QuotaAndCollections = {
   nComAcctCollection: 58,
 };
 
+/**
+ * How many claims each name is shown having processed, longest bar first.
+ *
+ * THE COUNTS ARE INVENTED AND THE NAMES ARE NOT, which is the one thing to hold
+ * in mind here. They are the ladder this board has always had — 27 down to 12,
+ * a spread chosen so the bars are visibly different lengths — and they say
+ * nothing whatever about the people they are now beside. Nobody's actual volume
+ * is in this repo: the dashboard has no source, it is hardcoded (see CLAUDE.md).
+ * Do not read a ranking off this and do not put it in front of the staff on it
+ * as one.
+ *
+ * Seven entries rather than the ten it held, because the department has seven
+ * people. The board draws whatever length it is given.
+ */
+const LEADERBOARD_COUNTS = [27, 24, 22, 20, 17, 15, 12];
+
+/**
+ * The claims department, ranked.
+ *
+ * DERIVED FROM THE ROSTER rather than retyped (user, 2026-09-14). The board held
+ * ten invented names; these are the real department, and taking them from
+ * `ROSTER` — the same list the territory ladders assign and `PROCESSORS` stamps
+ * on billings — means a hire or a correction reaches this board without anybody
+ * remembering it exists. It is the fourth place a name could have been copied
+ * to, and copies are what put four spellings of one person on four screens.
+ *
+ * DEATH CLAIM FIRST, THEN PAYABLES, which is roster order and nothing more. The
+ * pairing of a name to a count is arbitrary — see {@link LEADERBOARD_COUNTS}.
+ */
 export const staffLeaderboard: StaffLeaderboardEntry[] = [
-  { name: "GIL ANTHONY REYES", ns: 27 },
-  { name: "MARJORIE CASTILLO", ns: 24 },
-  { name: "EDUARDO NAVARRO", ns: 22 },
-  { name: "IMELDA SORIANO", ns: 20 },
-  { name: "ALVIN TORRES", ns: 17 },
-  { name: "ROSEMARIE DAVID", ns: 15 },
-  { name: "NESTOR AQUINO", ns: 12 },
-  { name: "CHONA LIM", ns: 10 },
-  { name: "BENEDICT FLORES", ns: 7 },
-  { name: "ANALYN PADILLA", ns: 5 },
-];
+  ...getStaff("DEATH_CLAIM"),
+  ...getStaff("SERVICE_PAYABLE"),
+].map((name, i) => ({ name, ns: LEADERBOARD_COUNTS[i] ?? 0 }));
 
 export const monthlyProcesses: MonthlyProcessYear[] = [
   {

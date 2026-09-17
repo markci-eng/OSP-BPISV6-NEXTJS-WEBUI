@@ -27,17 +27,10 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import {
-  LuBadgeCheck,
   LuEllipsis,
-  LuEye,
-  LuFilePlus,
-  LuFileX,
   LuFolderOpen,
-  LuPencil,
   LuPlus,
-  LuPrinter,
   LuSend,
-  LuTrash2,
   LuUser,
 } from "react-icons/lu";
 import { toast } from "sonner";
@@ -48,6 +41,13 @@ import { RowItem } from "@/components/info-card/row-item";
 import ActionButtons, {
   type ActionButtonItem,
 } from "@/components/primitives/ActionButtons";
+import {
+  EDIT_ACTION,
+  ENDORSE_ACTION,
+  MORE_CLAIM_ACTIONS,
+  PRIMARY_CLAIM_ACTIONS,
+  VERIFY_ACTION,
+} from "../../components/claim-action-items";
 import {
   addClaimNote,
   endorseClaim,
@@ -83,6 +83,7 @@ import {
   type PayeeFormValues,
 } from "./PlanholderPayeeAddDrawer";
 import { PlanholderClaimEditDrawer } from "./PlanholderClaimEditDrawer";
+import { claimPayeeFromForm } from "./claim-payee-from-form";
 
 const claimNoOf = (claim: ClaimRequest) => claim.claimNo ?? claim.reference;
 const claimTypeOf = (claim: ClaimRequest) => claim.benefit ?? claim.kind ?? "—";
@@ -175,83 +176,10 @@ const detailItems = (
   { label: "Audit Date", value: claim.auditDateDisplay },
 ];
 
-/** An entry in the "More" sheet, before its onClick is bound to the claim. */
-type ClaimAction = Omit<
-  Extract<ActionButtonItem, { type?: "action" }>,
-  "onClick"
->;
-
-/**
- * The most-used claim actions. They apply to the whole claim, not to any one
- * section, and appear twice: as the tile row at the top of the body, and as the
- * first entries in the "More" sheet. Print and Delete are not wired yet; the
- * rest are.
- */
-const ENDORSE_ACTION = "Endorse";
-const VERIFY_ACTION = "Verify";
-const EDIT_ACTION = "Edit";
-
-const PRIMARY_ACTIONS: ClaimAction[] = [
-  { label: "Print", icon: LuPrinter, description: "Print this claim" },
-  {
-    label: EDIT_ACTION,
-    icon: LuPencil,
-    description: "Correct the claim's details",
-  },
-  {
-    label: "Delete",
-    icon: LuTrash2,
-    description: "Remove this claim",
-    iconBg: "#fdeaea",
-    iconColor: "#c53030",
-  },
-  {
-    label: VERIFY_ACTION,
-    icon: LuBadgeCheck,
-    description: "Mark the claim verified",
-  },
-  {
-    label: ENDORSE_ACTION,
-    icon: LuSend,
-    description: "Send the claim onward",
-  },
-];
-
-/**
- * The remaining legacy PISv5 toolbar actions. They don't earn a tile of their
- * own, so they only appear in the "More" sheet — the same ActionButtons /
- * BottomQuickActions pairing the sales agent profile uses. None are wired to a
- * back end yet, so each one says so rather than failing silently.
- */
-const MORE_ACTIONS: ClaimAction[] = [
-  { label: "Preview", icon: LuEye, description: "Open the claim as printed" },
-  { label: "Reprint", icon: LuPrinter, description: "Print another copy" },
-  // No "Notes" entry. It opened nothing this page does not already have: the
-  // Notes section below writes a note from its own heading, which is the same
-  // action arrived at by reading what is already on file first.
-  {
-    label: "Edit Nature of Claim",
-    icon: LuPencil,
-    description: "Change how this claim is classified",
-  },
-  {
-    label: "Create QuitClaim",
-    icon: LuFilePlus,
-    description: "Draft the quit claim document",
-  },
-  {
-    label: "Print QuitClaim",
-    icon: LuPrinter,
-    description: "Print the quit claim document",
-  },
-  {
-    label: "Denial Letter",
-    icon: LuFileX,
-    description: "Issue a denial letter for this claim",
-    iconBg: "#fdeaea",
-    iconColor: "#c53030",
-  },
-];
+// The action LISTS live in `claim-action-items` now — see that file for why.
+// This screen keeps what is its own: what each one does when pressed.
+const PRIMARY_ACTIONS = PRIMARY_CLAIM_ACTIONS;
+const MORE_ACTIONS = MORE_CLAIM_ACTIONS;
 
 /**
  * A whole-claim action, styled like the benefit tiles in the death claim
@@ -354,7 +282,7 @@ function CompRow({
  * Swiping the row left reveals the remove action — see {@link SwipeToRemoveRow},
  * which owns the gesture for every list in this area.
  */
-function PayeeRow({
+export function PayeeRow({
   payee,
   onClick,
   onRequestRemove,
@@ -612,77 +540,22 @@ export function PlanholderClaimDetail({
     values: PayeeFormValues,
     payouts: BeneficiaryPayout[],
   ) => {
-    const lastName = values.lastName.trim();
-    const firstName = values.firstName.trim();
-    // Guard the two fields the row is identified by; the rest can be filled in
-    // later without leaving a blank row behind.
-    if (!lastName || !firstName) {
+    // The row itself is built by a shared helper, so this page and
+    // `/claims/death-claim` name a payee identically. See
+    // `claimPayeeFromForm` — `undefined` means the name was blank.
+    const payee = claimPayeeFromForm({
+      values,
+      payouts,
+      claimNo: claimNoOf(claim),
+      existingCount: payees.length,
+    });
+    if (!payee) {
       toast.error("First name and last name are required");
       return;
     }
 
-    const middleName = values.middleName.trim();
-    const suffix = values.suffix.trim();
-    // Assembled the same way every other name in claims is, rather than
-    // concatenating here.
-    const name = toFullName({
-      firstName,
-      middleName: middleName || undefined,
-      lastName,
-      suffix: suffix || undefined,
-    });
-
-    const address =
-      [
-        [values.lotBldgUnit.trim(), values.street.trim()]
-          .filter(Boolean)
-          .join(" "),
-        values.barangay.trim() ? `Brgy. ${values.barangay.trim()}` : "",
-        values.district.trim(),
-        values.city.trim(),
-        values.province.trim(),
-      ]
-        .filter(Boolean)
-        .join(", ") || "—";
-
-    const payeeAmount = Number(values.amount) || 0;
-
-    // A payee row shows one payout, so the first channel registered is the one
-    // it is paid through — the same choice `toClaimPayees` makes when it picks
-    // the active account off a person's list.
-    const primary = payouts[0];
-
-    setPayees((prev) => [
-      {
-        // No payee record on file for one added in-session, hence the index
-        // past the end and the empty person id.
-        idx: prev.length + 1,
-        claimNo: claimNoOf(claim),
-        personId: "",
-        name,
-        relation: values.relation || "—",
-        amount: payeeAmount,
-        amountDisplay:
-          "₱" +
-          payeeAmount.toLocaleString("en-PH", { minimumFractionDigits: 2 }),
-        birthDate: values.birthDate ? formatFiledDate(values.birthDate) : "—",
-        birthDateISO: values.birthDate,
-        address,
-        contact: "—",
-        isOnHold: values.isOnHold,
-        payout: primary
-          ? `${primary.channelName} ${primary.accountNoMasked}`
-          : "—",
-        channelName: primary?.channelName ?? "—",
-        channelCode: primary?.channelCode ?? "",
-        accountNo: primary?.accountNo ?? "—",
-        accountNoMasked: primary?.accountNoMasked ?? "—",
-        payoutBranch: "—",
-      },
-      ...prev,
-    ]);
-
-    toast.success(`${name} added`, { description: claimNoOf(claim) });
+    setPayees((prev) => [payee, ...prev]);
+    toast.success(`${payee.name} added`, { description: claimNoOf(claim) });
     setAddPayeeOpen(false);
   };
 

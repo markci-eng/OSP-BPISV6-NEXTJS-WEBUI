@@ -16,8 +16,17 @@ export function useApprovalMutations(view: ApprovalView) {
       rowIds: string[];
       status: ApprovalStatus;
     }) => updateApprovalStatus(view, rowIds, status),
-    onSuccess: (updated) => {
+    onSuccess: (updated, { status }) => {
       queryClient.setQueryData(["approvals", view], updated);
+
+      // Approving an assignment writes the roles through to the policy
+      // service, so the access console is now showing a user's old groups —
+      // and the group rails count their members from the same map.
+      if (view === "user-assignment" && status === "Approved") {
+        queryClient.invalidateQueries({
+          queryKey: ["role-access", "user-roles"],
+        });
+      }
     },
   });
 

@@ -37,8 +37,10 @@ import { useSyncExternalStore } from "react";
 
 import { db } from "../../data";
 import type {
+  BillingPeriod,
   ClaimsBillingRecord,
   ClaimsSpRecord,
+  PersonName,
   TerminationStatus,
 } from "../../data";
 
@@ -123,10 +125,15 @@ export interface SavedServiceRecord extends ServiceRecordDetails {
  * this point — the record, the discrepancy check, the termination — is the same
  * process, which is exactly what the rules say it should be.
  *
- * `endorsedName` is the one field that is NOT looked up, and it is the point of
- * the exercise: it is the name the franchise wrote on its paperwork, kept
- * verbatim so it can be compared against the plan holder on file. When the two
- * differ, that is the name discrepancy.
+ * `deceased` is the one field that is NOT looked up, and it is the point of the
+ * exercise: it is the name the franchise wrote on its paperwork, kept verbatim
+ * so it can be compared against the plan holder on file. When the two differ,
+ * that is the name discrepancy.
+ *
+ * IT IS STORED IN TWO PARTS because that is how the service record asks for it —
+ * `ServiceRecordForm` has a Deceased Lastname and a Deceased Firstname, and a
+ * single string keyed here would have to be guessed apart to fill them. Typed
+ * apart, what the processor enters is what the form opens with.
  */
 export interface ManualService {
   /** Stable id — the `ServiceRecord.id` this becomes. */
@@ -136,8 +143,8 @@ export interface ManualService {
   chapelCode: string;
   /** The plan number off the franchise's paperwork. */
   lpaNo: string;
-  /** The plan holder's name as the franchise wrote it. Verbatim. */
-  endorsedName: string;
+  /** The deceased, as the franchise wrote it. Verbatim, both parts. */
+  deceased: PersonName;
   /** ISO. When the chapel rendered the service. */
   serviceDateISO: string;
   /** ISO. */
@@ -146,6 +153,48 @@ export interface ManualService {
   remarks?: string;
   addedAtISO: string;
   addedBy: string;
+}
+
+/**
+ * A BILLING RAISED BY HAND AGAINST A MORTUARY — the paper franchise's, and the
+ * only kind of billing in this module that is not derived from something.
+ *
+ * WHY IT NEEDS A RECORD OF ITS OWN. Every other billing exists because the data
+ * says it does: a `TblBillingHdr` row, or services carrying a code. A franchise
+ * that submits on paper endorses nothing through the system, so until a
+ * processor raises one there is no billing anywhere — and the moment they do,
+ * it has no accounts on it either. Without this map that billing would be
+ * invisible between being created and having its first plan holder keyed in,
+ * which is precisely the window the whole path opens in.
+ *
+ * IT IS THE MORTUARY THAT IS BILLED, not a chapel. `RefMortuary.branchCode`
+ * names a chapel and for a franchise row it often does not resolve — one has
+ * none at all — so {@link chapelCode} may be empty and nothing may depend on
+ * it. The mortuary is what was typed, what prices the accounts, and what the
+ * billing is read by.
+ */
+export interface FranchiseBilling {
+  /**
+   * The key this billing is held under everywhere in the module — see
+   * {@link franchiseBillingCode}.
+   *
+   * IT IS NOT A CIS BILLING CODE and must never be shown as one. A paper
+   * franchise has no CIS code; this is a local handle, minted so the maps that
+   * key on `billingCode` have something to key on.
+   */
+  billingCode: string;
+  /** `RefMortuary.mortCode` — the franchisee, and the rate every account prices at. */
+  mortCode: string;
+  mortuaryName: string;
+  /** The mortuary's chapel, when its own `branchCode` resolves. Often empty. */
+  chapelCode: string;
+  period: BillingPeriod;
+  /** "SEPTEMBER 1-7, 2026". */
+  periodLabel: string;
+  /** ISO date on the cash voucher. */
+  cvDateISO: string;
+  createdAtISO: string;
+  createdBy: string;
 }
 
 /**
@@ -254,8 +303,14 @@ export interface ServiceTarget {
  * Whoever is signed in creates the billing. Hard-coded for now, exactly as the
  * processor's name is on the death-claim side — the signed-in user is not wired
  * into this area yet.
+ *
+ * MUST MATCH `PROCESSOR` in `app/(pis)/data/seed.ts` and `ACTING_USER` in
+ * `service-documents-store.ts`: three copies of one fact, and a billing created
+ * this session that disagrees with the seed opens a processor group of its own
+ * on the dashboard. It moved off MARITES BELIESTA on 2026-09-14, who is on the
+ * death claim team; see `PROCESSORS` in `billing-seed.ts`.
  */
-const CREATED_BY = "MARITES BELIESTA";
+const CREATED_BY = "JACKIE PANES";
 
 /* -------------------------- billing numbers -------------------------- */
 
@@ -315,6 +370,46 @@ const terminationsByServiceId = new Map<string, ClaimsSpRecord>();
 
 /** Plan holders keyed in by hand this session, by billing code. */
 const manualServicesByBilling = new Map<string, ManualService[]>();
+
+/**
+ * Billings raised by hand against a mortuary this session — the paper
+ * franchise's. See {@link FranchiseBilling}.
+ *
+ * SEPARATE FROM {@link billingsByCode} though every entry here has one there
+ * too. That map is the `TblClaimsBilling` row — the number, the CV date, the
+ * signatures — and it is the same row whether the billing was derived or
+ * raised. This one holds what a derived billing gets from its CODE and a paper
+ * franchise has nowhere else to get: which mortuary, which period, and the fact
+ * that it was raised by hand at all.
+ */
+const franchiseBillingByCode = new Map<string, FranchiseBilling>();
+
+/**
+ * Paper-franchise billings whose ENTRY IS CLOSED — the stack of hard copies has
+ * been keyed in, and nothing more may be added.
+ *
+ * IT LOCKS THE ENTRY. IT DOES NOT COMPLETE THE BILLING (user, 2026-09-15: "what
+ * the close billing does? it should be clickable if that was the locking of
+ * billing in order not allowed to be added"). Those are two different facts and
+ * conflating them is what made this act unusable for a day: the button meant
+ * both, so it could only be offered once every account was terminated — by which
+ * point the one thing it is actually for, stopping anything else being added,
+ * had had no chance to matter.
+ *
+ * WHY THE LOCK HAS TO BE A PERSON'S ACT. Every other billing completes by a rule
+ * the data can check — every plan that can be terminated has been, and the data
+ * knows how many there are because they arrived through the system. Nothing
+ * arrives for a paper franchise. Its accounts come into being one at a time as
+ * they are typed, so "all of them are terminated" is TRUE AFTER THE FIRST ONE.
+ * Only the processor knows the stack is finished.
+ *
+ * WHAT COMPLETION IS, NOW THAT THIS IS ONLY THE LOCK: the module's ordinary rule
+ * — numbered, and every plan that can be terminated has been — asked of a list
+ * that can no longer grow. See `getServiceBillings`, where the two meet. So a
+ * paper franchise does not get a special completion rule any more; it gets the
+ * normal one plus a gate that says the list is final.
+ */
+const closedFranchiseEntryByCode = new Map<string, VerifiedAccount>();
 
 /**
  * Notes written against a service, oldest first — the processor's own working
@@ -402,6 +497,26 @@ const verifiedBillingByCode = new Map<string, VerifiedAccount>();
  */
 const approvedBillingByCode = new Map<string, VerifiedAccount>();
 
+/**
+ * Billings ENDORSED this session, by billing code — the last signature this
+ * module takes, and the one that hands the payable to accounting.
+ *
+ * THE FOURTH MAP, for the reason there are three above it: a fourth act by a
+ * fourth person. It was the one stage with no act at all until 2026-09-14 — the
+ * conveyor's last queue offered a "Next billing" button that paged past the
+ * billing without writing anything, because the endorsement had never been
+ * described. What the user asked for (2026-09-14) was the button named Endorse,
+ * and a button named after an act has to perform it.
+ *
+ * WHAT IT DOES NOT DO IS MOVE THE BILLING TO A FIFTH STAGE. `BillingStage` has
+ * four, the queue tiles show four, and endorsement is where this department's
+ * work ENDS rather than another desk it lands on — so an endorsed billing simply
+ * leaves the conveyor's last queue. See `billingQueue`, which filters on this.
+ * When accounting's own side is described, that is when a fifth stage earns its
+ * place; until then a stage nobody works would be a queue that only ever fills.
+ */
+const endorsedBillingByCode = new Map<string, VerifiedAccount>();
+
 /** Discrepancies put right this session, by service id. */
 const resolvedByServiceId = new Map<string, ResolvedDiscrepancy>();
 
@@ -468,6 +583,11 @@ export function createBilling(
     dateVerified: "",
     approvedBy: "",
     dateApproved: "",
+    // NOR IS IT PROCESSED. Creating mints the number so the plans under it can
+    // be terminated; the work itself is what follows. A billing created here
+    // stays in For Process until every billable plan on it is terminated, which
+    // is the completion rule in `getServiceBillings` and not this row.
+    dateProcessed: "",
     cisBillingNo: target.billingCode,
     cisUploadDate: new Date().toISOString().slice(0, 10),
     company: target.company,
@@ -479,6 +599,165 @@ export function createBilling(
   billingsByCode.set(target.billingCode, billing);
   emit();
   return billing;
+}
+
+/* --------------------------- paper franchise --------------------------- */
+
+/**
+ * The mark a paper franchise's local key carries, and the thing that makes it
+ * unmistakable for a CIS billing code: no derived code contains a colon.
+ */
+export const FRANCHISE_BILLING_PREFIX = "FR:";
+
+const MONTH_ABBR = [
+  "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+  "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
+];
+
+/**
+ * The key a paper franchise's billing is held under — `FR:BT1-01:1SEP26`.
+ *
+ * IT IS DERIVED, AND THAT IS THE POINT. A paper franchise has no CIS billing
+ * code, but every map in this module keys on one, so it needs a handle. Making
+ * that handle a function of the mortuary and the period rather than a fresh id
+ * buys the one rule this path most needs enforcing: {@link createBilling}
+ * returns the first result untouched for a code it has already seen, so keying
+ * the SAME franchisee for the SAME cut twice cannot mint a second billing
+ * number. Numbering off a counter would have needed a guard written by hand,
+ * and a guard written by hand is one somebody can forget to ask.
+ *
+ * SHAPED LIKE `billingCodeFor` BUT NOT PRODUCED BY IT. The derived code is
+ * chapel + cut + month + year, and this is mortuary + cut + month + year behind
+ * a prefix — close enough to read at a glance, marked clearly enough that
+ * nothing mistakes it for the real thing. `periodFromBillingCode` is never
+ * asked about one: a franchise billing carries its period as a field.
+ */
+export function franchiseBillingCode(
+  mortCode: string,
+  period: BillingPeriod,
+): string {
+  const tail = `${period.cut}${MONTH_ABBR[period.month]}${String(period.year).slice(-2)}`;
+  return `${FRANCHISE_BILLING_PREFIX}${mortCode}:${tail}`;
+}
+
+/** Whether a billing code is a paper franchise's local key rather than a CIS one. */
+export function isFranchiseBillingCode(billingCode: string): boolean {
+  return billingCode.startsWith(FRANCHISE_BILLING_PREFIX);
+}
+
+/**
+ * Raise a billing for a franchise that submits on paper — the franchise
+ * intake's one write.
+ *
+ * TWO RECORDS, ONE ACT. The `TblClaimsBilling` row is written by
+ * {@link createBilling} exactly as it is for any other billing, because it IS
+ * the same row — the number, the CV date, the mortuary. What this adds is the
+ * franchise record beside it, holding the mortuary and the period that a
+ * derived billing would have got from its code.
+ *
+ * RAISED EMPTY, AND THAT IS THE ORDER OF THE PROCESS rather than a compromise.
+ * Nothing has been endorsed, so there is nothing to count: the number comes
+ * first because a terminated plan has to be posted against something, and the
+ * plan holders are keyed in against it afterwards, one at a time. See
+ * `canAddManualService`, which has always said exactly this.
+ *
+ * SAFE TO CALL TWICE. The key is derived from the mortuary and the period, so
+ * a processor who raises the same franchisee's same cut again gets the billing
+ * they already have, with the number it was already given.
+ */
+export function createFranchiseBilling(input: {
+  mortCode: string;
+  mortuaryName: string;
+  chapelCode: string;
+  period: BillingPeriod;
+  periodLabel: string;
+  cvDateISO: string;
+  company: string;
+}): { franchise: FranchiseBilling; billing: ClaimsBillingRecord } {
+  const billingCode = franchiseBillingCode(input.mortCode, input.period);
+
+  const existing = franchiseBillingByCode.get(billingCode);
+  if (existing) {
+    return { franchise: existing, billing: billingsByCode.get(billingCode)! };
+  }
+
+  const billing = createBilling(
+    {
+      billingCode,
+      chapelCode: input.chapelCode,
+      periodLabel: input.periodLabel,
+      // The PERIOD's year and not the clock's, the rule every other minting
+      // follows: the sequence in a billing number counts that year's services.
+      year: input.period.year,
+      // Nothing on it yet. The figure is a snapshot of the row at creation, as
+      // it is for every billing; what the module counts is the accounts
+      // themselves.
+      accountCount: 0,
+      company: input.company,
+    },
+    {
+      cvDateISO: input.cvDateISO,
+      mortuaryCode: input.mortCode,
+      mortuaryName: input.mortuaryName,
+    },
+  );
+
+  const franchise: FranchiseBilling = {
+    billingCode,
+    mortCode: input.mortCode,
+    mortuaryName: input.mortuaryName,
+    chapelCode: input.chapelCode,
+    period: input.period,
+    periodLabel: input.periodLabel,
+    cvDateISO: input.cvDateISO,
+    createdAtISO: new Date().toISOString(),
+    createdBy: CREATED_BY,
+  };
+
+  franchiseBillingByCode.set(billingCode, franchise);
+  emit();
+  return { franchise, billing };
+}
+
+/** A paper-franchise billing by its key, if this session raised one. */
+export function getFranchiseBilling(
+  billingCode: string,
+): FranchiseBilling | undefined {
+  return franchiseBillingByCode.get(billingCode);
+}
+
+/** Every paper-franchise billing raised this session. */
+export function getFranchiseBillings(): FranchiseBilling[] {
+  return [...franchiseBillingByCode.values()];
+}
+
+/**
+ * Close a paper franchise's ENTRY — the processor saying the stack of hard
+ * copies has all been keyed in.
+ *
+ * WHAT IT STOPS is anything else being added. What it does NOT do is finish the
+ * billing: the accounts still have to be terminated, and the ordinary
+ * completion rule takes it from there. See {@link closedFranchiseEntryByCode}.
+ *
+ * Written once, like every other signature in this file — and there is
+ * deliberately no re-opening. A list declared final that can be un-declared is
+ * not a lock, and the answer to a sheet found afterwards is the supplementary
+ * billing, which is what that module is for.
+ */
+export function closeFranchiseEntry(billingCode: string): void {
+  if (closedFranchiseEntryByCode.has(billingCode)) return;
+  closedFranchiseEntryByCode.set(billingCode, {
+    verifiedBy: CREATED_BY,
+    dateVerified: new Date().toISOString().slice(0, 10),
+  });
+  emit();
+}
+
+/** The lock on a paper franchise's entry, if the processor has closed it. */
+export function getClosedFranchiseEntry(
+  billingCode: string,
+): VerifiedAccount | undefined {
+  return closedFranchiseEntryByCode.get(billingCode);
 }
 
 /**
@@ -837,6 +1116,37 @@ export function getApprovedBilling(
   billingCode: string,
 ): VerifiedAccount | undefined {
   return approvedBillingByCode.get(billingCode);
+}
+
+/**
+ * Endorse a billing — the act that hands it to accounting, and the last thing
+ * this module does to it.
+ *
+ * THE APPROVAL'S COUNTERPART one stage on, written the same way: signed once,
+ * and a billing already endorsed keeps the date it was endorsed on. What has no
+ * counterpart is the destination — verifying sends a billing to For Approval and
+ * approving sends it to For Endorsement, while this sends it OUT. See
+ * {@link endorsedBillingByCode}.
+ *
+ * NOTHING IN `TblClaimsBilling` HOLDS IT YET. The row carries the verified and
+ * approved pairs and no third; this map is the shape that column pair will have
+ * when it exists, which is what the other three did before their columns were
+ * confirmed.
+ */
+export function endorseBilling(billingCode: string): void {
+  if (endorsedBillingByCode.has(billingCode)) return;
+  endorsedBillingByCode.set(billingCode, {
+    verifiedBy: CREATED_BY,
+    dateVerified: new Date().toISOString().slice(0, 10),
+  });
+  emit();
+}
+
+/** The endorsement on a billing, if one has been given this session. */
+export function getEndorsedBilling(
+  billingCode: string,
+): VerifiedAccount | undefined {
+  return endorsedBillingByCode.get(billingCode);
 }
 
 /** How many of these accounts have been verified. */

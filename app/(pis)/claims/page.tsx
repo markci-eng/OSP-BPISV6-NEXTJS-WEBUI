@@ -61,10 +61,8 @@ import {
 import { OSPBadge } from "osp-ui-kit";
 import { IconType } from "react-icons";
 import { UserWelcomeBanner } from "osp-ui-kit";
-import { useDemoAuth } from "osp-ui-kit";
 import { StaticCard as Card } from "osp-ui-kit";
 import { RowItem } from "@/components/info-card/row-item";
-import { AppHeaderActions } from "osp-ui-kit";
 import { Page } from "osp-ui-kit";
 
 // --- Types ---
@@ -468,11 +466,6 @@ export default function Dashboard() {
   });
 
   const name = "Mark Cristian";
-  const { login } = useDemoAuth();
-
-  useEffect(() => {
-    login();
-  }, [login]);
 
   return (
     // The shared page shell, same as every other claims page: it owns the
@@ -484,11 +477,6 @@ export default function Dashboard() {
       description="Claims processing at a glance."
       headerButton="menu"
     >
-      {/* The notification / profile actions the old home bar carried. */}
-      <Page.ToolContent>
-        <AppHeaderActions iconColor="#065f46" />
-      </Page.ToolContent>
-
       <Page.MainContent>
         {/* ── Process Overview ── */}
         <Page.Row>

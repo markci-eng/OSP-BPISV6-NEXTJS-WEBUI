@@ -264,6 +264,183 @@ export const MAIN_COLUMN_TAIL = {
   ...twoColumn({ order: 0, paddingBottom: MAIN_COLUMN_TAIL_HEIGHT }),
 };
 
+/* ------------------------- the conveyor's mirror ------------------------- */
+
+// CONTROLS LEFT, CONTENT RIGHT — the arrangement the conveyor asked for
+// (user, 2026-09-11), and the mirror image of the three rules above.
+//
+// WHY IT IS A SECOND SET AND NOT A FLAG ON THE FIRST. The four archived
+// workspaces are laid out to the originals and are still compiled; a `side`
+// parameter threaded through `workspaceRail`, `WORKSPACE_MAIN` and
+// `MAIN_COLUMN_TAIL` would put a branch in each of them for the benefit of one
+// caller. These three are that caller's, they sit beside the originals so the
+// two can be read against each other, and every figure in them — the track
+// clamp, the wider step, the tail — is the same figure. Only the order changes.
+//
+// THE OLDER RULE THIS OVERTURNS (user-confirmed 2026-08-13) said the list being
+// worked through is always on the RIGHT. That rule was about a PICKER: a rail
+// you choose FROM stands beside the thing you have chosen. The conveyor's rail
+// is not a picker — nothing on that page is chosen, the queue decides — so what
+// is left in the column is controls, and controls are read before the content
+// they act on.
+//
+// THE STACKED CASE IS UNCHANGED by any of it: the rail is written first in the
+// markup and wanted first when stacked either way, so these only have to say
+// what happens once there are two columns.
+
+// IT SPLITS ON THE VIEWPORT, NOT ON THE WORKSPACE (user, 2026-09-11: "lets make
+// it the same as the death claim") — which is the one place the conveyor departs
+// from the container-query rule argued at the top of this file, and it is a
+// deliberate exception rather than a lapse.
+//
+// WHAT THE DIFFERENCE WAS. The workspace rules need BOTH `lg` and 720px of
+// workspace, and the shell spends about 419px before the workspace sees a pixel
+// — so two columns needed roughly a 1139px viewport. The death claim asks only
+// `lg`. Between 1024 and 1139 the two screens therefore disagreed: a claim sat
+// in two columns with a pinned rail while a billing, on the same monitor, was
+// one stacked column. They are worked by the same people at the same desk, and
+// a window width that changes the shape of one screen and not the other is the
+// kind of difference that gets read as a bug.
+//
+// WHAT IT COSTS is the thing the container query was written to fix: at exactly
+// `lg` with the sidebar out, the workspace is about 605px and the record column
+// is left with roughly 300. That is tight. It is answered by the TRACK below
+// rather than by refusing to split — the rail gives width back on a narrow
+// desktop instead of holding 340 — and by the compact account rows the rail
+// carries there. See `PlanholderServiceList`'s `compact`.
+
+/** Styles that apply once the SHELL is a desktop, whatever the workspace holds. */
+const desktopShell = (styles: Record<string, unknown>) => ({
+  [DESKTOP_SHELL]: styles,
+});
+
+/**
+ * The conveyor's tracks — the rail first, and FLUID rather than clamped to 340.
+ *
+ * 32% with a 280 floor is what makes the viewport split survivable: at a 605px
+ * workspace the rail takes its floor and hands the record 300px, where a fixed
+ * 340 would have left 241. On a wide monitor 32% passes 360 and the ceiling
+ * holds it there, which is about where the old two-step rule ended up anyway.
+ */
+const CONVEYOR_TRACK = "clamp(280px, 32%, 360px) minmax(0, 1fr)";
+
+/** {@link WORKSPACE_GRID} with the rail on the left, split on the viewport. */
+export const CONVEYOR_GRID = {
+  ...STACKED_GRID,
+  ...desktopShell({ gridTemplateColumns: CONVEYOR_TRACK, gap: "24px" }),
+};
+
+/**
+ * The conveyor rail's own bound — a screenful, less everything above it.
+ *
+ * MEASURED IN THE SHELL AND NOT GUESSED (1440x1080, 2026-09-11): the app header
+ * takes the first 76px and the scrolling container starts under it, the page's
+ * heading block takes another 79px inside that container, so the rail's own top
+ * is at 155px until anything is scrolled. A rail bounded to more than
+ * `100vh - 155px` therefore ends below the fold ON THE VIEW A BILLING ARRIVES
+ * IN, which is the one view a processor has not scrolled yet.
+ *
+ * IT USED TO BE `100vh - 96px`, which is the PINNED figure: 76 for the header
+ * and the 16 the column is pinned with. That is the right bound for every scroll
+ * position except the first one, and while the account list was capped at five
+ * rows the rail never grew near either number so the difference never showed. It
+ * shows now that the list takes whatever the column will give it — 59px of the
+ * rail's foot, which is exactly where the commit is — so the bound is the
+ * stricter of the two.
+ *
+ * WHAT IT COSTS is those 59px of list once the page IS scrolled and the rail is
+ * pinned: about a row and a half out of fifteen on a 1080px screen. Cheap, for a
+ * commit that is on screen in every state of the page rather than in all but
+ * one.
+ */
+export const CONVEYOR_RAIL_MAX = "calc(100vh - 156px)";
+
+/** {@link workspaceRail} in the left-hand track. */
+export const conveyorRail = (maxHeight: string = RAIL_MAX_VIEWPORT) => ({
+  ...STACKED_ITEM,
+  ...desktopShell({
+    order: 0,
+    position: "sticky",
+    top: "16px",
+    maxHeight,
+    display: "flex",
+    flexDirection: "column",
+  }),
+});
+
+/**
+ * {@link MAIN_COLUMN_TAIL} in the right-hand track.
+ *
+ * `order: 1` in BOTH cases, which is the whole of the difference: stacked it
+ * puts the record under the rail, and in two columns it puts it beside it, on
+ * the right.
+ */
+export const CONVEYOR_MAIN_TAIL = {
+  ...STACKED_ITEM,
+  order: 1,
+  // THE SHELL'S BOTTOM RESERVE LIVES HERE, INSIDE THE GRID — the conveyor
+  // passes `paddingBottom={0}` to `Page.Root` and the record column carries it
+  // instead. It is the same 96px the shell wants for the mobile bottom
+  // navigation; what changes is which side of the grid it falls on.
+  //
+  // WHY IT HAD TO MOVE, measured at 1440x620: the rail pinned at 108px through
+  // the whole scroll and then jumped to 48 over the last tenth of it — a 60px
+  // lurch, at the exact moment a processor reaches the foot of the record. A
+  // sticky element may not leave its containing block, which is the grid ROW,
+  // and page padding sits OUTSIDE the row: every pixel of it is a pixel of
+  // scrolling with nothing left to pin against, so the rail is shoved up by the
+  // full depth of the reserve and takes its own head with it. The note on
+  // `MAIN_COLUMN_TAIL` describes this hazard; the conveyor walked straight into
+  // it by passing `PAGE_PADDING_BOTTOM` through.
+  //
+  // Inside the grid the same pixels do the opposite: the row grows by them, so
+  // the rail's area grows by them, and the rail does not move at all. The death
+  // claim does exactly this — see `paddingBottom={0}` on its own `Page.Root`.
+  paddingBottom: "calc(62px + 40px + env(safe-area-inset-bottom, 0px))",
+  ...desktopShell({ order: 1, paddingBottom: MAIN_COLUMN_TAIL_HEIGHT }),
+};
+
+/**
+ * The rail's list, capped for the conveyor — {@link railListBox} on the
+ * viewport condition, so it agrees with the three rules above.
+ *
+ * A list still capped by the wrapper and not by itself, for the reason
+ * `railListBox` gives: a percentage max-height on a flex item sized from its own
+ * content resolves to nothing.
+ *
+ * ON A DESKTOP IT IS CAPPED BY THE RAIL AND BY NOTHING ELSE (user, 2026-09-11:
+ * "when the screen is long allowed to display more planholder as long as the
+ * buttons will be shown"). It carried the five-row figure in both layouts, and
+ * five rows is a number measured on a SHORT screen: a 1080px monitor has room
+ * for about fifteen and drew five, with a third of the rail standing empty above
+ * a commit that was never in any danger.
+ *
+ * WHAT REPLACES THE NUMBER IS THE BOUND THAT WAS ALREADY THERE, and it is
+ * exactly the condition the request names. The rail is a flex column with a
+ * `maxHeight` of a screenful (see {@link conveyorRail}); everything in it but
+ * this holds its size (`flexShrink: 0`), and this one item is `0 1 auto` with
+ * `minHeight: 0`. So the list grows to whatever the accounts need, and the
+ * moment the column would outrun the screen the browser shrinks THIS — down to
+ * three rows on a 620px laptop if that is what it takes — and the controls under
+ * it stay where they are. "As long as the buttons will be shown" is not a figure
+ * to be re-measured every time something moves in the rail; it is what a bounded
+ * flex column does on its own.
+ *
+ * THE STACKED CAP STAYS A FIGURE, because stacked there is no bound to inherit:
+ * the rail is an ordinary block on a scrolling page, so a list free to run on
+ * simply pushes the commit below the fold — which is the exact fault the five
+ * rows were introduced to fix. See `LIST_MAX_HEIGHT_COMPACT`, which is now a
+ * phone's cap and not the list's.
+ */
+export const conveyorListBox = (stackedMax: string) => ({
+  display: "flex",
+  flexDirection: "column",
+  maxHeight: stackedMax,
+  // `none` and not "unset": this overrides the stacked declaration above, which
+  // a shorthand-free reset has to say out loud.
+  ...desktopShell({ flex: "0 1 auto", minHeight: 0, maxHeight: "none" }),
+});
+
 /**
  * An item in the rail that is allowed to SHRINK — everything else in the column
  * holds its size and this takes what is left.
@@ -277,6 +454,13 @@ export const RAIL_GIVES = {
   display: "flex",
   flexDirection: "column",
   ...twoColumn({ flex: "0 1 auto", minHeight: 0 }),
+};
+
+/** {@link RAIL_GIVES} on the conveyor's viewport condition. */
+export const CONVEYOR_GIVES = {
+  display: "flex",
+  flexDirection: "column",
+  [DESKTOP_SHELL]: { flex: "0 1 auto", minHeight: 0 },
 };
 
 /**
@@ -347,22 +531,79 @@ export const PAGE_PADDING_BOTTOM = {
   xl: 12,
 };
 
+/** Whether the reader has asked the system for less movement. */
+function reducedMotion(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true
+  );
+}
+
 /**
- * Bring the main column into view after something is picked in the rail.
+ * Bring an element to the top of the screen — the main column after something
+ * is picked in the rail, or the folder when the Deficient tick sends the reader
+ * to it.
  *
- * STACKED ONLY — the caller checks the width, since on a desktop the detail is
- * already beside the list and nothing moved. Above the fold there is no
- * scrolling to do; here the rail sits ON TOP of what it opens, so picking
- * without this leaves the user looking at the list they just used.
+ * STACKED ONLY for the rail's use — the caller checks the width, since on a
+ * desktop the detail is already beside the list and nothing moved. Above the
+ * fold there is no scrolling to do; there the rail sits ON TOP of what it opens,
+ * so picking without this leaves the user looking at the list they just used.
  *
  * Through `scrollParentOf` rather than `scrollIntoView`, for the reason that
  * helper was written: the shell scrolls an inner container, not the window.
  * `scrollIntoView` does find that container — but only its INSTANT form does;
  * asked to animate inside this shell it silently does nothing at all.
+ *
+ * WHICH IS WHY `smooth` IS A FLAG HERE AND NOT A CALLER'S `scrollIntoView`
+ * OPTION (user, 2026-09-14: "can we do that when scroll the page has animation
+ * scroll"). `scrollBy` on the container DOES animate — it is the element's own
+ * method rather than the one that walks up looking for a scrollport — so the
+ * animation is one argument away as long as it goes through this helper.
+ *
+ * INSTANT BY DEFAULT, so the two callers that predate the flag are untouched:
+ * a rail picking a detail is answering a tap that has already happened, and the
+ * swap it belongs to hides the jump behind a placeholder — animating it would
+ * be an animation nobody sees, running while a skeleton is on screen.
  */
-export function scrollDetailIntoView(detail: HTMLElement | null) {
+export function scrollDetailIntoView(
+  detail: HTMLElement | null,
+  { smooth = false }: { smooth?: boolean } = {},
+) {
   if (!detail) return;
   const scroller = scrollParentOf(detail);
   const offset = detail.getBoundingClientRect().top - visibleBandOf(scroller).top;
-  scroller.scrollBy({ top: offset - DETAIL_SCROLL_MARGIN });
+  scroller.scrollBy({
+    top: offset - DETAIL_SCROLL_MARGIN,
+    // The reader's own setting wins: `smooth` is a nicety, and somebody who has
+    // turned animation off system-wide has said what they think of it.
+    behavior: smooth && !reducedMotion() ? "smooth" : "auto",
+  });
 }
+
+// A `FOLDER_SECTION_MIN` STOOD HERE FOR AN AFTERNOON, and this note is what is
+// left of it — so that the next person to want "the folder and nothing else on
+// screen" knows what was tried and why it is not here.
+//
+// THE PROBLEM IT ANSWERED IS REAL AND STILL UNSOLVED. A scroller stops at its
+// end. The folder is the LAST card in the record column, so on a tall screen
+// with a short folder there is not enough page underneath it to bring it to the
+// top: the browser clamps, and the Deficient tick lands the reader with the
+// folder at the foot of the screen and the form still above it. No amount of
+// scrolling code fixes that — the page has to be long enough for the scroll to
+// exist.
+//
+// SO THE FOLDER WAS GIVEN A SCREENFUL OF MINIMUM HEIGHT, which worked exactly as
+// intended and was reverted the moment it was seen (user, 2026-09-14: "remove
+// the white space at the bottom"). The space it bought was blank, it sat under
+// the last card of every short folder, and it was there whether or not anybody
+// had pressed the tick — a permanent void paying for one occasional jump.
+//
+// WHAT WE HAVE INSTEAD is the honest stop: `scrollDetailIntoView` goes as far as
+// the page allows, which puts the folder as high as it can go and leaves
+// whatever is above it visible. The deficiency list is fully on screen either
+// way; it simply is not alone.
+//
+// IF IT IS WANTED AGAIN, the reserve is the wrong shape for it. The thing that
+// shows one section and nothing else is an OVERLAY — `SectionPopup`, which this
+// module's neighbours already use for exactly that — and it costs no layout at
+// all when it is closed.

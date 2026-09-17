@@ -211,7 +211,7 @@ function ProfileRecordSkeleton() {
         </CardBlock>
       </Box>
 
-      {/* Remarks, then Payments — the two that follow it down the column. */}
+      {/* Remarks. */}
       <Box mt={4}>
         <HeadingBlock withPill={false} />
         <CardBlock p={3}>
@@ -220,17 +220,28 @@ function ProfileRecordSkeleton() {
         </CardBlock>
       </Box>
 
+      {/* Payments · Beneficiaries — two launcher cards side by side, not the
+          sections themselves: both are behind a pop-up now. */}
+      <SimpleGrid mt={4} columns={{ base: 1, sm: 2 }} gap={3}>
+        {Array.from({ length: 2 }, (_, i) => (
+          <Skeleton key={i} h="62px" borderRadius="xl" />
+        ))}
+      </SimpleGrid>
+
+      {/* The folder, the column's last section since it left the rail. */}
       <Box mt={4}>
-        <HeadingBlock />
-        <CardBlock p={3}>
-          <RowLines count={5} />
-        </CardBlock>
+        <HeadingBlock withPill={false} />
+        <Flex direction="column" gap={2}>
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} h="56px" borderRadius="xl" />
+          ))}
+        </Flex>
       </Box>
     </Box>
   );
 }
 
-/** The work column: the plan's actions, the claims, the folder. */
+/** The work column: the plan's actions and the requests against it. */
 function ProfileRailSkeleton() {
   return (
     <Box>
@@ -246,15 +257,6 @@ function ProfileRailSkeleton() {
         <Flex direction="column" gap={3}>
           {Array.from({ length: 3 }, (_, i) => (
             <Skeleton key={i} h="82px" borderRadius="2xl" />
-          ))}
-        </Flex>
-      </Box>
-
-      <Box mt={4}>
-        <HeadingBlock withPill={false} />
-        <Flex direction="column" gap={2}>
-          {Array.from({ length: 4 }, (_, i) => (
-            <Skeleton key={i} h="56px" borderRadius="xl" />
           ))}
         </Flex>
       </Box>

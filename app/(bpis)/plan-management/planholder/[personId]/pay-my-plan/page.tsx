@@ -21,7 +21,7 @@ import {
   STANDARD_SIZES,
   STANDARD_SPACING,
 } from "@/lib/theme/standard-design-tokens";
-import { BaseButton, PrimaryMdButton, useDemoAuth, Page } from "osp-ui-kit";
+import { BaseButton, PrimaryMdButton, Page } from "osp-ui-kit";
 import { useEffect, useMemo, useState } from "react";
 import { FaEllipsisH } from "react-icons/fa";
 import {
@@ -119,8 +119,6 @@ const getInitialInstallmentNumbers = (selectedPlans: SelectedPlan[]) => {
 };
 
 const PayMyPlan = () => {
-  const { login } = useDemoAuth();
-
   const [selectedPlans, setSelectedPlans] = useState<SelectedPlan[]>(() =>
     getStoredSelectedPlans(),
   );
@@ -141,10 +139,6 @@ const PayMyPlan = () => {
       JSON.stringify(selectedPlans),
     );
   }, [selectedPlans]);
-
-  useEffect(() => {
-    login();
-  }, [login]);
 
   const totalSelectedAmount = useMemo(() => {
     return selectedPlans.reduce(

@@ -1,20 +1,9 @@
 "use client";
 
-import { LuClipboardCheck, LuPrinter, LuRotateCcw } from "react-icons/lu";
 import { toast } from "sonner";
 import { ActionButtonRow } from "../../components/action-button-row";
+import { PLAN_ACTIONS } from "../../components/plan-action-items";
 import type { Planholder } from "../../claims-data";
-
-/**
- * The whole-plan actions — the legacy PISv5 toolbar operations that apply to
- * the plan itself rather than to any one section down the page. None are wired
- * to a back end yet, so each says so rather than failing silently.
- */
-const PLAN_ACTIONS = [
-  { label: "Print SOA", icon: LuPrinter },
-  { label: "Cancel Plan Termination", icon: LuRotateCcw },
-  { label: "Consider Plan", icon: LuClipboardCheck },
-];
 
 /**
  * Columns for the row — three, so the plan's actions are ONE row.

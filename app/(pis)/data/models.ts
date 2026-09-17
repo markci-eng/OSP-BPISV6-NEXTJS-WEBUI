@@ -1825,6 +1825,27 @@ export interface ClaimsBillingRecord {
    * not it has any terminated accounts yet.
    */
   processedBy: string;
+  /**
+   * When the billing's work was FINISHED — every account on it terminated.
+   * Blank while it is still being worked.
+   *
+   * NOT IN THE SOURCE STRUCTURE either, and added for the same reason
+   * {@link processedBy} was: the table records the two signatures that come
+   * after processing and nothing that marks processing itself.
+   *
+   * WHAT IT REPLACED IS THE ROW'S MERE EXISTENCE (2026-09-17). Until a billing
+   * was created it had no `TblClaimsBilling` row at all, so "has a row" could
+   * stand in for "is past For Process" — and the reader of that rule is
+   * `getServiceBillings`. Once every billing carries its number from the start,
+   * that shorthand says every billing in the file is processed. The three stages
+   * now read off three dates, which is what the two signatures were already
+   * doing and is the shape this column completes.
+   *
+   * A BILLING IS NUMBERED BEFORE IT IS PROCESSED, which is the whole point:
+   * terminating a plan has to post it against a number, so the number must exist
+   * while the work is still to do.
+   */
+  dateProcessed: string; // ISO, blank while still being worked
 }
 
 /**

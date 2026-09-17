@@ -113,7 +113,27 @@ function Pill({
 
 /* ------------------------------ item builders ------------------------------ */
 
-function summaryItems(planholder: Planholder): DetailItem[] {
+/**
+ * What the plan holder record says about a person who has died.
+ *
+ * NOT ON THE `Planholder` MODEL, and that is not an oversight: the record is of
+ * a living plan until a claim says otherwise, and the date of death is filed on
+ * the CLAIM. So a caller that has a claim in hand passes it, and one that does
+ * not simply leaves the pair out — which is why the profile page and the claim
+ * drawer are untouched by this.
+ */
+export interface DeceasedFacts {
+  /** As the claim spells it. */
+  dateOfDeath?: string;
+  /** "42 yrs 7 mos 7 days" — to the day, because contestability turns on it. */
+  ageAtDeath?: string;
+}
+
+function summaryItems(
+  planholder: Planholder,
+  deceased?: DeceasedFacts,
+  deficient?: boolean,
+): DetailItem[] {
   // Good standing rather than "is it AC": a fully paid account is the best one
   // a plan reaches, and reading it as amber would say the opposite.
   const isActive = isAccountInGoodStanding(planholder.accountStatus);
@@ -146,6 +166,29 @@ function summaryItems(planholder: Planholder): DetailItem[] {
       value: planholder.age !== undefined ? `${planholder.age} yrs` : "—",
       text: planholder.age !== undefined ? `${planholder.age} yrs` : "—",
     },
+    // DIRECTLY AFTER THE BIRTH PAIR, when there is one. Born / aged / died /
+    // aged at death reads as one run of facts about a person; anywhere else in
+    // the list and the reader has to carry the birth date down the page to make
+    // sense of the death date. Spread, so a caller without a claim gets exactly
+    // the summary it had before.
+    ...(deceased?.dateOfDeath
+      ? [
+          {
+            label: "Date of Death",
+            value: deceased.dateOfDeath,
+            text: deceased.dateOfDeath,
+          },
+        ]
+      : []),
+    ...(deceased?.ageAtDeath
+      ? [
+          {
+            label: "Age at Death",
+            value: deceased.ageAtDeath,
+            text: deceased.ageAtDeath,
+          },
+        ]
+      : []),
     // {
     //   label: "Insurability",
     //   value: planholder.insurability ? (
@@ -184,6 +227,29 @@ function summaryItems(planholder: Planholder): DetailItem[] {
       value: planholder.laf ? planholder.laf : "—",
       text: planholder.laf ? planholder.laf : "—",
     },
+    // WHETHER THE FOLDER IS SHORT ANYTHING — last, and only for a caller that
+    // has asked the question. See {@link PlanholderInfoCardProps.deficient}.
+    //
+    // YES OR NO, NOT A TICK (user, 2026-09-14: "add the same is Deficient here
+    // instead make it yes or no"). Service payables draws this as a checkbox
+    // beside Double Used because it stands in a row of checkboxes; here it is
+    // one of twelve label-over-value pairs, and a lone box among them would be
+    // the only thing in the grid a reader could mistake for a control. The
+    // word is the same fact in the grid's own voice.
+    //
+    // AMBER WHEN IT IS YES, which is the tone this card already gives a
+    // contestable plan and a lapsed account: something to look at, not
+    // something wrong.
+    ...(deficient === undefined
+      ? []
+      : [
+          {
+            label: "Deficient",
+            value: deficient ? "Yes" : "No",
+            text: deficient ? "Yes" : "No",
+            tone: deficient ? "orange.600" : undefined,
+          },
+        ]),
   ];
 }
 
@@ -346,12 +412,37 @@ function DrawerSection({
  */
 export function PlanholderInfoCard({
   planholder,
+  deceased,
+  deficient,
   open: controlledOpen,
   onOpenChange,
   asDetails = false,
   summaryAsPairs = false,
 }: {
   planholder: Planholder;
+  /**
+   * Whether the folder read against this record is short anything — drawn as a
+   * Deficient / Yes-No pair at the end of the summary.
+   *
+   * A CALLER'S FACT, like {@link DeceasedFacts} above it and for the same
+   * reason: a deficiency belongs to the CLAIM being read, not to the plan
+   * holder, so the card is told rather than working it out. Omit it and the
+   * summary is exactly what it was — which is what the profile page and the
+   * claim drawer pass, since neither is reading a folder against a claim.
+   *
+   * IT IS A READING AND NOTHING ELSE. Service payables makes its own version of
+   * this clickable, because that screen has the deficiency list a few hundred
+   * pixels below it to jump to; this card sits above a column where the folder
+   * is already the next section but one, and a fact that navigated from inside a
+   * grid of facts would be the only one that did.
+   */
+  deficient?: boolean;
+  /**
+   * The death this record is being read against, when it is being read against
+   * one — see {@link DeceasedFacts}. Omit it and the card is exactly what it
+   * was: a living plan holder's record.
+   */
+  deceased?: DeceasedFacts;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   /**
@@ -525,7 +616,7 @@ export function PlanholderInfoCard({
               card reads as the details panel does on the profile. */}
           {summaryAsPairs ? (
             <SimpleGrid columns={2} gapX={4} gapY={3}>
-              {summaryItems(planholder).map((item) => (
+              {summaryItems(planholder, deceased, deficient).map((item) => (
                 <InfoLabel
                   key={item.label}
                   label={item.label}
@@ -535,7 +626,7 @@ export function PlanholderInfoCard({
               ))}
             </SimpleGrid>
           ) : (
-            summaryItems(planholder).map((item) => (
+            summaryItems(planholder, deceased, deficient).map((item) => (
               <RowItem key={item.label} label={item.label} value={item.value} />
             ))
           )}
@@ -624,7 +715,7 @@ export function PlanholderInfoCard({
                   heading to tell it apart from. See `titled`. */}
               <DetailPanel
                 title="Summary"
-                items={summaryItems(planholder)}
+                items={summaryItems(planholder, deceased, deficient)}
                 titled={detailsOpen}
               />
 
@@ -686,7 +777,7 @@ export function PlanholderInfoCard({
 
                   <DrawerSection
                     title="Summary"
-                    items={summaryItems(planholder)}
+                    items={summaryItems(planholder, deceased, deficient)}
                   />
                   <DrawerSection
                     title="Personal Info"

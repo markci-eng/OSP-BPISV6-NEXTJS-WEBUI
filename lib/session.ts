@@ -1,5 +1,21 @@
+import { getRoleForEmail } from "./users";
+
 export const SESSION_COOKIE = "osp_session";
 export const USER_COOKIE = "osp_user";
+
+/**
+ * The signed-in address, readable by the browser.
+ *
+ * `SESSION_COOKIE` carries it too, but that one is `httpOnly` — so client
+ * components wanting the person's name, position or office have nothing to look
+ * them up by, and have been falling back to placeholders instead. This is that
+ * key and nothing else.
+ *
+ * IT IS NOT A CREDENTIAL. Anything can write it; `proxy.ts` trusts only the
+ * signed session for who someone is and what they may load.
+ */
+export const EMAIL_COOKIE = "osp_email";
+
 export const MAX_AGE = 8 * 60 * 60; // 8 hours
 
 const SECRET =
@@ -11,15 +27,16 @@ export interface SessionPayload {
   exp: number;
 }
 
+/**
+ * The role an address signs in as.
+ *
+ * The addresses live in `lib/users.ts` now, alongside the name, position and
+ * office that belong to the same person, rather than in a list here that knew
+ * only half of each record. The mapping is unchanged, including the
+ * `sales-agent` fallback for an address the seed has never heard of.
+ */
 export function getRole(email: string): string {
-  const lower = email.toLowerCase();
-  if (lower === "branch@stpeter.com.ph") return "branch";
-  if (lower === "joycemb@stpeter.com.ph") return "branch";
-  if (lower === "claims@stpeter.com.ph") return "claims";
-  if (lower === "amd@stpeter.com.ph") return "amd";
-  if (lower === "bm@stpeter.com.ph") return "bm";
-  if (lower === "stl@stpeter.com.ph") return "stl";
-  return "sales-agent";
+  return getRoleForEmail(email);
 }
 
 function base64urlEncode(input: string): string {

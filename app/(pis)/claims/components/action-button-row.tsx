@@ -25,6 +25,16 @@ interface ActionRowButtonProps {
   label: string;
   icon: React.ElementType;
   onClick?: () => void;
+  /**
+   * Tighter padding and smaller type.
+   *
+   * OPT-IN, so the two screens already using this row are untouched. It exists
+   * for the conveyor's rail, which stacks NINE of these in one block: at the
+   * standard size that is 200px of buttons above the first thing a processor
+   * actually reads. Three of something is a row of controls; nine of it is a
+   * wall, and the fix is to make each one cost less rather than to hide some.
+   */
+  compact?: boolean;
 }
 
 /**
@@ -38,7 +48,7 @@ interface ActionRowButtonProps {
 export const ActionRowButton = forwardRef<
   HTMLButtonElement,
   ActionRowButtonProps
->(({ label, icon: Icon, ...rest }, ref) => (
+>(({ label, icon: Icon, compact = false, ...rest }, ref) => (
   <BaseButton
     ref={ref}
     // `BaseButton` with the same variant/size the `SecondarySmButton` pill
@@ -49,23 +59,23 @@ export const ActionRowButton = forwardRef<
     size="sm"
     width="100%"
     height="auto"
-    minH="32px"
+    minH={compact ? "26px" : "32px"}
     // Room enough that a label wrapping to two lines is not pressed against the
     // border on any side. `px` stays the tighter of the two on purpose: the
     // columns are narrow and every pixel taken here is a pixel of label, which
     // is what decides whether a third line appears.
-    px="10px"
-    py={2}
+    px={compact ? "6px" : "10px"}
+    py={compact ? "4px" : 2}
     // `xs`, the size {@link InfoLabel} sets its LABEL at — so a button's name
     // and a card's field name are the same size wherever they sit next to each
     // other in the rail. Briefly `sm`, which cost 5px of row height for nothing
     // the labels needed; height in the rail is shared with the claims and the
     // folder — see the note on `PLAN_ACTION_COLUMNS`.
-    fontSize="xs"
+    fontSize={compact ? "10px" : "xs"}
     // Icon over label: side by side, the icon takes a third of a column this
     // narrow away from the words.
     flexDirection="column"
-    gap="3px"
+    gap={compact ? "2px" : "3px"}
     whiteSpace="normal"
     textAlign="center"
     lineHeight="1.25"
@@ -107,12 +117,20 @@ export const ActionRowButton = forwardRef<
         setting the BUTTON green would take the label with it. The wrapper is
         what lets the two differ. `display: flex` so the box is the glyph's size
         and adds no line of its own. */}
-    <Box display="flex" color={BRAND_COLORS.primaryGreen}>
+    <Box
+      display="flex"
+      color={BRAND_COLORS.primaryGreen}
+      // react-icons default to `1em`, so the glyph follows whatever font size
+      // it is standing in. Compact drops the label to 10px, and an icon that
+      // small reads as a smudge rather than a mark — so the wrapper holds the
+      // glyph at its full-size dimension and only the words get smaller.
+      fontSize={compact ? "14px" : undefined}
+    >
       <Icon />
     </Box>
 
     <Text
-      fontSize="xs"
+      fontSize={compact ? "10px" : "xs"}
       color="gray.500"
       letterSpacing="-0.1px"
       lineHeight="1.25"
@@ -128,6 +146,7 @@ export function ActionButtonRow({
   columns = 3,
   maxW = "420px",
   after,
+  compact = false,
 }: {
   actions: ActionButtonRowItem[];
   /**
@@ -147,6 +166,16 @@ export function ActionButtonRow({
    * grid child, so it should be (or contain) a single {@link ActionRowButton}.
    */
   after?: React.ReactNode;
+  /**
+   * The smaller button — {@link ActionRowButton}'s own `compact`, which this
+   * row could not reach until now.
+   *
+   * IT IS WHAT THE DEATH CLAIM'S RAIL USES. `ClaimActions` assembles its own
+   * grid precisely so it can pass `compact` to every cell, so a caller wanting
+   * the same button had to copy the grid to get it. Exposing it here means a
+   * rail can have the small button without owning a second copy of the layout.
+   */
+  compact?: boolean;
 }) {
   return (
     // Equal columns rather than a wrapping flex row: sized to their labels
@@ -159,6 +188,7 @@ export function ActionButtonRow({
           key={label}
           label={label}
           icon={icon}
+          compact={compact}
           onClick={onClick}
         />
       ))}

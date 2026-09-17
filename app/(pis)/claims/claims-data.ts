@@ -84,7 +84,23 @@ export function planholderName(lpaNo: string): PersonName | undefined {
   return db.getPlanholder(lpaNo)?.name;
 }
 
-/** One row of the plan holder search — enough to identify a match and link to it. */
+/**
+ * One row of the plan holder search.
+ *
+ * IT CARRIES WHAT THE BPIS PLAN HOLDER LIST SHOWS (user, 2026-09-16: "display
+ * the search bar and the items for the planholder same as the one with the
+ * bpis"), which is four more fields than identifying a match strictly needs.
+ * `/plan-management/planholder` lists a plan holder by avatar and name, then the
+ * LPA, the plan, the branch, the account status and the effectivity — and the
+ * claims search now shows the same row, so a processor who has learned to read
+ * one is not asked to learn the other.
+ *
+ * THE NAME IS CARRIED THREE WAYS and that is not redundancy: `name` is
+ * surname-first because that is how the profile header and every claims table
+ * render it, and the two parts are kept apart because the shared row puts the
+ * given name first under an avatar. Splitting a formatted string back up is how
+ * a middle name ends up as a surname.
+ */
 export interface PlanholderSearchResult {
   lpaNo: string;
   personId: string;
@@ -92,6 +108,35 @@ export interface PlanholderSearchResult {
   name: string;
   /** Plan name, e.g. "ST.ANNE". */
   planDesc: string;
+  firstName: string;
+  lastName: string;
+  /**
+   * The branch that collects on the plan.
+   *
+   * OFF THE PAYMENT LEDGER, because a plan holder record has no branch of its
+   * own — the same source `service-payables` reads for `phBranchCode`. Empty for
+   * a plan nobody has paid against yet, which the row prints as a dash rather
+   * than guessing.
+   */
+  branch: string;
+  /** "Fully Paid", "Lapsed" — the label, not the code. */
+  accountStatus: string;
+  effectivityDate: Date;
+}
+
+/** Build a search row from a plan holder — the one place the shape is assembled. */
+function toSearchResult(planholder: PlanholderModel): PlanholderSearchResult {
+  return {
+    lpaNo: planholder.lpaNo,
+    personId: planholder.personId,
+    name: planholder.name ? toSurnameFirst(planholder.name) : "—",
+    planDesc: planholder.planDesc,
+    firstName: planholder.name?.firstName ?? "",
+    lastName: planholder.name?.lastName ?? "",
+    branch: db.getPayments(planholder.lpaNo)[0]?.branchCode ?? "",
+    accountStatus: planholder.accountStatusLabel,
+    effectivityDate: planholder.effectivityDate,
+  };
 }
 
 /**
@@ -117,12 +162,7 @@ export function searchPlanholders(
       name.toLowerCase().includes(needle);
     if (!matches) continue;
 
-    results.push({
-      lpaNo: planholder.lpaNo,
-      personId: planholder.personId,
-      name: planholder.name ? toSurnameFirst(planholder.name) : "—",
-      planDesc: planholder.planDesc,
-    });
+    results.push(toSearchResult(planholder));
     if (results.length >= limit) break;
   }
   return results;
@@ -137,12 +177,7 @@ export function searchPlanholders(
  * same rows, already narrowed; this is the set they are narrowed from.
  */
 export function listPlanholders(): PlanholderSearchResult[] {
-  return db.getPlanholders().map((planholder) => ({
-    lpaNo: planholder.lpaNo,
-    personId: planholder.personId,
-    name: planholder.name ? toSurnameFirst(planholder.name) : "—",
-    planDesc: planholder.planDesc,
-  }));
+  return db.getPlanholders().map(toSearchResult);
 }
 
 /* ------------------------------ claim requests ------------------------------ */
@@ -882,6 +917,27 @@ export function getDocumentTypes(): DocumentType[] {
   return db
     .getDocumentTypes()
     .map((d) => ({ code: d.documentCode, name: d.documentDesc }));
+}
+
+/**
+ * The document types a person has no file against — the deficiency list.
+ *
+ * DERIVED, because nothing in the data layer records a deficiency yet: there is
+ * no per-claim requirement table and no rule tying a benefit to the documents it
+ * needs, so "outstanding" can only mean "every type on file, minus what this
+ * person has supplied". The same expression the folder's Deficiencies tab uses.
+ *
+ * When a real requirement list arrives this is the one function that changes,
+ * and everything reading it already takes the shape it will return.
+ *
+ * PER PERSON AND NOT PER CLAIM, which is the honest limit of it today: two
+ * claims of the same plan holder are outstanding the same documents. See the
+ * note on `ClaimRequest.isDeficient`, which is a placeholder for the same
+ * missing table.
+ */
+export function getOutstandingDocumentTypes(personId: string): DocumentType[] {
+  const filed = new Set(getPlanholderDocuments(personId).map((d) => d.code));
+  return getDocumentTypes().filter((type) => !filed.has(type.code));
 }
 
 /** Documents filed for a person, joined to their document type. */

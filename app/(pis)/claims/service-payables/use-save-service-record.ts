@@ -9,6 +9,7 @@
 
 import { toaster } from "../components/toaster";
 import {
+  DISCREPANCY_HOLDS_TERMINATION,
   deceasedName,
   type ServiceBilling,
   type ServiceRecord,
@@ -55,7 +56,14 @@ export function terminationBlocker(
   service: ServiceRecord,
 ): string | undefined {
   if (!billing.billingNo) return "The billing has not been created yet";
-  if (service.discrepancy) return service.discrepancy.reason;
+  // A DISCREPANCY NO LONGER HOLDS THE TERMINATION (2026-09-15) — see
+  // {@link DISCREPANCY_HOLDS_TERMINATION}, which is where the rule it suspends
+  // and the reason are written down. The condition is kept behind the flag
+  // rather than deleted: the rule was confirmed twice and is waiting on a module
+  // that does not exist yet, not overturned.
+  if (DISCREPANCY_HOLDS_TERMINATION && service.discrepancy) {
+    return service.discrepancy.reason;
+  }
   return undefined;
 }
 

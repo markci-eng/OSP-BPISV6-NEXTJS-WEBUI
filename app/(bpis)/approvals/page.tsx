@@ -11,7 +11,13 @@ import {
 } from "@chakra-ui/react";
 import { Check, ChevronDown, Filter } from "lucide-react";
 import type { IconType } from "react-icons";
-import { LuFileStack, LuReceipt, LuUserCog, LuUsers } from "react-icons/lu";
+import {
+  LuFileStack,
+  LuReceipt,
+  LuShieldCheck,
+  LuUserCog,
+  LuUsers,
+} from "react-icons/lu";
 import { BottomQuickActions, Page } from "osp-ui-kit";
 
 import { ApprovalsTable } from "./components/ApprovalsTable";
@@ -47,6 +53,12 @@ const APPROVAL_TYPES: {
     value: "reassignment-sa2",
     icon: LuUserCog,
     description: "Reassign SA2 records",
+  },
+  {
+    label: "User Assignment",
+    value: "user-assignment",
+    icon: LuShieldCheck,
+    description: "Approve access group assignments",
   },
 ];
 
@@ -120,7 +132,7 @@ export default function page() {
             <Flex
               display={{ base: "none", md: "flex" }}
               flex="1"
-              bg="white"
+              // bg="white"
               cursor="pointer"
               justify="start"
               gap={3}

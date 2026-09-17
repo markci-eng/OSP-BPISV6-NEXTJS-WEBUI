@@ -16,11 +16,13 @@ import {
   Text,
   createListCollection,
   defineStyle,
+  CloseButton,
 } from "@chakra-ui/react";
 import { LuChevronLeft, LuPencil } from "react-icons/lu";
 import { toast } from "sonner";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { FloatingLabelInput } from "osp-ui-kit";
+import { DIALOG_SHEET_CSS } from "./dialog-sheet";
 import {
   getPayoutChannelOptions,
   type ClaimPayee,
@@ -31,6 +33,13 @@ interface PlanholderPayeeEditDrawerProps {
   payee?: ClaimPayee | null;
   open: boolean;
   onClose: () => void;
+  /**
+   * Show this as a CENTRED DIALOG rather than a full-height sheet — the twin of
+   * the prop on `PlanholderPayeeDrawer`, which opens this one and passes its
+   * own value straight through. The two must agree: an edit form that arrived
+   * as a full page over a dialog would read as having left the dialog behind.
+   */
+  asDialog?: boolean;
 }
 
 type Option = { label: string; value: string };
@@ -196,6 +205,7 @@ export function PlanholderPayeeEditDrawer({
   payee,
   open,
   onClose,
+  asDialog = false,
 }: PlanholderPayeeEditDrawerProps) {
   const channelOptions = useMemo(() => getPayoutChannelOptions(), []);
 
@@ -269,13 +279,26 @@ export function PlanholderPayeeEditDrawer({
     >
       <Portal>
         <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
-        <Drawer.Positioner>
+        <Drawer.Positioner
+          alignItems={asDialog ? "center" : undefined}
+          justifyContent={asDialog ? "center" : undefined}
+          p={asDialog ? 3 : undefined}
+        >
           <Drawer.Content
             display="flex"
             flexDirection="column"
-            h="100dvh"
-            maxH="100dvh"
-            borderRadius={0}
+            // Full-height sheet, or a centred one sized to its content — see
+            // `asDialog`, and the same note on the two payee drawers.
+            h={asDialog ? "auto" : "100dvh"}
+            maxH={asDialog ? { base: "88dvh", md: "82vh" } : "100dvh"}
+            w={asDialog ? "full" : undefined}
+            maxW={
+              asDialog
+                ? { base: "calc(100dvw - 24px)", md: "840px" }
+                : undefined
+            }
+            css={asDialog ? DIALOG_SHEET_CSS : undefined}
+            borderRadius={asDialog ? "xl" : 0}
             overflow="hidden"
           >
             <Drawer.Header
@@ -287,6 +310,10 @@ export function PlanholderPayeeEditDrawer({
               gap={3}
             >
               <Flex align="center" gap={2} minW={0}>
+                {/* A chevron in the corner of a centred sheet points at
+                    nothing — see `dismiss` on `DrawerPageHeader`, which draws
+                    the same distinction. The cross is at the far end instead. */}
+                {!asDialog && (
                 <Flex
                   as="button"
                   align="center"
@@ -307,6 +334,7 @@ export function PlanholderPayeeEditDrawer({
                 >
                   <LuChevronLeft size={20} strokeWidth={2.5} />
                 </Flex>
+                )}
                 <Box
                   p={2.5}
                   borderRadius="full"
@@ -331,6 +359,10 @@ export function PlanholderPayeeEditDrawer({
                   </Text>
                 </Box>
               </Flex>
+
+              {asDialog && (
+                <CloseButton size="sm" onClick={onClose} aria-label="Close" />
+              )}
             </Drawer.Header>
 
             <Drawer.Body py={5} overflowY="auto">

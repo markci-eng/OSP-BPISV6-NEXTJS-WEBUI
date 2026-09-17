@@ -10,6 +10,29 @@
 // `service-documents-store`, where the Deficiency list is DERIVED rather than
 // stored for exactly that reason.
 //
+// AND THE FOLDER IS `DocumentFolder`, shared with the death claim's (user,
+// 2026-09-17: "make the service payables used the same components"). The tabbed
+// heading, the switch between the lists and the two empty states live there;
+// what is left in this file is what is genuinely this screen's — the rows, the
+// counts, and the two Adds.
+//
+// THE TWO COLUMNS ARE GONE AGAIN, and it is worth writing down that they were
+// tried rather than leaving the next person to try them a third time. For an
+// afternoon this was a two-column row, a card each, on the argument that a
+// processor is holding both lists at once — what came in against what is still
+// wanting. What it cost is width: the rows carry a name, a code, a file and a
+// mark, and at half a card the names truncate. The tabs give the showing list
+// the whole card, which is what the rows want, and the count on the other pill
+// answers "is anything still outstanding" without a click.
+//
+// ONE ADD, AND IT ACTS ON THE TAB YOU ARE LOOKING AT. Documents → add a
+// document; Deficiencies → raise one by hand. That is where this departs from
+// the plan holder's folder, whose two tabs pass the same button, and the reason
+// is that here the two lists are written to by two different acts: a deficiency
+// is a thing somebody RAISES, not a missing file. Submitting the document for an
+// outstanding requirement is still a tap on its own row, which is where a
+// processor reaches for it anyway.
+//
 // THE ROWS ARE THE DEATH CLAIM'S ROWS. Same construction, same typography, same
 // gesture: a tinted icon chip, the document's name at `sm`, its file underneath
 // at 11px, a mark at the right — green `LuFileText` and a format pill for one
@@ -50,15 +73,8 @@
 // cannot be worked. The heading says it is provisional, where it is read.
 
 import { useState } from "react";
-import {
-  Box,
-  Flex,
-  IconButton,
-  SimpleGrid,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
-import { EmptyStateCard, TertiarySmButton, useMessageDialog } from "osp-ui-kit";
+import { Box, Flex, IconButton, Text, VStack } from "@chakra-ui/react";
+import { TertiarySmButton, useMessageDialog } from "osp-ui-kit";
 import {
   LuFileText,
   LuFileWarning,
@@ -68,8 +84,11 @@ import {
 } from "react-icons/lu";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { db } from "../../../data";
+import {
+  DocumentFolder,
+  type DocumentTab,
+} from "../../components/document-folder";
 import { ScrollFade } from "../../components/scroll-fade";
-import { SectionTitle } from "../../components/section-title";
 import { toaster } from "../../components/toaster";
 import { SwipeToRemoveRow } from "../../planholder/components/SwipeToRemoveRow";
 import {
@@ -103,14 +122,18 @@ import {
 } from "./ServiceDocumentPreview";
 
 /**
- * Tallest either list runs before it scrolls inside itself.
+ * Tallest either list runs before it scrolls inside itself — the death claim's
+ * folder bound, which is `420px` on the card it sits in.
  *
- * A maximum, not a height: three documents take three rows' worth. It exists so
- * the two columns cannot pull the section to the length of the longer one —
- * six outstanding requirements beside one document would otherwise leave five
- * rows of white space under the document.
+ * A maximum, not a height: three documents take three rows' worth.
+ *
+ * IT WAS 300 WHILE THE LISTS STOOD SIDE BY SIDE, and the number was doing a
+ * different job then: it stopped six outstanding requirements beside one
+ * document from leaving five rows of white space under the document. Tabbed,
+ * only one list is ever on screen, so nothing is being kept level any more and
+ * the cap is free to be the one the claim's folder uses.
  */
-const LIST_MAX_HEIGHT = "300px";
+const LIST_MAX_HEIGHT = "420px";
 
 /** The red the deficiency panel and the territory cards already use. */
 const DEFICIENCY_ACCENT = "#e11d48";
@@ -480,8 +503,17 @@ function ListFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
+
 export interface ServiceRecordDocumentsProps {
   service: ServiceRecord;
+  /**
+   * Which list to show — see the same pair on `DocumentFolder`. The Deficient
+   * tick on the form above is what switches it, and the tick and this section
+   * are in different components, so the page holds the state between them.
+   */
+  tab?: DocumentTab;
+  /** Told when a pill is pressed. Required to drive {@link tab} usefully. */
+  onTabChange?: (tab: DocumentTab) => void;
   /**
    * Whether this is the two-column PAGE rather than the drawer.
    *
@@ -499,6 +531,8 @@ export interface ServiceRecordDocumentsProps {
 
 export function ServiceRecordDocuments({
   service,
+  tab,
+  onTabChange,
   isDesktop = false,
 }: ServiceRecordDocumentsProps) {
   const { messageBox } = useMessageDialog();
@@ -626,34 +660,34 @@ export function ServiceRecordDocuments({
 
   return (
     <Box>
-      <SimpleGrid columns={{ base: 1, lg: 2 }} gap={{ base: 6, lg: 5 }}>
-        {/* ---------------------------- Documents --------------------------- */}
-        <Box minW={0}>
-          <SectionTitle
-            title="Documents"
-            subtitle={
-              documents.length === 0
-                ? "Nothing on file"
-                : // How to act on a row, said where the rows are — and it is
-                  // not the same sentence on both layouts, because it is not
-                  // the same interaction. See the note at the top.
-                  `${documents.length} on file · ${
-                    isDesktop ? "open one to view or delete" : "swipe to remove"
-                  }`
-            }
-            action={
-              <TertiarySmButton onClick={() => openAddDocument()}>
-                <LuPlus /> Add
-              </TertiarySmButton>
-            }
-          />
+      {/* THE FOLDER IS `DocumentFolder`, shared with the death claim's — see the
+          note at the top of that file. What is passed in is what is genuinely
+          this screen's: the rows, the counts, the two Adds, and the admission
+          below.
 
-          {documents.length === 0 ? (
-            <EmptyStateCard
-              title="No documents yet"
-              description="Documents received for this service will appear here."
-            />
-          ) : (
+          THE STAND-IN, ADMITTED WHERE IT IS READ. Every service is checked
+          against the same six documents because there is no per-service
+          requirement table yet, and a checklist that does not say so is a
+          checklist a processor would be right to trust. One 11px line, on the
+          tab it is true of, and it goes on its own the day the rule arrives —
+          see `REQUIRED_DOCUMENTS_RULE_PENDING`. */}
+      <DocumentFolder
+        tab={tab}
+        onTabChange={onTabChange}
+        documents={{
+          count: documents.length,
+          action: (
+            <TertiarySmButton onClick={() => openAddDocument()}>
+              <LuPlus /> Add
+            </TertiarySmButton>
+          ),
+          isEmpty: documents.length === 0,
+          empty: {
+            title: "No documents yet",
+            description:
+              "Documents received for this service will appear here.",
+          },
+          children: (
             <ListFrame>
               {documents.map((document) => (
                 <ServiceDocumentRow
@@ -665,37 +699,25 @@ export function ServiceRecordDocuments({
                 />
               ))}
             </ListFrame>
-          )}
-        </Box>
-
-        {/* --------------------------- Deficiency --------------------------- */}
-        <Box minW={0}>
-          <SectionTitle
-            title="Deficiency"
-            subtitle={
-              deficiencies.length === 0
-                ? "Nothing outstanding"
-                : // The stand-in is admitted in the one line that is read
-                  // before the list under it — see the note at the top.
-                  `${deficiencies.length} outstanding${
-                    REQUIRED_DOCUMENTS_RULE_PENDING
-                      ? " · provisional requirement list"
-                      : ""
-                  }`
-            }
-            action={
-              <TertiarySmButton onClick={() => setAddDefOpen(true)}>
-                <LuPlus /> Add
-              </TertiarySmButton>
-            }
-          />
-
-          {deficiencies.length === 0 ? (
-            <EmptyStateCard
-              title="Nothing outstanding"
-              description="Everything this service was asked for has been received."
-            />
-          ) : (
+          ),
+        }}
+        deficiencies={{
+          count: deficiencies.length,
+          action: (
+            <TertiarySmButton onClick={() => setAddDefOpen(true)}>
+              <LuPlus /> Add
+            </TertiarySmButton>
+          ),
+          note: REQUIRED_DOCUMENTS_RULE_PENDING
+            ? "Provisional requirement list"
+            : undefined,
+          isEmpty: deficiencies.length === 0,
+          empty: {
+            title: "Nothing outstanding",
+            description:
+              "Everything this service was asked for has been received.",
+          },
+          children: (
             <ListFrame>
               {deficiencies.map((deficiency) => (
                 <ServiceDeficiencyRow
@@ -708,9 +730,9 @@ export function ServiceRecordDocuments({
                 />
               ))}
             </ListFrame>
-          )}
-        </Box>
-      </SimpleGrid>
+          ),
+        }}
+      />
 
       {/* A SECOND "NOTES" SECTION STOOD HERE and is gone. It listed the plan
           holder's notes — `getPlanholderNotes`, written on the plan itself —

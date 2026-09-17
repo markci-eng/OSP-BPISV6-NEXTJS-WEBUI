@@ -164,7 +164,7 @@ export interface ServiceNotice {
  * yet, and inventing a second placeholder here would be worse than sharing the
  * one that is already wrong.
  */
-const ACTING_USER = "MARITES BELIESTA";
+const ACTING_USER = "JACKIE PANES";
 
 /* ------------------------------ state ------------------------------ */
 

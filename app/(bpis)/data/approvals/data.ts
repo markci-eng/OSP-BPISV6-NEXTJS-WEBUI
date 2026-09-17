@@ -137,6 +137,7 @@ import type {
   EmployeeMovement,
   ReassignmentRequest,
   SA2Reassignment,
+  UserAssignmentRequest,
 } from "./types";
 
 export const APPROVAL_STATUSES: ApprovalStatus[] = [
@@ -256,3 +257,99 @@ export const MOVEMENT_DATA: EmployeeMovement[] = Array.from(
     };
   },
 );
+
+/**
+ * Pending and settled access group assignments.
+ *
+ * Written out rather than generated: a role change only reads as a decision
+ * worth approving when the user, the groups they hold, and what the change
+ * costs them in permissions line up — which they cannot when the three are
+ * picked independently out of a modulo. The users and AccessGroupCodes here
+ * are the ones the access console itself ships with.
+ */
+export const USER_ASSIGNMENT_DATA: UserAssignmentRequest[] = [
+  {
+    id: "UAR-0001",
+    user: "Jasmine Delos Reyes",
+    memberCode: "10247",
+    position: "Sales Supervisor",
+    branch: "Cebu — Mandaue",
+    currentGroups: "SLSSUP",
+    requestedGroups: "SLSSUP, BRMGR",
+    permissionEffect: "+21 / −0",
+    status: "Pending",
+    date: "2026-09-16",
+    requestDate: "2026-09-16",
+    requester: "Mark Cristian Ibe",
+  },
+  {
+    id: "UAR-0002",
+    user: "Renato Villanueva",
+    memberCode: "10382",
+    position: "Cashier",
+    branch: "Davao — Matina",
+    currentGroups: "CASHR",
+    requestedGroups: "CASHR, AUDIT",
+    permissionEffect: "+6 / −0",
+    status: "Pending",
+    date: "2026-09-15",
+    requestDate: "2026-09-15",
+    requester: "Grace Ann Tolentino",
+  },
+  {
+    id: "UAR-0003",
+    user: "Paolo Mendoza",
+    memberCode: "10612",
+    position: "New Hire — Trainee",
+    branch: "Manila — Ortigas",
+    currentGroups: "TRNEE",
+    requestedGroups: "SLSSUP",
+    permissionEffect: "+9 / −2",
+    status: "Pending",
+    date: "2026-09-15",
+    requestDate: "2026-09-15",
+    requester: "Jasmine Delos Reyes",
+  },
+  {
+    id: "UAR-0004",
+    user: "Mark Cristian Ibe",
+    memberCode: "10001",
+    position: "Branch Manager",
+    branch: "Cebu — Mandaue",
+    currentGroups: "BRMGR",
+    requestedGroups: "BRMGR, CASHR",
+    permissionEffect: "+5 / −0",
+    status: "Pending",
+    date: "2026-09-12",
+    requestDate: "2026-09-12",
+    requester: "Grace Ann Tolentino",
+  },
+  {
+    id: "UAR-0005",
+    user: "Aileen Bautista",
+    memberCode: "10455",
+    position: "Accounts Officer",
+    branch: "Manila — Ortigas",
+    currentGroups: "BRMGR",
+    requestedGroups: "AUDIT",
+    permissionEffect: "+3 / −27",
+    status: "Approved",
+    date: "2026-09-08",
+    requestDate: "2026-09-08",
+    requester: "Mark Cristian Ibe",
+  },
+  {
+    id: "UAR-0006",
+    user: "Grace Ann Tolentino",
+    memberCode: "10733",
+    position: "Regional Director",
+    branch: "National",
+    currentGroups: "BRMGR, AUDIT",
+    requestedGroups: "SYSADM",
+    permissionEffect: "+24 / −0",
+    status: "Denied",
+    date: "2026-09-04",
+    requestDate: "2026-09-04",
+    requester: "Mark Cristian Ibe",
+  },
+];

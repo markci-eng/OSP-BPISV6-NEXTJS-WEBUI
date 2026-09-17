@@ -3,19 +3,25 @@
 import * as React from "react";
 import {
   Box,
+  Button,
   Carousel,
   Flex,
+  HStack,
   IconButton,
   SimpleGrid,
   Text,
 } from "@chakra-ui/react";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
+  Bandage,
   Check,
   CheckCircle,
   ChevronLeft,
   ChevronRight,
   Clock,
   Files,
+  HandCoins,
+  HeartPulse,
   X,
   XCircle,
 } from "lucide-react";
@@ -27,13 +33,79 @@ import type {
   RowAction,
 } from "osp-ui-kit";
 
-import { approvalConfig } from "../config/approval-config";
+import { approvalConfig, type ApprovalConfig } from "../config/approval-config";
 import { ApprovalDetailContent } from "./ApprovalDetailContent";
-import type { ApprovalView } from "@/app/(bpis)/data/approvals/types";
+import { ApprovalStatusBadge } from "./ApprovalStatusBadge";
+import type { ApprovalView } from "../data/types";
 import { useMessageDialog } from "osp-ui-kit";
 
 function getApprovalStatus(row: any) {
-  return row.drs?.status ?? row.status;
+  return row.status;
+}
+
+type CardSpec = {
+  label: string;
+  value: number;
+  /** What pressing it narrows the table to. "All" clears the filter. */
+  filter: string;
+  sub: string;
+  icon: typeof Files;
+  /** A Chakra palette name — the card reads `${accent}.50` and friends. */
+  accent: string;
+};
+
+/**
+ * THE THREE NATURES A CLAIM CAN BE (user, 2026-09-15), in the order they were
+ * asked for.
+ *
+ * `filter` is the `ClaimKind` string the row carries, so pressing a card is a
+ * plain equality and nothing maps between two spellings.
+ *
+ * THE LABEL IS THE EYEBROW AND IT MUST HOLD ONE LINE. "Waiver of Installment"
+ * spelled out wraps to two at 10px uppercase in a quarter of the strip, and a
+ * wrapped eyebrow makes that one card taller than the three beside it — the row
+ * stops reading as a row. So the label is the sidebar's "WOI" and the sub-line
+ * underneath spells it out, which is the one place on the card with the width
+ * for it. The other two fit as they are.
+ *
+ * The accents deliberately avoid green and red: those mean approved and denied
+ * everywhere else on this page, and a nature is not an outcome.
+ */
+const CLAIM_KIND_CARDS = [
+  {
+    label: "Death Claim",
+    filter: "Death Claim",
+    sub: "Death benefit",
+    icon: HeartPulse,
+    accent: "teal",
+  },
+  {
+    label: "Dismemberment",
+    filter: "Dismemberment",
+    sub: "Loss of limb or sense",
+    icon: Bandage,
+    accent: "purple",
+  },
+  {
+    label: "WOI",
+    filter: "Waiver of Installment",
+    sub: "Waiver of installment",
+    icon: HandCoins,
+    accent: "orange",
+  },
+] as const;
+
+/**
+ * The card each queue opens on.
+ *
+ * "All" WHERE THE CARDS SPLIT BY KIND, because none of the three is the one a
+ * supervisor is here for — narrowing to Death Claim on arrival would hide the
+ * other two behind a card nobody pressed. The status cards keep their Pending
+ * default: there, "All" and "Pending" hold the same rows anyway, and Pending is
+ * the one that says what the list is.
+ */
+function defaultCardFilter(facet: ApprovalConfig["cardFacet"]): string {
+  return facet === "kind" ? "All" : "Pending";
 }
 
 export function ApprovalsTable({
@@ -49,22 +121,30 @@ export function ApprovalsTable({
 
   const [dataByView, setDataByView] = React.useState<
     Record<ApprovalView, any[]>
-  >(() => ({
-    "reassignment-doc": approvalConfig["reassignment-doc"].data,
-    drs: approvalConfig.drs.data,
-    "movement-employees": approvalConfig["movement-employees"].data,
-    "reassignment-sa2": approvalConfig["reassignment-sa2"].data,
-  }));
+  >(
+    () =>
+      Object.fromEntries(
+        Object.entries(approvalConfig).map(([key, cfg]) => [key, cfg.getData()]),
+      ) as Record<ApprovalView, any[]>,
+  );
 
   const data = dataByView[view];
 
-  const [statusFilter, setStatusFilter] = React.useState<string>("Pending");
-  const [carouselIdx, setCarouselIdx] = React.useState(1);
+  // WHICH CARD IS PRESSED — a status on one queue and a claim nature on the
+  // other, which is why this is not called `statusFilter` any more. What it
+  // means is decided by `config.cardFacet`, in one place: `matchesCard`.
+  const facet = config.cardFacet;
+  const [cardFilter, setCardFilter] = React.useState<string>(() =>
+    defaultCardFilter(facet),
+  );
+  const [carouselIdx, setCarouselIdx] = React.useState(
+    facet === "kind" ? 0 : 1,
+  );
   const carouselReady = React.useRef(false);
 
   // Only mount the mobile carousel on mobile viewports. When hidden with
   // `display: none` on desktop it can't measure its slides and re-emits
-  // onPageChange(0), which would clobber the Pending default with "All".
+  // onPageChange(0), which would clobber the default with the first card.
   const [isMobile, setIsMobile] = React.useState(false);
   React.useEffect(() => {
     const mq = window.matchMedia("(max-width: 47.99em)"); // below Chakra `md`
@@ -75,35 +155,42 @@ export function ApprovalsTable({
   }, []);
 
   React.useEffect(() => {
-    setStatusFilter("Pending");
-    setCarouselIdx(1);
-  }, [view]);
+    setCardFilter(defaultCardFilter(facet));
+    setCarouselIdx(facet === "kind" ? 0 : 1);
+  }, [facet, view]);
 
   const filteredData = React.useMemo(() => {
-    if (statusFilter === "All") return data;
+    if (cardFilter === "All") return data;
 
-    return data.filter((row) => {
-      return getApprovalStatus(row) === statusFilter;
-    });
-  }, [data, statusFilter]);
+    return data.filter((row) =>
+      facet === "kind"
+        ? row.kind === cardFilter
+        : getApprovalStatus(row) === cardFilter,
+    );
+  }, [cardFilter, data, facet]);
 
   function updateApprovalStatus(row: any, status: "Approved" | "Denied") {
-    if (row.drs) {
-      return {
-        ...row,
-        status,
-        drs: {
-          ...row.drs,
-          status,
-        },
-      };
-    }
-
     return {
       ...row,
       status,
     };
   }
+
+  /**
+   * Write the decision through to the module the record came from, where that
+   * module has somewhere to put it. See `ApprovalConfig.commit`.
+   *
+   * Called for each row rather than once per action, so the single and the bulk
+   * paths make the same writes and a batch cannot take a shortcut the single
+   * one does not.
+   */
+  const commit = React.useCallback(
+    (rows: any[], status: "Approved" | "Denied") => {
+      if (!config.commit) return;
+      for (const row of rows) config.commit(row, status);
+    },
+    [config],
+  );
 
   const handleApprove = React.useCallback(
     async (row: any) => {
@@ -118,6 +205,8 @@ export function ApprovalsTable({
 
       const rowId = config.getRowId(row, 0);
 
+      commit([row], "Approved");
+
       setDataByView((prev) => ({
         ...prev,
         [view]: prev[view].map((item, index) =>
@@ -129,7 +218,7 @@ export function ApprovalsTable({
 
       toast.success("Request approved");
     },
-    [config, messageBox, view],
+    [commit, config, messageBox, view],
   );
 
   const handleReject = React.useCallback(
@@ -145,6 +234,8 @@ export function ApprovalsTable({
 
       const rowId = config.getRowId(row, 0);
 
+      commit([row], "Denied");
+
       setDataByView((prev) => ({
         ...prev,
         [view]: prev[view].map((item, index) =>
@@ -156,7 +247,7 @@ export function ApprovalsTable({
 
       toast.error("Request denied");
     },
-    [config, messageBox, view],
+    [commit, config, messageBox, view],
   );
 
   const handleBulkApprove = React.useCallback(
@@ -174,6 +265,8 @@ export function ApprovalsTable({
         rows.map((row, index) => config.getRowId(row, index)),
       );
 
+      commit(rows, "Approved");
+
       setDataByView((prev) => ({
         ...prev,
         [view]: prev[view].map((item, index) =>
@@ -185,7 +278,7 @@ export function ApprovalsTable({
 
       toast.success(`Approved ${rows.length} request(s)`);
     },
-    [config, messageBox, view],
+    [commit, config, messageBox, view],
   );
 
   const handleBulkDeny = React.useCallback(
@@ -203,6 +296,8 @@ export function ApprovalsTable({
         rows.map((row, index) => config.getRowId(row, index)),
       );
 
+      commit(rows, "Denied");
+
       setDataByView((prev) => ({
         ...prev,
         [view]: prev[view].map((item, index) =>
@@ -214,74 +309,170 @@ export function ApprovalsTable({
 
       toast.error(`Denied ${rows.length} request(s)`);
     },
-    [config, messageBox, view],
+    [commit, config, messageBox, view],
   );
 
+  // A QUEUE THAT CANNOT BE DENIED OFFERS NO DENIAL, anywhere — see
+  // `ApprovalConfig.canDeny`. Filtered out rather than disabled: a greyed Deny
+  // says "not for this row", and the truth is "not for this kind of work".
   const rowActions = React.useMemo<RowAction<any>[]>(
-    () => [
-      {
-        id: "deny",
-        label: "Deny",
-        icon: X,
-        variant: "destructive",
-        hidden: (row) => getApprovalStatus(row) !== "Pending",
-        onClick: handleReject,
-      },
-      {
-        id: "approve",
-        label: "Approve",
-        icon: Check,
-        hidden: (row) => getApprovalStatus(row) !== "Pending",
-        onClick: handleApprove,
-      },
-    ],
-    [handleApprove, handleReject],
+    () =>
+      [
+        config.canDeny && {
+          id: "deny",
+          label: "Deny",
+          icon: X,
+          variant: "destructive" as const,
+          hidden: (row: any) => getApprovalStatus(row) !== "Pending",
+          onClick: handleReject,
+        },
+        {
+          id: "approve",
+          label: "Approve",
+          icon: Check,
+          hidden: (row: any) => getApprovalStatus(row) !== "Pending",
+          onClick: handleApprove,
+        },
+      ].filter(Boolean) as RowAction<any>[],
+    [config.canDeny, handleApprove, handleReject],
   );
 
   const bulkActions = React.useMemo<BulkAction<any>[]>(
-    () => [
-      {
-        id: "bulk-approve",
-        label: "Approve All",
-        icon: Check,
-        onClick: handleBulkApprove,
-      },
-      {
-        id: "bulk-reject",
-        label: "Deny All",
-        icon: X,
-        variant: "destructive",
-        onClick: handleBulkDeny,
-      },
-    ],
-    [handleBulkApprove, handleBulkDeny],
+    () =>
+      [
+        {
+          id: "bulk-approve",
+          label: "Approve All",
+          icon: Check,
+          onClick: handleBulkApprove,
+        },
+        config.canDeny && {
+          id: "bulk-reject",
+          label: "Deny All",
+          icon: X,
+          variant: "destructive" as const,
+          onClick: handleBulkDeny,
+        },
+      ].filter(Boolean) as BulkAction<any>[],
+    [config.canDeny, handleBulkApprove, handleBulkDeny],
   );
 
-  const summary = React.useMemo(() => {
-    const total = data.length;
-    const pending = data.filter(
-      (r) => getApprovalStatus(r) === "Pending",
-    ).length;
-    const approved = data.filter(
-      (r) => getApprovalStatus(r) === "Approved",
-    ).length;
-    const denied = data.filter((r) => getApprovalStatus(r) === "Denied").length;
-    return { total, pending, approved, denied };
-  }, [data]);
+  /**
+   * APPROVE AND DENY IN THE ROW — see `ApprovalConfig.decisionColumn`.
+   *
+   * Appended to the configured columns rather than written into the column file,
+   * because the two buttons have to call this component's handlers: those are
+   * what ask for confirmation, write through to the source module and move the
+   * row. A column file is a static description of a cell and has none of that.
+   *
+   * ONCE DECIDED IT IS A BADGE. The buttons go — a decided claim is not offered
+   * the other answer, the same rule the "…" menu applied with `hidden` — and
+   * what stands in their place is what was chosen. On a table with no Status
+   * column that is the only report the row gets.
+   */
+  const decisionColumn = React.useMemo<ColumnDef<any, any>>(
+    () => ({
+      id: "decision",
+      header: "Decision",
+      enableSorting: false,
+      enableColumnFilter: false,
+      enableHiding: false,
+      meta: { responsivePriority: 1, alwaysVisible: true },
+      cell: ({ row }: any) => {
+        const status = getApprovalStatus(row.original);
+        if (status !== "Pending") return <ApprovalStatusBadge status={status} />;
 
-  const cards = React.useMemo(
-    () => [
-      {
-        label: "Total Requests",
-        value: summary.total,
-        filter: "All",
-        sub: "All requests",
-        icon: Files,
-        accent: "blue",
+        // THE CLICK MUST NOT REACH THE ROW. The row itself opens the detail
+        // drawer, so without this, pressing Approve put the confirmation dialog
+        // and the drawer on screen together — the dialog asking about a claim
+        // whose record was sliding in behind it.
+        const decide = (act: (row: any) => void) => (event: React.MouseEvent) => {
+          event.stopPropagation();
+          act(row.original);
+        };
+
+        return (
+          <HStack gap={1.5}>
+            <Button
+              size="xs"
+              variant="outline"
+              colorPalette="green"
+              borderRadius="full"
+              onClick={decide(handleApprove)}
+            >
+              <Check size={13} />
+              Approve
+            </Button>
+            {config.canDeny && (
+              <Button
+                size="xs"
+                variant="outline"
+                colorPalette="red"
+                borderRadius="full"
+                onClick={decide(handleReject)}
+              >
+                <X size={13} />
+                Deny
+              </Button>
+            )}
+          </HStack>
+        );
       },
+    }),
+    [config.canDeny, handleApprove, handleReject],
+  );
+
+  const columns = React.useMemo(
+    () =>
+      config.decisionColumn
+        ? [...config.columns, decisionColumn]
+        : config.columns,
+    [config.columns, config.decisionColumn, decisionColumn],
+  );
+
+  const countOf = React.useCallback(
+    (predicate: (row: any) => boolean) => data.filter(predicate).length,
+    [data],
+  );
+
+  const cards = React.useMemo(() => {
+    const total: CardSpec = {
+      label: "Total Requests",
+      value: data.length,
+      filter: "All",
+      sub: "All requests",
+      icon: Files,
+      accent: "blue",
+    };
+
+    // ONE CARD PER NATURE, AND ALL THREE ARE ALWAYS DRAWN — including the ones
+    // reading zero. The strip is a map of what this queue can hold, and a
+    // supervisor who has learned that WOI is the last card should not have to
+    // find it again on a morning when none is waiting. Same rule the service
+    // payables stage strip keeps, and the opposite of the Rejected card above:
+    // that one could NEVER be anything but zero, these are empty today.
+    //
+    // Note `isNatureBuilt` — only Death has a pipeline behind it so far, so the
+    // other two read zero until a dismemberment or a waiver can be verified.
+    if (facet === "kind") {
+      return [
+        total,
+        ...CLAIM_KIND_CARDS.map((kind) => ({
+          label: kind.label,
+          value: countOf((row) => row.kind === kind.filter),
+          filter: kind.filter,
+          sub: kind.sub,
+          icon: kind.icon,
+          accent: kind.accent,
+        })),
+      ];
+    }
+
+    return [
+      total,
       {
         label: "Pending",
-        value: summary.pending,
+        value: countOf((r) => getApprovalStatus(r) === "Pending"),
         filter: "Pending",
         sub: "Awaiting review",
         icon: Clock,
@@ -289,26 +480,32 @@ export function ApprovalsTable({
       },
       {
         label: "Approved",
-        value: summary.approved,
+        value: countOf((r) => getApprovalStatus(r) === "Approved"),
         filter: "Approved",
         sub: "Completed",
         icon: CheckCircle,
         accent: "green",
       },
-      {
-        label: "Rejected",
-        value: summary.denied,
-        filter: "Denied",
-        sub: "Denied",
-        icon: XCircle,
-        accent: "red",
-      },
-    ],
-    [summary],
-  );
+      // NO REJECTED CARD WHERE NOTHING CAN BE REJECTED — see
+      // `ApprovalConfig.canDeny`. A card that can only ever read zero invites
+      // the one click on this strip that can never show anything.
+      ...(config.canDeny
+        ? [
+            {
+              label: "Rejected",
+              value: countOf((r) => getApprovalStatus(r) === "Denied"),
+              filter: "Denied",
+              sub: "Denied",
+              icon: XCircle,
+              accent: "red",
+            },
+          ]
+        : []),
+    ];
+  }, [config.canDeny, countOf, data.length, facet]);
 
-  const renderCardContent = (card: (typeof cards)[number], i: number) => {
-    const isActive = statusFilter === card.filter;
+  const renderCardContent = (card: CardSpec, i: number) => {
+    const isActive = cardFilter === card.filter;
     return (
       <Box
         position="relative"
@@ -322,7 +519,7 @@ export function ApprovalsTable({
         cursor="pointer"
         transform={isActive ? "translateY(-2px)" : "none"}
         onClick={() => {
-          setStatusFilter(card.filter);
+          setCardFilter(card.filter);
           setCarouselIdx(i);
         }}
         transition="all 0.15s ease"
@@ -395,15 +592,19 @@ export function ApprovalsTable({
 
   return (
     <Flex direction="column" gap={4}>
-      {/* Desktop: 4-column grid */}
-      <SimpleGrid columns={4} gap={3} display={{ base: "none", md: "grid" }}>
+      {/* Desktop: one column per card — three where the queue has no denial. */}
+      <SimpleGrid
+        columns={cards.length}
+        gap={3}
+        display={{ base: "none", md: "grid" }}
+      >
         {cards.map((card, i) => (
           <Box key={card.label}>{renderCardContent(card, i)}</Box>
         ))}
       </SimpleGrid>
 
       {/* Mobile: carousel (only mounted on mobile so its page events can't
-          leak into statusFilter on desktop) */}
+          leak into cardFilter on desktop) */}
       {isMobile && (
         <Box>
           <Carousel.Root
@@ -418,7 +619,7 @@ export function ApprovalsTable({
                 return;
               }
               setCarouselIdx(details.page);
-              setStatusFilter(cards[details.page].filter);
+              setCardFilter(cards[details.page].filter);
             }}
           >
             <Carousel.ItemGroup>
@@ -453,9 +654,11 @@ export function ApprovalsTable({
         title={config.title}
         description={config.description}
         data={filteredData}
-        columns={config.columns}
+        columns={columns}
         getRowId={config.getRowId}
-        rowActions={rowActions}
+        // NOT BOTH. Where the decision is in the row, the "…" menu would be a
+        // second control offering the same two answers one click further away.
+        rowActions={config.decisionColumn ? undefined : rowActions}
         bulkActions={bulkActions}
         renderDetail={(row) => (
           <ApprovalDetailContent

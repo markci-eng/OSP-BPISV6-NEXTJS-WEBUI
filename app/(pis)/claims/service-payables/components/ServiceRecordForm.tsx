@@ -27,8 +27,9 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { Controller, useForm, type Control } from "react-hook-form";
-import { chakra, Checkbox, Field, Flex, SimpleGrid } from "@chakra-ui/react";
+import { Box, chakra, Checkbox, Field, Flex, SimpleGrid } from "@chakra-ui/react";
 import { FloatingLabelInput, FloatingLabelSelect } from "osp-ui-kit";
+import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { db } from "../../../data";
 import { FloatingLabelDate } from "../../components/floating-fields";
 import { SectionTitle } from "../../components/section-title";
@@ -367,8 +368,29 @@ export interface ServiceRecordFormProps {
    * differences above arrived as part of the verifier's screen, and the queue
    * that had them by accident — one component drawing both — was not the one
    * they were asked for.
+   *
+   * `"read"` IS A RECORD OFF A LIST rather than off a queue — the conveyor's
+   * held billing. It lands in the same half as the three above: the record is
+   * being read, so it is titled as a thing rather than as an act. See
+   * {@link RecordActionsProps.action}, which draws the distinction that matters
+   * more — which commit is offered — and offers none for this one.
    */
-  action?: "terminate" | "verify" | "approve" | "endorse";
+  action?: "terminate" | "verify" | "approve" | "endorse" | "read";
+  /**
+   * Take the reader to the DEFICIENCY LIST — what the Deficient tick does when
+   * it is pressed (user, 2026-09-14: "when click will move to the section of the
+   * documents").
+   *
+   * THE FORM DOES NOT KNOW WHERE THAT IS, which is why this is a callback and
+   * not a scroll written here. The Documents section is a sibling in a column
+   * this component has never had a reference to, it is a different element in
+   * the drawer than it is on the page, and which TAB of it should open is the
+   * section's own state. The caller holds all three.
+   *
+   * Optional, and the tick is the inert reading it always was without it — see
+   * the control itself, which is `disabled` exactly when this is absent.
+   */
+  onShowDeficiencies?: () => void;
 }
 
 /** The pair the CSP amount is priced by — see the re-pricing effect below. */
@@ -382,6 +404,7 @@ export function ServiceRecordForm({
   onSave,
   locked = false,
   action = "terminate",
+  onShowDeficiencies,
 }: ServiceRecordFormProps) {
   /**
    * The record is being READ on one of the queues past For Process — see
@@ -772,12 +795,27 @@ export function ServiceRecordForm({
             />
 
             {/* DEFICIENT — SYSTEM-GENERATED, AND NEVER THE PROCESSOR'S TO TICK
-                (user, 2026-08-27). ON THE VERIFIER'S RECORD ONLY: it was asked
-                for as part of what a verifier reads, and For Process is left as
-                it was. That queue is not without the fact — the same rule fills
-                in the "Waiting on N requirements" line under its Terminate
-                button, and the folder itself is in the Documents section below.
-                See {@link ServiceRecordFormProps.action}.
+                (user, 2026-08-27).
+
+                ON EVERY QUEUE SINCE 2026-09-14 (user: "add the deficient
+                here"), where it used to be the verifier's alone. The older rule
+                was that the tick arrived as part of what a VERIFIER reads and
+                For Process should be left as it was; what changed is that the
+                processor is the one who can do something about it. They are
+                standing in the record that is short a document, and the fact
+                was reaching them only as a sentence under a button in the rail.
+
+                AND IT IS A WAY IN, NOT ONLY A FACT (user, 2026-09-14: "when
+                click will move to the section of the documents"). Pressing it
+                opens the Deficiency list below and scrolls there — which is the
+                one thing a processor wants the moment they see the tick, and it
+                is two thousand pixels down a record on a long folder. See
+                `onShowDeficiencies`.
+
+                IT STILL CANNOT BE TICKED. `checked` is derived, so a press
+                changes nothing here; what it changes is where you are standing,
+                and the place it takes you is where the fact is actually altered
+                — submit the document, or withdraw the deficiency.
 
                 It is derived, not decided: a service is
                 deficient when something is outstanding against it, which is the
@@ -800,16 +838,76 @@ export function ServiceRecordForm({
                 black-bordered one — which reads as two different KINDS of
                 control before it reads as a distinction about who sets them.
                 Neither can be touched on this screen, and that is the thing the
-                row should say once, in one voice. */}
-            {verifying && (
-              <Checkbox.Root checked={deficient} disabled>
-                <Checkbox.HiddenInput />
+                row should say once, in one voice.
+
+                WHICH IS WHY IT IS NO LONGER `disabled` WHERE IT LEADS
+                SOMEWHERE. A disabled control takes no clicks at all, so the
+                tick could not be the way into the deficiency list and stay
+                greyed out. Where the caller gives it somewhere to go it is a
+                live control — cursor, hover, focus ring — and where it does not,
+                it is the disabled reading it always was. The tick's state is
+                derived either way, so neither version can be set from here. */}
+            {/* THE CLICK IS ON THE WRAPPER, AND THE CHECKBOX TAKES NO POINTER
+                EVENTS AT ALL.
+
+                It was on `Checkbox.Root` itself for an afternoon and that was
+                the wrong place to put it. The root is a <label> wrapping a
+                hidden input, and a click on it is handled by the checkbox's own
+                machinery first: the label forwards to the input, the input
+                re-dispatches, and whether a handler passed in as a prop survives
+                that depends on the order the library merges it in. A control
+                whose press MIGHT arrive is not a control.
+
+                So the box and its label are made inert — `pointerEvents: none`
+                — and the plain element around them takes the press. There is
+                nothing left to swallow it, and the checkbox goes back to doing
+                the one thing it is good at: showing a state.
+
+                `readOnly` rather than `disabled` now that the wrapper is the
+                control: disabled greys the tick, and this one is a fact being
+                READ, in full contrast, on a control that is very much alive. */}
+            <Box
+              role={onShowDeficiencies ? "button" : undefined}
+              tabIndex={onShowDeficiencies ? 0 : undefined}
+              onClick={onShowDeficiencies}
+              onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
+                if (!onShowDeficiencies) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onShowDeficiencies();
+                }
+              }}
+              cursor={onShowDeficiencies ? "pointer" : undefined}
+              borderRadius="md"
+              title={
+                onShowDeficiencies
+                  ? "Open the deficiency list below"
+                  : undefined
+              }
+              _focusVisible={{
+                outline: "2px solid",
+                outlineColor: BRAND_COLORS.primaryGreen,
+                outlineOffset: "2px",
+              }}
+              _hover={
+                onShowDeficiencies
+                  ? { "& [data-part='label']": { color: "gray.900" } }
+                  : undefined
+              }
+            >
+              <Checkbox.Root
+                checked={deficient}
+                readOnly
+                disabled={!onShowDeficiencies}
+                pointerEvents="none"
+              >
+                <Checkbox.HiddenInput tabIndex={-1} />
                 <Checkbox.Control />
                 <Checkbox.Label fontSize="sm" color="gray.700">
                   Deficient
                 </Checkbox.Label>
               </Checkbox.Root>
-            )}
+            </Box>
           </Flex>
         </SimpleGrid>
       </Flex>
