@@ -459,6 +459,12 @@ export const SideBarItemsAMD: NavItem[] = [
     href: "/accounts-management/cofp",
   },
   {
+    icon: RiClipboardLine,
+    activeIcon: RiClipboardFill,
+    label: "COFP2",
+    href: "/accounts-management/certificateoffullpayment",
+  },
+  {
     icon: BsFileEarmarkPlus,
     activeIcon: BsFileEarmarkPlusFill,
     label: "Credit Memo",

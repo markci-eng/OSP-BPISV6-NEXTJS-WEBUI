@@ -24,16 +24,13 @@ export function LoginPage() {
    * `username` is the email — the field is labelled for whichever the product
    * calls it, and this API takes an email.
    *
-   * THE PASSWORD IS NOT SENT AS TYPED. It is replaced with the seed's one
-   * accepted value, which is how this screen has always behaved: every account
-   * in `lib/users.ts` shares `DEMO_PASSWORD`, and the route now checks against
-   * it. Written as a literal rather than imported so the seed does not have to
-   * be bundled into the sign-in screen to get one string out of it — the two
-   * must be kept the same by hand.
-   *
-   * Left explicit rather than tidied away, because the day a real auth API
-   * replaces the seed, this line is the reason every sign-in suddenly fails —
-   * and passing `password` through is then the whole fix.
+   * THE PASSWORD IS NOT SENT AS TYPED. It is replaced with the mock system's
+   * one accepted value, which is how this screen has always behaved: the route
+   * behind it does not validate credentials yet (see its own TODO) and every
+   * account in the seed shares this password. Left explicit rather than tidied
+   * away, because the day the route starts checking, this line is the reason
+   * every sign-in suddenly fails — and passing `password` through is then the
+   * whole fix.
    */
   async function onLogin(username: string, _password: string) {
     const response = await fetch("/api/auth/login", {
@@ -51,22 +48,8 @@ export function LoginPage() {
         .then((body: { error?: string }) => body?.error)
         .catch(() => undefined);
 
-      throw new Error(
-        message ?? "Could not sign in. Check your email and try again.",
-      );
+      throw new Error(message ?? "Could not sign in. Check your email and try again.");
     }
-
-    // The kit reads the name from `localStorage`, not from the session — it
-    // cannot see the session at all, which is why it falls back to a hardcoded
-    // name otherwise. So hand it the one the route just resolved.
-    //
-    // THIS OVERWRITES A RENAME, and should: the kit's profile screen writes the
-    // same key, and keeping the previous value here would greet whoever signs
-    // in next by the last person's name.
-    const { user } = (await response.json().catch(() => ({}))) as {
-      user?: { name?: string };
-    };
-    if (user?.name) localStorage.setItem("user-display-name", user.name);
 
     // A full reload rather than a router push, deliberately: the session is a
     // cookie the SERVER reads to decide the user's role and which routes they
@@ -75,14 +58,5 @@ export function LoginPage() {
     window.location.reload();
   }
 
-  return (
-    <LoginForm
-      onLogin={onLogin}
-      showBiometricLogin={true}
-      showGoogleLogin={true}
-      onBiometricLogin={() => onLogin("branch@stpeter.com.ph", "1234")}
-      onGoogleLogin={() => onLogin("branch@stpeter.com.ph", "1234")}
-      onFacebookLogin={() => onLogin("branch@stpeter.com.ph", "1234")}
-    />
-  );
+  return <LoginForm onLogin={onLogin} />;
 }
