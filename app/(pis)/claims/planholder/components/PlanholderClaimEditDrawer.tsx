@@ -23,7 +23,9 @@ import {
 } from "../../components/floating-fields";
 import {
   editClaim,
+  editableClaimFieldLabel,
   EDITABLE_CLAIM_FIELDS,
+  incidentLabels,
   type ClaimEditValues,
   type EditableClaimField,
 } from "../../claim-store";
@@ -81,6 +83,9 @@ export function PlanholderClaimEditDrawer({
     if (open && claim) reset(valuesOf(claim));
   }, [open, claim, reset]);
 
+  // Death, disability or dismemberment — the date and cause are named for it.
+  const labels = incidentLabels(claim?.kind);
+
   const onSubmit = (values: ClaimEditValues) => {
     if (!claim) return;
 
@@ -95,11 +100,11 @@ export function PlanholderClaimEditDrawer({
       return;
     }
 
-    editClaim(claim.reference, values, changed);
+    editClaim(claim.reference, values, changed, undefined, claim.kind);
     onClose();
     toast.success("Claim updated", {
       description: `${changed
-        .map((f) => EDITABLE_CLAIM_FIELDS[f])
+        .map((f) => editableClaimFieldLabel(f, claim.kind))
         .join(", ")} — recorded in the claim's remarks.`,
     });
   };
@@ -197,7 +202,7 @@ export function PlanholderClaimEditDrawer({
                       name="dateOfDeathISO"
                       render={({ field }) => (
                         <FloatingLabelDate
-                          label="Date of Death"
+                          label={labels.date}
                           value={field.value}
                           onChange={field.onChange}
                           onBlur={field.onBlur}
@@ -212,7 +217,7 @@ export function PlanholderClaimEditDrawer({
                       name="causeOfDeath"
                       render={({ field }) => (
                         <FloatingLabelInput
-                          label="Cause of Death"
+                          label={labels.cause}
                           value={field.value}
                           onValueChange={field.onChange}
                           onBlur={field.onBlur}

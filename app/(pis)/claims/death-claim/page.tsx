@@ -987,9 +987,9 @@ export default function DeathClaimV3Page() {
                     actions open as the phone's list, every one shown, with no
                     "More" behind them. Desktop only: below `lg` the stage card
                     and the quick access below stay exactly as they are. */}
-                {/* THE SPINE — the line to this column's left, as tall as the
-                    column (capped at the screen), the fold's button at its
-                    middle. Inside the sticky rail so it pins with it. */}
+                {/* THE SPINE — the line in the gap between this column and the
+                    record, a screen tall, the fold's button at its middle.
+                    Inside the sticky rail so it pins with it. */}
                 <RailSpine
                   collapsed={railCollapsed}
                   onToggle={() => setRailCollapsed(!railCollapsed)}
@@ -1271,20 +1271,20 @@ export default function DeathClaimV3Page() {
                   </KitCardShape>
                 )}
 
-                {/* WHO IS PAID — first of the claim-scoped sections, because
-                    it is the decision the rest are evidence for. */}
-                <SectionCard>
-                  <ClaimPayees claim={claim} />
-                </SectionCard>
-
                 {/* The PLAN's remarks, not the claim's — its account history,
-                    which is why it reads the same whichever claim is served. */}
+                    which is why it reads the same whichever claim is served.
+                    Read before the payee (user, 2026-10-07). */}
                 <SectionCard>
                   <PlanholderRemarks
                     remarks={getPlanholderRemarks(claim.lpaNo)}
                     showNotes={false}
                     showSubtitles={false}
                   />
+                </SectionCard>
+
+                {/* WHO IS PAID — the decision the rest are evidence for. */}
+                <SectionCard>
+                  <ClaimPayees claim={claim} />
                 </SectionCard>
 
                 {/* THE TWO LOOK-UPS. Neither is what a claim is decided on —

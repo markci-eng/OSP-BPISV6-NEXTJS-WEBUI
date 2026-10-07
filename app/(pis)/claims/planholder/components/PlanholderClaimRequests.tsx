@@ -13,7 +13,7 @@ import {
 import { LuFileText } from "react-icons/lu";
 import { EmptyStateCard } from "osp-ui-kit";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { useClaimStore } from "../../claim-store";
+import { incidentLabels, useClaimStore } from "../../claim-store";
 import {
   getClaimRequests,
   type ClaimPhase,
@@ -214,7 +214,10 @@ function FeatureCard({
           where three would leave one alone on a second row and the eye reading
           down a column would find a different field in each card. */}
       <SimpleGrid columns={2} gap={4}>
-        <Detail label="Date of Death" value={claim.dateOfDeathDisplay ?? "—"} />
+        <Detail
+          label={incidentLabels(claim.kind).date}
+          value={claim.dateOfDeathDisplay ?? "—"}
+        />
         <Detail
           label="Contestability"
           value={contestabilityLabel(claim)}

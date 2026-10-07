@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Button, Flex, HStack } from "@chakra-ui/react";
+import { Box, Button, Flex, HStack } from "@chakra-ui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   Bandage,
@@ -13,6 +13,7 @@ import {
   HeartPulse,
   X,
   XCircle,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,7 +32,6 @@ import {
   FilterCards,
   type FilterCardSpec,
 } from "../../components/filter-cards";
-
 function getApprovalStatus(row: any) {
   return row.status;
 }
@@ -80,6 +80,9 @@ const CLAIM_KIND_CARDS = [
   },
 ] as const;
 
+/** The Special card's `filter` — a priority, so it cannot be a `ClaimKind`. */
+const SPECIAL_FILTER = "Special";
+
 /**
  * The card each queue opens on.
  *
@@ -123,6 +126,15 @@ export function ApprovalsTable({
     defaultCardFilter(facet),
   );
 
+  /**
+   * THE SPECIAL CARD is the only state in which the table's check-all box is
+   * offered (user, 2026-10-07). Selecting every row is a bulk approval of
+   * everything in view, and only Specials — the seven-day claims that overtake
+   * the queue — are meant to be cleared that way. Every other row is approved
+   * one at a time.
+   */
+  const canCheckAll = facet === "kind" && cardFilter === SPECIAL_FILTER;
+
   React.useEffect(() => {
     setCardFilter(defaultCardFilter(facet));
   }, [facet, view]);
@@ -132,7 +144,9 @@ export function ApprovalsTable({
 
     return data.filter((row) =>
       facet === "kind"
-        ? row.kind === cardFilter
+        ? cardFilter === SPECIAL_FILTER
+          ? row.priority === "Special"
+          : row.kind === cardFilter
         : getApprovalStatus(row) === cardFilter,
     );
   }, [cardFilter, data, facet]);
@@ -425,6 +439,18 @@ export function ApprovalsTable({
     if (facet === "kind") {
       return [
         total,
+        // SPECIAL, BETWEEN TOTAL AND THE NATURES (user, 2026-10-07) — a
+        // priority, not a nature, but pressed the same way. Every Special is a
+        // death claim, so it needs no combining with the cards after it. Pink,
+        // not red: red means denied on this page.
+        {
+          label: "Special",
+          value: countOf((row) => row.priority === "Special"),
+          filter: SPECIAL_FILTER,
+          sub: "Filed within 7 days",
+          icon: Zap,
+          accent: "pink",
+        },
         ...CLAIM_KIND_CARDS.map((kind) => ({
           label: kind.label,
           value: countOf((row) => row.kind === kind.filter),
@@ -480,8 +506,23 @@ export function ApprovalsTable({
         onSelect={setCardFilter}
       />
 
+      {/* THE CHECK-ALL BOX IS HIDDEN unless Special is on — see `canCheckAll`.
+          The kit has no switch for the header checkbox alone (only `selection`,
+          which takes the row boxes with it), so it is hidden here, scoped to
+          this table's head. Row boxes and the bulk bar are untouched.
+
+          Keyed on `canCheckAll` too, so turning Special off drops a check-all
+          selection made under it rather than leaving rows ticked that the
+          reader can no longer see were picked in bulk. */}
+      <Box
+        css={
+          canCheckAll
+            ? undefined
+            : { "& thead [data-scope='checkbox']": { display: "none" } }
+        }
+      >
       <DataTable<any>
-        key={view}
+        key={`${view}-${canCheckAll}`}
         title={config.title}
         description={config.description}
         data={filteredData}
@@ -528,6 +569,7 @@ export function ApprovalsTable({
           },
         }}
       />
+      </Box>
     </Flex>
   );
 }

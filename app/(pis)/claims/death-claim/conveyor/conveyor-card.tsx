@@ -48,7 +48,7 @@
 import { Box, Flex, SimpleGrid, Text } from "@chakra-ui/react";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { deathBenefitLabel, formatFiledDate } from "@/app/(pis)/data";
-import { getClaimDecision } from "../../claim-store";
+import { getClaimDecision, incidentLabels } from "../../claim-store";
 import { InfoLabel } from "../../components/info-label";
 import { CARD_SHAPE } from "../../components/section-card";
 import {
@@ -82,6 +82,8 @@ export function ConveyorCard({ claim }: { claim: DeathClaim }) {
    * the only honest way to know whether the field means anything.
    */
   const hasPriority = claim.kind === "Death Claim";
+
+  const labels = incidentLabels(claim.kind);
 
   return (
     // The shared shape, not a restatement of it — see `CARD_SHAPE`.
@@ -169,11 +171,13 @@ export function ConveyorCard({ claim }: { claim: DeathClaim }) {
             label="Benefit"
             value={deathBenefitLabel(claim.benefits)}
           />
-          <InfoLabel label="Cause" value={claim.typeOfIncident} />
+          {/* Named for the nature — death, disability or dismemberment — see
+              `incidentLabels`. */}
+          <InfoLabel label={labels.cause} value={claim.typeOfIncident} />
           {/* The incident date and not the filing date: it is what makes this
               claim Special — one filed within seven days of the incident
               overtakes — so it is the date the queue order turns on. */}
-          <InfoLabel label="Date of Incident" value={claim.incidentDate} />
+          <InfoLabel label={labels.date} value={claim.incidentDate} />
         </SimpleGrid>
       </Box>
 

@@ -23,18 +23,6 @@ export const CONVEYOR_GAP = "24px";
 export const CONVEYOR_TRACK_COLLAPSED = "56px minmax(0, 1fr)";
 
 /**
- * How far left of the rail the spine sits — the line the fold's button is on
- * (see `RailSpine`): its 26px, and 8px of air before the rail.
- *
- * IN THE PAGE'S GUTTER, NOT THE CONVEYOR'S WIDTH (user, 2026-10-05: "the
- * conveyor is still align with the title"). The page row pads its content
- * 44px and the shell 16px more, so there are 60px between the sidebar and the
- * title — measured at 1440 — and the spine hangs into them. Nothing between
- * clips: the first box that does is the shell's scroller, at the sidebar edge.
- */
-export const CONVEYOR_SPINE_ROOM = "34px";
-
-/**
  * A screenful, less everything above the conveyor — the rail's bound, and the
  * spine's. Measured in the shell: the header and the page heading put the
  * conveyor's top at 155px on the view a record arrives in. See

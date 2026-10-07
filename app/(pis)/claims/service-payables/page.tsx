@@ -1578,10 +1578,10 @@ export default function ServicePayablesPage() {
                         with the scrolling body inside; see
                         `CONVEYOR_RAIL_SHELL`. */}
                     <GridItem css={isDesktop ? CONVEYOR_RAIL_SHELL : STACKED_ITEM}>
-                      {/* THE SPINE — the line to the rail's left, as tall as
-                          the rail (capped at the screen), the fold's button at
-                          its middle. On the SHELL, which clips nothing — the
-                          body scrolls, and would cut it off. See `RailSpine`. */}
+                      {/* THE SPINE — the line in the gap between the rail and
+                          the record, a screen tall, the fold's button at its
+                          middle. On the SHELL, which clips nothing — the body
+                          scrolls, and would cut it off. See `RailSpine`. */}
                       {isDesktop && (
                         <RailSpine
                           collapsed={folded}

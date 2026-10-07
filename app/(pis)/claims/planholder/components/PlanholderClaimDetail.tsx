@@ -50,6 +50,7 @@ import {
   addClaimNote,
   endorseClaim,
   ENDORSEMENT_TARGETS,
+  incidentLabels,
   verifyClaim,
   type EndorsementTarget,
 } from "../../claim-store";
@@ -163,13 +164,13 @@ const detailItems = (
   { label: "Status", value: claim.phase },
   { label: "Nature of Claim", value: claim.natureOfClaim },
 
-  { label: "Date of Death", value: claim.dateOfDeathDisplay },
+  { label: incidentLabels(claim.kind).date, value: claim.dateOfDeathDisplay },
   { label: "Age at Death", value: claim.ageOfDeath },
   { label: "Contestability", value: contestabilityLabel(claim) || undefined },
   // Nothing records this yet — see `isDeficient` on the request.
   { label: "Deficient" },
 
-  { label: "Cause of Death", value: claim.causeOfIncident },
+  { label: incidentLabels(claim.kind).cause, value: claim.causeOfIncident },
   // Nor this — see `intermentDateDisplay` on the request.
   { label: "Interment Date", value: claim.intermentDateDisplay },
   { label: "Date Filed", value: claim.filedDisplay },

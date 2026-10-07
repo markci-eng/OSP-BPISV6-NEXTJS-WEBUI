@@ -23,7 +23,7 @@ import {
   type Contestability,
   type DeathBenefit,
 } from "../data";
-import type { ClaimPhase } from "../data";
+import type { ClaimKind, ClaimPhase } from "../data";
 import { CURRENT_USER } from "../data/current-user";
 
 /* ------------------------------ model ------------------------------ */
@@ -222,6 +222,36 @@ export const EDITABLE_CLAIM_FIELDS = {
 } as const;
 
 export type EditableClaimField = keyof typeof EDITABLE_CLAIM_FIELDS;
+
+/**
+ * What the incident's date and cause are called on a claim of this kind. The
+ * fields are the same on every claim — `incidentDate` / `causeOfIncident` — but
+ * a Waiver of Installment is a disability and a Dismemberment is a loss of limb,
+ * so "Date of Death" on either is wrong. An unknown kind reads as a death claim.
+ */
+export function incidentLabels(kind?: ClaimKind): {
+  date: string;
+  cause: string;
+} {
+  switch (kind) {
+    case "Waiver of Installment":
+      return { date: "Date of Disability", cause: "Cause of Disability" };
+    case "Dismemberment":
+      return { date: "Date of Dismemberment", cause: "Cause of Dismemberment" };
+    default:
+      return { date: "Date of Death", cause: "Cause of Death" };
+  }
+}
+
+/** How an editable field reads on a claim of this kind — see {@link incidentLabels}. */
+export function editableClaimFieldLabel(
+  field: EditableClaimField,
+  kind?: ClaimKind,
+): string {
+  if (field === "dateOfDeathISO") return incidentLabels(kind).date;
+  if (field === "causeOfDeath") return incidentLabels(kind).cause;
+  return EDITABLE_CLAIM_FIELDS[field];
+}
 
 /** The editable values, as the edit form holds them. Dates are ISO ("2026-04-18"). */
 export interface ClaimEditValues {
@@ -985,6 +1015,7 @@ export function editClaim(
   values: ClaimEditValues,
   changed: EditableClaimField[],
   editedBy: string = CLAIM_AUDIT_USER,
+  kind?: ClaimKind,
 ): ClaimEdit | undefined {
   if (changed.length === 0) return editsByRequest.get(requestNo);
 
@@ -999,7 +1030,7 @@ export function editClaim(
   const summary = changed
     .map(
       (field) =>
-        `${EDITABLE_CLAIM_FIELDS[field]} → ${editedValueLabel(field, values[field])}`,
+        `${editableClaimFieldLabel(field, kind)} → ${editedValueLabel(field, values[field])}`,
     )
     .join("; ");
   appendRemark(

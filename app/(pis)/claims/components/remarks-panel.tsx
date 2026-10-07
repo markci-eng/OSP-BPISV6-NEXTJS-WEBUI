@@ -101,7 +101,12 @@ export function RemarksPanel({
         readOnly
         placeholder={empty}
         rows={rows}
-        resize="none"
+        // `minH="auto"` so one row really is one row — the textarea's theme
+        // minimum would otherwise hold it at about three.
+        minH="auto"
+        // Dragged taller by the reader when a trail runs long — height only,
+        // so the panel never pushes past its column (user, 2026-10-07).
+        resize="vertical"
         bg="gray.50"
         color="gray.700"
         borderColor="gray.200"

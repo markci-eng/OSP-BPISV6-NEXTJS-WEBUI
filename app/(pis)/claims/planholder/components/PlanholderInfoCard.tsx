@@ -772,8 +772,8 @@ export function PlanholderInfoCard({
    * THE PHONE'S ROWS TOO. A marked row is drawn as an `InfoLabel`, which is the
    * same leader row below `lg`, because the shared `RowItem` takes only a string.
    *
-   * A mark on a label that only Personal Info carries — a part of the name —
-   * opens Show more, so a correction is never folded away where nobody sees it.
+   * A mark on a label only Personal Info carries does NOT open Show more — see
+   * `detailsOpen`.
    */
   labelMarks?: LabelMarks;
   /**
@@ -863,20 +863,11 @@ export function PlanholderInfoCard({
    * Shut to start with — see the block that renders them. The summary above them
    * is not part of this and never closes.
    */
+  // NEVER OPENED FOR THE READER, not even when a correction lands in the
+  // folded panels (user, 2026-10-07). The edited-fields icon and the marked
+  // labels already say a detail changed; opening Show more on top of them was
+  // a third notice of the same thing.
   const [detailsOpen, setDetailsOpen] = useState(false);
-
-  // Opened when a mark lands where only the folded panels would show it — see
-  // `labelMarks`. On the change, not on every render, so shutting it again after
-  // reading is the reader's to do.
-  const summaryLabels = summaryItems(planholder, deceased, deficient).map(
-    (item) => item.label,
-  );
-  const marksHidden = Object.keys(labelMarks ?? {}).some(
-    (label) => !summaryLabels.includes(label),
-  );
-  useEffect(() => {
-    if (marksHidden) setDetailsOpen(true);
-  }, [marksHidden]);
   /** The card's own body, so a click can be told from a click on the header. */
   const bodyRef = useRef<HTMLDivElement>(null);
   /** Ties the toggle to the region it opens, for anything reading the page. */

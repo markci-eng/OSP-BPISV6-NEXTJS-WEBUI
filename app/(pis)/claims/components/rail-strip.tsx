@@ -45,7 +45,7 @@ import type { IconType } from "react-icons";
 import { LuPanelLeftClose, LuPanelLeftOpen } from "react-icons/lu";
 import { Tooltip } from "osp-ui-kit";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { CONVEYOR_SPINE_ROOM, CONVEYOR_VIEW_MAX } from "./conveyor-columns";
+import { CONVEYOR_GAP, CONVEYOR_VIEW_MAX } from "./conveyor-columns";
 import { CARD_SHAPE, INSET_RADIUS, KIT_BORDER, SURFACE_RADIUS } from "./section-card";
 
 /** The pale green an icon sits on while hovered or while its flyout is open. */
@@ -518,14 +518,14 @@ const SPINE_KNOB = 26;
  * the minimize button on it … middle is the best"). The panel icon, not an
  * arrow: it says "panel" in both states, closing or opening.
  *
- * AS TALL AS THE RAIL, NEVER TALLER THAN THE SCREEN (user, 2026-10-05: "dynamic
- * from the total height of the conveyor if the height is not more than the
- * display height"). It is placed INSIDE the rail's sticky box, hanging out to
- * its left by {@link CONVEYOR_SPINE_ROOM} into the page's gutter — the rail
- * itself stays aligned with the page title — so its height
- * is the rail's — the expanded column or the folded strip, whichever is
- * showing — with no measuring; capped at {@link CONVEYOR_VIEW_MAX}. The rail
- * is sticky, so the line pins with it and the button never scrolls away.
+ * BETWEEN THE TWO SECTIONS, ALWAYS A SCREEN TALL (user, 2026-10-07: "place
+ * the minimize button between the section then the height is always at the
+ * maximum height of the display"). It used to hang into the page gutter left
+ * of the rail and stop where the rail did; now it stands centred in the
+ * {@link CONVEYOR_GAP} between the rail and the record, at
+ * {@link CONVEYOR_VIEW_MAX} whatever the rail's height — so the button sits at
+ * the middle of the screen, not of the rail. It is placed INSIDE the rail's
+ * sticky box, so the line pins with it and the button never scrolls away.
  *
  * The parent must be the rail's positioned box and must not clip — on Service
  * that is the shell, not the scrolling body. One element in both states, so
@@ -545,10 +545,12 @@ export function RailSpine({
       hideBelow="lg"
       position="absolute"
       top={0}
-      left={`calc(-1 * ${CONVEYOR_SPINE_ROOM})`}
+      // Centred on the gutter: the rail's right edge, plus half the gap, less
+      // half the knob.
+      left={`calc(100% + ${CONVEYOR_GAP} / 2 - ${SPINE_KNOB / 2}px)`}
       w={`${SPINE_KNOB}px`}
-      h="100%"
-      maxH={CONVEYOR_VIEW_MAX}
+      h={CONVEYOR_VIEW_MAX}
+      zIndex={1}
       css={{
         // The line answers a hover anywhere on the spine, so it reads as one
         // control with the button rather than as a border.

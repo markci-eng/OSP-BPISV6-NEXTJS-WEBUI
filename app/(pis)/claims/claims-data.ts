@@ -473,11 +473,15 @@ function applyClaimEdit(view: ClaimRequest, request: ClaimRequestModel) {
     ? formatFiledDate(edit.dateOfDeathISO)
     : undefined;
 
-  const dob = db.getPlanholder(request.lpaNo)?.dateOfBirth;
-  view.ageOfDeath =
-    dob && edit.dateOfDeathISO
-      ? formatAgeOfDeath(dob, new Date(edit.dateOfDeathISO))
-      : undefined;
+  // Only a death has an age at death; the date on a living benefit is the
+  // disability or the loss.
+  if (request.claimType === "Death Claim") {
+    const dob = db.getPlanholder(request.lpaNo)?.dateOfBirth;
+    view.ageOfDeath =
+      dob && edit.dateOfDeathISO
+        ? formatAgeOfDeath(dob, new Date(edit.dateOfDeathISO))
+        : undefined;
+  }
 
   view.dateReceivedISO = edit.dateReceivedISO || undefined;
   view.dateReceivedDisplay = edit.dateReceivedISO
@@ -582,12 +586,15 @@ export function getClaimRequests(lpaNo: string): ClaimRequest[] {
     // beneficiary; on a living benefit it is the plan holder.
     view.payees = payeeViewsForRequest(request.requestNo);
 
+    // Every claim has an incident date — death, disability or dismemberment.
+    // The field keeps its death-claim name; `incidentLabels` says what it is.
+    view.dateOfDeathDisplay = formatFiledDate(request.incidentDateISO);
+    view.dateOfDeathISO = request.incidentDateISO.slice(0, 10);
+
     // Death claims carry extra header detail (claim no, dates, age). The
     // header comes from the store for claims opened this session, and from the
     // mock database for ones that were already processed.
     if (request.claimType === "Death Claim") {
-      view.dateOfDeathDisplay = formatFiledDate(request.incidentDateISO);
-      view.dateOfDeathISO = request.incidentDateISO.slice(0, 10);
       view.natureOfClaim = natureOfClaim(request);
       view.ageOfDeath = ageOfDeathFor(request);
 

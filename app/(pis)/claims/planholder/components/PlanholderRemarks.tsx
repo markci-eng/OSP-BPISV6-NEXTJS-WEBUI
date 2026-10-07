@@ -33,12 +33,15 @@ const ALL_SECTIONS = [
     label: "Remarks",
     subtitle: "Remarks on record",
     empty: "No remarks on file.",
+    rows: 5,
   },
   {
     key: "notes",
     label: "Notes",
     subtitle: "Internal notes on record",
     empty: "No notes on file.",
+    // One line, dragged taller when there is more to read (user, 2026-10-07).
+    rows: 1,
   },
 ] as const;
 
@@ -207,6 +210,7 @@ export function PlanholderRemarks({
           subtitle={showSubtitles ? section.subtitle : undefined}
           value={values[section.key]}
           empty={section.empty}
+          rows={section.rows}
           // Ghost in the heading on a desktop; a full-width button under the
           // panel on a phone, where the corner is a reach — see
           // `SectionAddAction` / `SectionAddFoot`.
