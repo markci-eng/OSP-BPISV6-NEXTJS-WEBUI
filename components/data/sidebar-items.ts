@@ -181,9 +181,20 @@ export const SideBarItemsBranch: NavItem[] = [
   {
     icon: HiOutlineShieldCheck,
     activeIcon: HiShieldCheck,
-    label: "User Access Management",
+    label: "Access Group Management",
     displayName: "Access",
-    href: "/user-access-management",
+    subItems: [
+      {
+        label: "Access Groups",
+        href: "/role-access-management/access-groups",
+        displayName: "Groups",
+      },
+      {
+        label: "User Assignment",
+        href: "/role-access-management/user-assignment",
+        displayName: "Assign",
+      },
+    ],
   },
 
   // {
