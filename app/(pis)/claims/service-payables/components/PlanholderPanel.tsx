@@ -3,17 +3,9 @@
 // Who the service record is FOR — the plan holder block of the LEFT column,
 // above the form that is filled in against them.
 //
-// It leads with the SHARED PROFILE CARD, the same `PlanholderProfileHeader` the
-// plan holder page and the claim view lead with. This used to be a hand-built
-// grid of eighteen labelled facts under a "Plan Holder" heading, which meant one
-// person was drawn one way here and another way everywhere else in claims — and
-// the way here was the poorer of the two: no face, no address, no contact, and a
-// heading doing the work a card's own identity should do.
-//
-// The card carries the name, the LPA number, the avatar, whether they are
-// insurable, both addresses and all three contact channels. It does NOT carry
-// the plan or the dates, and this screen is where those matter — so THE NEXT ROW
-// is the rest of the record, under the card, in the claims area's own pairs.
+// ONE CARD: `PlanholderCardHeader` (avatar, name, LPA, insurable, and the
+// address/contact behind an icon) heads it, and the rest of the record follows
+// underneath in the claims area's own pairs.
 //
 // No section heading over either. The card names the person; a heading above it
 // reading "Plan Holder" was naming what was already unmistakable.
@@ -52,7 +44,7 @@ import { db, formatAge, formatFiledDate, type Planholder } from "../../../data";
 import { TooltipLabel } from "../../components/tooltip-label";
 import { DetailCard } from "../../components/detail-card";
 import { InfoLabel } from "../../components/info-label";
-import { PlanholderProfileHeader } from "../../planholder/components/PlanholderProfileHeader";
+import { PlanholderCardHeader } from "../../planholder/components/PlanholderCardHeader";
 import type { ServiceRecord } from "../service-payables-data";
 import { getTermination } from "../service-payables-store";
 
@@ -88,15 +80,19 @@ export function PlanholderPanel({ service, planholder }: PlanholderPanelProps) {
   const terminatedAtISO = getTermination(service.id)?.auditDate;
 
   return (
-    <Box>
-      {planholder && <PlanholderProfileHeader planholder={planholder} />}
-
-      {/* The next row: everything the profile card does not carry.
-          Deliberately NOT the name, the LPA number or insurability — the card
-          above has all three, and repeating them would make the pair read as
-          two records of one person rather than one record in two parts. */}
-      <Box mt={4}>
-        <DetailCard>
+    // ONE CARD (user, 2026-10-02: "combine this card since they are in the same
+    // group"). Who it is heads it — `PlanholderCardHeader`, with the address and
+    // contact behind its icon — and the record follows with no rule between, set
+    // apart by the card's own padding as space.
+    <DetailCard>
+      {planholder && (
+        <Box mb={{ base: 4, md: 5 }}>
+          <PlanholderCardHeader planholder={planholder} />
+        </Box>
+      )}
+      {/* Deliberately NOT the name, the LPA number or insurability — the
+          header has all three. */}
+      <Box>
           {/* The same column counts the profile's own details panel uses, so
               the same facts are set the same way in both places. This is the
               wide column of the page, which is what makes four possible here
@@ -231,9 +227,8 @@ export function PlanholderPanel({ service, planholder }: PlanholderPanelProps) {
               card by however many years of account history the plan happened to
               have, and it was the one thing in claims that said "remarks"
               without looking like the remarks on every other screen. */}
-        </DetailCard>
       </Box>
-    </Box>
+    </DetailCard>
   );
 }
 

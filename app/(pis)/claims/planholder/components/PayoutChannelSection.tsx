@@ -25,9 +25,10 @@ import {
  *
  * Behaves like `DocumentRow`: tapping opens the channel in the form drawer, and
  * swiping left reveals the remove action — see {@link SwipeToRemoveRow}, which
- * owns the gesture for every list here.
+ * owns the gesture for every list here. Exported for the phone's Add Payee
+ * sheet, which lists its channels the same way.
  */
-function PayoutRow({
+export function PayoutRow({
   payout,
   onClick,
   onRequestRemove,

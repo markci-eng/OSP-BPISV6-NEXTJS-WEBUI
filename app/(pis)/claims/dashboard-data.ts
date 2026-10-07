@@ -5,7 +5,7 @@ import type {
   StaffLeaderboardEntry,
   MonthlyProcessYear,
 } from "@/app/(bpis)/data/dashboard/types";
-import { getStaff } from "./utilities/territory-assignment-store";
+import { getStaff } from "./staff-roster";
 
 export const processOverview: ProcessOverview = {
   newRequests: 28,

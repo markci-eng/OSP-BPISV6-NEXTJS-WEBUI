@@ -185,6 +185,13 @@ const removedByPerson = new Map<string, Set<string>>();
 const deficienciesByPerson = new Map<string, ManualDeficiency[]>();
 
 /**
+ * Required document codes withdrawn from the deficiency list this session, by
+ * person id. A tombstone, like {@link removedByPerson}: the requirement list is
+ * derived, so a withdrawn requirement is one the read leaves out.
+ */
+const waivedByPerson = new Map<string, Set<string>>();
+
+/**
  * Deficiency notices sent this session, by SERVICE id.
  *
  * Keyed by service and not by person, unlike everything else here: a notice
@@ -192,6 +199,9 @@ const deficienciesByPerson = new Map<string, ManualDeficiency[]>();
  * two services would have two of them to send.
  */
 const noticeByService = new Map<string, ServiceNotice>();
+
+/** A required deficiency's id is this plus its document code. */
+const REQUIRED_ID_PREFIX = "req-";
 
 /** Counter behind the ids this store mints. Never reset. */
 let idSeq = 0;
@@ -352,14 +362,25 @@ export function addDeficiency(
 }
 
 /**
- * Withdraw a hand-raised deficiency.
+ * Withdraw a deficiency — hand-raised OR required.
  *
- * Only the hand-raised ones can go this way. A required document that is still
- * missing is cleared by SUBMITTING it, not by deleting the line that says it is
- * missing — the requirement is the company's, and a list a processor can edit
- * their way out of is not a checklist.
+ * ANY DEFICIENCY CAN BE REMOVED (user, 2026-10-01: "user can remove the
+ * deficiency freely"), the same as a document. It used to be hand-raised only,
+ * on the argument that a requirement is cleared by submitting it; the user
+ * overruled that. A required one is waived for the person — see
+ * {@link waivedByPerson} — and raising it again by hand brings it back.
  */
 export function removeDeficiency(personId: string, deficiencyId: string) {
+  if (deficiencyId.startsWith(REQUIRED_ID_PREFIX)) {
+    const code = deficiencyId.slice(REQUIRED_ID_PREFIX.length);
+    const waived = waivedByPerson.get(personId) ?? new Set<string>();
+    if (waived.has(code)) return;
+    waived.add(code);
+    waivedByPerson.set(personId, waived);
+    emit();
+    return;
+  }
+
   const list = deficienciesByPerson.get(personId);
   if (!list?.some((d) => d.id === deficiencyId)) return;
   deficienciesByPerson.set(
@@ -455,10 +476,14 @@ export function getServiceDeficiencies(
     getServiceDocuments(personId).map((doc) => doc.documentCode),
   );
 
+  const waived = waivedByPerson.get(personId);
+
   const required: ServiceDeficiencyItem[] = getRequiredDocuments(service)
-    .filter((req) => !onFile.has(req.documentCode))
+    .filter(
+      (req) => !onFile.has(req.documentCode) && !waived?.has(req.documentCode),
+    )
     .map((req) => ({
-      id: `req-${req.documentCode}`,
+      id: `${REQUIRED_ID_PREFIX}${req.documentCode}`,
       documentCode: req.documentCode,
       description: req.documentDesc,
       source: "required" as const,

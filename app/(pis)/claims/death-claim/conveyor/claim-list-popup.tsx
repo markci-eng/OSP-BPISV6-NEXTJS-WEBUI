@@ -14,16 +14,12 @@
 // hold. Behind a control, browsing stays free and stays one click; it is just a
 // deliberate act rather than the default state of the screen.
 //
-// TWO FILTERS, AND THE SECOND OUTRANKS THE FIRST.
-//
-//  · NATURE — Death, WOI, Dismemberment, or all. Which kind of claim is being
-//    looked at, so it is the first question and it is asked of every list.
-//
-//  · SPECIAL / REGULAR — drawn only when the nature is Death, because the split
-//    comes from filing within seven days of the incident and that is a death
-//    claim rule. Over a waiver list it would be a filter on a distinction those
-//    claims do not have, whose two options could only ever empty the table. See
-//    `showTypeFilter` on the table.
+// ONE FILTER FOR WHAT KIND OF CLAIM — All, Special, Regular, Waiver of
+// Installment, Dismemberment (user, 2026-10-05). It used to be two: a Nature
+// control (Death / WOI / Dismemberment) and a Special / Regular one drawn only
+// over death claims. Folded into one, a reader can no longer ask for a Special
+// waiver, and Special and Regular stay death-claim-only by construction — see
+// `matchesClaimFilter`.
 //
 // THE FUNNEL IS ON, and it is cut to what a pop-up is opened for: TERRITORY,
 // BRANCH and FILED DATE, behind the one icon.
@@ -42,34 +38,28 @@
 // shows "May 4 · 4:00 am" and no amount of typing finds the week around it. See
 // `showFiledDateFilter` on the table.
 
-import { useMemo, useState } from "react";
-import { Flex } from "@chakra-ui/react";
-import { SectionPopup } from "../../components/section-popup";
-import { NatureSelect, type ClaimNature } from "../../components/nature-select";
+import { useEffect, useMemo, useState } from "react";
+import { Text, useBreakpointValue } from "@chakra-ui/react";
+import { db } from "@/app/(pis)/data";
+import { ListPopup } from "../../components/section-popup";
+import {
+  QueueSearchSheet,
+  SheetChoiceGroup,
+  SheetDateRange,
+} from "../../components/queue-search-sheet";
 import { YearSelect, type ClaimYear } from "../../components/year-select";
-import { DeathClaimsTable } from "../components/DeathClaimsTable";
-import type { DeathClaimFilter } from "../components/DeathClaimsFilter";
-import type { ClaimKind } from "../../claims-data";
+import { ClaimCard, DeathClaimsTable } from "../components/DeathClaimsTable";
+import {
+  FILTER_OPTIONS,
+  claimFilterCounts,
+  matchesClaimFilter,
+  type DeathClaimFilter,
+} from "../components/DeathClaimsFilter";
 import {
   planholderName,
   toFullName,
   type DeathClaim,
 } from "../death-claims-data";
-
-/**
- * The nature control's value against the value a claim carries.
- *
- * Two vocabularies for one fact, and this is the seam between them: the control
- * speaks the navigation's short words ("WOI"), the model speaks the register's
- * full ones ("Waiver of Installment"). Written out rather than derived, so
- * adding a nature to either side fails here instead of silently matching
- * nothing.
- */
-const NATURE_KIND: Record<Exclude<ClaimNature, "all">, ClaimKind> = {
-  death: "Death Claim",
-  woi: "Waiver of Installment",
-  dismemberment: "Dismemberment",
-};
 
 export function ClaimListPopup({
   open,
@@ -116,16 +106,11 @@ export function ClaimListPopup({
   onYearChange?: (year: ClaimYear) => void;
   onOpenClaim: (claim: DeathClaim) => void;
 }) {
-  const [nature, setNature] = useState<ClaimNature>("all");
   const [filter, setFilter] = useState<DeathClaimFilter>("all");
 
   // All three arrive together or not at all — see the prop note.
   const showYear =
     year !== undefined && years !== undefined && onYearChange !== undefined;
-
-  // SPECIAL / REGULAR IS ONLY A QUESTION ABOUT DEATH CLAIMS — see the note at
-  // the top. "all" and "death" both show death claims, so both draw it.
-  const typeFilterApplies = nature === "all" || nature === "death";
 
   const searched = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -144,126 +129,288 @@ export function ClaimListPopup({
     });
   }, [claims, query]);
 
-  const byNature = useMemo(
-    () =>
-      nature === "all"
-        ? searched
-        : searched.filter((claim) => claim.kind === NATURE_KIND[nature]),
-    [searched, nature],
-  );
-
-  const counts = useMemo(
-    () => ({
-      regular: byNature.filter((c) => c.type === "regular").length,
-      special: byNature.filter((c) => c.type === "special").length,
-      all: byNature.length,
-    }),
-    [byNature],
-  );
+  /** Each filter's count over what the caller's query left. */
+  const counts = useMemo(() => claimFilterCounts(searched), [searched]);
 
   /**
    * What the funnel's two lists offer, taken from the claims on show.
    *
-   * OFF `byNature` — after the nature and the caller's query, before the type
-   * filter and before the funnel's own ticks. That is the same line the v2 rail
+   * OFF `searched` — after the caller's query, before the kind filter and before the funnel's own ticks. That is the same line the v2 rail
    * draws, and it is drawn there for two reasons that both apply here: an option
    * for a branch that is not in this list could only ever empty it, and reading
    * them off the FILTERED rows instead would be circular — ticking Davao would
    * leave Davao as the only branch on offer, with no way back.
    */
   const branchOptions = useMemo(
-    () => Array.from(new Set(byNature.map((c) => c.requestingBranch))).sort(),
-    [byNature],
+    () => Array.from(new Set(searched.map((c) => c.requestingBranch))).sort(),
+    [searched],
   );
 
   const territoryOptions = useMemo(
-    () => Array.from(new Set(byNature.map((c) => c.territoryCode))).sort(),
-    [byNature],
+    () => Array.from(new Set(searched.map((c) => c.territoryCode))).sort(),
+    [searched],
   );
 
-  // The type filter is ignored, not merely hidden, when it does not apply: a
-  // "Special" left selected from a death list must not follow the user into a
-  // waiver list and empty it.
   const rows = useMemo(
-    () =>
-      !typeFilterApplies || filter === "all"
-        ? byNature
-        : byNature.filter((c) => c.type === filter),
-    [byNature, filter, typeFilterApplies],
+    () => searched.filter((c) => matchesClaimFilter(c, filter)),
+    [searched, filter],
   );
 
+  /* ───────────── THE PHONE'S SHEET — see `QueueSearchSheet` ─────────────
+     Below `lg` the list opens as a bottom sheet instead of the table's dialog.
+     It starts from the same `searched` the table gets, and adds back what the
+     table's own toolbar does on the desktop: its search box, and the funnel's
+     territory, branch and filed date — matched exactly as the table matches
+     them, so the two never disagree about what a filter finds. */
+  const isPhone = useBreakpointValue({ base: true, lg: false }) ?? false;
+  const [sheetQuery, setSheetQuery] = useState("");
+  const [territories, setTerritories] = useState<string[]>([]);
+  const [branches, setBranches] = useState<string[]>([]);
+  const [filed, setFiled] = useState({ from: "", to: "" });
+
+  // A sitting's filters end with it, and with a change of list — the table's
+  // own rule; see `loadKey` there.
+  const loadKey = `${title}:${year ?? "any"}`;
+  useEffect(() => {
+    setTerritories([]);
+    setBranches([]);
+    setFiled({ from: "", to: "" });
+  }, [loadKey, open]);
+  useEffect(() => {
+    if (open) setSheetQuery("");
+  }, [open]);
+
+  /** `searched` narrowed by the sheet's search — what the tab counts read. */
+  const sheetSearched = useMemo(() => {
+    const q = sheetQuery.trim().toLowerCase();
+    if (!q) return searched;
+    return searched.filter((c) => {
+      const nm = planholderName(c.lpaNo);
+      return [
+        nm ? toFullName(nm) : "",
+        c.reference,
+        c.claimNo ?? "",
+        c.lpaNo,
+        c.requestingBranch,
+      ].some((v) => v.toLowerCase().includes(q));
+    });
+  }, [searched, sheetQuery]);
+
+  // THE COUNTS FOLLOW THE SEARCH, NOT THE FUNNEL — Service's rule: a tab
+  // reading 0 because a territory was ticked would say the claim is nowhere.
+  const sheetCounts = claimFilterCounts(sheetSearched);
+  const sheetTabs = FILTER_OPTIONS.map((opt) => ({
+    key: opt.value,
+    label: opt.label,
+    count: sheetCounts[opt.value],
+  }));
+
+  // Branches narrowed to the ticked territories, as the table does — a branch
+  // belongs to one territory, so the rest could only empty the list.
+  const sheetBranchOptions = useMemo(
+    () =>
+      territories.length
+        ? branchOptions.filter((b) =>
+            searched.some(
+              (c) =>
+                c.requestingBranch === b &&
+                territories.includes(c.territoryCode),
+            ),
+          )
+        : branchOptions,
+    [branchOptions, searched, territories],
+  );
+  // ...and a branch ticked before its territory was taken away goes with it.
+  useEffect(() => {
+    setBranches((current) => {
+      const next = current.filter((b) => sheetBranchOptions.includes(b));
+      return next.length === current.length ? current : next;
+    });
+  }, [sheetBranchOptions]);
+
+  const filedSpan = useMemo(() => {
+    const days = searched.map((c) => c.filedAt.slice(0, 10)).sort();
+    return { min: days[0], max: days[days.length - 1] };
+  }, [searched]);
+
+  const sheetRows = useMemo(
+    () =>
+      sheetSearched.filter((c) => {
+        if (!matchesClaimFilter(c, filter)) return false;
+        if (territories.length && !territories.includes(c.territoryCode)) {
+          return false;
+        }
+        if (branches.length && !branches.includes(c.requestingBranch)) {
+          return false;
+        }
+        // The day, not the instant — the table's own comparison.
+        const day = c.filedAt.slice(0, 10);
+        if (filed.from && day < filed.from) return false;
+        if (filed.to && day > filed.to) return false;
+        return true;
+      }),
+    [sheetSearched, filter, territories, branches, filed],
+  );
+
+  const sheetFilterCount =
+    territories.length +
+    branches.length +
+    (filed.from || filed.to ? 1 : 0);
+
+  const clearSheetFilters = () => {
+    setTerritories([]);
+    setBranches([]);
+    setFiled({ from: "", to: "" });
+  };
+
+  // BOTH ALWAYS MOUNTED, `open` choosing between them — never one swapped for
+  // the other. See `SectionPopup`.
   return (
-    <SectionPopup
-      title={title}
-      open={open}
-      onClose={onClose}
-      // WIDE ENOUGH FOR THE COLUMNS. The look-up default of 840 cut the Branch
-      // column off its own right edge — five columns of identifiers, two of them
-      // stacked pairs, need more than a ledger does. The dialog is still capped
-      // by the screen, so a narrow window gets a narrow sheet.
-      maxW="1100px"
-    >
-      {/* NO HEADING. The title is the one the caller's own button already
-          carries, and repeating it eighteen pixels below that button names the
-          same thing twice. The count and nature are not rehoused either: the
-          type dropdown on the toolbar carries the count and the nature dropdown
-          beside it states the nature, both in the row the eye lands on first.
-          The dialog is still LABELLED for a screen reader — see `title` above
-          and `SR_ONLY` in `SectionPopup`. */}
-      <DeathClaimsTable
-        data={rows}
-        // The order is the point of these lists, so the dot is on whenever both
-        // types are in one — a reader scanning for why a claim sits where it
-        // does should not have to open it to find out.
-        showTypeDot={typeFilterApplies && filter === "all"}
-        filter={filter}
-        onFilterChange={setFilter}
-        counts={counts}
-        showTypeFilter={typeFilterApplies}
-        // TERRITORY, BRANCH AND FILED DATE — see the note at the top of this
-        // file for why these three and not the other one.
-        showFiledDateFilter
-        // The table is the answer here and the deck is not on offer — see the
-        // prop. A phone still gets cards; it just is not asked.
-        showViewToggle={false}
-        branchOptions={branchOptions}
-        territoryOptions={territoryOptions}
-        // BENEFIT IS THE ONE LEFT OUT, and an empty list is how that is said:
-        // the table draws no section for a group with nothing in it. One prop
-        // the day it is wanted.
-        benefitOptions={[]}
-        // NATURE AND PERIOD, on the row the table keeps for a caller's own
-        // questions — the same slot the v2 dashboard puts its nature dropdown
-        // in. The two that scope the list stand together, ahead of the search
-        // box that narrows whatever they leave.
-        toolbarSlot={
-          <Flex gap={2}>
-            <NatureSelect value={nature} onChange={setNature} />
-            {showYear && (
-              <YearSelect
-                value={year}
-                years={years}
-                onChange={onYearChange}
+    <>
+      <QueueSearchSheet
+        title={title}
+        open={open && isPhone}
+        onClose={onClose}
+        tabs={sheetTabs}
+        activeTab={filter}
+        onTabChange={(key) => setFilter(key as DeathClaimFilter)}
+        query={sheetQuery}
+        onQueryChange={setSheetQuery}
+        placeholder="Reference, name or LPA…"
+        items={sheetRows}
+        getKey={(claim) => claim.reference}
+        renderItem={(claim) => (
+          <ClaimCard
+            claim={claim}
+            showTypeDot={filter === "all"}
+            identifier="request"
+            onClick={() => {
+              onOpenClaim(claim);
+              onClose();
+            }}
+          />
+        )}
+        empty={
+          <Text fontSize="sm" color="gray.500" textAlign="center" py={10}>
+            {sheetFilterCount
+              ? "No claim here matches the filters. Clear them to see the rest."
+              : sheetQuery.trim()
+                ? "No claim here carries that reference, name or LPA."
+                : "There is no claim in this list."}
+          </Text>
+        }
+        filterCount={sheetFilterCount}
+        onClearFilters={clearSheetFilters}
+        renderFilters={() => (
+          <>
+            {/* Checked one by one rather than through `showYear`, so the
+                callbacks below know each is there. */}
+            {year !== undefined && years && onYearChange && (
+              <SheetChoiceGroup
+                label="Year"
+                options={[
+                  { value: "all", label: "All years" },
+                  ...years.map((y) => ({ value: String(y), label: String(y) })),
+                ]}
+                selected={[String(year)]}
+                onChange={([y]) =>
+                  onYearChange(y === "all" ? "all" : Number(y))
+                }
               />
             )}
-          </Flex>
-        }
-        toolbarSlotWidth={showYear ? "290px" : "150px"}
-        // THE REQUEST NO IDENTIFIES EVERY CLAIM, which the claim no does not: a
-        // claim still waiting to be processed has no header yet. These lists mix
-        // the two states — the history holds both — so the column that is always
-        // filled is the one they are read by.
-        identifier="request"
-        // Changing nature changes the list's length, which is what the table
-        // treats as a load; without this the rows would swap under the reader
-        // with no beat.
-        loadKey={`${title}:${nature}:${year ?? "any"}`}
-        onProcess={(claim) => {
-          onOpenClaim(claim);
-          onClose();
-        }}
+            <SheetDateRange
+              label="Filed"
+              from={filed.from}
+              to={filed.to}
+              min={filedSpan.min}
+              max={filedSpan.max}
+              onChange={setFiled}
+            />
+            <SheetChoiceGroup
+              label="Territory"
+              multi
+              options={territoryOptions.map((t) => ({
+                value: t,
+                label: db.getTerritoryName(t) || t,
+              }))}
+              selected={territories}
+              onChange={setTerritories}
+            />
+            <SheetChoiceGroup
+              label="Branches"
+              multi
+              options={sheetBranchOptions.map((b) => ({ value: b, label: b }))}
+              selected={branches}
+              onChange={setBranches}
+            />
+          </>
+        )}
       />
-    </SectionPopup>
+
+      <ListPopup
+        title={title}
+        open={open && !isPhone}
+        onClose={onClose}
+        // WIDE ENOUGH FOR THE COLUMNS. The look-up default of 840 cut the Branch
+        // column off its own right edge — five columns of identifiers, two of them
+        // stacked pairs, need more than a ledger does. The dialog is still capped
+        // by the screen, so a narrow window gets a narrow sheet.
+        maxW="1100px"
+      >
+        {/* NO HEADING. The title is the one the caller's own button already
+            carries, and repeating it eighteen pixels below that button names the
+            same thing twice. The count and kind are not rehoused either: the
+            kind dropdown on the toolbar carries both, in the row the eye lands
+            on first.
+            The dialog is still LABELLED for a screen reader — see `title` above
+            and `SR_ONLY` in `SectionPopup`. */}
+        <DeathClaimsTable
+          data={rows}
+          // The order is the point of these lists, so the dot is on whenever both
+          // types are in one — a reader scanning for why a claim sits where it
+          // does should not have to open it to find out.
+          showTypeDot={filter === "all"}
+          filter={filter}
+          onFilterChange={setFilter}
+          counts={counts}
+          // TERRITORY, BRANCH AND FILED DATE — see the note at the top of this
+          // file for why these three and not the other one.
+          showFiledDateFilter
+          // The table is the answer here and the deck is not on offer — see the
+          // prop. A phone still gets cards; it just is not asked.
+          showViewToggle={false}
+          branchOptions={branchOptions}
+          territoryOptions={territoryOptions}
+          // BENEFIT IS THE ONE LEFT OUT, and an empty list is how that is said:
+          // the table draws no section for a group with nothing in it. One prop
+          // the day it is wanted.
+          benefitOptions={[]}
+          // THE PERIOD, on the row the table keeps for a caller's own
+          // questions, ahead of the search box that narrows whatever it leaves.
+          // The nature dropdown that stood beside it went into the kind filter
+          // (2026-10-05).
+          toolbarSlot={
+            showYear ? (
+              <YearSelect value={year} years={years} onChange={onYearChange} />
+            ) : undefined
+          }
+          toolbarSlotWidth="140px"
+          // THE REQUEST NO IDENTIFIES EVERY CLAIM, which the claim no does not: a
+          // claim still waiting to be processed has no header yet. These lists mix
+          // the two states — the history holds both — so the column that is always
+          // filled is the one they are read by.
+          identifier="request"
+          // Changing the year changes the list's length, which is what the table
+          // treats as a load; without this the rows would swap under the reader
+          // with no beat.
+          loadKey={loadKey}
+          onProcess={(claim) => {
+            onOpenClaim(claim);
+            onClose();
+          }}
+        />
+      </ListPopup>
+    </>
   );
 }
 

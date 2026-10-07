@@ -125,7 +125,7 @@ const columns: ColumnDef<DeathClaim>[] = [
       const name = planholderName(claim.lpaNo);
       return name ? toFullName(name) : "";
     },
-    header: "Plan Holder",
+    header: "Planholder",
     cell: (info) => (
       <StackedCell
         primary={(info.getValue() as string) || NO_IDENTITY}

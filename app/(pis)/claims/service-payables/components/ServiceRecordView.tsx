@@ -264,6 +264,8 @@ export function ServiceRecordView({
   /** Open the deficiency list and go to it — the Deficient tick's press. */
   const showDeficiencies = () => {
     setDocsTab("deficiencies");
+    // A phone opens the deficiency sheet instead — see `ServiceRecordDocuments`.
+    if (!asPage) return;
     // Animated, the conveyor's own. It stops where the page ends — there is
     // no reserve under the folder; see `workspace-layout`.
     scrollDetailIntoView(documentsRef.current, { smooth: true });

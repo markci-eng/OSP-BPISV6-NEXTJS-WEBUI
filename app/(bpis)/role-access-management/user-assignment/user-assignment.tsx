@@ -6,7 +6,8 @@ import { EmptyStateCard, Page } from "osp-ui-kit";
 import { toast } from "sonner";
 import Link from "next/link";
 
-import type { AccessUser } from "../types";
+import type { AccessUser, GroupScopeMap } from "../types";
+import { DATA_SCOPE_NOUNS } from "../data/data-scopes";
 import {
   countGranted,
   TOTAL_PERMISSION_COUNT,
@@ -58,6 +59,7 @@ export default function UserAssignmentPage() {
 
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [draftRoles, setDraftRoles] = useState<string[]>([]);
+  const [draftScopes, setDraftScopes] = useState<GroupScopeMap>({});
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   const requestMutation = useRequestUserAssignment();
@@ -102,17 +104,36 @@ export default function UserAssignmentPage() {
     [currentAccess, pendingAccess],
   );
 
+  // Selected roles restricted by data scope that have no area picked yet. Each
+  // must name at least one region, territory or branch before it can be filed.
+  const unscopedRoles = useMemo(
+    () =>
+      groups.filter(
+        (group) =>
+          group.dataScope &&
+          draftRoles.includes(group.code) &&
+          !draftScopes[group.code]?.length,
+      ),
+    [groups, draftRoles, draftScopes],
+  );
+
   const dirty = !sameRoles(currentRoles, draftRoles);
   const noRoles = draftRoles.length === 0;
-  const canSave = dirty && !noRoles;
+  const missingScope = unscopedRoles.length > 0;
+  const canSave = dirty && !noRoles && !missingScope;
 
   const selectUser = (user: AccessUser) => {
     setSelectedUserId(user.id);
     appliedRef.current = null;
     setDraftRoles([...(userRoles[user.id] ?? [])]);
+    setDraftScopes({});
   };
 
   const toggleRole = (code: string) => {
+    if (draftRoles.includes(code)) {
+      // An unticked role takes its areas with it, so re-ticking starts clean.
+      setDraftScopes(({ [code]: _dropped, ...rest }) => rest);
+    }
     setDraftRoles((current) =>
       current.includes(code)
         ? current.filter((entry) => entry !== code)
@@ -120,7 +141,21 @@ export default function UserAssignmentPage() {
     );
   };
 
-  const revert = () => setDraftRoles([...currentRoles]);
+  const changeScope = (code: string, areaCodes: string[]) =>
+    setDraftScopes((current) => ({ ...current, [code]: areaCodes }));
+
+  const revert = () => {
+    setDraftRoles([...currentRoles]);
+    setDraftScopes({});
+  };
+
+  /** Only the areas of roles still selected and actually scoped. */
+  const requestedScopes = (): GroupScopeMap =>
+    Object.fromEntries(
+      groups
+        .filter((group) => group.dataScope && draftRoles.includes(group.code))
+        .map((group) => [group.code, draftScopes[group.code] ?? []]),
+    );
 
   /**
    * Files the change for approval.
@@ -145,6 +180,7 @@ export default function UserAssignmentPage() {
         branch: selectedUser.branch,
         currentGroups: currentRoles,
         requestedGroups: draftRoles,
+        dataScopes: requestedScopes(),
         granted: diff.granted.length,
         revoked: diff.revoked.length,
         requester: requesterName(),
@@ -153,6 +189,7 @@ export default function UserAssignmentPage() {
         onSuccess: (request) => {
           setConfirmOpen(false);
           setDraftRoles([...currentRoles]);
+          setDraftScopes({});
           toast.success("Sent for approval", {
             description: `${request.id} — ${selectedUser.name} requested for ${draftRoles.length} role(s): ${names.join(", ")}. Access changes once it is approved under Approvals › User Assignment.`,
           });
@@ -285,6 +322,8 @@ export default function UserAssignmentPage() {
                   selectedCodes={draftRoles}
                   currentCodes={currentRoles}
                   onToggle={toggleRole}
+                  scopes={draftScopes}
+                  onScopeChange={changeScope}
                 />
               )}
             </Box>
@@ -304,7 +343,14 @@ export default function UserAssignmentPage() {
               savedLabel={
                 noRoles
                   ? "At least one role is required before saving."
-                  : savedLabel
+                  : missingScope
+                    ? `Choose the ${unscopedRoles
+                        .map(
+                          (group) =>
+                            `${DATA_SCOPE_NOUNS[group.dataScope!].many} for ${group.description}`,
+                        )
+                        .join(" and ")} before saving.`
+                    : savedLabel
               }
               saveLabel="Submit for approval"
               onCancel={revert}

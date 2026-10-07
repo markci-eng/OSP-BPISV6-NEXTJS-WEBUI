@@ -37,7 +37,7 @@ import {
  */
 const COLUMNS: LookupColumn<PlanholderSearchResult>[] = [
   { key: "lpaNo", header: "LPA No." },
-  { key: "name", header: "Plan Holder" },
+  { key: "name", header: "Planholder" },
   { key: "planDesc", header: "Plan", enableColumnFilter: true },
 ];
 
@@ -90,7 +90,7 @@ export function PlanholderQuickSearch({
     >
       <LookupField<PlanholderSearchResult>
         placeholder={placeholder ?? "Search by LPA No. or name"}
-        modalTitle="Search Plan Holders"
+        modalTitle="Search Planholders"
         columns={COLUMNS}
         dataSource={planholders}
         searchKeys={SEARCH_KEYS}

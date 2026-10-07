@@ -9,16 +9,23 @@ import {
   Portal,
   Text,
   Textarea,
+  useBreakpointValue,
   VStack,
 } from "@chakra-ui/react";
-import { LuPlus } from "react-icons/lu";
 import {
   BottomQuickActions,
   PrimaryMdButton,
+  PrimarySmButton,
   SecondaryMdButton,
-  TertiarySmButton,
+  SecondarySmButton,
 } from "osp-ui-kit";
+import { BottomSheet } from "../../components/bottom-sheet";
 import { RemarksPanel } from "../../components/remarks-panel";
+import {
+  SectionAddAction,
+  SectionAddFoot,
+} from "../../components/section-add-button";
+import { FieldError, SheetTextArea } from "../../components/sheet-picker";
 
 const ALL_SECTIONS = [
   {
@@ -80,6 +87,7 @@ export function PlanholderRemarks({
   showNotes = true,
   showSubtitles = true,
   asDialog = false,
+  noteSubtitle,
   onAddNote,
 }: {
   remarks?: string;
@@ -115,8 +123,19 @@ export function PlanholderRemarks({
    * this one should match them.
    *
    * The FORM is identical either way. Only what it arrives in changes.
+   *
+   * ON A PHONE THE DIALOG BECOMES A BOTTOM SHEET — option A of the mock-up
+   * (user, 2026-10-02, for Death Claim and Service alike): the sheet Deny and
+   * Return use, the note box, then Cancel and Add side by side at its foot,
+   * which rides on the keyboard while typing. Below `lg`, the line every phone
+   * form on these screens switches at.
    */
   asDialog?: boolean;
+  /**
+   * The record the note is written against — the claim number, the LPA —
+   * under the phone sheet's title. Only the sheet shows it.
+   */
+  noteSubtitle?: string;
   /** Write a note. Omit it and the Notes heading carries no button. */
   onAddNote?: (text: string) => void;
 }) {
@@ -131,15 +150,22 @@ export function PlanholderRemarks({
   // The add-note form, and its in-progress text.
   const [addOpen, setAddOpen] = useState(false);
   const [draft, setDraft] = useState("");
+  /** The phone sheet's one error — its Add is always pressable. */
+  const [error, setError] = useState<string | null>(null);
+  const isPhone = useBreakpointValue({ base: true, lg: false }) ?? false;
 
   const closeAdd = () => {
     setAddOpen(false);
     setDraft("");
+    setError(null);
   };
 
   const saveNote = () => {
     const note = draft.trim();
-    if (!note) return;
+    if (!note) {
+      setError("Write the note first.");
+      return;
+    }
     onAddNote?.(note);
     closeAdd();
   };
@@ -181,19 +207,23 @@ export function PlanholderRemarks({
           subtitle={showSubtitles ? section.subtitle : undefined}
           value={values[section.key]}
           empty={section.empty}
+          // Ghost in the heading on a desktop; a full-width button under the
+          // panel on a phone, where the corner is a reach — see
+          // `SectionAddAction` / `SectionAddFoot`.
           action={
             section.key === "notes" && onAddNote ? (
-              // Ghost, not solid: a heading control should stay quiet next to
-              // the section's own content. Same slot and weight as the
-              // library's "History" header action.
-              //
-              // FROM `osp-ui-kit` and no longer from `st-peter-ui`, which this
-              // project does not import from any more. The same component
-              // either way — checked against the rendered button rather than
-              // taken on trust: same class, same 32px, same 12px label.
-              <TertiarySmButton onClick={() => setAddOpen(true)}>
-                <LuPlus /> Add Note
-              </TertiarySmButton>
+              <SectionAddAction
+                label="Add Note"
+                onClick={() => setAddOpen(true)}
+              />
+            ) : undefined
+          }
+          footer={
+            section.key === "notes" && onAddNote ? (
+              <SectionAddFoot
+                label="Add Note"
+                onClick={() => setAddOpen(true)}
+              />
             ) : undefined
           }
         />
@@ -206,9 +236,56 @@ export function PlanholderRemarks({
           The dialog is narrower than the page's other pop-ups: those hold a
           ledger and a record, this holds a textarea and two buttons, and 840px
           of it would be mostly empty. */}
+      {/* THE PHONE'S SHEET — see `asDialog`. Mounted beside the dialog with
+          `open` choosing between them, never one swapped for the other. No
+          sentence under the title: the record number is all it needs. */}
+      {asDialog && (
+        <BottomSheet
+          title={
+            <Box as="span" display="block">
+              Add Note
+              {noteSubtitle && (
+                <Text
+                  as="span"
+                  display="block"
+                  fontSize="xs"
+                  fontWeight="500"
+                  color="gray.500"
+                >
+                  {noteSubtitle}
+                </Text>
+              )}
+            </Box>
+          }
+          open={addOpen && isPhone}
+          onClose={closeAdd}
+          footer={
+            <Flex gap={2.5}>
+              <SecondarySmButton flex="1" h="42px" minH="42px" onClick={closeAdd}>
+                Cancel
+              </SecondarySmButton>
+              <PrimarySmButton flex="1" h="42px" minH="42px" onClick={saveNote}>
+                Add
+              </PrimarySmButton>
+            </Flex>
+          }
+        >
+          <SheetTextArea
+            label="Note"
+            value={draft}
+            autoFocus
+            onChange={(e) => {
+              setDraft(e.currentTarget.value);
+              setError(null);
+            }}
+          />
+          {error && <FieldError>{error}</FieldError>}
+        </BottomSheet>
+      )}
+
       {asDialog ? (
         <Dialog.Root
-          open={addOpen}
+          open={addOpen && !isPhone}
           onOpenChange={(e) => {
             if (!e.open) closeAdd();
           }}

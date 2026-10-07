@@ -16,38 +16,58 @@
 // card the row opens, and a rail that repeats them is four things to read where
 // the rail is only ever scanned for one — whose plan this is.
 //
-// THE ACTION BUTTONS ABOVE THE ROWS ARE TABS (user, 2026-09-22). Pressing one
-// does not run anything: it picks which requests the rail lists, and the rows
-// under it change to match. Generate is the one picked on arrival.
-//
-// Generate also puts a SECOND CARD under this one — `CofpDeficiencyListCard`,
-// the accounts it cannot raise a certificate on. That list lived in this card
-// briefly and is its own now: two jobs, two cards. The page stacks them.
+// THE HEADER IS A VIEW CAROUSEL (user, 2026-10-02), the same one the ROP, CSV,
+// Transfer and Reinstatement rails draw. Stepping it does not run anything: it
+// picks which requests the rail lists, and the rows under it change to match.
+// For Printing is the one picked on arrival.
 
-import { useMemo, useState } from "react";
-import { Box, Flex, Input, Menu, Portal, Text } from "@chakra-ui/react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
+  Box,
+  Combobox,
+  Flex,
+  Input,
+  Menu,
+  Portal,
+  Text,
+  useFilter,
+  useListCollection,
+} from "@chakra-ui/react";
+import {
+  AlertTriangle,
   Ban,
-  Check,
-  Ellipsis,
+  ChevronLeft,
+  ChevronRight,
+  EllipsisVertical,
   FileCheck,
-  FilePlus,
-  PackageCheck,
   Printer,
   Repeat,
   Search,
-  Send,
-  Undo2,
+  Star,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { PrimarySmButton, SecondarySmButton } from "osp-ui-kit";
+import { H3 } from "osp-ui-kit";
 
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { SURFACE_RADIUS } from "../../../claims/components/section-card";
 import type { CofpRequest } from "../../cofp/data/types";
-import type { CofpView } from "../data/types";
-import { LIST_HEIGHT, ROW_GAP, RequestRow } from "./request-row";
+import {
+  COFP_PINNED_BRANCH_CODE,
+  branchCountOf,
+  isBranchView,
+  type CofpBranchView,
+} from "../data/branches";
+import { forPrintingCountOf, regionLabelOf } from "../data/regions";
+import type {
+  CofpBranch,
+  CofpMemo,
+  CofpRegion,
+  CofpReplacementRequest,
+  CofpReplacementSource,
+  CofpView,
+} from "../data/types";
+import { LIST_HEIGHT, ROW_GAP, ROW_HEIGHT, RequestRow } from "./request-row";
 
 interface CofpAction {
   view: CofpView;
@@ -56,17 +76,11 @@ interface CofpAction {
   icon: LucideIcon;
 }
 
-// What a certificate can be put through, in the order it moves: raised,
-// printed, transmitted, released — then the three ways one comes back. One
-// button per {@link CofpView}, and the list each one opens is decided by
-// `requestsFor` in the data module, not here.
+// What a certificate can be put through, in the order it moves: printed —
+// then the two ways one comes back. One button per selectable
+// {@link CofpView}, and the list each one opens is decided by `requestsFor` in
+// the data module, not here.
 const COFP_ACTIONS: CofpAction[] = [
-  {
-    view: "GENERATE",
-    label: "Generate",
-    description: "Raise certificates for fully paid accounts",
-    icon: FilePlus,
-  },
   {
     view: "FOR_PRINTING",
     label: "For Printing",
@@ -74,22 +88,23 @@ const COFP_ACTIONS: CofpAction[] = [
     icon: Printer,
   },
   {
+    view: "DEFICIENT",
+    label: "Deficient",
+    description: "Certificates held back for a missing requirement",
+    icon: AlertTriangle,
+  },
+  {
     view: "PRINTED",
     label: "Printed",
     description: "Certificates already printed",
     icon: FileCheck,
   },
+  // Confiscated takes Released's place (user, 2026-10-05).
   {
-    view: "BATCH_TRANSMITTAL",
-    label: "Batch Transmittal",
-    description: "Transmit printed certificates to a branch",
-    icon: Send,
-  },
-  {
-    view: "RELEASED",
-    label: "Released",
-    description: "Certificates handed over to the planholder",
-    icon: PackageCheck,
+    view: "CONFISCATED",
+    label: "Confiscated",
+    description: "Certificates taken back from a planholder",
+    icon: Ban,
   },
   {
     view: "REPLACEMENT",
@@ -97,36 +112,573 @@ const COFP_ACTIONS: CofpAction[] = [
     description: "Reissue a lost or damaged certificate",
     icon: Repeat,
   },
-  {
-    view: "RETURN",
-    label: "Return",
-    description: "Send a certificate back to the office",
-    icon: Undo2,
-  },
-  {
-    view: "CONFISCATED",
-    label: "Confiscated",
-    description: "Certificates taken back from a planholder",
-    icon: Ban,
-  },
 ];
 
-// The rail is 360px wide, so the row has room for two of the eight and hands
-// them all to the "More" menu — which holds every one either way, so nothing is
-// reachable only at one width.
-//
-// GENERATE HOLDS THE FIRST SLOT, always: it is the view the screen opens on and
-// the one a user comes back to, so it does not move.
-const [GENERATE_ACTION, ...OTHER_ACTIONS] = COFP_ACTIONS;
-
-// The second slot is WHICHEVER OTHER VIEW WAS PICKED LAST (user, 2026-09-22) —
-// picking one from the menu puts it in the row rather than leaving the row
-// showing a view nobody chose. For Printing is what it holds on arrival, the
-// step after Generate.
-const DEFAULT_SECOND_VIEW = OTHER_ACTIONS[0].view;
-
 const actionFor = (view: CofpView): CofpAction =>
-  COFP_ACTIONS.find((action) => action.view === view) ?? GENERATE_ACTION;
+  COFP_ACTIONS.find((action) => action.view === view) ?? COFP_ACTIONS[0];
+
+/** One of the header's chevrons — the same one the other rails draw. */
+export function StatusStepButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <Box
+      as="button"
+      onClick={onClick}
+      aria-label={label}
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      boxSize="28px"
+      flexShrink={0}
+      borderWidth="1px"
+      borderColor="border.muted"
+      borderRadius="full"
+      color="gray.500"
+      cursor="pointer"
+      transition="all 0.15s ease"
+      _hover={{ color: BRAND_COLORS.primaryGreen, borderColor: BRAND_COLORS.primaryGreen }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+/** A region's row — the code read down the list, its branches under it. */
+export function RegionRow({
+  region,
+  active,
+  onClick,
+}: {
+  region: CofpRegion;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const printCount = forPrintingCountOf(region);
+
+  return (
+    <Flex
+      as="button"
+      onClick={onClick}
+      align="center"
+      gap={2}
+      w="full"
+      h={`${ROW_HEIGHT}px`}
+      px={2.5}
+      textAlign="start"
+      // The same row `RequestRow` draws, so the two lists read alike.
+      borderWidth="1px"
+      borderRadius="sm"
+      borderColor={active ? BRAND_COLORS.primaryGreen : "gray.200"}
+      bg={active ? "#f4faf6" : "white"}
+      cursor="pointer"
+      transition="all 0.15s ease"
+      _hover={{ borderColor: active ? undefined : "gray.300" }}
+      flexShrink={0}
+    >
+      <Box minW={0} flex="1">
+        <Text fontSize="xs" fontWeight="700" color="gray.800" truncate>
+          {region.code}
+        </Text>
+        <Text fontSize="10px" color="gray.400" truncate title={region.description}>
+          {region.description}
+        </Text>
+      </Box>
+      {/* The certificates waiting to print — green while there are any, grey
+          at zero so an idle region reads as one at a glance. */}
+      <Box
+        flexShrink={0}
+        minW="24px"
+        px={1.5}
+        py={0.5}
+        borderRadius="full"
+        bg={printCount ? BRAND_COLORS.primaryGreen : "gray.100"}
+        color={printCount ? "white" : "gray.500"}
+        fontSize="10.5px"
+        fontWeight="700"
+        textAlign="center"
+        title={`${printCount} for printing`}
+      >
+        {printCount}
+      </Box>
+    </Flex>
+  );
+}
+
+/**
+ * The Special Request row (user, 2026-10-05) — the first row of the For
+ * Printing list, above the regions and never filtered out by the search, drawn in the brand's dark green and gold
+ * (user, 2026-10-05) with a star and a "Priority" tag so it is the first thing
+ * the eye lands on.
+ */
+function SpecialRequestRow({
+  region,
+  active,
+  onClick,
+}: {
+  region: CofpRegion;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const printCount = forPrintingCountOf(region);
+
+  return (
+    <Flex
+      as="button"
+      onClick={onClick}
+      align="center"
+      gap={2.5}
+      w="full"
+      minH={`${ROW_HEIGHT + 8}px`}
+      px={3}
+      py={2}
+      textAlign="start"
+      // The brand's own dark green, filled — every other row is white with a
+      // green edge, so a filled one reads as different without leaving the
+      // palette. The brand gold marks it as priority; picked, it takes a gold
+      // ring.
+      borderWidth="2px"
+      borderRadius="sm"
+      borderColor={active ? BRAND_COLORS.brightGold : BRAND_COLORS.darkGreen}
+      bg={BRAND_COLORS.darkGreen}
+      shadow={active ? "md" : "xs"}
+      cursor="pointer"
+      transition="all 0.15s ease"
+      _hover={{ bg: BRAND_COLORS.primaryGreen }}
+      flexShrink={0}
+    >
+      <Flex
+        align="center"
+        justify="center"
+        boxSize="28px"
+        flexShrink={0}
+        borderRadius="full"
+        bg="whiteAlpha.200"
+        color={BRAND_COLORS.brightGold}
+      >
+        <Star size={14} fill="currentColor" />
+      </Flex>
+      <Box minW={0} flex="1">
+        <Flex align="center" gap={1.5}>
+          <Text
+            fontSize="sm"
+            fontWeight="700"
+            color="white"
+            truncate
+            title={regionLabelOf(region)}
+          >
+            {regionLabelOf(region)}
+          </Text>
+          <Box
+            flexShrink={0}
+            px={1.5}
+            borderRadius="sm"
+            bg={BRAND_COLORS.brightGold}
+            color={BRAND_COLORS.darkGreen}
+            fontSize="9px"
+            fontWeight="700"
+            letterSpacing="0.04em"
+            textTransform="uppercase"
+          >
+            Priority
+          </Box>
+        </Flex>
+        <Text fontSize="10px" color={BRAND_COLORS.softGreen} truncate>
+          Replacement certificates to reprint
+        </Text>
+      </Box>
+      <Box
+        flexShrink={0}
+        minW="24px"
+        px={1.5}
+        py={0.5}
+        borderRadius="full"
+        bg={BRAND_COLORS.brightGold}
+        color={BRAND_COLORS.darkGreen}
+        fontSize="10.5px"
+        fontWeight="700"
+        textAlign="center"
+        title={`${printCount} for printing`}
+      >
+        {printCount}
+      </Box>
+    </Flex>
+  );
+}
+
+/** A branch's row — the code, its description under it, its count beside. */
+function BranchRow({
+  branch,
+  view,
+  active,
+  onClick,
+}: {
+  branch: CofpBranch;
+  /** Which view's figure the badge shows. */
+  view: CofpBranchView;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const count = branchCountOf(view, branch);
+
+  return (
+    <Flex
+      as="button"
+      onClick={onClick}
+      align="center"
+      gap={2}
+      w="full"
+      h={`${ROW_HEIGHT}px`}
+      px={2.5}
+      textAlign="start"
+      // The same row `RegionRow` draws, so the lists read alike.
+      borderWidth="1px"
+      borderRadius="sm"
+      borderColor={active ? BRAND_COLORS.primaryGreen : "gray.200"}
+      bg={active ? "#f4faf6" : "white"}
+      cursor="pointer"
+      transition="all 0.15s ease"
+      _hover={{ borderColor: active ? undefined : "gray.300" }}
+      flexShrink={0}
+    >
+      <Box minW={0} flex="1">
+        <Text fontSize="xs" fontWeight="700" color="gray.800" truncate>
+          {branch.code}
+        </Text>
+        <Text fontSize="10px" color="gray.400" truncate title={branch.description}>
+          {branch.description}
+        </Text>
+      </Box>
+      {/* The branch's certificates under this view — deficient, or printed.
+          The same badge the region row draws, green while there are any,
+          grey at zero. */}
+      <Box
+        flexShrink={0}
+        minW="24px"
+        px={1.5}
+        py={0.5}
+        borderRadius="full"
+        bg={count ? BRAND_COLORS.primaryGreen : "gray.100"}
+        color={count ? "white" : "gray.500"}
+        fontSize="10.5px"
+        fontWeight="700"
+        textAlign="center"
+        title={`${count} ${view.toLowerCase()}`}
+      >
+        {count}
+      </Box>
+    </Flex>
+  );
+}
+
+/**
+ * The pinned branch's row (user, 2026-10-05) — SPFC, first in the branch list
+ * and never filtered out by the search, drawn like the From COFP Replacement
+ * row so the two pinned rows read as one idea.
+ */
+function PinnedBranchRow({
+  branch,
+  view,
+  active,
+  onClick,
+}: {
+  branch: CofpBranch;
+  view: CofpBranchView;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const count = branchCountOf(view, branch);
+
+  return (
+    <Flex
+      as="button"
+      onClick={onClick}
+      align="center"
+      gap={2.5}
+      w="full"
+      minH={`${ROW_HEIGHT + 8}px`}
+      px={3}
+      py={2}
+      textAlign="start"
+      borderWidth="2px"
+      borderRadius="sm"
+      borderColor={active ? BRAND_COLORS.brightGold : BRAND_COLORS.darkGreen}
+      bg={BRAND_COLORS.darkGreen}
+      shadow={active ? "md" : "xs"}
+      cursor="pointer"
+      transition="all 0.15s ease"
+      _hover={{ bg: BRAND_COLORS.primaryGreen }}
+      flexShrink={0}
+    >
+      <Flex
+        align="center"
+        justify="center"
+        boxSize="28px"
+        flexShrink={0}
+        borderRadius="full"
+        bg="whiteAlpha.200"
+        color={BRAND_COLORS.brightGold}
+      >
+        <Star size={14} fill="currentColor" />
+      </Flex>
+      <Box minW={0} flex="1">
+        <Text fontSize="sm" fontWeight="700" color="white" truncate>
+          {branch.code}
+        </Text>
+        <Text
+          fontSize="10px"
+          color={BRAND_COLORS.softGreen}
+          truncate
+          title={branch.description}
+        >
+          {branch.description}
+        </Text>
+      </Box>
+      <Box
+        flexShrink={0}
+        minW="24px"
+        px={1.5}
+        py={0.5}
+        borderRadius="full"
+        bg={BRAND_COLORS.brightGold}
+        color={BRAND_COLORS.darkGreen}
+        fontSize="10.5px"
+        fontWeight="700"
+        textAlign="center"
+        title={`${count} ${view.toLowerCase()}`}
+      >
+        {count}
+      </Box>
+    </Flex>
+  );
+}
+
+/**
+ * A memo's row — the memo number, its branch under it, the date and the
+ * number of printed certificates beside.
+ */
+export function MemoRow({
+  memo,
+  active,
+  onClick,
+}: {
+  memo: CofpMemo;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Flex
+      as="button"
+      onClick={onClick}
+      align="center"
+      gap={2}
+      w="full"
+      h={`${ROW_HEIGHT}px`}
+      px={2.5}
+      textAlign="start"
+      // The same row `BranchRow` draws, so the lists read alike.
+      borderWidth="1px"
+      borderRadius="sm"
+      borderColor={active ? BRAND_COLORS.primaryGreen : "gray.200"}
+      bg={active ? "#f4faf6" : "white"}
+      cursor="pointer"
+      transition="all 0.15s ease"
+      _hover={{ borderColor: active ? undefined : "gray.300" }}
+      flexShrink={0}
+    >
+      <Box minW={0} flex="1">
+        <Text fontSize="xs" fontWeight="700" color="gray.800" fontFamily="mono" truncate>
+          {memo.memoNo}
+        </Text>
+        <Text fontSize="10px" color="gray.400" truncate>
+          {memo.branch}
+        </Text>
+      </Box>
+      <Box flexShrink={0} textAlign="end">
+        <Text fontSize="9px" color="gray.400" textTransform="uppercase">
+          Transmitted
+        </Text>
+        <Text fontSize="10.5px" color="gray.600" whiteSpace="nowrap">
+          {formatDate(memo.dateTransmitted)}
+        </Text>
+      </Box>
+      {/* The number of printed certificates the memo carried — the same badge
+          the branch and region rows draw. */}
+      <Box
+        flexShrink={0}
+        minW="24px"
+        px={1.5}
+        py={0.5}
+        borderRadius="full"
+        bg={memo.rows.length ? BRAND_COLORS.primaryGreen : "gray.100"}
+        color={memo.rows.length ? "white" : "gray.500"}
+        fontSize="10.5px"
+        fontWeight="700"
+        textAlign="center"
+        title={`${memo.rows.length} printed`}
+      >
+        {memo.rows.length}
+      </Box>
+    </Flex>
+  );
+}
+
+/**
+ * A Branch replacement request's row (user, 2026-10-05) — the LPA number and
+ * the plan holder's name, the date requested beside.
+ */
+function ReplacementRequestRow({
+  request,
+  active,
+  onClick,
+}: {
+  request: CofpReplacementRequest;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const name = `${request.lastName}, ${request.firstName} ${request.middleName}`;
+
+  return (
+    <Flex
+      as="button"
+      onClick={onClick}
+      align="center"
+      gap={2}
+      w="full"
+      h={`${ROW_HEIGHT}px`}
+      px={2.5}
+      textAlign="start"
+      // The same row `MemoRow` draws, so the lists read alike.
+      borderWidth="1px"
+      borderRadius="sm"
+      borderColor={active ? BRAND_COLORS.primaryGreen : "gray.200"}
+      bg={active ? "#f4faf6" : "white"}
+      cursor="pointer"
+      transition="all 0.15s ease"
+      _hover={{ borderColor: active ? undefined : "gray.300" }}
+      flexShrink={0}
+    >
+      <Box minW={0} flex="1">
+        <Text fontSize="xs" fontWeight="700" color="gray.800" fontFamily="mono" truncate>
+          {request.lpaNo}
+        </Text>
+        <Text fontSize="10px" color="gray.500" truncate title={name}>
+          {name}
+        </Text>
+      </Box>
+      <Box flexShrink={0} textAlign="end">
+        <Text fontSize="9px" color="gray.400" textTransform="uppercase">
+          Requested
+        </Text>
+        <Text fontSize="10.5px" color="gray.600" whiteSpace="nowrap">
+          {formatDate(request.dateRequested)}
+        </Text>
+      </Box>
+    </Flex>
+  );
+}
+
+/** "Oct 1, 2026" — read as a calendar date, never shifted by the time zone. */
+const formatDate = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+
+const branchLabel = (branch: CofpBranch) =>
+  branch.code === branch.description
+    ? branch.code
+    : `${branch.code} — ${branch.description}`;
+
+/**
+ * The Printed view's branch picker (user, 2026-10-05) — a combo box, so a
+ * branch out of two hundred is found by typing rather than scrolling. Also the
+ * Add Special COFP dialog's Preferred Branch.
+ */
+export function BranchCombobox({
+  branches,
+  value,
+  onChange,
+  label = "Branch",
+  errorText,
+  portalled = true,
+}: {
+  branches: CofpBranch[];
+  value?: string;
+  onChange: (branch: CofpBranch) => void;
+  label?: string;
+  errorText?: string;
+  portalled?: boolean;
+}) {
+  const { contains } = useFilter({ sensitivity: "base" });
+  const { collection, filter } = useListCollection({
+    initialItems: branches,
+    itemToString: branchLabel,
+    itemToValue: (branch) => branch.code,
+    filter: contains,
+  });
+  const selected = branches.find((branch) => branch.code === value);
+
+  return (
+    <Combobox.Root
+      collection={collection}
+      value={value ? [value] : []}
+      defaultInputValue={selected ? branchLabel(selected) : ""}
+      onValueChange={(e) => {
+        const next = branches.find((branch) => branch.code === e.value[0]);
+        if (next) onChange(next);
+      }}
+      // Only typing filters. Picking a branch writes its label into the input
+      // too, and filtering on that left the list holding just that branch.
+      onInputValueChange={(e) =>
+        filter(e.reason === "input-change" ? e.inputValue : "")
+      }
+      openOnClick
+      size="sm"
+      mb={3}
+      flexShrink={0}
+      invalid={!!errorText}
+    >
+      <Combobox.Label fontSize="xs" color="gray.500">
+        {label}
+      </Combobox.Label>
+      <Combobox.Control>
+        <Combobox.Input placeholder="Type a branch code or name..." />
+        <Combobox.IndicatorGroup>
+          <Combobox.Trigger />
+        </Combobox.IndicatorGroup>
+      </Combobox.Control>
+      <Portal disabled={!portalled}>
+        <Combobox.Positioner>
+          <Combobox.Content maxH="300px" overflowY="auto">
+            <Combobox.Empty>No branch matches.</Combobox.Empty>
+            {collection.items.map((branch) => (
+              <Combobox.Item key={branch.code} item={branch}>
+                <Text fontSize="xs" truncate>
+                  {branchLabel(branch)}
+                </Text>
+                <Combobox.ItemIndicator />
+              </Combobox.Item>
+            ))}
+          </Combobox.Content>
+        </Combobox.Positioner>
+      </Portal>
+      {errorText && (
+        <Text fontSize="xs" color="red.500" mt={1}>
+          {errorText}
+        </Text>
+      )}
+    </Combobox.Root>
+  );
+}
 
 export interface CofpRequestListCardProps {
   requests: CofpRequest[];
@@ -136,6 +688,117 @@ export interface CofpRequestListCardProps {
   /** The row drawn as picked. */
   selectedId?: string;
   onSelect: (request: CofpRequest) => void;
+  /** What For Printing lists in place of requests. */
+  regions: CofpRegion[];
+  /** Pinned above the regions under For Printing, whatever the search. */
+  specialRequest?: CofpRegion;
+  /** The region row drawn as picked. */
+  selectedRegionCode?: string;
+  onSelectRegion: (region: CofpRegion) => void;
+  /** What Deficient and Confiscated list in place of requests. */
+  branches: CofpBranch[];
+  /** The branch row drawn as picked. */
+  selectedBranchCode?: string;
+  onSelectBranch: (branch: CofpBranch) => void;
+  /** What Printed lists under the picked branch. */
+  memos: CofpMemo[];
+  /** The memo row drawn as picked. */
+  selectedMemoId?: string;
+  onSelectMemo: (memo: CofpMemo) => void;
+  /** Which of Replacement's three sources is pressed. */
+  replacementSource: CofpReplacementSource;
+  onReplacementSourceChange: (source: CofpReplacementSource) => void;
+  /** What Replacement's Branch combo box offers. */
+  replacementBranches: CofpBranch[];
+  replacementBranchCode?: string;
+  onSelectReplacementBranch: (branch: CofpBranch) => void;
+  /** How many requests the right-hand list holds under Replacement. */
+  replacementCount: number;
+  /** The picked branch's requests — listed under the Branch combo box. */
+  replacementRequests: CofpReplacementRequest[];
+  /** The Branch request row drawn as picked. */
+  selectedReplacementId?: string;
+  onSelectReplacementRequest: (request: CofpReplacementRequest) => void;
+}
+
+const REPLACEMENT_SOURCES: { source: CofpReplacementSource; label: string }[] = [
+  { source: "SPFC", label: "SPFC" },
+  { source: "CONFISCATED", label: "Confiscated" },
+  { source: "BRANCH", label: "Branch" },
+];
+
+/**
+ * Replacement's three source buttons (user, 2026-10-05) — one pressed at a
+ * time, and the list beside the rail is that source's requests.
+ */
+function ReplacementSourceButtons({
+  value,
+  onChange,
+}: {
+  value: CofpReplacementSource;
+  onChange: (source: CofpReplacementSource) => void;
+}) {
+  return (
+    // In a card of its own under a "From" title (user, 2026-10-06), so the
+    // three read as one choice apart from the combo box and list below.
+    <Box
+      mb={3}
+      flexShrink={0}
+      p={3}
+      borderWidth="1px"
+      borderColor="border.muted"
+      borderRadius="md"
+      bg="gray.50"
+    >
+    <Text
+      id="replacement-source-title"
+      fontSize="xs"
+      fontWeight="700"
+      color="gray.600"
+      letterSpacing="0.06em"
+      textTransform="uppercase"
+      mb={2}
+    >
+      From
+    </Text>
+    <Flex
+      role="radiogroup"
+      aria-labelledby="replacement-source-title"
+      gap={1.5}
+    >
+      {REPLACEMENT_SOURCES.map(({ source, label }) => {
+        const active = source === value;
+        return (
+          <Box
+            as="button"
+            key={source}
+            role="radio"
+            aria-checked={active}
+            onClick={() => onChange(source)}
+            flex="1"
+            h="34px"
+            px={2}
+            borderWidth="1px"
+            borderRadius="md"
+            borderColor={active ? BRAND_COLORS.primaryGreen : "gray.200"}
+            bg={active ? BRAND_COLORS.primaryGreen : "white"}
+            color={active ? "white" : "gray.700"}
+            fontSize="xs"
+            fontWeight="600"
+            cursor="pointer"
+            transition="all 0.15s ease"
+            _hover={{
+              borderColor: BRAND_COLORS.primaryGreen,
+              color: active ? "white" : BRAND_COLORS.primaryGreen,
+            }}
+          >
+            {label}
+          </Box>
+        );
+      })}
+    </Flex>
+    </Box>
+  );
 }
 
 export function CofpRequestListCard({
@@ -144,23 +807,43 @@ export function CofpRequestListCard({
   onViewChange,
   selectedId,
   onSelect,
+  regions,
+  specialRequest,
+  selectedRegionCode,
+  onSelectRegion,
+  branches,
+  selectedBranchCode,
+  onSelectBranch,
+  memos,
+  selectedMemoId,
+  onSelectMemo,
+  replacementSource,
+  onReplacementSourceChange,
+  replacementBranches,
+  replacementBranchCode,
+  onSelectReplacementBranch,
+  replacementCount,
+  replacementRequests,
+  selectedReplacementId,
+  onSelectReplacementRequest,
 }: CofpRequestListCardProps) {
   const [query, setQuery] = useState("");
+  // FOR PRINTING LISTS REGIONS, not requests (user, 2026-10-02), DEFICIENT
+  // lists branches, and PRINTED lists memos under a branch picked from a combo
+  // box (user, 2026-10-05). CONFISCATED lists branches like Deficient (user,
+  // 2026-10-05): every other view is still a run of plan holders.
+  const showsRegions = view === "FOR_PRINTING";
+  const showsMemos = view === "PRINTED";
+  const showsBranches = view === "DEFICIENT" || view === "CONFISCATED";
+  // REPLACEMENT lists nothing in the rail (user, 2026-10-05): three source
+  // buttons, and under Branch a combo box — the requests are on the right.
+  const showsReplacement = view === "REPLACEMENT";
 
-  // Which view the second button is. Every view except Generate passes through
-  // here, so the row always holds the two views that can be reached without
-  // opening the menu — and the picked one is always one of them.
-  const [secondView, setSecondView] = useState<CofpView>(DEFAULT_SECOND_VIEW);
-
-  // Picking Generate from the menu leaves the second button alone: it is the
-  // first button's own view, and moving it into the second slot would take the
-  // row down to one view and put the same one in it twice.
-  const pickView = (next: CofpView) => {
-    if (next !== GENERATE_ACTION.view) setSecondView(next);
-    onViewChange(next);
+  const step = (direction: 1 | -1) => {
+    const count = COFP_ACTIONS.length;
+    const index = COFP_ACTIONS.findIndex((action) => action.view === view);
+    onViewChange(COFP_ACTIONS[(index + direction + count) % count].view);
   };
-
-  const rowActions = [GENERATE_ACTION, actionFor(secondView)];
 
   // LPA number, name and CFP number — the three things a request is looked up
   // by. Matched on the raw string so a partial LPA finds its row.
@@ -180,6 +863,45 @@ export function CofpRequestListCard({
     if (!needle) return requests;
     return requests.filter((request) => matches(request, needle));
   }, [requests, query]);
+
+  // A region is looked up by its code or any branch under it.
+  const visibleRegions = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return regions;
+    return regions.filter((region) =>
+      `${region.code} ${region.description}`.toLowerCase().includes(needle),
+    );
+  }, [regions, query]);
+
+  // SPFC is pinned above the branches whatever the search (user, 2026-10-05),
+  // the way From COFP Replacement is above the regions — so it is drawn on its
+  // own and left out of the list the search filters.
+  const pinnedBranch = branches.find(
+    (branch) => branch.code === COFP_PINNED_BRANCH_CODE,
+  );
+
+  // A branch is looked up by its code or description.
+  const visibleBranches = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const rest = branches.filter(
+      (branch) => branch.code !== COFP_PINNED_BRANCH_CODE,
+    );
+    if (!needle) return rest;
+    return rest.filter((branch) =>
+      `${branch.code} ${branch.description}`.toLowerCase().includes(needle),
+    );
+  }, [branches, query]);
+
+  const count = showsReplacement
+    ? replacementCount
+    : showsRegions
+    ? visibleRegions.length + (specialRequest ? 1 : 0)
+    : showsMemos
+      ? memos.length
+      : showsBranches
+        ? visibleBranches.length + (pinnedBranch ? 1 : 0)
+        : visible.length;
+  const noun = showsRegions ? "region" : showsBranches ? "branch" : "request";
 
   return (
     <Box
@@ -203,96 +925,166 @@ export function CofpRequestListCard({
       p={4}
       display="flex"
       flexDirection="column"
-      // No cap of its own any more: the list inside is a fixed five rows, so
-      // the card is the height of its own contents whatever the branch holds.
+      // THE SCREEN'S HEIGHT ON DESKTOP (user, 2026-10-02) — the same figure the
+      // ROP, CSV, Transfer and Reinstatement rails cap at, so the list runs to
+      // the bottom of the viewport and scrolls inside. Stacked below lg, the
+      // list keeps its five rows.
+      h={{ lg: "calc(100vh - 220px)" }}
       overflow="hidden"
     >
-      {/* The actions stand where the card's heading used to (user, 2026-09-21).
-          A rail whose contents are self-evident does not need to be told what it
-          is, and the row it makes room for is the one on the COFP list header —
-          two of them as buttons, every one of them under "More".
+      {/* THE SAME STATUS CAROUSEL THE ROP, CSV, TRANSFER AND REINSTATEMENT
+          RAILS DRAW (user, 2026-10-02) — it replaced a strip of two tab
+          buttons and a "More" menu. One view shows at a time, the chevrons
+          step through all seven and wrap at either end, and the menu on the
+          right jumps straight to one. */}
+      <Flex align="center" justify="space-between" gap={2} mb={3} flexShrink={0}>
+        <StatusStepButton label="Previous view" onClick={() => step(-1)}>
+          <ChevronLeft size={16} />
+        </StatusStepButton>
 
-          THE PRESSED ONE IS SOLID, the other outlined: the kit's primary and
-          secondary small buttons are the same button in its two variants, so a
-          tab strip out of them costs no styling of its own. */}
-      <Flex align="center" gap={2} mb={3} flexWrap="wrap" flexShrink={0}>
-        {rowActions.map((action) => {
-          const Button =
-            action.view === view ? PrimarySmButton : SecondarySmButton;
-          return (
-            <Button
-              key={action.view}
-              aria-pressed={action.view === view}
-              onClick={() => pickView(action.view)}
-            >
-              <action.icon size={16} />
-              {action.label}
-            </Button>
-          );
-        })}
+        <Flex direction="column" align="center" gap={1} minW={0} aria-live="polite">
+          <H3 textAlign="center" fontSize="lg" truncate>
+            {actionFor(view).label}
+          </H3>
+          <Flex gap={1} aria-hidden="true">
+            {COFP_ACTIONS.map((action) => (
+              <Box
+                as="button"
+                key={action.view}
+                onClick={() => onViewChange(action.view)}
+                tabIndex={-1}
+                w={action.view === view ? "14px" : "5px"}
+                h="5px"
+                borderRadius="full"
+                bg={action.view === view ? BRAND_COLORS.primaryGreen : "gray.200"}
+                transition="all 0.2s ease"
+                cursor="pointer"
+              />
+            ))}
+          </Flex>
+          <Text fontSize="xs" color="gray.400">
+            {`${count} record${count === 1 ? "" : "s"}`}
+          </Text>
+        </Flex>
 
-        {/* A DROPDOWN, not the bottom sheet the shared `ActionButtons` opens
-            (user, 2026-09-22) — the same call the death claim's rail makes. A
-            sheet slides up and takes the window over, which is right for a
-            thumb and wrong for a button in a rail with a pointer already on
-            it. The menu opens where the button is.
+        {/* The next chevron and the view menu share the right edge, so the
+            title stays centred between the two sides. */}
+        <Flex align="center" gap={1} flexShrink={0}>
+          <StatusStepButton label="Next view" onClick={() => step(1)}>
+            <ChevronRight size={16} />
+          </StatusStepButton>
 
-            It never draws as pressed: what is picked from it takes the second
-            slot, so the pressed button is always one of the two in the row. */}
-        <Menu.Root
-          positioning={{ placement: "bottom-start" }}
-          onSelect={({ value }) => pickView(value as CofpView)}
-        >
-          <Menu.Trigger asChild>
-            <SecondarySmButton>
-              <Ellipsis size={16} />
-              More
-            </SecondarySmButton>
-          </Menu.Trigger>
-          <Portal>
-            <Menu.Positioner>
-              <Menu.Content minW="248px">
-                {COFP_ACTIONS.map(
-                  ({ view: itemView, label, icon: Icon, description }) => {
-                    const current = itemView === view;
-                    return (
-                      <Menu.Item
-                        key={itemView}
-                        value={itemView}
-                        py={2}
-                        bg={current ? "#f4faf6" : undefined}
+          <Menu.Root positioning={{ placement: "bottom-end" }}>
+            <Menu.Trigger asChild>
+              <Box
+                as="button"
+                aria-label="Choose COFP view"
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                boxSize="28px"
+                flexShrink={0}
+                borderWidth="1px"
+                borderColor={BRAND_COLORS.primaryGreen}
+                borderRadius="full"
+                bg="#eaf5ee"
+                color={BRAND_COLORS.primaryGreen}
+                cursor="pointer"
+                transition="all 0.15s ease"
+                _hover={{ bg: BRAND_COLORS.primaryGreen, color: "white" }}
+                _expanded={{ bg: BRAND_COLORS.primaryGreen, color: "white" }}
+              >
+                <EllipsisVertical size={16} strokeWidth={2.5} />
+              </Box>
+            </Menu.Trigger>
+            <Portal>
+              <Menu.Positioner>
+                <Menu.Content minW="180px">
+                  <Menu.RadioItemGroup
+                    value={view}
+                    onValueChange={(e) => onViewChange(e.value as CofpView)}
+                  >
+                    {COFP_ACTIONS.map((action) => (
+                      <Menu.RadioItem
+                        key={action.view}
+                        value={action.view}
+                        fontWeight={action.view === view ? "600" : undefined}
+                        color={
+                          action.view === view
+                            ? BRAND_COLORS.primaryGreen
+                            : undefined
+                        }
                       >
-                        <Flex align="center" gap={2.5} minW={0} flex="1">
-                          <Box color={BRAND_COLORS.darkGreen} flexShrink={0}>
-                            <Icon size={15} />
-                          </Box>
-                          <Box minW={0} flex="1">
-                            <Text fontSize="sm" color="gray.800">
-                              {label}
-                            </Text>
-                            <Text fontSize="xs" color="gray.500">
-                              {description}
-                            </Text>
-                          </Box>
-                          {/* The one the rows are already showing, so a user
-                              opening the menu to find out sees it at once. */}
-                          {current && (
-                            <Box color={BRAND_COLORS.darkGreen} flexShrink={0}>
-                              <Check size={15} />
-                            </Box>
-                          )}
-                        </Flex>
-                      </Menu.Item>
-                    );
-                  },
-                )}
-              </Menu.Content>
-            </Menu.Positioner>
-          </Portal>
-        </Menu.Root>
+                        {action.label}
+                        <Menu.ItemIndicator ms="auto" />
+                      </Menu.RadioItem>
+                    ))}
+                  </Menu.RadioItemGroup>
+                </Menu.Content>
+              </Menu.Positioner>
+            </Portal>
+          </Menu.Root>
+        </Flex>
       </Flex>
 
-      {/* Same search field the memo rail uses — icon, bare input, clear. */}
+      {/* Replacement's source buttons, and under Branch the combo box of
+          branches with a request. Nothing else is drawn in the rail. */}
+      {showsReplacement ? (
+        <>
+          <ReplacementSourceButtons
+            value={replacementSource}
+            onChange={onReplacementSourceChange}
+          />
+          {replacementSource === "BRANCH" && (
+            <>
+              <BranchCombobox
+                key="replacement-branch"
+                branches={replacementBranches}
+                value={replacementBranchCode}
+                onChange={onSelectReplacementBranch}
+              />
+              {/* The picked branch's requests, under the combo box (user,
+                  2026-10-05) — scrolling inside the card like every other
+                  rail list. */}
+              {replacementBranchCode && (
+                <Flex
+                  direction="column"
+                  gap={`${ROW_GAP}px`}
+                  h={{ base: `${LIST_HEIGHT}px`, lg: "auto" }}
+                  flex={{ lg: "1" }}
+                  minH={{ lg: 0 }}
+                  flexShrink={{ base: 0, lg: 1 }}
+                  overflowY="auto"
+                >
+                  {replacementRequests.length === 0 ? (
+                    <Text fontSize="sm" color="gray.400" px={1} py={6} textAlign="center">
+                      No replacement requests from this branch.
+                    </Text>
+                  ) : (
+                    replacementRequests.map((request) => (
+                      <ReplacementRequestRow
+                        key={request.id}
+                        request={request}
+                        active={request.id === selectedReplacementId}
+                        onClick={() => onSelectReplacementRequest(request)}
+                      />
+                    ))
+                  )}
+                </Flex>
+              )}
+            </>
+          )}
+        </>
+      ) : /* Printed picks its branch from a combo box in place of the search
+          field — the memos under it are the list. */
+      showsMemos ? (
+        <BranchCombobox
+          branches={branches}
+          value={selectedBranchCode}
+          onChange={onSelectBranch}
+        />
+      ) : (
+      /* Same search field the memo rail uses — icon, bare input, clear. */
       <Flex
         align="center"
         gap={2}
@@ -314,7 +1106,13 @@ export function CofpRequestListCard({
         <Input
           value={query}
           onChange={(e) => setQuery(e.currentTarget.value)}
-          placeholder="Search LPA, name, or CFP no..."
+          placeholder={
+            showsRegions
+              ? "Search region or branch..."
+              : showsBranches
+                ? "Search branch code or description..."
+                : "Search LPA, name, or CFP no..."
+          }
           flex="1"
           h="full"
           px={0}
@@ -340,37 +1138,92 @@ export function CofpRequestListCard({
           </Box>
         )}
       </Flex>
+      )}
 
-      {/* THE LIST THE ACTION OPENS, and the only one in this card: the
-          accounts with a deficiency are a card of their own below it.
-
-          FIVE ROWS TALL, exactly, whether it holds three or forty — the same
-          height the deficiency card's list takes, so the two read as one
-          system rather than two lists that happen to sit together. */}
+      {/* THE LIST THE ACTION OPENS — whatever height the card has left on
+          desktop, five rows tall when stacked. Replacement's is on the
+          right instead. */}
+      {!showsReplacement && (
       <Flex
         direction="column"
         gap={`${ROW_GAP}px`}
-        h={`${LIST_HEIGHT}px`}
-        flexShrink={0}
+        h={{ base: `${LIST_HEIGHT}px`, lg: "auto" }}
+        flex={{ lg: "1" }}
+        minH={{ lg: 0 }}
+        flexShrink={{ base: 0, lg: 1 }}
         overflowY="auto"
       >
-        {visible.length === 0 && (
+        {/* Special Request is the list's first row (user, 2026-10-05), and
+            stays there whatever the search — the regions follow it. */}
+        {showsRegions && specialRequest && (
+          <SpecialRequestRow
+            region={specialRequest}
+            active={specialRequest.code === selectedRegionCode}
+            onClick={() => onSelectRegion(specialRequest)}
+          />
+        )}
+
+        {showsBranches && isBranchView(view) && pinnedBranch && (
+          <PinnedBranchRow
+            branch={pinnedBranch}
+            view={view}
+            active={pinnedBranch.code === selectedBranchCode}
+            onClick={() => onSelectBranch(pinnedBranch)}
+          />
+        )}
+
+        {(showsRegions
+          ? visibleRegions.length === 0
+          : showsBranches
+            ? visibleBranches.length === 0
+            : count === 0) && (
           <Text fontSize="sm" color="gray.400" px={1} py={6} textAlign="center">
-            {query
-              ? `No request matches “${query}”.`
-              : "Nothing to list under this action."}
+            {showsMemos
+              ? "No memos transmitted to this branch."
+              : query
+                ? `No ${noun} matches “${query}”.`
+                : "Nothing to list under this action."}
           </Text>
         )}
 
-        {visible.map((request) => (
-          <RequestRow
-            key={request.id}
-            request={request}
-            active={request.id === selectedId}
-            onClick={() => onSelect(request)}
-          />
-        ))}
+        {showsRegions
+          ? visibleRegions.map((region) => (
+              <RegionRow
+                key={region.code}
+                region={region}
+                active={region.code === selectedRegionCode}
+                onClick={() => onSelectRegion(region)}
+              />
+            ))
+          : showsMemos
+            ? memos.map((memo) => (
+                <MemoRow
+                  key={memo.id}
+                  memo={memo}
+                  active={memo.id === selectedMemoId}
+                  onClick={() => onSelectMemo(memo)}
+                />
+              ))
+          : isBranchView(view)
+            ? visibleBranches.map((branch) => (
+                <BranchRow
+                  key={branch.code}
+                  branch={branch}
+                  view={view}
+                  active={branch.code === selectedBranchCode}
+                  onClick={() => onSelectBranch(branch)}
+                />
+              ))
+            : visible.map((request) => (
+              <RequestRow
+                key={request.id}
+                request={request}
+                active={request.id === selectedId}
+                onClick={() => onSelect(request)}
+              />
+            ))}
       </Flex>
+      )}
     </Box>
   );
 }

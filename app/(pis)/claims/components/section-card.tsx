@@ -91,7 +91,7 @@ export const INSET_RADIUS = "2px";
  * tint moved to green. Side by side at one pixel it is not a colour you name,
  * it is a colour you notice: two cards in a column whose edges do not agree.
  */
-const KIT_BORDER = "#e3e8e5";
+export const KIT_BORDER = "#e3e8e5";
 
 /**
  * The kit card's lift — an ambient glow rather than a drop.
@@ -115,6 +115,28 @@ export const CARD_SHAPE = {
   borderWidth: "1px",
   borderColor: KIT_BORDER,
   boxShadow: KIT_SHADOW,
+} as const;
+
+/**
+ * A bar that FLOATS over the page on a phone — the card's edge and corner with a
+ * lifted shadow instead of the glow, inset from the screen's sides rather than
+ * running edge to edge. Service Payables' Prev / Next bar and the Death Claim
+ * pinned bar both wear it (user, 2026-09-30: "just like this so it is
+ * floating"), so the two read as the same kind of thing.
+ */
+export const FLOATING_BAR = {
+  // THE LAYER, measured off the shell (2026-09-30): over the page and the
+  // bottom navigation (100), UNDER the phone sidebar (1000) and its dimming
+  // overlay (999) — "the side bar is still superior to our quick access".
+  // Chakra's `sticky` token (1100) put these bars over the open sidebar.
+  zIndex: 110,
+  bg: "white",
+  borderRadius: SURFACE_RADIUS,
+  borderWidth: "1px",
+  borderColor: KIT_BORDER,
+  boxShadow: "md",
+  px: 2,
+  py: 1.5,
 } as const;
 
 export interface SectionCardProps {

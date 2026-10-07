@@ -36,3 +36,37 @@ export const DIALOG_SHEET_CSS = {
   },
   '&[data-state="closed"]': { display: "none" },
 } as const;
+
+/**
+ * A pop-up FROM `lg` ONLY — below it the drawer keeps its own slide up from the
+ * bottom edge, which is right on a phone (user, 2026-10-02, on the payee
+ * details: "do the pop-up in the bottom animation when mobile"). Pair it with
+ * {@link POPUP_FROM_LG}, which places and shapes the sheet to match.
+ */
+export const DIALOG_SHEET_FROM_LG_CSS = {
+  "@media screen and (min-width: 64rem)": DIALOG_SHEET_CSS,
+} as const;
+
+/**
+ * Where a pop-up-from-`lg` sheet sits and how it is cut: a bottom sheet with a
+ * rounded top on a phone, a centred 840px box from `lg`. Positioner props
+ * first, content props second.
+ */
+export const POPUP_FROM_LG = {
+  positioner: {
+    alignItems: { base: "flex-end", lg: "center" },
+    justifyContent: "center",
+    p: { base: 0, lg: 3 },
+  },
+  content: {
+    h: "auto",
+    w: "full",
+    maxW: { base: "100%", lg: "840px" },
+    maxH: { base: "88dvh", lg: "82vh" },
+    borderTopRadius: { base: "2xl", lg: "xl" },
+    borderBottomRadius: { base: 0, lg: "xl" },
+    pb: { base: "env(safe-area-inset-bottom, 0px)", lg: 0 },
+  },
+  /** The same content props when the sheet is NOT a pop-up: full height. */
+  fullHeight: { h: "100dvh", maxH: "100dvh", borderRadius: 0 },
+} as const;

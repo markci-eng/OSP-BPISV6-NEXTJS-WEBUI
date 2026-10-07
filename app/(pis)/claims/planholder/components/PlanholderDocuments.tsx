@@ -30,14 +30,34 @@ import {
   type DocumentType,
   type PlanholderDocument,
 } from "../../claims-data";
+import {
+  AddDeficiencyDialog,
+  type AddDeficiencySubmission,
+} from "../../components/add-deficiency-dialog";
+import { AddDeficiencySheet } from "../../components/add-deficiency-sheet";
+import { AddDocumentSheet } from "../../components/add-document-sheet";
 import { DocumentFolder } from "../../components/document-folder";
+import { MobileDocumentFolder } from "../../components/mobile-document-folder";
 import { ScrollFade } from "../../components/scroll-fade";
+import {
+  getRaisedDeficiencies,
+  getWaivedDocumentCodes,
+  raiseDeficiency,
+  usePlanholderDeficiencyStore,
+  waiveDocumentType,
+  withdrawRaisedDeficiency,
+  type RaisedDeficiency,
+} from "../../planholder-deficiency-store";
 import { PlanholderSectionHeader } from "./PlanholderSectionHeader";
 import { PlanholderDocumentDrawer } from "./PlanholderDocumentDrawer";
 import { PlanholderDocumentListDrawer } from "./PlanholderDocumentListDrawer";
 import { DocumentRow } from "./DocumentRow";
 import { DocumentDeficiencyRow } from "./DocumentDeficiencyRow";
-import { DIALOG_SHEET_CSS } from "./dialog-sheet";
+import {
+  DIALOG_SHEET_CSS,
+  DIALOG_SHEET_FROM_LG_CSS,
+  POPUP_FROM_LG,
+} from "./dialog-sheet";
 
 /** Rows shown inline before "View all" opens the full-list drawer. */
 const COLLAPSED_LIMIT = 5;
@@ -164,6 +184,28 @@ export function PlanholderDocuments({
     (t) => !uploadedCodes.has(t.code),
   );
 
+  // THE DEFICIENCY LIST IS EDITABLE NOW (user, 2026-10-01): a derived one can
+  // be withdrawn, and one can be raised by hand. The service record's pair,
+  // kept in `planholder-deficiency-store` so the page's Deficient line and the
+  // return list read the same edits.
+  usePlanholderDeficiencyStore();
+  const waived = personId ? getWaivedDocumentCodes(personId) : new Set<string>();
+  const requiredDefs = availableTypes.filter((t) => !waived.has(t.code));
+  // A raised one naming a document now on file is answered, so it goes.
+  const raisedDefs = (personId ? getRaisedDeficiencies(personId) : []).filter(
+    (d) => !d.code || !uploadedCodes.has(d.code),
+  );
+  const deficiencyCount = requiredDefs.length + raisedDefs.length;
+  const outstandingCodes = [
+    ...requiredDefs.map((t) => t.code),
+    ...raisedDefs.map((d) => d.code).filter(Boolean),
+  ];
+  // What a deficiency can still be raised against: not on file, not outstanding.
+  const raisableTypes = availableTypes.filter(
+    (t) => !outstandingCodes.includes(t.code),
+  );
+  const [addDefOpen, setAddDefOpen] = useState(false);
+
   // WHICH LIST IS SHOWING IS `DocumentFolder`'S, and nothing outside it needs
   // to know: no tick on this screen points into the folder the way the service
   // record's Deficient box does. So the tabs are left uncontrolled.
@@ -175,6 +217,20 @@ export function PlanholderDocuments({
    */
   const isRail =
     useBreakpointValue({ base: false, xl: true }) ?? false;
+
+  /**
+   * A PHONE gets the shared summary card and bottom sheets in place of the
+   * tabs (user, 2026-10-01: "implement this in death claim document section
+   * also") — see `MobileDocumentFolder`. Below `lg`, where the claim's rail
+   * becomes the quick bar. Only with deficiencies: the profile's one-list
+   * folder has no tabs to replace.
+   */
+  const isPhone =
+    (useBreakpointValue({ base: true, lg: false }) ?? false) &&
+    withDeficiencies;
+  /** The phone's Add sheet, and the type it opens on. */
+  const [addSheetOpen, setAddSheetOpen] = useState(false);
+  const [addPreset, setAddPreset] = useState<string>();
 
   const count = documents.length;
   // Stacked, five rows and a "View all" into the list drawer — a fixed preview,
@@ -206,7 +262,108 @@ export function PlanholderDocuments({
     return true;
   };
 
+  /* ---------------------------- deficiencies ---------------------------- */
+
+  /** Confirm, then withdraw a deficiency, derived or raised. */
+  const handleRemoveDeficiency = async (
+    name: string,
+    remove: () => void,
+  ): Promise<boolean> => {
+    const confirmed = await messageBox({
+      title: "WITHDRAW DEFICIENCY",
+      message: `Remove "${name}" from the deficiency list?`,
+      confirmText: "Withdraw",
+      variant: "confirmation",
+    });
+    if (!confirmed || !personId) return false;
+    remove();
+    toast.success("Deficiency withdrawn", { description: name });
+    return true;
+  };
+
+  const handleRaise = (submission: AddDeficiencySubmission) => {
+    if (!personId) return;
+    const raised = raiseDeficiency(personId, {
+      code: submission.documentCode,
+      description: submission.description,
+      remarks: submission.remarks,
+    });
+    if (!raised) {
+      toast.info("Already outstanding", {
+        description: `${submission.description} is already on the deficiency list.`,
+      });
+      return;
+    }
+    toast.success("Deficiency added", { description: raised.description });
+  };
+
+  /** The Deficiencies list's rows: derived first, then the raised ones. */
+  const deficiencyRows = [
+    ...requiredDefs.map((type) => (
+      <DocumentDeficiencyRow
+        key={type.code}
+        name={type.name}
+        caption={type.code}
+        onUpload={() => startAdd(type)}
+        onRequestRemove={() =>
+          handleRemoveDeficiency(type.name, () =>
+            waiveDocumentType(personId!, type.code),
+          )
+        }
+      />
+    )),
+    ...raisedDefs.map((d: RaisedDeficiency) => {
+      const type = availableTypes.find((t) => t.code === d.code);
+      return (
+        <DocumentDeficiencyRow
+          key={d.id}
+          name={d.description}
+          caption={`${d.code || "Special case"} · raised by ${d.raisedBy}`}
+          remarks={d.remarks}
+          onUpload={type ? () => startAdd(type) : undefined}
+          onRequestRemove={() =>
+            handleRemoveDeficiency(d.description, () =>
+              withdrawRaisedDeficiency(personId!, d.id),
+            )
+          }
+        />
+      );
+    }),
+  ];
+
   /* -------------------------- add-document flow -------------------------- */
+
+  /** Put a chosen file on the list against its type, and say so. */
+  const addFile = (type: DocumentType, file: File) => {
+    const ext = file.name.includes(".") ? file.name.split(".").pop()! : "";
+    const newDoc: PlanholderDocument = {
+      id: Date.now(),
+      code: type.code,
+      name: type.name,
+      fileName: file.name,
+      format: ext.toUpperCase(),
+      // Local-only preview URL — there is no write path to the data layer yet.
+      url: URL.createObjectURL(file),
+    };
+
+    setDocuments((prev) => [newDoc, ...prev]);
+    toast.success(`${type.name} added`, { description: file.name });
+  };
+
+  /**
+   * Start adding — on a phone the Add sheet, opened on `type` when a
+   * deficiency row asked; elsewhere the type picker, or straight to the file
+   * dialog for a row's own type.
+   */
+  const startAdd = (type?: DocumentType) => {
+    if (isPhone) {
+      setAddPreset(type?.code);
+      setAddSheetOpen(true);
+      return;
+    }
+    if (type) handlePickType(type);
+    else setTypePickerOpen(true);
+  };
 
   /** Step 1 — a document type was chosen; open the file picker for it. */
   const handlePickType = (type: DocumentType) => {
@@ -224,20 +381,7 @@ export function PlanholderDocuments({
     e.target.value = "";
     pendingType.current = null;
     if (!file || !type) return;
-
-    const ext = file.name.includes(".") ? file.name.split(".").pop()! : "";
-    const newDoc: PlanholderDocument = {
-      id: Date.now(),
-      code: type.code,
-      name: type.name,
-      fileName: file.name,
-      format: ext.toUpperCase(),
-      // Local-only preview URL — there is no write path to the data layer yet.
-      url: URL.createObjectURL(file),
-    };
-
-    setDocuments((prev) => [newDoc, ...prev]);
-    toast.success(`${type.name} added`, { description: file.name });
+    addFile(type, file);
   };
 
   /** The documents list itself — the same rows in both layouts. */
@@ -285,13 +429,7 @@ export function PlanholderDocuments({
   const deficiencyList = (
     <ListFrame isRail={isRail}>
       <VStack align="stretch" gap={2}>
-        {availableTypes.map((type) => (
-          <DocumentDeficiencyRow
-            key={type.code}
-            type={type}
-            onUpload={() => handlePickType(type)}
-          />
-        ))}
+        {deficiencyRows}
       </VStack>
     </ListFrame>
   );
@@ -325,17 +463,46 @@ export function PlanholderDocuments({
         onChange={handleFileChosen}
       />
 
-      {withDeficiencies ? (
+      {isPhone ? (
+        /* THE PHONE — the shared summary card; the lists open in bottom
+           sheets. Every row is listed there (no five-row cut): the sheet is
+           the "View all". */
+        <MobileDocumentFolder
+          documents={{
+            count,
+            names: documents.map((d) => d.name),
+            rows: documents.map((doc) => (
+              <DocumentRow
+                key={doc.id}
+                document={doc}
+                onClick={() => handleSelect(doc)}
+                onRequestRemove={() => handleRemove(doc)}
+              />
+            )),
+            addLabel: "Add document",
+            onAdd: () => startAdd(),
+            emptyText: "Nothing received yet",
+          }}
+          deficiencies={{
+            count: deficiencyCount,
+            names: [
+              ...requiredDefs.map((t) => t.name),
+              ...raisedDefs.map((d) => d.description),
+            ],
+            rows: deficiencyRows,
+            addLabel: "Raise deficiency",
+            onAdd: () => setAddDefOpen(true),
+            emptyText: "Nothing outstanding",
+          }}
+        />
+      ) : withDeficiencies ? (
         /* THE SHARED FOLDER — the same component the service record's documents
            section renders (user, 2026-09-17: "make the service payables used
            the same components"). The tabbed heading, the counts on the pills,
            the switch and the empty states all live there.
 
-           THE SAME ADD ON BOTH TABS, which is where this differs from the
-           service record's folder and is the honest answer here: the type
-           picker it opens lists exactly what the Deficiencies tab lists, so
-           there is only one act to offer. On the service record a deficiency is
-           RAISED by hand, which is a second act and a second button. */
+           TWO ADDS NOW, as on the service record (user, 2026-10-01): a
+           document is added, a deficiency is RAISED by hand. */
         <DocumentFolder
           documents={{
             count,
@@ -349,13 +516,15 @@ export function PlanholderDocuments({
             children: documentsList,
           }}
           deficiencies={{
-            count: availableTypes.length,
+            count: deficiencyCount,
+            // RAISES, now that a deficiency can be raised by hand: the
+            // service record's second act, on its own tab.
             action: (
-              <TertiarySmButton onClick={() => setTypePickerOpen(true)}>
+              <TertiarySmButton onClick={() => setAddDefOpen(true)}>
                 <LuPlus /> Add
               </TertiarySmButton>
             ),
-            isEmpty: availableTypes.length === 0,
+            isEmpty: deficiencyCount === 0,
             empty: deficienciesEmpty,
             children: deficiencyList,
           }}
@@ -418,6 +587,35 @@ export function PlanholderDocuments({
         asDialog={asDialog}
       />
 
+      {/* THE PHONE'S ADD — the service record's sheet, shared. Every type
+          not on file is outstanding here, so all of them are tagged. */}
+      <AddDocumentSheet
+        types={availableTypes}
+        outstandingCodes={outstandingCodes}
+        presetCode={addPreset}
+        open={isPhone && addSheetOpen}
+        onOpenChange={setAddSheetOpen}
+        onSubmit={({ code, file }) => {
+          const type = availableTypes.find((t) => t.code === code);
+          if (type) addFile(type, file);
+        }}
+      />
+
+      {/* RAISE A DEFICIENCY: the service record's forms, shared. A dialog on
+          a wider screen, the bottom sheet on a phone. Both mounted. */}
+      <AddDeficiencyDialog
+        types={raisableTypes}
+        open={!isPhone && addDefOpen}
+        onOpenChange={setAddDefOpen}
+        onSubmit={handleRaise}
+      />
+      <AddDeficiencySheet
+        types={raisableTypes}
+        open={isPhone && addDefOpen}
+        onOpenChange={setAddDefOpen}
+        onSubmit={handleRaise}
+      />
+
       {/* Step 1 — pick the document type, then the file dialog opens. */}
       <Drawer.Root
         open={typePickerOpen}
@@ -426,22 +624,29 @@ export function PlanholderDocuments({
       >
         <Portal>
           <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
+          {/* NOT `asDialog` (the profile): A SHEET ON A PHONE, A POP-UP IN
+              THE MIDDLE FROM `lg` (user, 2026-10-02: "the add document of the
+              planholder profile does not pop-up at the middle when pc"). It ran
+              edge to edge along the foot of the screen. The document sheet's
+              rule — see `POPUP_FROM_LG`. */}
           <Drawer.Positioner
-            alignItems={asDialog ? "center" : undefined}
-            justifyContent={asDialog ? "center" : undefined}
-            p={asDialog ? 3 : undefined}
+            {...(asDialog
+              ? { alignItems: "center", justifyContent: "center", p: 3 }
+              : POPUP_FROM_LG.positioner)}
           >
             <Drawer.Content
-              borderRadius={asDialog ? "xl" : undefined}
-              roundedTop={asDialog ? undefined : "2xl"}
-              w={asDialog ? "full" : undefined}
-              maxW={
-                asDialog
-                  ? { base: "calc(100dvw - 24px)", md: "560px" }
-                  : undefined
-              }
-              maxH={asDialog ? { base: "88dvh", md: "82vh" } : "70vh"}
-              css={asDialog ? DIALOG_SHEET_CSS : undefined}
+              {...(asDialog
+                ? {
+                    borderRadius: "xl",
+                    w: "full",
+                    maxH: { base: "88dvh", md: "82vh" },
+                  }
+                : POPUP_FROM_LG.content)}
+              maxW={{
+                base: asDialog ? "calc(100dvw - 24px)" : "100%",
+                lg: "560px",
+              }}
+              css={asDialog ? DIALOG_SHEET_CSS : DIALOG_SHEET_FROM_LG_CSS}
               overflow="hidden"
               display="flex"
               flexDirection="column"
@@ -449,7 +654,12 @@ export function PlanholderDocuments({
               {/* The drag handle is the sheet's — a grab bar on a centred
                   dialog offers a gesture that does nothing there. */}
               {!asDialog && (
-              <Box pt={3} pb={1} display="flex" justifyContent="center">
+              <Box
+                pt={3}
+                pb={1}
+                display={{ base: "flex", lg: "none" }}
+                justifyContent="center"
+              >
                 <Box
                   w="36px"
                   h="4px"

@@ -6,32 +6,75 @@
 // table view uses, so a row here behaves the way a row anywhere else in the app
 // does: same column model, same sorting, same chrome.
 //
-// PAGED, which that table is not. The queue's table sits beside a card deck that
-// scrolls, and paging one and scrolling the other would be two ways through the
-// same claims; this section has no such twin. A ledger is also the one list here
-// that grows without limit — a plan pays for its whole term — so "the first five
-// and a button" stops being a preview and starts being a wall.
+// INFINITE SCROLL BY DEFAULT, PAGES ON REQUEST (user, 2026-10-02: "the user
+// does not want pagination, but I think we should add an option"). One Rows
+// control does both: "All, scroll" is the kit's infinite scroll, a number is
+// that many per page with the pager beside it. One control and not a switch
+// plus a page size, because a page size means nothing while scrolling.
 //
-// Everything else the table can do is off: a search box and column filters for
-// four columns of one plan's receipts would be more chrome than ledger.
+// THE CHOICE IS REMEMBERED in this browser (user, same day) — someone who
+// reads in pages keeps getting pages. The filters are not; see `usePaymentsLedger`.
+//
+// The search and the pay class live OUTSIDE the table, in `PaymentsToolbar`,
+// so they can sit pinned above it in a pop-up. The kit's own search is off.
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "osp-ui-kit";
+import { DataTable, FloatingLabelSelect } from "osp-ui-kit";
 import type { PlanholderPayment } from "../../claims-data";
 
+/** "scroll", or a page size. */
+type RowsMode = "scroll" | "10" | "25" | "50";
+
+const ROWS_OPTIONS: { value: RowsMode; label: string }[] = [
+  { value: "scroll", label: "All, scroll" },
+  { value: "10", label: "10 per page" },
+  { value: "25", label: "25 per page" },
+  { value: "50", label: "50 per page" },
+];
+
+const ROWS_KEY = "claims.payments.rows";
+
+/** Receipts revealed per step while scrolling. */
+const SCROLL_BATCH = 20;
+
 /**
- * Receipts to a page. Fixed, not measured.
+ * How tall the scrolling table may be — the kit's default is a whole-page
+ * figure, and this sits in a section or a pop-up.
  *
- * A tall monitor CAN hold twenty-odd rows, and sizing the page to fill it was
- * the wrong thing to do with that room: twenty receipts is more ledger than
- * anyone reads at once, and the section stops being one part of a page and
- * becomes the page. Ten is a year of a monthly plan, which is the unit this is
- * actually read in — and it leaves the sections under it where a reader can
- * find them.
+ * The pop-up is capped at 82vh and spends ~230px on its toolbar, the table's
+ * own foot and its padding; past that, a second scrollbar appears around the
+ * first. So: what the pop-up leaves, never under 240px nor over 560px.
  */
-const PAGE_SIZE = 10;
+const SCROLL_MAX_HEIGHT = "clamp(240px, calc(82vh - 230px), 560px)";
+
+/**
+ * The remembered Rows choice. "scroll" until it has been read, so the server
+ * and the first client render agree.
+ */
+function useRowsMode(): [RowsMode, (next: RowsMode) => void] {
+  const [mode, setMode] = useState<RowsMode>("scroll");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(ROWS_KEY);
+      if (ROWS_OPTIONS.some((o) => o.value === saved)) {
+        setMode(saved as RowsMode);
+      }
+    } catch {
+      // Storage refused (private window) — the default stands.
+    }
+  }, []);
+  const choose = (next: RowsMode) => {
+    setMode(next);
+    try {
+      localStorage.setItem(ROWS_KEY, next);
+    } catch {
+      // Not remembered, but still applied.
+    }
+  };
+  return [mode, choose];
+}
 
 /**
  * Four columns, each one field: an OR number, what it was collected for, when,
@@ -90,31 +133,39 @@ const columns: ColumnDef<PlanholderPayment>[] = [
 ];
 
 export interface PlanholderPaymentsTableProps {
-  /** Every receipt on record for the plan — the table pages through them. */
+  /** The receipts on show — already narrowed by the toolbar's filters. */
   payments: PlanholderPayment[];
+  /** What stands in the table when the filters leave nothing. */
+  emptyState?: ReactNode;
 }
 
 export function PlanholderPaymentsTable({
   payments,
+  emptyState,
 }: PlanholderPaymentsTableProps) {
   // Stable across renders, so a sort the user set is not thrown away whenever
   // the section re-renders around it.
   const cols = useMemo(() => columns, []);
+  const [mode, setMode] = useRowsMode();
+  const scrolling = mode === "scroll";
 
   return (
-    // The pager to the bottom right, where a table's pager belongs — you page
-    // when you have finished reading the rows, not before you start.
+    // The toolbar to the bottom, where a table's pager and its count belong —
+    // you page when you have finished reading the rows, not before you start.
     //
-    // The kit puts it in the toolbar above the table, and there is no prop for
-    // that, so the card is flipped instead: two children, the toolbar and the
-    // table, and `order` sends the toolbar last. Everything that made it a
-    // header comes off with it — the bottom rule becomes a top rule, and the
-    // sticky that pinned it under the page header is released, since a pinned
-    // footer inside a box that does not scroll would only sit where it already
-    // is. The range and arrows are the toolbar's own right-hand group, so they
-    // land on the right of it with nothing to say here.
+    // The kit puts it above the table, and there is no prop for that, so the
+    // card is flipped instead: two children, the toolbar and the table, and
+    // `order` sends the toolbar last. Everything that made it a header comes
+    // off with it — the bottom rule becomes a top rule, and the sticky that
+    // pinned it under the page header is released.
     <Box
       css={{
+        // ROOM UNDER THE TABLE FOR THE KIT'S LOAD-MORE SENTINEL. It is a
+        // zero-height last row watched with no margin, and with the table flush
+        // to the scroller's floor it rests a fraction of a pixel below the
+        // visible edge (measured: 562.125 against 561.875) — so scrolling to the
+        // end never loaded the next batch. Two pixels lets it scroll inside.
+        "& table": { marginBottom: "2px" },
         "& > div": { display: "flex", flexDirection: "column" },
         "& > div > div:first-of-type": {
           order: 1,
@@ -126,27 +177,41 @@ export function PlanholderPaymentsTable({
       }}
     >
       <DataTable<PlanholderPayment>
+        // A NEW TABLE PER MODE: the page size is the kit's initial state, read
+        // once, so switching it needs a fresh mount.
+        key={mode}
         columns={cols}
         data={payments}
         getRowId={(row) => row.orNo}
         size="sm"
-        defaultPageSize={PAGE_SIZE}
-        // The kit has ONE pager and it lives in the toolbar, which renders its
-        // row only when `search`, `filtering`, `columnToggle`, `headerButton` or
-        // `headerActions` is set — and the first three each bring a search box
-        // this section has no use for. `headerActions` is the one that opens the
-        // row without adding a control to it, so an empty node is what pays for
-        // the pager. It is a workaround for that gate, not a decoration: if the
-        // kit ever renders the range and arrows on their own, this comes out.
-        headerActions={<Box />}
+        defaultPageSize={scrolling ? SCROLL_BATCH : Number(mode)}
+        tableContainerMaxHeight={SCROLL_MAX_HEIGHT}
+        emptyState={emptyState}
+        // The Rows control, in the toolbar's own action slot — which is also
+        // what opens that row at all; see the kit's toolbar gate.
+        headerActions={
+          <Box w="150px">
+            <FloatingLabelSelect
+              label="Rows"
+              value={mode}
+              onValueChange={(value: string) => setMode(value as RowsMode)}
+            >
+              {ROWS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </FloatingLabelSelect>
+          </Box>
+        }
         features={{
-          pagination: true,
-          // The range and the arrows — "1–5 of 52" — which is the pager itself.
-          showToolbarPagination: true,
+          infiniteScroll: scrolling,
+          pagination: !scrolling,
+          // The range and the arrows — "1–10 of 52" — when paging; the plain
+          // count when scrolling.
+          showToolbarPagination: !scrolling,
           sorting: true,
-          // A ledger of one plan's receipts is not searched or filtered, and
-          // each of these would put a search box above four columns that never
-          // needed one — see the note on `headerActions`.
+          // Searched and filtered from `PaymentsToolbar`, outside the table.
           search: false,
           filtering: false,
           columnToggle: false,

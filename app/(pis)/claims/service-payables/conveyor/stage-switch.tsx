@@ -31,9 +31,10 @@
 // That rule came from `StageQuickLinks` and is the one thing about it worth
 // keeping.
 //
-// THREE CELLS AND NOT FOUR (user, 2026-09-15). Approval left this screen — a
+// TWO CELLS (user, 2026-09-15, then 2026-09-30). Approval left this screen — a
 // verified billing is decided on `/claims/approvals`, beside the death claims
-// waiting on the same supervisor — so the strip runs Process, Verify, Endorse.
+// waiting on the same supervisor — and approval now endorses on its own, so
+// Endorse went too. The strip runs For Process, Verify, like the death claim's.
 // It draws `CONVEYOR_STAGES` rather than `BILLING_STAGES`, which is the gating
 // point the note below anticipated; the stage is still in the pipeline and
 // billings still pass through it, they are just not worked here. See
@@ -78,7 +79,11 @@ import {
  * not "For Verification".
  */
 const TAB_LABEL: Record<BillingStage, string> = {
-  "for-process": "Process",
+  // "For Process" again now that two tabs share the track — the death claim's
+  // own words, so both conveyors read the same.
+  "for-process": "For Process",
+  // Never drawn — not a conveyor stage. Worked on Franchise Deductions.
+  "for-deduction": "Deduction",
   processed: "Verify",
   verified: "Approve",
   approved: "Endorse",
@@ -195,7 +200,7 @@ export function StageSwitch({
           gone and the block is 22px shorter for it. */}
       <Flex gap={1.5} mb={2.5} align="stretch">
         <SimpleGrid
-          columns={3}
+          columns={CONVEYOR_STAGES.length}
           gap={1}
           p="3px"
           flex="1"

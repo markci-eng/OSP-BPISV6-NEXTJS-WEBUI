@@ -39,27 +39,46 @@ import {
   useMessageDialog,
 } from "osp-ui-kit";
 import { toast } from "sonner";
-import { LuInbox, LuUsers } from "react-icons/lu";
+import {
+  LuClipboardList,
+  LuHistory,
+  LuInbox,
+  LuLayoutGrid,
+  LuSearch,
+  LuShieldCheck,
+  LuUsers,
+} from "react-icons/lu";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
+import { formatFiledDate, type ClaimPhase } from "../../data";
 import {
   addClaimNote,
+  CLAIM_AUDIT_USER,
   COMPLIANCE_REASONS,
+  CORRECTABLE_PLANHOLDER_FIELDS,
+  correctPlanholder,
   decideClaim,
+  getPlanholderCorrections,
+  planholderValueLabel,
+  revertPlanholderCorrections,
+  type CorrectionStage,
+  type PlanholderCorrection,
+  type PlanholderField,
   DENIAL_REASONS,
-  getClaimComplianceReturn,
+  getClaimActionBy,
   getClaimDecision,
   getClaimNotes,
   getClaimRework,
   getClaimVerdict,
-  hasProcessorActivity,
   recordVerdict,
+  type ClaimAction,
+  type ClaimActionKind,
   returnClaimForCompliance,
   returnToProcessor,
   REWORK_REASONS,
   useClaimStore,
 } from "../claim-store";
 import {
-  getOutstandingDocumentTypes,
+  getOutstandingDeficiencyNames,
   getPlanholder,
   getPlanholderBeneficiaries,
   getPlanholderRemarks,
@@ -73,26 +92,48 @@ import {
   type DeathClaim,
 } from "./death-claims-data";
 
+/** The edit form's values when a claim has no planholder record to correct. */
+const NO_PLANHOLDER_VALUES = {
+  lastName: "",
+  firstName: "",
+  middleName: "",
+  suffix: "",
+  dateOfBirthISO: "",
+};
+
 /** The queues this page can serve. See `STAGES` below for who owns which. */
 type StageKey = "process" | "verification";
+
+/**
+ * Where a claim on file sits in its processor's history, by its status.
+ * "Pending" is absent: nobody has answered it, so it is not history.
+ */
+const PHASE_TO_HISTORY: Partial<Record<ClaimPhase, ClaimActionKind>> = {
+  "For Approval": "approval",
+  "For Denial": "denial",
+  Approved: "approved",
+  Denied: "denied",
+};
 import { KitCardShape, SectionCard } from "../components/section-card";
 import {
-  claimFiledYear,
-  claimYearLabel,
-  claimYears,
-  defaultClaimYear,
-  type ClaimYear,
-} from "../components/year-select";
+  currentRange,
+  inRange,
+  rangeFor,
+  rangeSteps,
+  type HistoryRange,
+} from "./conveyor/history-range";
 import { LookupRow, PaymentsLookup } from "../components/lookup-row";
-import { SectionLauncher, SectionPopup } from "../components/section-popup";
+import {
+  BottomOnPhonePopup,
+  SectionLauncher,
+} from "../components/section-popup";
 import { ClaimPayees } from "../components/claim-payees";
 import { PlanholderInfoCard } from "../planholder/components/PlanholderInfoCard";
 import { PlanholderRemarks } from "../planholder/components/PlanholderRemarks";
 import { PlanholderBeneficiaries } from "../planholder/components/PlanholderBeneficiaries";
 import { PlanholderDocuments } from "../planholder/components/PlanholderDocuments";
 import { ConveyorCard } from "./conveyor/conveyor-card";
-import { ClaimActions } from "./conveyor/claim-actions";
-import { EvidencePanel } from "./conveyor/evidence-panel";
+import { ClaimActionList, ClaimActions } from "./conveyor/claim-actions";
 import { ClaimListPopup } from "./conveyor/claim-list-popup";
 import { ReasonDialog } from "./conveyor/reason-dialog";
 import {
@@ -102,10 +143,54 @@ import {
 } from "./conveyor/work-lists";
 import { StageCard } from "./conveyor/stage-card";
 import {
-  ClaimSwapSkeleton,
-  RailSwapSkeleton,
-} from "./conveyor/claim-swap-skeleton";
+  CountBubble,
+  MobileQuickAccess,
+  QUICK_BAR_ROOM,
+} from "./conveyor/mobile-quick-access";
+import {
+  SHELL_NAV_HEIGHT,
+  SHELL_NAV_HIDE_EASE,
+  SHELL_NAV_SHOW_EASE,
+  useShellNavHidden,
+} from "../components/use-shell-nav-hidden";
+import {
+  CONVEYOR_GAP,
+  CONVEYOR_TRACK,
+  CONVEYOR_TRACK_COLLAPSED,
+} from "../components/conveyor-columns";
+import { useRailCollapsed } from "../components/use-rail-collapsed";
+import {
+  RAIL_FADE_IN,
+  RAIL_TRACK_TRANSITION,
+  RailCount,
+  RailFlyout,
+  RailHint,
+  RailSpine,
+  RailStagePair,
+  RailStrip,
+  RailStripButton,
+  RailStripDivider,
+} from "../components/rail-strip";
+import { ClaimSwapSkeleton } from "./conveyor/claim-swap-skeleton";
 import { useClaimSwap } from "./conveyor/use-claim-swap";
+import {
+  CorrectionLabel,
+  type CorrectionLine,
+} from "./conveyor/correction-label";
+import { PlanholderEditDialog } from "./conveyor/planholder-edit-dialog";
+import {
+  PlanholderChangesDialog,
+  type ChangesReader,
+} from "./conveyor/planholder-changes-dialog";
+import {
+  ageAtDeathOf,
+  ageOf,
+  correctedValues,
+  planholderValuesOnFile,
+  withValues,
+} from "./conveyor/planholder-corrections";
+import type { LabelMarks } from "../planholder/components/PlanholderInfoCard";
+import { EditedFieldsButton, type EditedItem } from "../components/edit-mark";
 import { useClaimEvidence } from "./conveyor/use-claim-evidence";
 
 export default function DeathClaimV3Page() {
@@ -240,6 +325,9 @@ export default function DeathClaimV3Page() {
    * the literal sense that somebody had to open a list and pick.
    */
   const [query, setQuery] = useState("");
+
+  /** The rail folded to its icon strip — desktop only; see `RailStrip`. */
+  const [railCollapsed, setRailCollapsed] = useRailCollapsed();
   const [browseOpen, setBrowseOpen] = useState(false);
 
   /** Which of the reference lists is open over the page, if any. */
@@ -278,109 +366,91 @@ export default function DeathClaimV3Page() {
   const [denyOpen, setDenyOpen] = useState(false);
   const [complianceOpen, setComplianceOpen] = useState(false);
   const [reworkOpen, setReworkOpen] = useState(false);
+  // Whether the shell's bottom navigation is tucked away — the column's foot
+  // only reserves room for it while it is up.
+  const navHidden = useShellNavHidden();
 
   /**
-   * The period every list is cut by.
-   *
-   * ONE PERIOD FOR ALL FIVE, held here rather than in each list, so the numbers
-   * on the card are totals of the same thing and can be read against each other
-   * — 6 approved out of 65 filed means something; 6 approved this year out of 65
-   * filed since the system was installed means nothing.
-   *
-   * Read off the claims rather than counted back from today: a year with no
-   * claim in it is an option that can only ever empty the list.
+   * The planholder's correction — the form, and the list of changes the rail's
+   * Edit opens once there are some. Two dialogs, mounted always, for the same
+   * reason as the pair above.
    */
-  const years = useMemo(
-    () => claimYears(deathClaims.map((item) => item.filedAt)),
-    [],
+  const [editOpen, setEditOpen] = useState(false);
+  const [changesOpen, setChangesOpen] = useState(false);
+
+  /**
+   * THE USER'S HISTORY — every claim connected to them, most recent first, with
+   * where it stands and when they acted.
+   *
+   * NOT THE FILE. The claims still waiting are the queue, and the queue is
+   * reached through the search at the top of the rail (user, 2026-09-29).
+   *
+   * TWO SOURCES. What this session did (`getClaimActionBy`) wins, being the
+   * later fact; otherwise a claim on file this user processed — its header's
+   * processor — sits under its status on the record, dated when the header was
+   * opened. A claim on file still "Pending" was not answered by anyone, so it
+   * is not history.
+   *
+   * UNCUT HERE: the arrows need every date the user has, whatever period is on
+   * screen. See `rangeSteps`.
+   *
+   * Re-derived on `storeVersion`: every answer writes to the store, and a count
+   * that did not follow would be wrong from the first one.
+   */
+  const history = useMemo(() => {
+    const fromRecord = (item: DeathClaim): ClaimAction | undefined => {
+      if (item.processor.name !== CLAIM_AUDIT_USER) return undefined;
+      const kind = PHASE_TO_HISTORY[item.phase];
+      return kind ? { kind, atISO: item.processedAt ?? item.filedAt } : undefined;
+    };
+
+    return deathClaims
+      .map((item) => ({
+        item,
+        action: getClaimActionBy(item.reference) ?? fromRecord(item),
+      }))
+      .filter(
+        (entry): entry is { item: DeathClaim; action: ClaimAction } =>
+          entry.action !== undefined,
+      )
+      .sort((a, b) => b.action.atISO.localeCompare(a.action.atISO));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeVersion]);
+
+  const historyDates = useMemo(
+    () => history.map((entry) => entry.action.atISO),
+    [history],
   );
-  const [year, setYear] = useState<ClaimYear>(() => defaultClaimYear(years));
 
   /**
-   * The three lists that are not the queue.
-   *
-   * READ OFF THE WHOLE FILE, not off the queue: the point of them is the claims
-   * the conveyor has already passed. `deathClaims` is every death claim there
-   * is, which is what "All claims" means — For Process included, as asked.
-   *
-   * Re-derived on `storeVersion` for the same reason the queue is: deciding a
-   * claim or sending one back writes to the store, and both of those move a
-   * claim INTO one of these lists. A count that did not follow would be wrong
-   * from the first verdict of the session.
+   * The period the card counts — WEEKLY, ON THE CURRENT WEEK, by default
+   * (user, 2026-09-29). See `history-range` for where the arrows may go.
    */
+  const [range, setRange] = useState<HistoryRange>(() => currentRange("week"));
+  const steps = rangeSteps(range, historyDates);
+
   const workLists = useMemo(() => {
-    // CUT BY THE PERIOD FIRST, so every list below counts the same thing.
-    const inPeriod =
-      year === "all"
-        ? deathClaims
-        : deathClaims.filter((item) => claimFiledYear(item.filedAt) === year);
+    const mine = history.filter((entry) => inRange(range, entry.action.atISO));
+    const of = (kind: ClaimActionKind) =>
+      mine.filter((entry) => entry.action.kind === kind).map((e) => e.item);
 
     return {
-      history: inPeriod,
-      // OFF THE RECORD, NOT OFF THE STORE. `phase` is the status stored on the
-      // claim request, and Approved / Denied are a supervisor's verdicts — see
-      // `ClaimOutcome`. Nothing this screen does writes either one, which is
-      // why approving a claim here lands it in `processed` below and leaves
-      // these two alone.
-      approved: inPeriod.filter((item) => item.phase === "Approved"),
-      denied: inPeriod.filter((item) => item.phase === "Denied"),
-      // ONLY EVER SESSION-DEEP, and not by choice — see the note below the
-      // memo. Cut by the period like the rest, so all five numbers on the card
-      // are totals of the same thing.
-      compliance: inPeriod.filter((item) =>
-        getClaimComplianceReturn(item.reference),
-      ),
-      /*
-       * EVERY CLAIM THAT HAS BEEN WORKED, from both sides of the line.
-       *
-       * THE RECORD half is `phase` — a claim that is not "Pending" has been
-       * opened by somebody: endorsed for a decision, approved, or denied. That
-       * is the all-time number, and it is what makes this row a real total
-       * rather than a tally of the last few minutes.
-       *
-       * THE SESSION half is `hasProcessorActivity`, and it is not redundant: a
-       * claim answered on this screen a moment ago is still "Pending" on the
-       * seed, because the store records the verdict without rewriting the
-       * record's status. Without it, approving a claim would leave the count
-       * exactly where it was.
-       *
-       * The union double-counts nothing — `filter` yields each claim once — and
-       * it is the union rather than either half because both are true answers
-       * to the same question asked of different sources.
-       */
-      processed: inPeriod.filter(
-        (item) =>
-          item.phase !== "Pending" || hasProcessorActivity(item.reference),
-      ),
+      all: mine.map((entry) => entry.item),
+      approval: of("approval"),
+      denial: of("denial"),
+      approved: of("approved"),
+      denied: of("denied"),
+      compliance: of("compliance"),
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storeVersion, year]);
-
-  /*
-   * WHY "RETURNED FOR COMPLIANCE" CANNOT BE AN ALL-TIME NUMBER YET.
-   *
-   * Every other row on that card is backed by the record: `phase` carries
-   * Approved, Denied, For Approval and Pending, so a total can be counted for
-   * any year on file. There is no fifth status for a claim handed back to a
-   * branch — the seed's claim statuses are PE / FA / AP / DN and nothing else —
-   * so the only compliance returns that exist anywhere are the ones this session
-   * has made, in `complianceByRequest`.
-   *
-   * Left reading 0 rather than filled with a stand-in. The alternative is to
-   * count claims with outstanding DOCUMENTS, which is a different fact — a claim
-   * can be short of a document without anyone having sent it back — and a number
-   * that is nearly the right one is the kind that gets trusted and then acted on.
-   *
-   * It needs a status on the claim request, or a returns table. Until then this
-   * row is honest and small.
-   */
+  }, [history, range]);
 
   const workListCounts: Record<WorkListKey, number> = {
-    history: workLists.history.length,
+    all: workLists.all.length,
+    approval: workLists.approval.length,
+    denial: workLists.denial.length,
     approved: workLists.approved.length,
     denied: workLists.denied.length,
     compliance: workLists.compliance.length,
-    processed: workLists.processed.length,
   };
 
   /**
@@ -563,12 +633,222 @@ export default function DeathClaimV3Page() {
    * That field is `DEFICIENT_UNTIL_RECORDED` — hard `true` on every claim until
    * a real requirement table exists — so a card drawn from it would say Yes
    * about everything, including a claim whose Deficiencies tab reads 0. This is
-   * `getOutstandingDocumentTypes`, which is exactly what that tab counts, so the
+   * `getOutstandingDeficiencyNames`, which is exactly what that tab counts, so the
    * word here and the number a few sections down can never disagree.
    */
+  // Raised and withdrawn deficiencies count too — see
+  // `planholder-deficiency-store`, which this page subscribes to.
   const deficient = planholder
-    ? getOutstandingDocumentTypes(planholder.personId).length > 0
+    ? getOutstandingDeficiencyNames(planholder.personId).length > 0
     : undefined;
+
+  /**
+   * THE PLANHOLDER AS THIS CLAIM READS IT — the record, with the processor's
+   * corrections laid over (see `planholder-corrections`). Re-read on every
+   * render; the page is subscribed to the store, so a save or a revert redraws
+   * the card at once.
+   *
+   * WHO IS READING decides what they may do with them: the processor and the
+   * verifier both correct and revert — the verifier overrides by editing, with
+   * no accept or reject (user, 2026-10-01) — and a held claim, one taken out of
+   * a list rather than a queue this desk works, is only read.
+   */
+  const corrections = getPlanholderCorrections(claim.reference);
+  const onFile = planholder ? planholderValuesOnFile(planholder) : undefined;
+  const shown = onFile ? correctedValues(onFile, corrections) : undefined;
+  const shownPlanholder =
+    planholder && shown ? withValues(planholder, shown) : planholder;
+  const reader: ChangesReader = held
+    ? "reader"
+    : verifying
+      ? "verifier"
+      : "processor";
+  const dobCorrection = corrections.find((c) => c.field === "dateOfBirthISO");
+
+  /**
+   * WHO MAY TAKE A CHANGE BACK: whoever has the claim — the processor, or the
+   * verifier on any change, the processor's included (user, 2026-10-01).
+   */
+  const canRevert = reader !== "reader";
+
+  /** Both of the asks below say exactly what goes back, field by field. */
+  const describeReverts = (list: PlanholderCorrection[]) =>
+    list
+      .map(
+        (c) =>
+          `${CORRECTABLE_PLANHOLDER_FIELDS[c.field]}: ${planholderValueLabel(c.field, c.to)} → ${planholderValueLabel(c.field, c.from)}`,
+      )
+      .join("; ");
+
+  /**
+   * EVERY UNDO ASKS FIRST (user, 2026-09-29) — one field from its label's
+   * tooltip, or all of them from the change list. A correction may have taken a
+   * death certificate to work out; it should not vanish on a stray click.
+   */
+  const revert = async (fields: PlanholderField[]) => {
+    const list = corrections.filter((c) => fields.includes(c.field));
+    if (list.length === 0) return;
+    const confirmed = await messageBox({
+      title: list.length > 1 ? "REVERT CHANGES" : "REVERT CHANGE",
+      message: `Revert ${list.length > 1 ? `all ${list.length} changes` : CORRECTABLE_PLANHOLDER_FIELDS[list[0].field]} to what the record says? ${describeReverts(list)}.`,
+      confirmText: "Revert",
+      cancelText: "Keep change",
+      variant: "confirmation",
+    });
+    if (!confirmed) return;
+    revertPlanholderCorrections(
+      claim.reference,
+      list.map((c) => c.field),
+    );
+    toast.success(list.length > 1 ? "Changes reverted" : "Change reverted", {
+      description: list
+        .map((c) => CORRECTABLE_PLANHOLDER_FIELDS[c.field])
+        .join(", "),
+    });
+  };
+
+  /**
+   * The corrected labels, for the card — see `CorrectionLabel`. The name's parts
+   * and the birth date are marked where they were changed; the two ages follow
+   * the birth date, so they are marked with it and say so.
+   */
+  const byline = (c: PlanholderCorrection) =>
+    `by ${c.editedBy} · ${formatFiledDate(c.editedAtISO)}`;
+  // OVERRIDE IS THE FORM (user, 2026-10-02: "verifier or user can revert or
+  // override changes"). Editing a change again makes it the editor's.
+  const ownStage: CorrectionStage | undefined =
+    reader === "processor" ? "process" : reader === "verifier" ? "verification" : undefined;
+  const override = canRevert ? () => setEditOpen(true) : undefined;
+  const labelMarks: LabelMarks = {};
+  for (const c of corrections) {
+    const label = CORRECTABLE_PLANHOLDER_FIELDS[c.field];
+    labelMarks[label] = (
+      <CorrectionLabel
+        label={label}
+        stage={c.stage}
+        byline={byline(c)}
+        markKey={c.field}
+        lines={[
+          {
+            title: label,
+            from: c.from ? planholderValueLabel(c.field, c.from) : "",
+            to: planholderValueLabel(c.field, c.to),
+            field: c.field,
+          },
+        ]}
+        onRevert={canRevert ? (f) => revert([f]) : undefined}
+        onOverride={override}
+        ownStage={ownStage}
+      />
+    );
+  }
+  if (dobCorrection && onFile) {
+    const derived = (label: string, line: CorrectionLine) => (
+      <CorrectionLabel
+        label={label}
+        stage={dobCorrection.stage}
+        byline={byline(dobCorrection)}
+        markKey={label}
+        lines={[line]}
+      />
+    );
+    labelMarks.Age = derived("Age", {
+      title: "Follows Date of Birth",
+      from: ageOf(onFile.dateOfBirthISO),
+      to: ageOf(dobCorrection.to),
+    });
+    labelMarks["Age at Death"] = derived("Age at Death", {
+      title: "Follows Date of Birth",
+      from:
+        ageAtDeathOf(onFile.dateOfBirthISO, claim.dateOfDeath) ??
+        claim.ageOfDeath,
+      to: ageAtDeathOf(dobCorrection.to, claim.dateOfDeath) ?? "—",
+    });
+  }
+
+  /**
+   * THE HEADER'S EDIT LIST — the pencil beside the contact icon (see
+   * `EditedFieldsButton`). A part of the name rings the header's name when its
+   * own label is not on screen, which on a phone it never is.
+   */
+  const editedItems: EditedItem[] = corrections.map((c) => ({
+    key: c.field,
+    label: CORRECTABLE_PLANHOLDER_FIELDS[c.field],
+    from: c.from ? planholderValueLabel(c.field, c.from) : "",
+    to: planholderValueLabel(c.field, c.to),
+    by: `${c.stage === "process" ? "Processor" : "Verifier"} · ${c.editedBy} · ${formatFiledDate(c.editedAtISO)}`,
+    fallbackKey: c.field === "dateOfBirthISO" ? undefined : "name",
+  }));
+
+  /**
+   * THE RAIL'S EDIT. With changes on the claim it opens the list of them — for
+   * everybody, since the list is where each reader acts on them. Without, the
+   * processor and the verifier both get the form; a held claim is only read.
+   */
+  const openEdit = () => {
+    if (corrections.length > 0) return setChangesOpen(true);
+    if (reader !== "reader") return setEditOpen(true);
+    toast.info("No planholder changes on this claim", { description: label });
+  };
+
+  /**
+   * A STAGE CHANGE IS A CLAIM CHANGE. The other queue's head is a different
+   * claim, a different plan holder and a different set of answers — everything
+   * a swap exists for, including the scroll back to the top.
+   *
+   * AND IT LETS GO OF A HELD CLAIM. Asking for a queue is asking for the work in
+   * it; leaving a claim from the Denied list standing in front of the stage just
+   * picked would answer a question nobody asked. See {@link held}.
+   */
+  const changeStage = (key: string) =>
+    swap(() => {
+      setHeld(null);
+      setStage(key as StageKey);
+    });
+
+  // Every change on the claim, for whoever is reading it.
+  const editCount = corrections.length;
+
+  // THE THREE ANSWERS, once — the desktop row and the phone's two rows both
+  // call these, so the two layouts cannot drift into two behaviours. What each
+  // one does and why is told where the desktop row draws them.
+  const openReturn = () =>
+    verifying ? setReworkOpen(true) : setComplianceOpen(true);
+  const openDeny = () => setDenyOpen(true);
+  const endorse = async () => {
+    const confirmed = await messageBox({
+      title: verifying ? "VERIFY CLAIM" : "ENDORSE CLAIM",
+      message: verifying
+        ? `Verify ${label}? It leaves your queue and goes for approval.`
+        : `Endorse ${label} for approval? It leaves your queue and a supervisor rules on it next.`,
+      confirmText: verifying ? "Verify" : "Endorse",
+      cancelText: "Cancel",
+      variant: "confirmation",
+    });
+    if (!confirmed) return;
+
+    if (verifying) {
+      recordVerdict(claim.reference, "approval");
+      advance("Verified for approval", `${label} — approval rules next.`);
+    } else {
+      decideClaim(claim.reference, "approval");
+      advance("Endorsed for approval", `${label} — a supervisor rules next.`);
+    }
+  };
+
+  // The History card, once for the rail and once for the phone's sheet — only
+  // what a tapped row does differs, since the sheet has to close first.
+  const historyCard = (onOpen: (key: WorkListKey) => void) => (
+    <WorkLists
+      rows={WORK_LISTS}
+      counts={workListCounts}
+      range={range}
+      steps={steps}
+      onRangeChange={setRange}
+      onKindChange={(kind) => setRange(rangeFor(kind, historyDates))}
+      onOpen={onOpen}
+    />
+  );
 
   return (
     <Page.Root
@@ -649,8 +929,15 @@ export default function DeathClaimV3Page() {
                 line of chrome between the page title and the work. */}
             <Box
               display="grid"
-              gridTemplateColumns={{ base: "1fr", lg: "320px minmax(0, 1fr)" }}
-              gap={{ base: 4, lg: 5 }}
+              // SERVICE'S COLUMNS (user, 2026-10-05: "used the length of the
+              // service payable") — one track for both conveyors; see
+              // `conveyor-columns`. It was a fixed 320px rail and a 20px gap.
+              gridTemplateColumns={{
+                base: "1fr",
+                lg: railCollapsed ? CONVEYOR_TRACK_COLLAPSED : CONVEYOR_TRACK,
+              }}
+              css={RAIL_TRACK_TRANSITION}
+              gap={{ base: 4, lg: CONVEYOR_GAP }}
               // THE LINE THE PINNING HANGS ON. Grid items stretch to the row by
               // default, which would make the evidence as tall as the claim
               // stack — and a sticky box the height of its scroll container
@@ -695,54 +982,155 @@ export default function DeathClaimV3Page() {
                     WHICH QUEUE, OVER THE FIELD THAT SEARCHES IT — and with one
                     stage that row is a heading rather than a switch. See
                     `StageCard`; the stages a user owns is what decides it. */}
-                <StageCard
-                  stages={STAGES}
-                  active={stage}
-                  // A STAGE CHANGE IS A CLAIM CHANGE. The other queue's head is
-                  // a different claim, a different plan holder and a different
-                  // set of answers — everything a swap exists for.
-                  //
-                  // AND IT LETS GO OF A HELD CLAIM. Asking for a queue is asking
-                  // for the work in it; leaving a claim from the Denied list
-                  // standing in front of the stage just picked would answer a
-                  // question nobody asked. See {@link held}.
-                  onStageChange={(key) =>
-                    swap(() => {
-                      setHeld(null);
-                      setStage(key as StageKey);
-                    })
-                  }
-                  query={query}
-                  onQueryChange={setQuery}
-                  onSearch={() => setBrowseOpen(true)}
+                {/* FOLDED, THE RAIL IS AN ICON STRIP (user, 2026-10-05) — each
+                    block one icon, opening beside it; see `RailStrip`. The
+                    actions open as the phone's list, every one shown, with no
+                    "More" behind them. Desktop only: below `lg` the stage card
+                    and the quick access below stay exactly as they are. */}
+                {/* THE SPINE — the line to this column's left, as tall as the
+                    column (capped at the screen), the fold's button at its
+                    middle. Inside the sticky rail so it pins with it. */}
+                <RailSpine
+                  collapsed={railCollapsed}
+                  onToggle={() => setRailCollapsed(!railCollapsed)}
                 />
-
-                {/* THE RAIL SWAPS ONLY WHAT IS CLAIM-SCOPED. The stage card
-                    above and the reference lists below belong to the session,
-                    not to the claim, so blanking them would say something
-                    changed that did not. */}
-                {swapping ? (
-                  <RailSwapSkeleton />
-                ) : (
-                  <EvidencePanel evidence={evidence} />
+                {railCollapsed && (
+                  <Box hideBelow="lg">
+                    <RailStrip>
+                      {/* THE QUEUE AS ICONS, and the search goes straight to
+                          the list (user, 2026-10-05) — no flyout between. */}
+                      <RailStagePair
+                        stages={STAGES.map((s) => ({
+                          ...s,
+                          icon:
+                            s.key === "process" ? LuClipboardList : LuShieldCheck,
+                        }))}
+                        active={stage}
+                        onChange={changeStage}
+                      />
+                      <RailHint label="Search the queue">
+                        <RailStripButton
+                          icon={LuSearch}
+                          label="Search the queue"
+                          onClick={() => setBrowseOpen(true)}
+                        />
+                      </RailHint>
+                      <RailStripDivider />
+                      <RailFlyout
+                        icon={LuLayoutGrid}
+                        label="Actions"
+                        badge={
+                          editCount > 0 ? (
+                            <CountBubble count={editCount} />
+                          ) : undefined
+                        }
+                      >
+                        {(close) => (
+                          <ClaimActionList
+                            claim={claim}
+                            onEdit={() => {
+                              close();
+                              openEdit();
+                            }}
+                            editCount={editCount}
+                          />
+                        )}
+                      </RailFlyout>
+                      <RailFlyout
+                        icon={LuHistory}
+                        label="History"
+                        badge={<RailCount count={workListCounts.all} />}
+                      >
+                        {(close) =>
+                          historyCard((key) => {
+                            close();
+                            setWorkList(key);
+                          })
+                        }
+                      </RailFlyout>
+                    </RailStrip>
+                  </Box>
                 )}
 
-                {/* THE ACTIONS UNDER THE CARD, not above it — the plan's three
-                    lead the block, and they only make sense once the plan has
-                    been named. See `ClaimActions` for the rest of it.
+                <Box hideFrom={railCollapsed ? "lg" : undefined}>
+                  <StageCard
+                    stages={STAGES}
+                    active={stage}
+                    onStageChange={changeStage}
+                    query={query}
+                    onQueryChange={setQuery}
+                    onSearch={() => setBrowseOpen(true)}
+                  />
+                </Box>
+
+                {/* NO PLAN HOLDER CARD IN THE RAIL ANY MORE. It named whose plan
+                    this is, and that name is now the title of the plan holder's
+                    card in the claim column, so the claim
+                    is read in one column without a look to the left.
+
+                    THE ACTIONS UNDER THE STAGE CARD. See `ClaimActions`.
 
                     Bare, with no card around it: nine labelled buttons say what
                     they are, and a border would only frame what is already a
                     block of controls. */}
-                <ClaimActions claim={claim} />
+                {!railCollapsed && (
+                  <>
+                    <Box hideBelow="lg" css={RAIL_FADE_IN}>
+                      <ClaimActions
+                        claim={claim}
+                        onEdit={openEdit}
+                        editCount={editCount}
+                      />
+                    </Box>
 
-                {/* THE LISTS THAT ARE NOT THE QUEUE, last in the rail. They are
-                    consulted rather than worked from, so they sit under the
-                    actions rather than over them — see `WorkLists`. */}
-                <WorkLists
-                  counts={workListCounts}
-                  period={claimYearLabel(year)}
-                  onOpen={(key) => setWorkList(key)}
+                    {/* THE LISTS THAT ARE NOT THE QUEUE, last in the rail. They
+                        are consulted rather than worked from, so they sit under
+                        the actions rather than over them — see `WorkLists`. */}
+                    <Box hideBelow="lg" css={RAIL_FADE_IN}>
+                      {historyCard((key) => setWorkList(key))}
+                    </Box>
+                  </>
+                )}
+
+                {/* THE SAME TWO ON A PHONE, behind a strip of two buttons so
+                    the claim starts on the first screen — see
+                    `MobileQuickAccess`. Hidden from `lg`, where the pair above
+                    is the rail. */}
+                <MobileQuickAccess
+                  // The same stage switch and search the stage card above
+                  // runs, for the bar that pins once this is scrolled past.
+                  stages={STAGES}
+                  stage={stage}
+                  onStageChange={changeStage}
+                  onSearch={() => setBrowseOpen(true)}
+                  primary={{
+                    icon: LuLayoutGrid,
+                    label: "Actions",
+                    title: "Actions",
+                    ariaLabel:
+                      editCount > 0
+                        ? `Actions, ${editCount} planholder change${editCount === 1 ? "" : "s"}`
+                        : "Actions",
+                    badge:
+                      editCount > 0 ? <CountBubble count={editCount} /> : undefined,
+                    render: (close) => (
+                      <ClaimActions
+                        claim={claim}
+                        onEdit={() => {
+                          close();
+                          openEdit();
+                        }}
+                        editCount={editCount}
+                      />
+                    ),
+                  }}
+                  historyCount={workListCounts.all}
+                  renderHistory={(close) =>
+                    historyCard((key) => {
+                      close();
+                      setWorkList(key);
+                    })
+                  }
                 />
               </Box>
 
@@ -758,10 +1146,19 @@ export default function DeathClaimV3Page() {
                 direction="column"
                 gap={4}
                 minW={0}
+                // The quick bar's room on a phone — see `QUICK_BAR_ROOM` — and
+                // the shell's navigation's ONLY WHILE IT IS UP (user,
+                // 2026-10-02: "too much white space in the bottom"). The nav
+                // hides on a downward scroll, which is how this page is read to
+                // its end, so a fixed 62px for it sat empty under Endorse.
+                // Service's foot does the same — see `AccountStepperBar`.
                 pb={{
-                  base: "calc(62px + 40px + env(safe-area-inset-bottom, 0px))",
+                  base: navHidden
+                    ? QUICK_BAR_ROOM
+                    : `calc(${SHELL_NAV_HEIGHT} + ${QUICK_BAR_ROOM})`,
                   lg: "40px",
                 }}
+                transition={`padding-bottom ${navHidden ? SHELL_NAV_HIDE_EASE : SHELL_NAV_SHOW_EASE}`}
               >
                 {swapping ? (
                   /* THE WHOLE COLUMN, not a spinner over it — see
@@ -836,10 +1233,14 @@ export default function DeathClaimV3Page() {
                     `KitCardShape` because it is the KIT's card: 5px corners and
                     no hairline, where every other card in this column turns at
                     12 over one. */}
-                {planholder && (
+                {shownPlanholder && (
                   <KitCardShape>
                     <PlanholderInfoCard
-                      planholder={planholder}
+                      // As this claim reads it — the corrections laid over the
+                      // record. See `shownPlanholder`.
+                      planholder={shownPlanholder}
+                      labelMarks={labelMarks}
+                      headerEdits={<EditedFieldsButton items={editedItems} />}
                       // The death is filed on the CLAIM, not on the plan
                       // holder — see `DeceasedFacts`. Handed over so the
                       // summary reads born / aged / died / aged at death in
@@ -847,7 +1248,12 @@ export default function DeathClaimV3Page() {
                       // facts about the same person.
                       deceased={{
                         dateOfDeath: claim.dateOfDeath,
-                        ageAtDeath: claim.ageOfDeath,
+                        // Worked out again from a corrected birth date; the
+                        // claim's own figure was taken from the record's.
+                        ageAtDeath: dobCorrection
+                          ? (ageAtDeathOf(dobCorrection.to, claim.dateOfDeath) ??
+                            claim.ageOfDeath)
+                          : claim.ageOfDeath,
                       }}
                       // WHETHER THE FOLDER IS SHORT ANYTHING (user,
                       // 2026-09-14), as a Yes / No at the end of the summary —
@@ -856,6 +1262,11 @@ export default function DeathClaimV3Page() {
                       // is not read off `claim.isDeficient`.
                       deficient={deficient}
                       asDetails
+                      // WHO, as the heading of the card that says what about
+                      // them — the same header Service Payables' planholder
+                      // card carries (user, 2026-10-02). It reads the name off
+                      // `shownPlanholder`, so a corrected name shows corrected.
+                      identity
                     />
                   </KitCardShape>
                 )}
@@ -907,6 +1318,7 @@ export default function DeathClaimV3Page() {
                     showRemarks={false}
                     showSubtitles={false}
                     asDialog
+                    noteSubtitle={label}
                     notes={getClaimNotes(claim.reference).join("\n\n")}
                     onAddNote={(text) => {
                       addClaimNote(claim.reference, text);
@@ -960,7 +1372,53 @@ export default function DeathClaimV3Page() {
                     </Text>
                   </Flex>
                 ) : (
-                <Flex align="center" gap={3} wrap="wrap" pt={1}>
+                <>
+                {/* ON A PHONE, TWO ROWS AND THE PRIMARY LAST — option A of the
+                    mock-up (user, 2026-10-02). The desktop row's three buttons
+                    are 28–32px tall and the two that matter sit in the corner;
+                    here every target is 44px or more and at least half the
+                    screen wide, and Endorse is the full-width one nearest the
+                    thumb and the quick bar under it.
+
+                    "FOR COMPLIANCE" ON A PHONE (user, 2026-10-02), so the two
+                    halves can be EQUAL: "Return for compliance" needed a 3:2
+                    split to fit. The sheet it opens still reads "Return for
+                    compliance", so the full name is one tap away.
+
+                    Outline for both, as on the desktop: Return stays the quiet
+                    exit by being a secondary, not by being small. */}
+                <Box hideFrom="lg" pt={1}>
+                  <Box display="grid" gridTemplateColumns="1fr 1fr" gap="10px">
+                    <SecondarySmButton
+                      onClick={openReturn}
+                      h="44px"
+                      minH="44px"
+                      fontSize="13px"
+                    >
+                      For Compliance
+                    </SecondarySmButton>
+                    <SecondarySmButton
+                      onClick={openDeny}
+                      h="44px"
+                      minH="44px"
+                      fontSize="13px"
+                    >
+                      Deny
+                    </SecondarySmButton>
+                  </Box>
+                  <PrimarySmButton
+                    onClick={endorse}
+                    w="full"
+                    h="48px"
+                    minH="48px"
+                    mt="10px"
+                    fontSize="14px"
+                  >
+                    {verifying ? "Verify" : "Endorse"}
+                  </PrimarySmButton>
+                </Box>
+
+                <Flex align="center" gap={3} wrap="wrap" pt={1} hideBelow="lg">
                   {/* THE QUIET EXIT. ONE NAME, AND THE DESTINATION IS DATA.
                       "Return for compliance" at both stages, because it is the
                       same act to the person doing it: this cannot be settled as
@@ -977,9 +1435,7 @@ export default function DeathClaimV3Page() {
                       changes nothing. */}
                   <Box
                     as="button"
-                    onClick={() =>
-                      verifying ? setReworkOpen(true) : setComplianceOpen(true)
-                    }
+                    onClick={openReturn}
                     fontSize="13px"
                     fontWeight="600"
                     color="gray.600"
@@ -1004,7 +1460,7 @@ export default function DeathClaimV3Page() {
                       deciding, because a denial is the one verdict somebody has
                       to justify later — see `DenyDialog`. Approve stays one
                       press: it explains itself. */}
-                  <SecondarySmButton onClick={() => setDenyOpen(true)}>
+                  <SecondarySmButton onClick={openDeny}>
                     Deny
                   </SecondarySmButton>
                   {/* "ENDORSE", NOT "APPROVE", and the word is the accurate one
@@ -1026,34 +1482,7 @@ export default function DeathClaimV3Page() {
                       asks at all because the conveyor makes it irreversible in
                       practice: the answer sends the claim on and the next one
                       takes the screen, with no way back to the one just left. */}
-                  <PrimarySmButton
-                    onClick={async () => {
-                      const confirmed = await messageBox({
-                        title: verifying ? "VERIFY CLAIM" : "ENDORSE CLAIM",
-                        message: verifying
-                          ? `Verify ${label}? It leaves your queue and goes for approval.`
-                          : `Endorse ${label} for approval? It leaves your queue and a supervisor rules on it next.`,
-                        confirmText: verifying ? "Verify" : "Endorse",
-                        cancelText: "Cancel",
-                        variant: "confirmation",
-                      });
-                      if (!confirmed) return;
-
-                      if (verifying) {
-                        recordVerdict(claim.reference, "approval");
-                        advance(
-                          "Verified for approval",
-                          `${label} — approval rules next.`,
-                        );
-                      } else {
-                        decideClaim(claim.reference, "approval");
-                        advance(
-                          "Endorsed for approval",
-                          `${label} — a supervisor rules next.`,
-                        );
-                      }
-                    }}
-                  >
+                  <PrimarySmButton onClick={endorse}>
                     {/* THE WORD IS THE STEP, and neither of these is Approval.
                         The pipeline runs Review → Verification → Approval: a
                         processor ENDORSES a recommendation, a supervisor
@@ -1063,10 +1492,59 @@ export default function DeathClaimV3Page() {
                     {verifying ? "Verify" : "Endorse"}
                   </PrimarySmButton>
                 </Flex>
+                </>
                 )}
                   </>
                 )}
               </Flex>
+
+              {/* THE PLANHOLDER'S CORRECTION — the form, and the list of what
+                  it changed. Mounted always, `open` driving them. */}
+              <PlanholderEditDialog
+                  open={editOpen && !!onFile}
+                  onClose={() => setEditOpen(false)}
+                  subtitle={`LPA No. ${claim.lpaNo}`}
+                  values={shown ?? NO_PLANHOLDER_VALUES}
+                  onSave={(values) => {
+                    if (!onFile) return;
+                    const changed = correctPlanholder(
+                      claim.reference,
+                      onFile,
+                      values,
+                      // A verifier's save overrides — see `CorrectionStage`.
+                      verifying ? "verification" : "process",
+                    );
+                    setEditOpen(false);
+                    if (changed.length === 0) {
+                      toast.info("Nothing to save", {
+                        description: "No planholder details were changed.",
+                      });
+                      return;
+                    }
+                    // THE NOTIFICATION IN THE CORNER names every field and the
+                    // value it now reads (user, 2026-09-29).
+                    toast.success("Planholder updated", {
+                      description: changed
+                        .map(
+                          (field) =>
+                            `${CORRECTABLE_PLANHOLDER_FIELDS[field]}: ${planholderValueLabel(field, values[field])}`,
+                        )
+                        .join(" · "),
+                    });
+                  }}
+                />
+              <PlanholderChangesDialog
+                open={changesOpen && corrections.length > 0}
+                onClose={() => setChangesOpen(false)}
+                subtitle={`LPA No. ${claim.lpaNo}`}
+                corrections={corrections}
+                reader={reader}
+                onEdit={() => {
+                  setChangesOpen(false);
+                  setEditOpen(true);
+                }}
+                onRevertAll={() => revert(corrections.map((c) => c.field))}
+              />
 
               {/* THE TWO NEGATIVE ANSWERS, both through one dialog — see
                   `ReasonDialog`. Mounted always, `open` driving them, like every
@@ -1075,7 +1553,7 @@ export default function DeathClaimV3Page() {
                 open={denyOpen}
                 onClose={() => setDenyOpen(false)}
                 title={verifying ? "Deny claim" : "Endorse for denial"}
-                subtitle={`${label} — the reason is recorded in the claim's remarks`}
+                subtitle={label}
                 reasons={DENIAL_REASONS}
                 confirmText={verifying ? "Deny claim" : "Endorse for denial"}
                 destructive
@@ -1105,7 +1583,7 @@ export default function DeathClaimV3Page() {
                 open={reworkOpen}
                 onClose={() => setReworkOpen(false)}
                 title="Return for compliance"
-                subtitle={`${label} — it goes back to ${returnsTo}`}
+                subtitle={label}
                 reasons={REWORK_REASONS}
                 confirmText="Return claim"
                 onConfirm={(reason) => {
@@ -1122,7 +1600,7 @@ export default function DeathClaimV3Page() {
                 open={complianceOpen}
                 onClose={() => setComplianceOpen(false)}
                 title="Return for compliance"
-                subtitle={`${label} — the branch sees this on the returned claim`}
+                subtitle={label}
                 reasons={COMPLIANCE_REASONS}
                 confirmText="Return claim"
                 onConfirm={(reason) => {
@@ -1144,7 +1622,7 @@ export default function DeathClaimV3Page() {
                   `served` to it — the one override on a screen that otherwise
                   only ever advances. */}
               <ClaimListPopup
-                title="For Process queue"
+                title={verifying ? "Verify queue" : "For Process queue"}
                 open={browseOpen}
                 onClose={() => setBrowseOpen(false)}
                 claims={queue}
@@ -1182,11 +1660,10 @@ export default function DeathClaimV3Page() {
                 open={workList !== null}
                 onClose={() => setWorkList(null)}
                 claims={workList ? workLists[workList] : []}
-                // EVERY REFERENCE LIST IS CUT BY THE YEAR, so all five carry the
-                // control. Only the QUEUE goes without — see its own note.
-                year={year}
-                years={years}
-                onYearChange={setYear}
+                // NO YEAR CONTROL IN HERE ANY MORE. The history lists are cut by
+                // the card's range, which is changed on the card beside the
+                // counts — a second period control in the list would be a second
+                // answer to the same question.
                 onOpenClaim={(picked) =>
                   openFromList(
                     picked,
@@ -1204,13 +1681,13 @@ export default function DeathClaimV3Page() {
                   PAYMENTS NO LONGER HAS ONE HERE: its dialog travels with its
                   card, so that the service record gets the same one. See
                   `PaymentsLookup`. */}
-              <SectionPopup
+              <BottomOnPhonePopup
                 title="Beneficiaries"
                 open={popup === "beneficiaries"}
                 onClose={() => setPopup(null)}
               >
                 <PlanholderBeneficiaries lpaNo={claim.lpaNo} />
-              </SectionPopup>
+              </BottomOnPhonePopup>
             </Box>
           </Box>
         </Page.Row>

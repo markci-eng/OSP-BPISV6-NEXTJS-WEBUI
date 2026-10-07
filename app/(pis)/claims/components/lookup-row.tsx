@@ -38,11 +38,18 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Box } from "@chakra-ui/react";
+import { Box, useBreakpointValue } from "@chakra-ui/react";
 import { LuReceipt } from "react-icons/lu";
+import { EmptyStateCard } from "osp-ui-kit";
 import { db } from "../../data";
-import { PlanholderPayments } from "../planholder/components/PlanholderPayments";
-import { SectionLauncher, SectionPopup } from "./section-popup";
+import { PlanholderPaymentsTable } from "../planholder/components/PlanholderPaymentsTable";
+import {
+  PaymentsNoMatch,
+  PaymentsSheet,
+  PaymentsToolbar,
+  usePaymentsLedger,
+} from "./payments-ledger";
+import { ListPopup, SectionLauncher } from "./section-popup";
 
 /**
  * The grid the look-ups sit in: two across where there is room, stacked where
@@ -86,7 +93,10 @@ export interface PaymentsLookupProps {
  */
 export function PaymentsLookup({ lpaNo }: PaymentsLookupProps) {
   const [open, setOpen] = useState(false);
+  const ledger = usePaymentsLedger(lpaNo, open);
+  const isPhone = useBreakpointValue({ base: true, lg: false }) ?? false;
 
+  // BOTH ALWAYS MOUNTED, `open` choosing between them — see `SectionPopup`.
   return (
     <>
       <SectionLauncher
@@ -97,13 +107,34 @@ export function PaymentsLookup({ lpaNo }: PaymentsLookupProps) {
         onClick={() => setOpen(true)}
       />
 
-      <SectionPopup
-        title="Payments"
-        open={open}
+      {/* The phone's sheet — loads as it scrolls, controls at its foot. */}
+      <PaymentsSheet
+        ledger={ledger}
+        open={open && isPhone}
         onClose={() => setOpen(false)}
+      />
+
+      {/* A LIST POP-UP, NOT A LOOK-UP ONE: the rows now change with the search
+          and the pay class, so it holds its height. The toolbar rides in the
+          header so it stays put while the table scrolls. */}
+      <ListPopup
+        title="Payments"
+        open={open && !isPhone}
+        onClose={() => setOpen(false)}
+        header={<PaymentsToolbar ledger={ledger} />}
       >
-        <PlanholderPayments lpaNo={lpaNo} />
-      </SectionPopup>
+        {ledger.payments.length === 0 ? (
+          <EmptyStateCard
+            title="No payments yet"
+            description="Official receipts posted for this plan will appear here."
+          />
+        ) : (
+          <PlanholderPaymentsTable
+            payments={ledger.rows}
+            emptyState={<PaymentsNoMatch ledger={ledger} />}
+          />
+        )}
+      </ListPopup>
     </>
   );
 }

@@ -23,9 +23,13 @@ export default function ClaimsPlanholderProfilePage() {
   return (
     <Page.Root
       subtitle="Claims"
-      title="Plan Holder"
-      description="Look up a plan holder's profile"
+      title="Planholder"
+      description="Look up a planholder's profile"
       headerButton="menu"
+      // THE PHONE LIST KEEPS ITS OWN FOOT — room for its floating search bar
+      // and the navigation while that is up — so the shell's fixed reserve is
+      // handed back below `lg`. See `PlanholderPhoneList`.
+      paddingBottom={{ base: 0, lg: 10, xl: 12 }}
     >
       <Page.MainContent>
         <Page.Row>

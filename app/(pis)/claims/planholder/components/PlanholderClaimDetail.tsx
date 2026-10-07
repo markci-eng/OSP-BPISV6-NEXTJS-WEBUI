@@ -24,18 +24,16 @@ import {
   Portal,
   SimpleGrid,
   Text,
+  useBreakpointValue,
   VStack,
 } from "@chakra-ui/react";
 import {
   LuEllipsis,
-  LuFolderOpen,
-  LuPlus,
   LuSend,
   LuUser,
 } from "react-icons/lu";
 import { toast } from "sonner";
 import { useMessageDialog } from "osp-ui-kit";
-import { TertiarySmButton } from "st-peter-ui";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { RowItem } from "@/components/info-card/row-item";
 import ActionButtons, {
@@ -70,6 +68,14 @@ import {
 } from "../../components/action-button-row";
 import { DetailCard } from "../../components/detail-card";
 import { InfoLabel } from "../../components/info-label";
+import {
+  LAST_PAYEE_MESSAGE,
+  MissingPayee,
+} from "../../components/missing-payee";
+import {
+  SectionAddAction,
+  SectionAddFoot,
+} from "../../components/section-add-button";
 import { BackButton, DrawerPageHeader } from "./DrawerPageHeader";
 import { PlanholderProfileHeader } from "./PlanholderProfileHeader";
 import { PlanholderDetailsDrawer } from "./PlanholderDetailsDrawer";
@@ -84,6 +90,7 @@ import {
 } from "./PlanholderPayeeAddDrawer";
 import { PlanholderClaimEditDrawer } from "./PlanholderClaimEditDrawer";
 import { claimPayeeFromForm } from "./claim-payee-from-form";
+import { AddPayeeSheet } from "../../components/add-payee-sheet";
 
 const claimNoOf = (claim: ClaimRequest) => claim.claimNo ?? claim.reference;
 const claimTypeOf = (claim: ClaimRequest) => claim.benefit ?? claim.kind ?? "—";
@@ -484,6 +491,8 @@ export function PlanholderClaimDetail({
 
   // The Add Payee sheet.
   const [addPayeeOpen, setAddPayeeOpen] = useState(false);
+  /** Below `lg` Add Payee opens the phone's bottom sheet instead. */
+  const isPhone = useBreakpointValue({ base: true, lg: false }) ?? false;
 
   // Payees named on this claim, joined to each person's contact details. The
   // payee is filed with the request, so there is one even before processing.
@@ -511,6 +520,12 @@ export function PlanholderClaimDetail({
    * sharing an `idx`.
    */
   const handleRemovePayee = async (payee: ClaimPayee): Promise<boolean> => {
+    if (payees.length <= 1) {
+      toast.error("Cannot remove the only payee", {
+        description: LAST_PAYEE_MESSAGE,
+      });
+      return false;
+    }
     const confirmed = await messageBox({
       title: "REMOVE PAYEE",
       message: `Remove ${payee.name} from this claim's payees?`,
@@ -701,40 +716,20 @@ export function PlanholderClaimDetail({
           <Box>
             <PlanholderSectionHeader
               title="Payee's Information"
+              // Heading control on a desktop, full-width under the rows on a
+              // phone — see `SectionAddAction`.
               action={
-                <TertiarySmButton onClick={() => setAddPayeeOpen(true)}>
-                  <LuPlus /> Add Payee
-                </TertiarySmButton>
+                <SectionAddAction
+                  label="Add Payee"
+                  onClick={() => setAddPayeeOpen(true)}
+                />
               }
             />
 
             <Box>
               {payees.length === 0 ? (
-                <Flex
-                  direction="column"
-                  align="center"
-                  justify="center"
-                  textAlign="center"
-                  py={10}
-                  gap={3}
-                >
-                  <Box
-                    p={4}
-                    borderRadius="full"
-                    bg="gray.100"
-                    color="gray.500"
-                  >
-                    <LuFolderOpen size={24} />
-                  </Box>
-                  <Box>
-                    <Text fontSize="sm" fontWeight="600" color="gray.700">
-                      No payees yet
-                    </Text>
-                    <Text fontSize="xs" color="gray.500" mt={1} maxW="280px">
-                      Payees named on this claim will appear here.
-                    </Text>
-                  </Box>
-                </Flex>
+                // An error, not an empty state — see `MissingPayee`.
+                <MissingPayee />
               ) : (
                 <VStack align="stretch" gap={2}>
                   {payees.map((payee) => (
@@ -747,6 +742,10 @@ export function PlanholderClaimDetail({
                   ))}
                 </VStack>
               )}
+              <SectionAddFoot
+                label="Add Payee"
+                onClick={() => setAddPayeeOpen(true)}
+              />
             </Box>
           </Box>
         </VStack>
@@ -838,9 +837,14 @@ export function PlanholderClaimDetail({
 
       {/* Add Payee — the same form the Add Beneficiary sheet uses. */}
       <PlanholderPayeeAddDrawer
-        open={addPayeeOpen}
+        open={addPayeeOpen && !isPhone}
         onClose={() => setAddPayeeOpen(false)}
         claimNo={claimNoOf(claim)}
+        onSave={handleAddPayee}
+      />
+      <AddPayeeSheet
+        open={addPayeeOpen && isPhone}
+        onClose={() => setAddPayeeOpen(false)}
         onSave={handleAddPayee}
       />
     </>

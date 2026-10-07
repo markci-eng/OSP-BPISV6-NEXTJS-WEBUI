@@ -66,6 +66,7 @@ export async function createAccessGroup({
   code,
   description,
   base,
+  dataScope,
 }: CreateGroupInput): Promise<AccessGroup> {
   await delay(700);
 
@@ -92,6 +93,7 @@ export async function createAccessGroup({
     code: normalized,
     description: label,
     modified: "Just now",
+    dataScope,
     summary:
       base === "blank" || !seededFrom
         ? "New access group — no permissions assigned yet."

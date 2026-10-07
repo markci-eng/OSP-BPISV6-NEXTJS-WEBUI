@@ -66,6 +66,11 @@ export interface RemarksPanelProps {
    */
   action?: ReactNode;
   /**
+   * What sits under the panel — the phone's full-width "Add Note", which is
+   * where the heading's action moves below `lg`. See `SectionAddFoot`.
+   */
+  footer?: ReactNode;
+  /**
    * How tall the panel stands, in rows. Five is the claim's, and enough to show
    * that a trail continues below without giving a whole screen to a section that
    * is usually skimmed.
@@ -79,6 +84,7 @@ export function RemarksPanel({
   value,
   empty,
   action,
+  footer,
   rows = 5,
 }: RemarksPanelProps) {
   return (
@@ -102,6 +108,7 @@ export function RemarksPanel({
         cursor="default"
         _focusVisible={{ borderColor: "gray.300", boxShadow: "none" }}
       />
+      {footer}
     </Box>
   );
 }

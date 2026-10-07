@@ -2,84 +2,80 @@
 
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { LuFileWarning, LuUpload } from "react-icons/lu";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import type { DocumentType } from "../../claims-data";
+import { SwipeToRemoveRow } from "./SwipeToRemoveRow";
 
 /**
- * A document type with no file on record — one line of the Deficiencies list.
+ * One line of the Deficiencies list — a document type with no file on record,
+ * or a deficiency raised by hand.
  *
  * The same compact row a document is, deliberately: these are the same objects
- * seen from the other side, and a reader comparing the two tabs is comparing
- * one list against another rather than a list against a form.
+ * seen from the other side. What differs is the chip and the trailing mark —
+ * amber instead of green, and an UPLOAD arrow where a document shows its
+ * format, because tapping it opens the add flow for this type. A special case
+ * has no document behind it, so it has no arrow and nothing to tap.
  *
- * What differs is the chip and the trailing mark. Amber instead of green, so
- * the two tabs are told apart at a glance even mid-scroll; and an UPLOAD arrow
- * where a document shows its format, because that is what the row does — tapping
- * it opens the file picker for this type, and the file lands in the tab next
- * door. Nothing here says "Missing": the tab it is in already said that.
- *
- * Not swipeable. There is nothing to remove — a deficiency is the absence of a
- * document, and it goes when the file arrives.
+ * SWIPED LEFT TO REMOVE, like a document (user, 2026-10-01: "make the
+ * deficiencies removable in death claim too") — through the same
+ * `SwipeToRemoveRow` every list on this page uses.
  */
 export function DocumentDeficiencyRow({
-  type,
+  name,
+  caption,
+  remarks,
   onUpload,
+  onRequestRemove,
 }: {
-  type: DocumentType;
-  /** Start the add flow for this exact type. */
-  onUpload: () => void;
+  name: string;
+  /** The code, or who raised it. */
+  caption: string;
+  remarks?: string;
+  /** Start the add flow for this type. Absent for a special case. */
+  onUpload?: () => void;
+  /** Resolves true once the deficiency has actually been removed. */
+  onRequestRemove: () => Promise<boolean>;
 }) {
   return (
-    <Flex
-      role="button"
-      tabIndex={0}
-      onClick={onUpload}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onUpload();
-        }
-      }}
-      aria-label={`Upload ${type.name}`}
-      align="center"
-      justify="space-between"
-      gap={3}
-      borderWidth="1px"
-      borderColor="gray.200"
-      borderRadius="xl"
-      bg="white"
-      boxShadow="xs"
-      px={3}
-      py="10px"
-      cursor="pointer"
-      transition="all 0.15s ease"
-      _hover={{ borderColor: BRAND_COLORS.primaryGreen, bg: "#f4faf6" }}
-      css={{ "&:hover .deficiency-upload": { color: BRAND_COLORS.darkGreen } }}
-    >
-      <Flex align="center" gap={3} minW={0}>
-        <Box
-          p={2}
-          borderRadius="lg"
-          bg="#fdf3e3"
-          color="#b45309"
-          flexShrink={0}
-        >
-          <LuFileWarning size={16} />
-        </Box>
-        <Box minW={0}>
-          <Text fontSize="sm" fontWeight="600" color="gray.800" truncate>
-            {type.name}
-          </Text>
-          <Text fontSize="11px" color="gray.500" truncate>
-            {type.code}
-          </Text>
-        </Box>
-      </Flex>
+    <SwipeToRemoveRow onClick={onUpload} onRequestRemove={onRequestRemove}>
+      <Flex
+        align="center"
+        justify="space-between"
+        gap={3}
+        aria-label={onUpload ? `Upload ${name}` : undefined}
+      >
+        <Flex align="center" gap={3} minW={0}>
+          <Box
+            p={2}
+            borderRadius="lg"
+            bg="#fdf3e3"
+            color="#b45309"
+            flexShrink={0}
+          >
+            <LuFileWarning size={16} />
+          </Box>
+          <Box minW={0}>
+            <Text fontSize="sm" fontWeight="600" color="gray.800" truncate>
+              {name}
+            </Text>
+            <Text fontSize="11px" color="gray.500" truncate>
+              {caption}
+            </Text>
+            {/* Wraps rather than truncates — a reason cut off mid-sentence is
+                a row the reader has to open something else to understand. */}
+            {remarks && (
+              <Text fontSize="11px" color="gray.500" mt="2px" lineHeight="1.5">
+                {remarks}
+              </Text>
+            )}
+          </Box>
+        </Flex>
 
-      <Box className="deficiency-upload" color="gray.400" flexShrink={0}>
-        <LuUpload size={16} />
-      </Box>
-    </Flex>
+        {onUpload && (
+          <Box color="gray.400" flexShrink={0}>
+            <LuUpload size={16} />
+          </Box>
+        )}
+      </Flex>
+    </SwipeToRemoveRow>
   );
 }
 

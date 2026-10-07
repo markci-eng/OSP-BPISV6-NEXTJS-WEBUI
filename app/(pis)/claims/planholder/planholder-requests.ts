@@ -146,6 +146,9 @@ const CLAIM_STATUS: Record<ClaimPhase, PlanholderRequestStatus> = {
  */
 const SERVICE_STEP: Record<BillingStage, number> = {
   "for-process": 1,
+  // Still the verify step on the planholder's card: a franchise's deduction is
+  // a stop on the way to it, not a step of the planholder's request.
+  "for-deduction": 2,
   processed: 2,
   verified: 3,
   approved: 4,
@@ -153,6 +156,7 @@ const SERVICE_STEP: Record<BillingStage, number> = {
 
 const SERVICE_STATUS: Record<BillingStage, PlanholderRequestStatus> = {
   "for-process": "Pending",
+  "for-deduction": "In Progress",
   processed: "In Progress",
   verified: "In Progress",
   approved: "In Progress",

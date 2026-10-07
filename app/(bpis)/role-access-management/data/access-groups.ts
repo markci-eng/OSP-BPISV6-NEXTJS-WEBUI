@@ -43,6 +43,7 @@ export const ACCESS_GROUPS: AccessGroup[] = [
     code: "BRMGR",
     description: "Branch Manager",
     modified: "18 Aug 2026",
+    dataScope: "branch",
     summary:
       "Full oversight of a branch: dashboards, approvals, agent management and read access to plans.",
   },
@@ -50,6 +51,7 @@ export const ACCESS_GROUPS: AccessGroup[] = [
     code: "SLSSUP",
     description: "Sales Supervisor",
     modified: "11 Aug 2026",
+    dataScope: "territory",
     summary:
       "Manages a sales unit: agent profiles, document assignment and leaderboard visibility.",
   },

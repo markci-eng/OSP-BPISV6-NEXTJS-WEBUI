@@ -37,6 +37,7 @@ import DeathClaimsFilter, {
   DeathClaimsFiledRange,
   DeathClaimsFilterSelect,
   TYPE_DOT,
+  type ClaimFilterCounts,
   type DeathClaimFilter,
 } from "./DeathClaimsFilter";
 import { DeathClaimsDataTable } from "./DeathClaimsDataTable";
@@ -202,7 +203,7 @@ export function branchShortLabel(branch: string): string {
  * reading column; they simply swap rows, because the date now qualifies the
  * reference and the branch never did.
  */
-function ClaimCard({
+export function ClaimCard({
   claim,
   showTypeDot,
   selected = false,
@@ -294,7 +295,8 @@ function ClaimCard({
         {/* THE TYPE, AS A STRIPE RATHER THAN A DOT. It says the same thing in
             3px where the dot and its gap took 15, and a stripe down the leading
             edge reads as the row's category where a dot reads as an ornament. */}
-        {showTypeDot && (
+        {/* Death claims only — Special and Regular are their categories. */}
+        {showTypeDot && claim.kind === "Death Claim" && (
           <Box
             position="absolute"
             left="4px"
@@ -371,7 +373,7 @@ function ClaimCard({
     >
       <Flex justify="space-between" align="flex-start" gap={2}>
         <Flex align="flex-start" gap={2} minW={0} flex="1">
-          {showTypeDot && (
+          {showTypeDot && claim.kind === "Death Claim" && (
             <Box
               mt="6px"
               w="8px"
@@ -522,10 +524,13 @@ interface DeathClaimsTableProps extends Omit<BoxProps, "data"> {
    * the other, the same way the cards lead with one and never show the other.
    */
   identifier?: ClaimIdentifier;
-  /** Item filter (Special / Regular / All), owned by the page. */
+  /**
+   * Item filter — All, Special, Regular, Waiver of Installment, Dismemberment —
+   * owned by the page. See `matchesClaimFilter`.
+   */
   filter: DeathClaimFilter;
   onFilterChange: (value: DeathClaimFilter) => void;
-  counts: Record<DeathClaimFilter, number>;
+  counts: ClaimFilterCounts;
   /**
    * Whether to draw the Special / Regular / All filter at all.
    *
@@ -974,8 +979,12 @@ export function DeathClaimsTable({
       <Flex
         // A COLUMN WHEN COMPACT. The dropdowns and the search cannot share one
         // 360px row, so the rail stacks them: search, then the filters under it.
-        direction={compact ? "column" : "row"}
-        align={compact ? "stretch" : "center"}
+        //
+        // AND BELOW `lg` WHEN NOT. A phone is no wider than the rail, and on one
+        // row the filed-date range, the funnel and the search overran a 350px
+        // dialog by more than a hundred pixels.
+        direction={compact ? "column" : { base: "column", lg: "row" }}
+        align={compact ? "stretch" : { base: "stretch", lg: "center" }}
         gap={2}
         mb={3}
         flexShrink={0}
@@ -996,8 +1005,10 @@ export function DeathClaimsTable({
           align="center"
           gap={2}
           flexShrink={0}
-          order={compact ? 1 : 0}
-          w={compact ? "full" : undefined}
+          order={compact ? 1 : { base: 1, lg: 0 }}
+          w={compact ? "full" : { base: "full", lg: "auto" }}
+          // Stacked, the date range takes a line of its own — see below.
+          flexWrap={compact ? undefined : { base: "wrap", lg: "nowrap" }}
         >
           {/* No toggle in compact: there is no table view to toggle TO. */}
           {showViewToggle && isDesktop && !compact && (
@@ -1017,7 +1028,8 @@ export function DeathClaimsTable({
             onChange={onFilterChange}
             counts={counts}
             display={compact ? "block" : { base: "none", lg: "block" }}
-            w={compact ? "auto" : "150px"}
+            // 210, not 150: "Waiver of Installment (12)" has to read whole.
+            w={compact ? "auto" : "210px"}
             flex={compact ? "1 1 0" : undefined}
             minW={compact ? 0 : undefined}
           />
@@ -1044,14 +1056,23 @@ export function DeathClaimsTable({
               nothing, because it is the filter a reader arrives already meaning
               to use. See {@link DeathClaimsFiledRange} for why this one is not
               behind the icon with the other three. */}
+          {/* STACKED, IT IS THE LAST LINE of the group, under the dropdowns
+              and the funnel: the range alone is about as wide as a phone's
+              dialog, so beside anything it would push that thing off the edge. */}
           {showFiledDateFilter && (
-            <DeathClaimsFiledRange
-              from={filed.from}
-              to={filed.to}
-              min={filedSpan.min}
-              max={filedSpan.max}
-              onChange={setFiled}
-            />
+            <Box
+              order={compact ? undefined : { base: 1, lg: 0 }}
+              flexBasis={compact ? undefined : { base: "100%", lg: "auto" }}
+              flexShrink={0}
+            >
+              <DeathClaimsFiledRange
+                from={filed.from}
+                to={filed.to}
+                min={filedSpan.min}
+                max={filedSpan.max}
+                onChange={setFiled}
+              />
+            </Box>
           )}
 
           {/* Last of the filters: the type names itself and the queue is worked
@@ -1129,9 +1150,9 @@ export function DeathClaimsTable({
           minW={0}
           // Full width at the top of a stacked toolbar; capped and pushed right
           // when it shares a row with the filters.
-          maxW={compact ? "full" : "420px"}
-          ml={compact ? 0 : "auto"}
-          order={compact ? 0 : 1}
+          maxW={compact ? "full" : { base: "full", lg: "420px" }}
+          ml={compact ? 0 : { base: 0, lg: "auto" }}
+          order={compact ? 0 : { base: 0, lg: 1 }}
         />
       </Flex>
 

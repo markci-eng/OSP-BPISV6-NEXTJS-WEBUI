@@ -35,6 +35,19 @@ interface ActionRowButtonProps {
    * wall, and the fix is to make each one cost less rather than to hide some.
    */
   compact?: boolean;
+  /**
+   * Something waiting behind this action, counted — the header bell's red
+   * bubble, on the button.
+   *
+   * THE DEATH CLAIM'S EDIT CARRIES IT: once a processor has corrected the
+   * planholder, the button that made the corrections is where the next reader
+   * learns there are some (user, 2026-09-29). The button turns orange with it,
+   * the colour the card gives a corrected label, so the two read as one fact.
+   * Zero or absent and the button is exactly as it always was.
+   */
+  count?: number;
+  /** For a count the label alone does not say — "Edit, 3 planholder changes". */
+  "aria-label"?: string;
 }
 
 /**
@@ -48,7 +61,9 @@ interface ActionRowButtonProps {
 export const ActionRowButton = forwardRef<
   HTMLButtonElement,
   ActionRowButtonProps
->(({ label, icon: Icon, compact = false, ...rest }, ref) => (
+>(({ label, icon: Icon, compact = false, count, ...rest }, ref) => {
+  const flagged = (count ?? 0) > 0;
+  return (
   <BaseButton
     ref={ref}
     // `BaseButton` with the same variant/size the `SecondarySmButton` pill
@@ -98,14 +113,43 @@ export const ActionRowButton = forwardRef<
        colours — including on hover, which would otherwise go back to green the
        moment the pointer landed. */
     color="gray.800"
-    borderColor="gray.200"
+    borderColor={flagged ? "orange.400" : "gray.200"}
     bg="white"
+    // Room for the count's bubble, which sits over the corner.
+    position="relative"
+    overflow="visible"
     // Hover is the one place they part company with a card: a card is not
     // pressable and these are, so the border firms and the ground greys.
-    _hover={{ bg: "gray.50", borderColor: "gray.300", color: "gray.800" }}
+    _hover={{
+      bg: "gray.50",
+      borderColor: flagged ? "orange.500" : "gray.300",
+      color: "gray.800",
+    }}
     _active={{ bg: "gray.100" }}
     {...rest}
   >
+    {flagged && (
+      <Box
+        as="span"
+        position="absolute"
+        top="-7px"
+        right="-7px"
+        minW="18px"
+        h="18px"
+        px="5px"
+        borderRadius="full"
+        bg={BRAND_COLORS.destructiveRed}
+        color="white"
+        fontSize="10px"
+        fontWeight="700"
+        lineHeight="18px"
+        textAlign="center"
+        boxShadow="0 0 0 2px white"
+        aria-hidden
+      >
+        {count}
+      </Box>
+    )}
     {/* The ICON is the exception, and the only brand colour left on the control:
         the same `primaryGreen` the navigation draws its icons in, so a mark in
         this app is green wherever it appears. It works here for the reason green
@@ -119,7 +163,7 @@ export const ActionRowButton = forwardRef<
         and adds no line of its own. */}
     <Box
       display="flex"
-      color={BRAND_COLORS.primaryGreen}
+      color={flagged ? "orange.500" : BRAND_COLORS.primaryGreen}
       // react-icons default to `1em`, so the glyph follows whatever font size
       // it is standing in. Compact drops the label to 10px, and an icon that
       // small reads as a smudge rather than a mark — so the wrapper holds the
@@ -131,14 +175,16 @@ export const ActionRowButton = forwardRef<
 
     <Text
       fontSize={compact ? "10px" : "xs"}
-      color="gray.500"
+      color={flagged ? "orange.600" : "gray.500"}
+      fontWeight={flagged ? "600" : undefined}
       letterSpacing="-0.1px"
       lineHeight="1.25"
     >
       {label}
     </Text>
   </BaseButton>
-));
+  );
+});
 ActionRowButton.displayName = "ActionRowButton";
 
 export function ActionButtonRow({

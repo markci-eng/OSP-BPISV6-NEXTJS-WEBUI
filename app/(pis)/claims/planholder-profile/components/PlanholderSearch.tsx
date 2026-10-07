@@ -26,54 +26,18 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Flex, Text } from "@chakra-ui/react";
-import { BrandedAvatar, DataTable, OSPBadge, type OSPBadgeProps } from "osp-ui-kit";
+import { Box, Flex, Text, useBreakpointValue } from "@chakra-ui/react";
+import { BrandedAvatar, DataTable, OSPBadge } from "osp-ui-kit";
 import type { ColumnDef } from "@tanstack/react-table";
 import { mockAvatarUrl } from "@/lib/mock-avatar";
-import { db } from "../../../data";
 import { listPlanholders, type PlanholderSearchResult } from "../../claims-data";
-
-/**
- * Which badge an account status gets — the BPIS list's own mapping, on the
- * labels this area uses.
- *
- * THE LABELS DIFFER FROM BPIS'S BY CASE AND WORDING, which is why the compare is
- * upper-cased and covers both spellings where they part: `Planholder`'s
- * `accountStatusLabel` says "Fully Paid" where the BPIS data says "FULLY PAID",
- * and this area has statuses that one does not. Anything unrecognised gets no
- * badge type rather than a wrong one.
- */
-function statusBadgeType(status: string): OSPBadgeProps["type"] {
-  switch (status.toUpperCase()) {
-    case "ACTIVE":
-    case "REINSTATED":
-      return "success";
-    case "LAPSED":
-      return "warning";
-    case "TERMINATED":
-    case "CANCELLED":
-      return "danger";
-    case "FULLY PAID":
-    case "NEW SALES":
-      return "info";
-    default:
-      return undefined;
-  }
-}
-
-function toTitleCase(value: string): string {
-  return value.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-/** "Sep 16, 2026" — the BPIS list's date, which is shorter than ours. */
-function formatDate(date: Date | undefined): string {
-  if (!date) return "—";
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+import {
+  branchName,
+  formatDate,
+  statusBadgeType,
+  toTitleCase,
+} from "./planholder-list-format";
+import { PlanholderPhoneList } from "./PlanholderPhoneList";
 
 /**
  * The columns, in the BPIS list's order: who, then what they hold, then where it
@@ -134,16 +98,11 @@ const planholderColumns: ColumnDef<PlanholderSearchResult>[] = [
   {
     accessorKey: "branch",
     header: "Branch",
-    // THE BRANCH'S NAME, FALLING BACK TO ITS CODE — and to a dash where the plan
-    // has no payment on file to read one off. See `PlanholderSearchResult.branch`.
-    cell: (info) => {
-      const code = String(info.getValue() ?? "");
-      return (
-        <Text fontSize="sm" color="gray.700">
-          {code ? db.getBranch(code)?.description || code : "—"}
-        </Text>
-      );
-    },
+    cell: (info) => (
+      <Text fontSize="sm" color="gray.700">
+        {branchName(String(info.getValue() ?? ""))}
+      </Text>
+    ),
   },
   {
     accessorKey: "accountStatus",
@@ -183,6 +142,10 @@ export function PlanholderSearch() {
   // screen, and re-deriving it would hand `DataTable` a new array on every
   // render — which is a re-sort and a re-page for nothing.
   const planholders = useMemo(() => listPlanholders(), []);
+
+  // BELOW `lg`, ROWS INSTEAD OF THE TABLE — see `PlanholderPhoneList`.
+  const isPhone = useBreakpointValue({ base: true, lg: false }) ?? false;
+  if (isPhone) return <PlanholderPhoneList planholders={planholders} />;
 
   return (
     <DataTable<PlanholderSearchResult>

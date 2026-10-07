@@ -11,6 +11,7 @@ import {
   LuCircleCheckBig,
   LuFileClock,
   LuInbox,
+  LuReceipt,
   LuShieldCheck,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
@@ -18,6 +19,7 @@ import type { BillingStage } from "./service-payables-data";
 
 export const STAGE_ICONS: Record<BillingStage, IconType> = {
   "for-process": LuInbox,
+  "for-deduction": LuReceipt,
   processed: LuFileClock,
   verified: LuShieldCheck,
   approved: LuCircleCheckBig,

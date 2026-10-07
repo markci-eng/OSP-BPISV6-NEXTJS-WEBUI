@@ -66,6 +66,7 @@ const TAB_LABELS = BILLING_QUEUE_LABELS;
 /** Reads after the territory count, e.g. "3 territories with work to bill". */
 const TERRITORY_VERB: Record<BillingStage, string> = {
   "for-process": "with work to bill",
+  "for-deduction": "billed, awaiting deduction",
   processed: "billed, awaiting verification",
   verified: "verified, awaiting approval",
   approved: "approved for release",
@@ -82,6 +83,7 @@ const TERRITORY_VERB: Record<BillingStage, string> = {
  */
 const PROCESSOR_VERB: Record<BillingStage, string> = {
   "for-process": "to bill",
+  "for-deduction": "awaiting deduction",
   processed: "awaiting verification",
   verified: "awaiting approval",
   approved: "approved for release",

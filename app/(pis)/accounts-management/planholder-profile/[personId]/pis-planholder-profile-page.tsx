@@ -1,21 +1,9 @@
 "use client";
-import {
-  Box,
-  Dialog,
-  Flex,
-  Grid,
-  GridItem,
-  Portal,
-  Show,
-  Text,
-} from "@chakra-ui/react";
-import { useBreakpointValue } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
-
-
+import { Box, Dialog, Flex, Portal, Text } from "@chakra-ui/react";
+import { useState } from "react";
 
 import { LuFolderOpen } from "react-icons/lu";
-import { RiFileList3Line } from "react-icons/ri";
+import { RiArrowLeftRightLine, RiFileList3Line } from "react-icons/ri";
 import { TbMoneybagMove, TbFileCertificate } from "react-icons/tb";
 import { MdOutlineCancelPresentation } from "react-icons/md";
 import { GiReceiveMoney } from "react-icons/gi";
@@ -25,25 +13,15 @@ import {
   ActionButtons,
   LookupField,
   Page,
-  ProfileHeaderCard,
   useMessageDialog,
 } from "osp-ui-kit";
 import type { LookupColumn } from "osp-ui-kit";
 import { BackToTop } from "../../components/back-to-top";
 import { planholderLookup } from "../data/planholder-lookup";
+import { PlanholderProfileBody } from "../components/planholder-profile-body";
 import type { PlanholderLookup } from "@/components/plan-management/planholders/tables/planholder-list-table";
-import { PendingRequests, RequestProps } from "@/components/plan-management/planholder-profile/sections/pending-requests";
+import { RequestProps } from "@/components/plan-management/planholder-profile/sections/pending-requests";
 import { PlanholderPageProps } from "@/components/plan-management/planholder-profile/planholder-page";
-import { ListOfPlans } from "@/components/plan-management/planholder-profile/sections/list-of-plans";
-import { PlanholderInfo } from "@/components/plan-management/planholder-profile/sections/planholder-info";
-
-import { ContactInfo } from "@/components/plan-management/planholder-profile/sections/contact-info";
-import { EmploymentInfo } from "@/components/plan-management/planholder-profile/sections/employment-info";
-import { Address, PlanholderAddressCard } from "@/components/plan-management/planholder-profile/sections/address-info";
-
-import { RITF_REQUESTS } from "../../ritf/data/data";
-import { ROP_REQUESTS } from "../../rop/data/data";
-import { CSV_REQUESTS } from "../../csv/data/data";
 
 
 // Same columns the BPIS profile's lookup shows.
@@ -94,67 +72,19 @@ export default function PisPlanholderProfilePage({
 }: {
   props: PlanholderPageProps;
 }) {
-  const isMobile = useBreakpointValue({ base: true, lg: false });
   const router = useRouter();
   const { messageBox } = useMessageDialog();
-  const [isProfileOpen] = useState(true);
-  const isWebOnMount = () =>
-    typeof window !== "undefined" &&
-    window.matchMedia("(min-width: 1024px)").matches;
   const [emptyStateOpen, setEmptyStateOpen] = useState(!props.planholderInfo);
-  const [personalOpen, setPersonalOpen] = useState(isWebOnMount);
-  const [addressOpen, setAddressOpen] = useState(isWebOnMount);
-  const [contactOpen, setContactOpen] = useState(isWebOnMount);
-  const [employmentOpen, setEmploymentOpen] = useState(isWebOnMount);
 
-  const planholderAddress = (() => {
-    const addr =
-      props.planholderAddress?.find((a) => a.addressType === "RESIDENCE") ??
-      props.planholderAddress?.[0];
-    return addr
-      ? [addr.addressNo, addr.street, addr.barangay, addr.city, addr.province]
-          .filter(Boolean)
-          .join(", ")
-      : undefined;
-  })();
+  // The address lines, the contact number and the accordions' open state all
+  // moved to `PlanholderProfileBody` with the layout that used them.
 
-  const buildAddressLines = (addr?: Address) =>
-    addr
-      ? [
-          [addr.addressNo, addr.street].filter(Boolean).join(" "),
-          [addr.barangay, addr.district].filter(Boolean).join(" "),
-          [addr.city, addr.province].filter(Boolean).join(" "),
-        ]
-          .map((line) => line.trim())
-          .filter(Boolean)
-          .join("\n")
-      : undefined;
-
-  const homeAddress = buildAddressLines(
-    props.planholderAddress?.find((a) => a.addressType === "RESIDENCE"),
-  );
-  const officeAddress = buildAddressLines(
-    props.planholderAddress?.find((a) => a.addressType === "OFFICE"),
-  );
-
-  const phone =
-    props.planholderContact?.find((c) => c.type === "MobileNo")?.value ??
-    props.planholderContact?.find((c) => c.type === "LandlineNo")?.value;
-
-  const personId = props.planholderInfo?.personId;
-
-  // If this planholder has an existing RITF/ROP/CSV request (matched by LPA
-  // number), jump straight to editing it. Otherwise let the user know there's
-  // nothing to open instead of dumping them on the unfiltered list.
-  const planLpaNumbers = (props.plans ?? []).map((p) => p.lpaNumber);
-
-  function findRequestId(requests: { id: string; lpaNo: string }[]) {
-    return requests.find((r) => planLpaNumbers.includes(r.lpaNo))?.id;
-  }
-
-  const ritfId = findRequestId(RITF_REQUESTS);
-  const ropId = findRequestId(ROP_REQUESTS);
-  const csvId = findRequestId(CSV_REQUESTS);
+  // NO SOURCE WHILE RETURN OF PREMIUM AND CSV ARE BEING REBUILT (2026-09-23,
+  // CSV 2026-10-01). Neither new module has a per-request route yet, so the
+  // actions below fall through to their "no request" message. Point these at
+  // the new modules once they open a request by id.
+  const ropId = undefined;
+  const csvId = undefined;
 
   const goToRequestOrNotify = (label: string, id: string | undefined, basePath: string) => {
     if (id) {
@@ -173,15 +103,23 @@ export default function PisPlanholderProfilePage({
   // the overflow drawer; the toolbar itself carries the planholder lookup.
   const overflowActions = [
     {
-      label: "RITF",
-      onClick: () =>
-        goToRequestOrNotify("RITF", ritfId, "/accounts-management/ritf"),
+      label: "Re-Instatement",
+      href: "/accounts-management/reinstatement",
       icon: () => <RiFileList3Line size={16} />,
+    },
+    {
+      label: "Transfer",
+      href: "/accounts-management/transfer",
+      icon: () => <RiArrowLeftRightLine size={16} />,
     },
     {
       label: "ROP",
       onClick: () =>
-        goToRequestOrNotify("ROP", ropId, "/accounts-management/rop"),
+        goToRequestOrNotify(
+          "ROP",
+          ropId,
+          "/accounts-management/return-of-premium",
+        ),
       icon: () => <GiReceiveMoney size={16} />,
     },
     {
@@ -344,109 +282,8 @@ export default function PisPlanholderProfilePage({
             lg: "block",
           }}
         >
-          <Grid
-            templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
-            gap={5}
-            alignItems="start"
-          >
-            <GridItem>
-              <Flex direction="column" gap={4}>
-                <Box pt={0}>
-                  <ProfileHeaderCard
-                    name={
-                      props.planholderInfo
-                        ? props.planholderInfo.firstName +
-                          " " +
-                          props.planholderInfo.lastName
-                        : undefined
-                    }
-                    personId={personId}
-                    isInsured={props.plans?.[0]?.isInsured}
-                    homeAddress={homeAddress}
-                    officeAddress={officeAddress}
-                    email={
-                      props.planholderContact?.find((x) => x.type === "Email")
-                        ?.value
-                    }
-                    landlineNo={
-                      props.planholderContact?.find(
-                        (x) => x.type === "LandlineNo",
-                      )?.value
-                    }
-                    contactNo={phone}
-                    isOpen={isProfileOpen}
-                    contentId="profile-details-content"
-                  />
-                </Box>
-                <Show when={isMobile}>
-                  <ListOfPlans
-                    plans={(props.plans ?? []) as any}
-                    deletePlanFunction={props.actionFunctions?.deletePlanFunction}
-                    personId={personId}
-                    planholderAddress={planholderAddress}
-                  />
-                  <PendingRequests requests={MOCK_REQUESTS} />
-                </Show>
-
-                <Box>
-                  <PlanholderInfo
-                    planholder={props.planholderInfo ?? undefined}
-                    isOpen={personalOpen}
-                    onToggle={() => setPersonalOpen((p) => !p)}
-                  />
-                </Box>
-                <Box display={{ base: "block", lg: "none" }}>
-                  <PlanholderAddressCard
-                    phAddress={props.planholderAddress}
-                    isOpen={addressOpen}
-                    onToggle={() => setAddressOpen((p) => !p)}
-                  />
-                </Box>
-              </Flex>
-            </GridItem>
-
-            <GridItem>
-              <Flex direction="column" gap={4}>
-                <Show when={!isMobile}>
-                  <PendingRequests requests={MOCK_REQUESTS} />
-                </Show>
-                <Box display={{ base: "block", lg: "none" }}>
-                  <ContactInfo
-                    contacts={{
-                      Email:
-                        props.planholderContact
-                          ?.filter((x) => x.type === "Email")
-                          .map((x) => x.value) ?? [],
-                      MobileNo:
-                        props.planholderContact
-                          ?.filter((x) => x.type === "MobileNo")
-                          .map((x) => x.value) ?? [],
-                      LandlineNo:
-                        props.planholderContact
-                          ?.filter((x) => x.type === "LandlineNo")
-                          .map((x) => x.value) ?? [],
-                    }}
-                    isOpen={contactOpen}
-                    onToggle={() => setContactOpen((p) => !p)}
-                  />
-                </Box>
-                <EmploymentInfo
-                  planholderInfo={undefined}
-                  isOpen={employmentOpen}
-                  onToggle={() => setEmploymentOpen((p) => !p)}
-                />
-              </Flex>
-            </GridItem>
-          </Grid>
-
-          <Box display={{ base: "none", lg: "block" }}>
-            <ListOfPlans
-              plans={(props.plans ?? []) as any}
-              deletePlanFunction={props.actionFunctions?.deletePlanFunction}
-              personId={personId}
-              planholderAddress={planholderAddress}
-            />
-          </Box>
+          {/* The profile itself, shared with the ROP module's right panel. */}
+          <PlanholderProfileBody props={props} requests={MOCK_REQUESTS} />
         </Box>
 
       </Page.MainContent>

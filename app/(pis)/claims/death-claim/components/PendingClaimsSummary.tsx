@@ -25,11 +25,12 @@ import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { SectionTitle } from "../../components/section-title";
 import { SwipeDeck } from "../../components/swipe-deck";
 import { useIsShortViewport } from "../../components/use-short-viewport";
-import { TYPE_DOT, type DeathClaimFilter } from "./DeathClaimsFilter";
+import { TYPE_DOT } from "./DeathClaimsFilter";
+import type { DeathClaimType } from "../death-claims-data";
 
 interface PendingClaimsSummaryProps {
   /** Pending counts per type, plus the combined `all` total. */
-  counts: Record<DeathClaimFilter, number>;
+  counts: Record<DeathClaimType | "all", number>;
   /**
    * Heading, when the default does not fit where it is being used.
    *

@@ -1100,10 +1100,24 @@ export interface ClaimsHdrDCRecord {
 /**
  * A row in the `ClaimsPayee` table. Mirrors the C# `ClaimsPayee` entity — a
  * claim can be paid to one or two payees (e.g. joint claimants).
+ *
+ * EVERY CLAIM REQUEST HAS AT LEAST ONE (user, 2026-09-29). The payee is filed
+ * with the request, so a request without one is bad data, not an empty state —
+ * `database.ts` refuses to load a seed that has one.
  */
 export interface ClaimsPayeeRecord {
   idx: number;
-  claimNo: string;
+  /**
+   * The request it was filed with — `ClaimsPayee.ClaimsRequest`. What a payee
+   * is joined by, because it exists before any header does.
+   */
+  claimRequest: string;
+  /**
+   * The death-claim header — `ClaimsPayee.ClaimNo`. Absent until a processor
+   * opens one, and always absent on a living-benefit claim, which has no
+   * death-claim header to point at.
+   */
+  claimNo?: string;
   /** Primary payee — a `Person` key. */
   payeeOneId: string;
   /** Secondary/joint payee, if any — a `Person` key. */
@@ -1144,6 +1158,11 @@ export class ClaimsHdr {
   /** The processor assigned to the claim (C# `AuditUser`). */
   get processor(): string {
     return this.hdr.auditUser;
+  }
+
+  /** When the processor opened the header (C# `AuditDate`), as ISO. */
+  get processedAtISO(): string {
+    return this.hdr.auditDate;
   }
 
   /** Status code, taken from the request (C# `Status`). */

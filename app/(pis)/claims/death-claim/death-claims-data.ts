@@ -118,6 +118,12 @@ export interface DeathClaim {
   /** Human-friendly filed label, e.g. "Apr 18 · 8:00 am". */
   filedDisplay: string;
   processor: ClaimProcessor;
+  /**
+   * When the processor opened the claim header (ISO) — the date a claim on file
+   * was WORKED, which is what the user's history is cut by. Absent until a
+   * header exists.
+   */
+  processedAt?: string;
   phase: ClaimPhase;
   /** Branch that filed the claim, e.g. "Davao City Branch". */
   requestingBranch: string;
@@ -251,6 +257,7 @@ function toDeathClaim(
   planholder: Planholder | undefined,
   header?: ClaimsHdrDC,
 ): DeathClaim {
+  const onFile = header ?? db.getDeathClaimByRequest(request.requestNo);
   return {
     id: header?.claimNo ?? request.requestNo,
     reference: request.requestNo,
@@ -262,7 +269,12 @@ function toDeathClaim(
     typeOfIncident: request.causeOfIncident,
     filedAt: request.fileDateISO,
     filedDisplay: formatFiledDateTime(request.fileDateISO),
-    processor: toProcessor(header?.processor ?? request.auditUser),
+    // THE HEADER'S PROCESSOR WHEREVER THERE IS A HEADER, even when the caller
+    // did not pass one: whoever opened the claim is who processed it, and the
+    // user's history on the death claim screen is read off this name. Falling
+    // back to the request's audit user only when no header exists at all.
+    processor: toProcessor(onFile?.processor ?? request.auditUser),
+    processedAt: onFile?.processedAtISO,
     phase: request.statusLabel,
     requestingBranch: request.requestingBranch,
     requestingBranchCode: request.requestingBranchCode,

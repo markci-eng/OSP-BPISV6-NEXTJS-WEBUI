@@ -43,6 +43,8 @@ import type {
   PersonName,
   TerminationStatus,
 } from "../../data";
+// Type-only, so it adds no runtime cycle with the read model that imports this.
+import type { BillingStage } from "./service-payables-data";
 
 /* ------------------------------ model ------------------------------ */
 
@@ -258,6 +260,27 @@ export interface VerifiedAccount {
  * Passed in rather than looked up because this file deliberately knows nothing
  * about how a billing is derived: the caller has the billing in front of it.
  */
+/**
+ * A franchise billing's DEDUCTIONS as posted on the Franchise Deductions page —
+ * the royalty typed in, and the loan as the backend reported it at that moment.
+ *
+ * THE LOAN IS KEPT, NOT RE-READ. It is real-time from the loan system, so it
+ * can move after posting; what the verifier signs is the figure that was
+ * posted, and a verified billing must not change its net under them.
+ *
+ * NO TABLE FOR IT IN THE STRUCTURE DROPS yet, so it is session state keyed by
+ * billing code, the way every signature here was before its column landed.
+ */
+export interface PostedDeduction {
+  royalty: number;
+  loan: number;
+  postedBy: string;
+  /** "YYYY-MM-DD" — the first post. Kept when the royalty is later edited. */
+  datePosted: string;
+  /** "YYYY-MM-DD" — the latest edit, while the billing was still unverified. */
+  dateUpdated?: string;
+}
+
 export interface BillingTarget {
   /** The billing code — chapel + cut + month + year. */
   billingCode: string;
@@ -310,7 +333,7 @@ export interface ServiceTarget {
  * on the dashboard. It moved off MARITES BELIESTA on 2026-09-14, who is on the
  * death claim team; see `PROCESSORS` in `billing-seed.ts`.
  */
-const CREATED_BY = "JACKIE PANES";
+export const CREATED_BY = "JACKIE PANES";
 
 /* -------------------------- billing numbers -------------------------- */
 
@@ -517,11 +540,37 @@ const approvedBillingByCode = new Map<string, VerifiedAccount>();
  */
 const endorsedBillingByCode = new Map<string, VerifiedAccount>();
 
+/** Franchise deductions posted this session, by billing code. */
+const deductionsByCode = new Map<string, PostedDeduction>();
+
 /** Discrepancies put right this session, by service id. */
 const resolvedByServiceId = new Map<string, ResolvedDiscrepancy>();
 
 /** Compliance recorded against a service's deficiency, by service id. */
 const compliedByServiceId = new Map<string, CompliedDeficiency>();
+
+/**
+ * Accounts whose record has been put on screen, keyed `stage:serviceId`.
+ *
+ * PER STAGE (user, 2026-09-25): a verifier meeting a billing the processor has
+ * already worked starts with nothing marked, because "opened" is about this
+ * desk's reading, not anybody's. See `markAccountOpened`.
+ */
+const openedAccounts = new Set<string>();
+
+/**
+ * What the processor has typed on each record, before the billing is processed.
+ *
+ * THERE IS NO PER-ACCOUNT SAVE ANY MORE (user, 2026-09-25): For Process commits
+ * the whole billing with one Process Billing press, so an account's edits have
+ * to survive stepping away from it. The form writes here on every change and
+ * reads it back on arrival; Process Billing posts it.
+ *
+ * WRITTEN WITHOUT `emit()`. Nothing on screen reads a draft live — the form
+ * seeds from it once and the press reads it once — so bumping the store on
+ * every keystroke would re-derive every queue for nothing.
+ */
+const draftsByServiceId = new Map<string, ServiceRecordDetails>();
 
 /** Counter behind the ids minted for manual services. Never reset. */
 let manualSeq = 0;
@@ -1104,10 +1153,18 @@ export function getVerifiedBilling(
  */
 export function approveBilling(billingCode: string): void {
   if (approvedBillingByCode.has(billingCode)) return;
-  approvedBillingByCode.set(billingCode, {
+  const signature = {
     verifiedBy: CREATED_BY,
     dateVerified: new Date().toISOString().slice(0, 10),
-  });
+  };
+  approvedBillingByCode.set(billingCode, signature);
+  // APPROVAL ENDORSES (user, 2026-09-30: "upon approval the system will
+  // automatically endorse"). There is no For Endorsement queue any more, so the
+  // endorsement is written with the approval, same signature and same day —
+  // here, where every approval passes, rather than at each caller.
+  if (!endorsedBillingByCode.has(billingCode)) {
+    endorsedBillingByCode.set(billingCode, signature);
+  }
   emit();
 }
 
@@ -1147,6 +1204,40 @@ export function getEndorsedBilling(
   billingCode: string,
 ): VerifiedAccount | undefined {
   return endorsedBillingByCode.get(billingCode);
+}
+
+/**
+ * Post franchise deductions — the Franchise Deductions page's one write, for
+ * every changed row at once.
+ *
+ * ONE EMIT FOR THE BATCH, so the page and every queue re-derive once rather than
+ * once per billing. A billing posted before keeps its `datePosted` and gains a
+ * `dateUpdated`; whether it may still be changed (not yet verified) is the
+ * caller's rule — see `usePostDeductions` — and this only writes.
+ */
+export function postDeductions(
+  rows: { billingCode: string; royalty: number; loan: number }[],
+): void {
+  if (rows.length === 0) return;
+  const today = new Date().toISOString().slice(0, 10);
+  for (const row of rows) {
+    const before = deductionsByCode.get(row.billingCode);
+    deductionsByCode.set(row.billingCode, {
+      royalty: row.royalty,
+      loan: row.loan,
+      postedBy: CREATED_BY,
+      datePosted: before?.datePosted ?? today,
+      ...(before ? { dateUpdated: today } : {}),
+    });
+  }
+  emit();
+}
+
+/** The deduction posted against a billing this session, if any. */
+export function getPostedDeduction(
+  billingCode: string,
+): PostedDeduction | undefined {
+  return deductionsByCode.get(billingCode);
 }
 
 /** How many of these accounts have been verified. */
@@ -1210,6 +1301,44 @@ export function addServiceNote(serviceId: string, text: string): void {
 /** A service's notes, oldest first. */
 export function getServiceNotes(serviceId: string): string[] {
   return notesByServiceId.get(serviceId) ?? [];
+}
+
+/**
+ * Record that an account's record has been shown at a stage — the stepper's
+ * "Opened" mark.
+ *
+ * MARKED ON SHOW, not on a separate tick (user, 2026-09-25): the strong signal
+ * is the stage's own act (terminated / verified), so this only has to separate
+ * "never looked at" from "looked at, not finished".
+ *
+ * Emits only on the first mark, so the effect that calls it on every account
+ * change does not bump the store for an account already opened.
+ */
+export function markAccountOpened(stage: BillingStage, serviceId: string): void {
+  const key = `${stage}:${serviceId}`;
+  if (openedAccounts.has(key)) return;
+  openedAccounts.add(key);
+  emit();
+}
+
+/** Keep what the form holds for a record — see {@link draftsByServiceId}. */
+export function setServiceDraft(
+  serviceId: string,
+  details: ServiceRecordDetails,
+): void {
+  draftsByServiceId.set(serviceId, details);
+}
+
+/** The unposted edits on a record, if it has been touched. */
+export function getServiceDraft(
+  serviceId: string,
+): ServiceRecordDetails | undefined {
+  return draftsByServiceId.get(serviceId);
+}
+
+/** Whether an account's record has been shown at this stage. */
+export function isAccountOpened(stage: BillingStage, serviceId: string): boolean {
+  return openedAccounts.has(`${stage}:${serviceId}`);
 }
 
 /** Whether this service's plan has been terminated into its billing. */

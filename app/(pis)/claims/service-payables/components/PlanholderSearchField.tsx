@@ -72,7 +72,7 @@ export function PlanholderSearchField({
           `htmlFor` here would point at a div and associate nothing. The input
           carries its own `aria-label` — the same arrangement `FieldLabel`
           documents for the rails' listboxes. */}
-      <FieldLabel>Plan Holder</FieldLabel>
+      <FieldLabel>Planholder</FieldLabel>
       <SearchBar
         size="sm"
         placeholder={PLACEHOLDER}

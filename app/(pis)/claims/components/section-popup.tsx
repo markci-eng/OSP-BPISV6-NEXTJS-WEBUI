@@ -14,7 +14,7 @@
 // what the dock is for; this is a look-up you finish and close, and it should
 // take the screen while it is open rather than compete with it.
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Box,
   CloseButton,
@@ -27,6 +27,7 @@ import { LuChevronRight } from "react-icons/lu";
 import type { IconType } from "react-icons";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { CARD_SHAPE } from "./section-card";
+import { SHEET_MIN_HEIGHT } from "./sheet-height";
 
 /**
  * Hides a node from the screen and keeps it for a screen reader.
@@ -185,21 +186,111 @@ export interface SectionPopupProps {
  * fall back to rows — which is one of the reasons these two are better off in a
  * pop-up than in a 460px column.
  */
-export function SectionPopup({
+export function SectionPopup(props: SectionPopupProps) {
+  return <PopupSheet {...props} fixedHeight={false} />;
+}
+
+/**
+ * THE SAME POP-UP FOR A LIST WHOSE ROWS COME AND GO — tabs, filters, a search.
+ * It holds its height while open (user, 2026-10-01: "thats the drawer that
+ * should be fixed since the data under that was constantly changing through
+ * user interaction"). Sized to its rows, a sheet like this jumped on every tab
+ * and every keystroke.
+ *
+ * SIZED FOR ITS LARGEST SELECTION, NOT THE SCREEN (user, same day: "the
+ * maximum height is base on how many is the maximum item that will be shown at
+ * the display at once"). The rows here are cards and table rows of no fixed
+ * height, so the sheet MEASURES rather than counts: it opens at its natural
+ * height — a list opens unfiltered, which is its largest — and from then on
+ * only grows, never shrinks, until it is closed. Floored at the History sheet
+ * (`SHEET_MIN_HEIGHT`), capped as every pop-up is.
+ *
+ * A NAMED COMPONENT, NOT A FLAG ON `SectionPopup`, so the choice is made once
+ * per KIND of sheet: every list uses this, every look-up that reads top to
+ * bottom uses `SectionPopup` and fits what is in it. The history lists on both
+ * pages and the queue browser are lists.
+ */
+export function ListPopup(props: SectionPopupProps) {
+  return <PopupSheet {...props} fixedHeight />;
+}
+
+/**
+ * A LOOK-UP THAT RISES FROM THE BOTTOM ON A PHONE — `SectionPopup` from `lg`,
+ * and below it a sheet pinned to the bottom edge that slides up, with only its
+ * top corners rounded (user, 2026-10-02, on the death claim's Beneficiaries:
+ * "do the pop-up in the bottom animation when mobile").
+ *
+ * Named, like `ListPopup`, rather than a flag — the choice is per sheet.
+ */
+export function BottomOnPhonePopup(props: SectionPopupProps) {
+  return <PopupSheet {...props} fixedHeight={false} bottomOnPhone />;
+}
+
+/** A phone bottom sheet's cut, overriding the centred pop-up below `lg`. */
+const BOTTOM_ON_PHONE = {
+  maxW: { base: "100dvw", md: "100dvw", lg: "min(840px, calc(100dvw - 48px))" },
+  m: { base: 0, lg: "auto" },
+  borderTopRadius: { base: "2xl", lg: "xl" },
+  borderBottomRadius: { base: 0, lg: "xl" },
+  pb: { base: "env(safe-area-inset-bottom, 0px)", lg: 0 },
+} as const;
+
+function PopupSheet({
   title,
   open,
   onClose,
   maxW = "840px",
   header,
   children,
-}: SectionPopupProps) {
+  fixedHeight,
+  bottomOnPhone = false,
+}: SectionPopupProps & { fixedHeight: boolean; bottomOnPhone?: boolean }) {
+  const height = { base: "88dvh", md: "82vh" };
+
+  // THE TALLEST THIS LIST HAS NEEDED SINCE IT OPENED — see `ListPopup`.
+  // Natural height = everything outside the body + all the body holds. Zero
+  // until measured, and again once closed. The inner box is only what is
+  // WATCHED — it resizes whenever the rows do.
+  const contentRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  // A STATE, NOT A REF: the dialog mounts its content a beat after `open`
+  // turns true, so the effect has to run again once the box exists.
+  const [inner, setInner] = useState<HTMLDivElement | null>(null);
+  const [tallest, setTallest] = useState(0);
+  useEffect(() => {
+    if (!fixedHeight) return;
+    if (!open) {
+      setTallest(0);
+      return;
+    }
+    if (!inner) return;
+    const measure = () => {
+      const content = contentRef.current;
+      const body = bodyRef.current;
+      if (!content || !body) return;
+      // The body's SCROLL height, not the inner box's: it counts what spills
+      // past that box too (a child's margin), which a sum of boxes came up
+      // 30px short on. Held taller than its rows, it simply equals the body.
+      const natural =
+        content.offsetHeight - body.clientHeight + body.scrollHeight;
+      setTallest((was) => Math.max(was, Math.ceil(natural)));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(inner);
+    return () => observer.disconnect();
+  }, [open, fixedHeight, inner]);
+
   return (
     <Dialog.Root
       open={open}
       onOpenChange={(details) => {
         if (!details.open) onClose();
       }}
-      placement="center"
+      placement={bottomOnPhone ? { base: "bottom", lg: "center" } : "center"}
+      motionPreset={
+        bottomOnPhone ? { base: "slide-in-bottom", lg: "scale" } : undefined
+      }
       /*
        * ONE SIZE, AND NOT `full` ANYWHERE.
        *
@@ -234,8 +325,18 @@ export function SectionPopup({
               base: "calc(100dvw - 24px)",
               md: `min(${maxW}, calc(100dvw - 48px))`,
             }}
-            maxH={{ base: "88dvh", md: "82vh" }}
+            // A list holds the tallest it has been, floored; a look-up fits its
+            // content. Both under the same cap.
+            ref={contentRef}
+            h={
+              fixedHeight && tallest
+                ? `${Math.max(tallest, SHEET_MIN_HEIGHT)}px`
+                : undefined
+            }
+            maxH={height}
             borderRadius="xl"
+            // Edge to edge at the foot on a phone — see `BottomOnPhonePopup`.
+            {...(bottomOnPhone && BOTTOM_ON_PHONE)}
           >
             {/* The close button alone. The heading a reader sees is the
                 section's own, immediately below. */}
@@ -288,11 +389,13 @@ export function SectionPopup({
             )}
 
             <Dialog.Body
+              ref={bodyRef}
               px={{ base: 4, md: 6 }}
               pt={header ? 3 : 2}
               pb={6}
             >
-              {children}
+              {/* Measured — see `tallest`. */}
+              <Box ref={setInner}>{children}</Box>
             </Dialog.Body>
           </Dialog.Content>
         </Dialog.Positioner>

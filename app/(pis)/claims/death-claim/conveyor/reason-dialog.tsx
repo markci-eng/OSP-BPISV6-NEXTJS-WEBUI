@@ -31,13 +31,29 @@
 // Picking from a list is a browsing gesture and people make it carelessly; the
 // claims this screen serves are somebody's death benefit. The second press is
 // cheap and it is the one that means it.
+//
+// ON A PHONE, A BOTTOM SHEET OF RADIO ROWS — option A of the mock-up (user,
+// 2026-10-02). The dropdown there was a 36px target that opened the phone's
+// own wheel, with two small buttons in the corner. The sheet is the History
+// sheet's, the grounds are all on show as rows straight on it (no card around
+// them), and Cancel and the commit sit at the foot where the thumb is. The rows
+// are kept short enough that "Other" is on screen without scrolling.
 
-import { useEffect, useState } from "react";
-import { Box, Flex, NativeSelect, Text, Textarea } from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Box,
+  Flex,
+  NativeSelect,
+  Text,
+  Textarea,
+  useBreakpointValue,
+} from "@chakra-ui/react";
 import { PrimarySmButton, SecondarySmButton } from "osp-ui-kit";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
+import { BottomSheet } from "../../components/bottom-sheet";
 import { SectionPopup } from "../../components/section-popup";
 import { SectionTitle } from "../../components/section-title";
+import { FieldError, SheetTextArea } from "../../components/sheet-picker";
 import {
   OTHER_DENIAL_REASON,
   type DenialReason,
@@ -77,6 +93,14 @@ export function ReasonDialog({
   const [code, setCode] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * Below `lg`, where the claim's rail becomes the quick bar — the same line
+   * every phone form on this screen switches at. Both shells stay mounted and
+   * this only picks which one `open` reaches; see `SectionPopup`.
+   */
+  const isPhone = useBreakpointValue({ base: true, lg: false }) ?? false;
 
   // CLEARED EVERY TIME IT OPENS. The dialog is mounted for the life of the page
   // — see `SectionPopup` — so without this, the reason chosen for the last claim
@@ -92,6 +116,17 @@ export function ReasonDialog({
 
   const chosen = reasons.find((reason) => reason.code === code);
   const isOther = code === OTHER_DENIAL_REASON;
+
+  // THE PHONE'S TEXT BOX OPENS UNDER "OTHER" — brought into view without the
+  // focus scrolling the sheet past it, so the row and its radio stay on screen
+  // above the box (user, 2026-10-02: "don't hide the radio button of other").
+  useEffect(() => {
+    if (!open || !isPhone || !isOther) return;
+    const box = noteRef.current;
+    if (!box) return;
+    box.focus({ preventScroll: true });
+    box.scrollIntoView({ block: "nearest" });
+  }, [open, isPhone, isOther]);
 
   /**
    * The denial's red, forced past the kit's own primary.
@@ -110,6 +145,8 @@ export function ReasonDialog({
   const destructiveCss = destructive
     ? {
         background: `${BRAND_COLORS.destructiveRed} !important`,
+        // The kit's green edge too, which showed as a ring around the red.
+        borderColor: `${BRAND_COLORS.destructiveRed} !important`,
         "&:hover": { background: "#A11B29 !important" },
         "&:active": { background: "#8C1724 !important" },
       }
@@ -129,95 +166,214 @@ export function ReasonDialog({
     onConfirm(isOther ? note.trim() : (chosen?.label ?? code));
   };
 
+  const pick = (next: string) => {
+    setCode(next);
+    setError(null);
+  };
+
+  /** Red only on the denial — the same rule as the commit button. */
+  const accent = destructive
+    ? BRAND_COLORS.destructiveRed
+    : BRAND_COLORS.primaryGreen;
+
   return (
-    <SectionPopup
-      title={title}
-      open={open}
-      onClose={onClose}
-      // NARROW, because this is a form of two fields and not a table. The
-      // look-up default of 840 would stretch one dropdown across most of a
-      // laptop screen with its label stranded at the far left.
-      maxW="520px"
-    >
-      <SectionTitle title={title} subtitle={subtitle} />
+    <>
+      <BottomSheet
+        title={
+          <Box as="span" display="block">
+            {title}
+            <Text
+              as="span"
+              display="block"
+              fontSize="xs"
+              fontWeight="500"
+              color="gray.500"
+            >
+              {subtitle}
+            </Text>
+          </Box>
+        }
+        open={open && isPhone}
+        onClose={onClose}
+        footer={
+          <Flex gap={2.5}>
+            <SecondarySmButton flex="1" h="42px" minH="42px" onClick={onClose}>
+              Cancel
+            </SecondarySmButton>
+            <PrimarySmButton
+              flex="1"
+              h="42px"
+              minH="42px"
+              onClick={confirm}
+              css={destructiveCss}
+            >
+              {confirmText}
+            </PrimarySmButton>
+          </Flex>
+        }
+      >
+        {/* STRAIGHT ON THE SHEET, NO CARD (user, 2026-10-02) — edge to edge,
+            hairlines between. */}
+        <Box role="radiogroup" aria-label={`Reason — ${title}`} mx={-4}>
+          {reasons.map((reason) => {
+            const on = reason.code === code;
+            return (
+              <Flex
+                key={reason.code}
+                as="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => pick(reason.code)}
+                align="flex-start"
+                gap={3}
+                w="full"
+                minH="44px"
+                px={4}
+                py="11px"
+                textAlign="left"
+                cursor="pointer"
+                _notFirst={{ borderTopWidth: "1px", borderColor: "gray.200" }}
+                _focusVisible={{
+                  outline: "2px solid",
+                  outlineColor: BRAND_COLORS.primaryGreen,
+                  outlineOffset: "-2px",
+                }}
+              >
+                <Flex
+                  w="20px"
+                  h="20px"
+                  mt="1px"
+                  flexShrink={0}
+                  align="center"
+                  justify="center"
+                  borderRadius="full"
+                  borderWidth="2px"
+                  borderColor={on ? accent : "gray.300"}
+                >
+                  {on && <Box w="10px" h="10px" borderRadius="full" bg={accent} />}
+                </Flex>
+                <Box flex="1" minW={0}>
+                  <Text fontSize="13.5px" fontWeight="600" color="gray.800">
+                    {reason.label}
+                  </Text>
+                  {on && reason.code !== OTHER_DENIAL_REASON && (
+                    <Text fontSize="11.5px" color="gray.500" mt="3px">
+                      {reason.description}
+                    </Text>
+                  )}
+                </Box>
+              </Flex>
+            );
+          })}
+        </Box>
 
-      <Text fontSize="xs" fontWeight="700" color="gray.600" mb={1}>
-        Reason
-      </Text>
-      <NativeSelect.Root size="sm">
-        <NativeSelect.Field
-          aria-label={`Reason — ${title}`}
-          h="36px"
-          borderRadius="lg"
-          bg="white"
-          value={code}
-          onChange={(event) => {
-            setCode(event.currentTarget.value);
-            setError(null);
-          }}
-        >
-          {/* AN EMPTY FIRST OPTION, so the field opens on no answer rather than
-              on the first ground in the list. A select that arrives pre-filled
-              is an answer nobody chose. */}
-          <option value="">Choose a reason…</option>
-          {reasons.map((reason) => (
-            <option key={reason.code} value={reason.code}>
-              {reason.label}
-            </option>
-          ))}
-        </NativeSelect.Field>
-        <NativeSelect.Indicator />
-      </NativeSelect.Root>
+        {isOther && (
+          <Box mt={2}>
+            <SheetTextArea
+              ref={noteRef}
+              label="In your own words"
+              value={note}
+              rows={3}
+              onChange={(event) => {
+                setNote(event.currentTarget.value);
+                setError(null);
+              }}
+            />
+          </Box>
+        )}
 
-      {/* WHEN THE CHOSEN GROUND APPLIES — the line that would otherwise sit on
-          every option, shown for the one that was picked. */}
-      {chosen && !isOther && (
-        <Text fontSize="xs" color="gray.500" mt={1.5}>
-          {chosen.description}
+        {error && <FieldError>{error}</FieldError>}
+      </BottomSheet>
+
+      <SectionPopup
+        title={title}
+        open={open && !isPhone}
+        onClose={onClose}
+        // NARROW, because this is a form of two fields and not a table. The
+        // look-up default of 840 would stretch one dropdown across most of a
+        // laptop screen with its label stranded at the far left.
+        maxW="520px"
+      >
+        <SectionTitle title={title} subtitle={subtitle} />
+
+        <Text fontSize="xs" fontWeight="700" color="gray.600" mb={1}>
+          Reason
         </Text>
-      )}
-
-      {isOther && (
-        <Box mt={3}>
-          <Text fontSize="xs" fontWeight="700" color="gray.600" mb={1}>
-            In your own words
-          </Text>
-          <Textarea
-            value={note}
+        <NativeSelect.Root size="sm">
+          <NativeSelect.Field
+            aria-label={`Reason — ${title}`}
+            h="36px"
+            borderRadius="lg"
+            bg="white"
+            value={code}
             onChange={(event) => {
-              setNote(event.currentTarget.value);
+              setCode(event.currentTarget.value);
               setError(null);
             }}
-            placeholder={chosen?.description}
-            rows={3}
-            fontSize="sm"
-            resize="vertical"
-          />
-        </Box>
-      )}
+          >
+            {/* AN EMPTY FIRST OPTION, so the field opens on no answer rather than
+                on the first ground in the list. A select that arrives pre-filled
+                is an answer nobody chose. */}
+            <option value="">Choose a reason…</option>
+            {reasons.map((reason) => (
+              <option key={reason.code} value={reason.code}>
+                {reason.label}
+              </option>
+            ))}
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
 
-      {/* INLINE, NOT A DISABLED BUTTON. A greyed-out control says something is
-          wrong without saying what. */}
-      {error && (
-        <Text fontSize="xs" color={BRAND_COLORS.destructiveRed} mt={2}>
-          {error}
-        </Text>
-      )}
+        {/* WHEN THE CHOSEN GROUND APPLIES — the line that would otherwise sit on
+            every option, shown for the one that was picked. */}
+        {chosen && !isOther && (
+          <Text fontSize="xs" color="gray.500" mt={1.5}>
+            {chosen.description}
+          </Text>
+        )}
 
-      <Flex justify="flex-end" gap={2} mt={5}>
-        <SecondarySmButton onClick={onClose}>Cancel</SecondarySmButton>
-        <PrimarySmButton
-          onClick={confirm}
-          // THE ONE RED BUTTON ON THE SCREEN, and only on the denial — see
-          // `destructive` and `destructiveCss`. Everywhere else the primary is
-          // brand green, because everywhere else the primary action is the one
-          // you want taken.
-          css={destructiveCss}
-        >
-          {confirmText}
-        </PrimarySmButton>
-      </Flex>
-    </SectionPopup>
+        {isOther && (
+          <Box mt={3}>
+            <Text fontSize="xs" fontWeight="700" color="gray.600" mb={1}>
+              In your own words
+            </Text>
+            <Textarea
+              value={note}
+              onChange={(event) => {
+                setNote(event.currentTarget.value);
+                setError(null);
+              }}
+              placeholder={chosen?.description}
+              rows={3}
+              fontSize="sm"
+              resize="vertical"
+            />
+          </Box>
+        )}
+
+        {/* INLINE, NOT A DISABLED BUTTON. A greyed-out control says something is
+            wrong without saying what. */}
+        {error && (
+          <Text fontSize="xs" color={BRAND_COLORS.destructiveRed} mt={2}>
+            {error}
+          </Text>
+        )}
+
+        <Flex justify="flex-end" gap={2} mt={5}>
+          <SecondarySmButton onClick={onClose}>Cancel</SecondarySmButton>
+          <PrimarySmButton
+            onClick={confirm}
+            // THE ONE RED BUTTON ON THE SCREEN, and only on the denial — see
+            // `destructive` and `destructiveCss`. Everywhere else the primary is
+            // brand green, because everywhere else the primary action is the one
+            // you want taken.
+            css={destructiveCss}
+          >
+            {confirmText}
+          </PrimarySmButton>
+        </Flex>
+      </SectionPopup>
+    </>
   );
 }
 

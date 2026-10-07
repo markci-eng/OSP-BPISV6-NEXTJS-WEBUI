@@ -84,6 +84,7 @@ import {
   getManualServices,
   getResolvedDiscrepancy,
   getApprovedBilling,
+  getPostedDeduction,
   getSavedServiceRecord,
   getVerifiedBilling,
   isPlanTerminated,
@@ -122,42 +123,57 @@ export {
 
 /* =============================== the model =============================== */
 
-/** Where a billing has got to. */
-export type BillingStage = "for-process" | "processed" | "verified" | "approved";
+/**
+ * Where a billing has got to.
+ *
+ * `for-deduction` IS A FRANCHISE'S STOP BETWEEN PROCESS AND VERIFY (user,
+ * 2026-10-01). A processed franchise billing waits there until its royalty and
+ * loan deductions are posted on the Franchise Deductions page, and only then
+ * reaches For Verification — so by approval the deduction has been verified too.
+ * A company-owned chapel's billing never stops there.
+ */
+export type BillingStage =
+  | "for-process"
+  | "for-deduction"
+  | "processed"
+  | "verified"
+  | "approved";
 
 export const BILLING_STAGES: BillingStage[] = [
   "for-process",
+  "for-deduction",
   "processed",
   "verified",
   "approved",
 ];
 
 /**
- * The stages WORKED ON THIS SCREEN — every stage except `verified`.
+ * The stages WORKED ON THIS SCREEN — For Process and For Verification.
  *
  * APPROVAL LEFT THE CONVEYOR (user, 2026-09-15). A verified billing is one
- * waiting for a supervisor's decision, and that decision is now made on
- * `/claims/approvals` beside the death claims awaiting the same person. So the
- * stage strip offers Process, Verify and Endorse, and the queue between the
- * second and the third is reached from the Approvals page instead.
+ * waiting for a supervisor's decision, and that decision is made on
+ * `/claims/approvals` beside the death claims awaiting the same person.
  *
- * THE STAGE ITSELF IS UNTOUCHED, and that distinction is the whole reason this
- * is a second array rather than a shorter {@link BILLING_STAGES}. Verifying a
- * billing still moves it to `verified`; billings still SIT there; approving one
- * still moves it to `approved` and into For Endorsement below. Nothing about the
- * pipeline changed — only which screen works that one step of it. Drop
- * `verified` from the model and the Approvals page's service queue would be
- * reading an empty stage.
+ * AND SO DID ENDORSEMENT (user, 2026-09-30: "upon approval the system will
+ * automatically endorse"). `approveBilling` writes the endorsement with the
+ * approval, so an approved billing is finished and no queue here serves it.
+ * The strip is For Process · Verify.
+ *
+ * THE STAGES THEMSELVES ARE UNTOUCHED, and that distinction is the whole reason
+ * this is a second array rather than a shorter {@link BILLING_STAGES}. Verifying
+ * a billing still moves it to `verified`, where it sits for the Approvals page;
+ * approving one still moves it to `approved`. Only which screen works each step
+ * changed. Drop `verified` from the model and the Approvals page's service queue
+ * would be reading an empty stage.
  *
  * This is the gating point `StageSwitch` was written to expect; see the note at
  * the top of `conveyor/stage-switch`.
  */
-export const CONVEYOR_STAGES: BillingStage[] = BILLING_STAGES.filter(
-  (stage) => stage !== "verified",
-);
+export const CONVEYOR_STAGES: BillingStage[] = ["for-process", "processed"];
 
 export const BILLING_STAGE_LABELS: Record<BillingStage, string> = {
   "for-process": "For Process",
+  "for-deduction": "For Deduction",
   processed: "Processed",
   verified: "Verified",
   approved: "Approved",
@@ -185,6 +201,7 @@ export const BILLING_STAGE_LABELS: Record<BillingStage, string> = {
  */
 export const BILLING_QUEUE_LABELS: Record<BillingStage, string> = {
   "for-process": "For Process",
+  "for-deduction": "For Deduction",
   processed: "For Verification",
   verified: "For Approval",
   approved: "For Endorsement",
@@ -204,6 +221,8 @@ export const BILLING_QUEUE_LABELS: Record<BillingStage, string> = {
  */
 export const BILLING_STAGE_ROUTES: Record<BillingStage, string> = {
   "for-process": "/claims/service-payables/for-process",
+  // Its own page, outside Service Payables — see `franchise-deductions/`.
+  "for-deduction": "/claims/franchise-deductions",
   processed: "/claims/service-payables/for-verification",
   verified: "/claims/service-payables/for-approval",
   approved: "/claims/service-payables/for-endorsement",
@@ -943,6 +962,32 @@ export interface ServiceBilling {
    * nobody's name on it yet.
    */
   processedBy?: string;
+  /**
+   * A franchise billing's posted deductions — absent until they are posted,
+   * and always absent on a company-owned chapel's. See {@link BillingDeduction}.
+   */
+  deduction?: BillingDeduction;
+}
+
+/**
+ * What a franchise billing's payable comes to after its deductions.
+ *
+ * `totalCSP` STAYS THE GROSS. It is what the chapel's services are worth and
+ * every count in this module adds it up; the deductions are what the company
+ * keeps back from paying it, so the NET is this record's own figure.
+ */
+export interface BillingDeduction {
+  royalty: number;
+  loan: number;
+  net: number;
+  /** Who posted it and when; absent on a {@link seeded} one. */
+  postedBy?: string;
+  datePosted?: string;
+  /**
+   * STAND-IN for a billing verified before the deduction step existed — see
+   * {@link seededRoyalty}. Never editable, and never written to the store.
+   */
+  seeded: boolean;
 }
 
 /** A territory as the dashboard's cards show it, for one stage. */
@@ -2078,6 +2123,26 @@ export function getServiceBillings(): ServiceBilling[] {
       if (complete) stage = "processed";
     }
 
+    // Read off the chapel unless the billing was raised by hand, in which case
+    // it is a franchise whatever the chapel says — see `isFranchise` below.
+    const isFranchise = Boolean(franchise) || (chapel?.isFranchise ?? false);
+    const posted = getPostedDeduction(billingCode);
+
+    // ── HELD FOR DEDUCTION ──
+    //
+    // A PROCESSED FRANCHISE BILLING DOES NOT REACH VERIFICATION until its
+    // royalty and loan deductions are posted (user, 2026-10-01). It waits at
+    // `for-deduction`, worked on the Franchise Deductions page, and comes back
+    // to `processed` the moment the deduction is posted. Read BEFORE the
+    // verified rule below so a held billing can never be signed past it.
+    //
+    // ONLY FROM `processed`. A billing already verified or approved on file was
+    // signed before this step existed and is left where its signatures put it;
+    // its deduction is a stand-in — see {@link seededRoyalty}.
+    if (stage === "processed" && isFranchise && !posted) {
+      stage = "for-deduction";
+    }
+
     // ── VERIFIED THIS SESSION ──
     //
     // THE BILLING'S OWN SIGNATURE, and nothing else (user, 2026-08-27). It used
@@ -2115,6 +2180,20 @@ export function getServiceBillings(): ServiceBilling[] {
       stage = "approved";
     }
 
+    const totalCSP = billable.reduce((sum, s) => sum + s.csp, 0);
+    const deduction: BillingDeduction | undefined = posted
+      ? {
+          royalty: posted.royalty,
+          loan: posted.loan,
+          net: totalCSP - posted.royalty - posted.loan,
+          postedBy: posted.postedBy,
+          datePosted: posted.dateUpdated ?? posted.datePosted,
+          seeded: false,
+        }
+      : isFranchise && (stage === "verified" || stage === "approved")
+        ? seededDeduction(billingCode, chapelCode, totalCSP)
+        : undefined;
+
     billings.push({
       billingCode,
       billingNo,
@@ -2136,7 +2215,7 @@ export function getServiceBillings(): ServiceBilling[] {
       // read off the chapel, and a paper franchise's mortuary may resolve to no
       // chapel — which would leave a hand-raised franchise billing reporting
       // itself as a company-owned chapel's.
-      isFranchise: Boolean(franchise) || (chapel?.isFranchise ?? false),
+      isFranchise,
       isManualFranchise:
         Boolean(franchise) || (chapel?.isManualFranchise ?? false),
       isPaperFranchise: Boolean(franchise),
@@ -2144,13 +2223,88 @@ export function getServiceBillings(): ServiceBilling[] {
       services: billable,
       deficient,
       discrepant,
-      totalCSP: billable.reduce((sum, s) => sum + s.csp, 0),
+      totalCSP,
       terminatedCount,
       processedBy,
+      deduction,
     });
   }
 
   return billings;
+}
+
+/* ========================== franchise deductions ========================== */
+//
+// A franchise's payable carries two DEDUCTIONS (user, 2026-10-01): the ROYALTY
+// fee, typed in on the Franchise Deductions page by somebody outside the service
+// payables team, and the LOAN deduction, which the backend works out on its own.
+
+/**
+ * STAND-IN for the loan system — what the franchisee's loan takes out of this
+ * billing, read REAL-TIME (user, 2026-10-01: "it should be real-time"). Never
+ * filled in late, and ZERO is an ordinary answer: a franchisee with no loan.
+ *
+ * Spread by chapel so a given franchise always has the same loan, and capped at
+ * a tenth of the gross so a stand-in can never swallow a payable. The real
+ * backend call replaces this function and nothing else; its logic is being
+ * worked out separately.
+ */
+export function liveLoanFor(chapelCode: string, gross: number): number {
+  const h = hash(`loan:${chapelCode}`);
+  if (h % 4 === 0) return 0;
+  const amount = 1500 + (h % 8) * 750;
+  return Math.min(amount, Math.floor(gross / 10 / 50) * 50);
+}
+
+/**
+ * STAND-IN for a franchise billing VERIFIED BEFORE THIS STEP EXISTED — it was
+ * signed with no deduction on record, and a verified billing showing a blank
+ * royalty would read as a gap in the data rather than as history. 5–8% of the
+ * gross, to the ten pesos. Never written to the store, and never editable.
+ */
+function seededRoyalty(billingCode: string, gross: number): number {
+  const rate = 0.05 + (hash(`royalty:${billingCode}`) % 4) / 100;
+  return Math.round((gross * rate) / 10) * 10;
+}
+
+function seededDeduction(
+  billingCode: string,
+  chapelCode: string,
+  gross: number,
+): BillingDeduction {
+  const royalty = seededRoyalty(billingCode, gross);
+  const loan = liveLoanFor(chapelCode, gross);
+  return { royalty, loan, net: gross - royalty - loan, seeded: true };
+}
+
+/**
+ * Whether a franchise billing's deduction can still be typed over — while it is
+ * waiting for one, and after posting until the verifier signs (user,
+ * 2026-10-01: "it can be edited as long as it is not verified").
+ */
+export function isDeductionEditable(billing: ServiceBilling): boolean {
+  return (
+    billing.isFranchise &&
+    (billing.stage === "for-deduction" ||
+      (billing.stage === "processed" && !billing.deduction?.seeded))
+  );
+}
+
+/**
+ * Whether a typed royalty may be posted. It is required and NEVER ZERO (user,
+ * 2026-10-01), and the two deductions together may not exceed the gross.
+ */
+export function isValidRoyalty(
+  royalty: number | null,
+  gross: number,
+  loan: number,
+): royalty is number {
+  return (
+    royalty !== null &&
+    Number.isFinite(royalty) &&
+    royalty > 0 &&
+    gross - loan - royalty >= 0
+  );
 }
 
 // WHICH BILLINGS HAVE ALREADY BEEN BILLED IS NO LONGER ASKED HERE.

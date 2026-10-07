@@ -44,7 +44,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Box, Flex, Text } from "@chakra-ui/react";
-import { LuBadgeCheck, LuInbox, LuSearchCheck, LuSend } from "react-icons/lu";
+import {
+  LuBadgeCheck,
+  LuInbox,
+  LuReceipt,
+  LuSearchCheck,
+  LuSend,
+} from "react-icons/lu";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import {
   BILLING_QUEUE_LABELS,
@@ -65,6 +71,7 @@ import {
  */
 const STAGE_ICONS: Record<BillingStage, ReactNode> = {
   "for-process": <LuInbox size={17} />,
+  "for-deduction": <LuReceipt size={17} />,
   processed: <LuSearchCheck size={17} />,
   verified: <LuBadgeCheck size={17} />,
   approved: <LuSend size={17} />,

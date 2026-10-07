@@ -43,6 +43,7 @@ import {
   type RefTermiStatRecord,
   type TerritoryRecord,
 } from "./models";
+import { CURRENT_USER } from "./current-user";
 
 const AUDIT = { user: "system", date: "2026-01-01T00:00:00" };
 
@@ -162,6 +163,31 @@ const BULK_BRANCH = [
   { code: "MANILA", territory: "NCT2" },
 ];
 
+/**
+ * When the current user worked each of their bulk claims, by `seq`.
+ *
+ * Written out rather than derived so the spread is deliberate: this week of
+ * 2026-09-28 holds three (one sent for approval, one approved, one denied),
+ * the rest of September five more, August the remaining six. Only claims `openedBy` gives the current
+ * user appear here — see `buildBulkClaim`.
+ */
+const USER_WORKED_ON: Record<number, string> = {
+  24: "2026-09-28T10:30:00",
+  26: "2026-09-22T09:15:00",
+  28: "2026-09-16T14:00:00",
+  30: "2026-09-08T11:20:00",
+  32: "2026-08-27T15:45:00",
+  34: "2026-08-12T09:40:00",
+  35: "2026-09-29T08:50:00",
+  36: "2026-09-28T16:10:00",
+  37: "2026-09-24T10:05:00",
+  38: "2026-09-18T13:30:00",
+  39: "2026-08-31T09:00:00",
+  40: "2026-08-20T14:25:00",
+  41: "2026-08-14T11:50:00",
+  42: "2026-08-05T10:10:00",
+};
+
 const BULK_PLAN = ["A5M", "B5M10", "RC5M4", "C5M8", "D5M9", "RF5M8", "RD5M5", "NF5M4"];
 
 /** Natural causes file late (nature RC); the accidental ones file fast (SC). */
@@ -279,22 +305,54 @@ function buildBulkClaim(index: number, stage: "pending" | "endorsed" | "decided"
     auditDate: filedAt,
   };
 
+  // WHO OPENED IT. Every decided claim, and every other endorsed one, was
+  // processed by the current user — so their history on the death claim screen
+  // has Approved, Denied and For Approval claims on file from the first load,
+  // not only what this session adds. The rest stay with the seed's processor,
+  // so the history is visibly theirs rather than everything.
+  const openedBy =
+    stage === "decided" || (stage === "endorsed" && seq % 2 === 0)
+      ? CURRENT_USER
+      : PROCESSOR;
+
+  // WHEN IT WAS WORKED. The current user's claims were worked recently — a
+  // backlog filed in May to July and cleared in August and September — so the
+  // history card's week, month and year each have something on file. The rest
+  // keep the filing date, as before.
+  const workedOn =
+    openedBy === CURRENT_USER ? USER_WORKED_ON[seq] ?? filedAt : filedAt;
+
   const header: ClaimsHdrDCRecord | null =
     stage === "pending"
       ? null
       : {
           claimNo,
           claimRequest: requestNo,
-          auditUser: PROCESSOR,
-          auditDate: filedAt,
+          auditUser: openedBy,
+          auditDate: workedOn,
           isQuitClaim: false,
           isVerified: true,
-          verifiedBy: PROCESSOR,
-          verifiedDate: filedAt,
+          verifiedBy: openedBy,
+          verifiedDate: workedOn,
           benefits,
         };
 
-  return { person, planholder, beneficiary, request, header, requestNo, stage };
+  // THE PAYEE, filed with the request — every stage has one, a pending claim
+  // included, because a request cannot be filed without it. The plan's own
+  // beneficiary claims it, which is the ordinary case. A denied claim's release
+  // is held, the same as the showcase's denied claim.
+  const payee: ClaimsPayeeRecord = {
+    idx: 100 + seq,
+    claimRequest: requestNo,
+    ...(header ? { claimNo } : {}),
+    payeeOneId: beneficiary.personId,
+    amount: [56000, 60000, 85000, 100000, 125000][seq % 5],
+    relation: beneficiary.relation,
+    isOnHold: status === "DN",
+    ...(status === "DN" ? { remarks: "Claim denied — release suspended." } : {}),
+  };
+
+  return { person, planholder, beneficiary, request, header, payee, requestNo, stage };
 }
 
 const bulkClaims = [
@@ -314,6 +372,7 @@ const bulkRequests = bulkClaims.map((c) => c.request);
 const bulkHeaders = bulkClaims
   .map((c) => c.header)
   .filter((h): h is ClaimsHdrDCRecord => h !== null);
+const bulkPayees = bulkClaims.map((c) => c.payee);
 
 /**
  * The bulk claims that have been decided — what the death-claim dashboard's
@@ -1222,10 +1281,9 @@ export const claimsHdrDCSeed: ClaimsHdrDCRecord[] = [
   { claimNo: "NCT2DC26009802", claimRequest: "CLMANILA2026ECAB000018", auditUser: PROCESSOR, auditDate: "2026-06-25T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-06-26T09:00:00", benefits: "ECAB" },
   { claimNo: "MCETDC26009803", claimRequest: "CLDAVAO2026ADB000019", auditUser: PROCESSOR, auditDate: "2026-07-02T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-07-03T09:00:00", benefits: "ADB" },
   { claimNo: "VWT1DC26009804", claimRequest: "CLILOILO2026CAB000020", auditUser: PROCESSOR, auditDate: "2026-07-08T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-07-09T09:00:00", benefits: "CAB" },
-  // The showcase plan holder's three death claims. The pending one carries a
-  // header too — not because a processor has opened it, but because that is
-  // what joins the request to its payee (see `payeeRecordsForRequest`); it is
-  // unverified, and the UI shows the reference until a claim no is issued.
+  // The showcase plan holder's three death claims. The pending one carries an
+  // unverified header, and the UI shows the reference until a claim no is
+  // issued. (It no longer needs one for its payee — payees join by request.)
   { claimNo: "NCT1DC26009810", claimRequest: "CLQCITY2026CAB000406", auditUser: PROCESSOR, auditDate: "2026-07-14T09:00:00", isQuitClaim: false, isVerified: false, benefits: "CAB" },
   { claimNo: "NCT1DC26009811", claimRequest: "CLQCITY2026CAB000407", auditUser: PROCESSOR, auditDate: "2026-07-15T09:00:00", isQuitClaim: false, isVerified: true, verifiedBy: PROCESSOR, verifiedDate: "2026-07-16T10:15:00", benefits: "CAB" },
   { claimNo: "NCT1DC26009812", claimRequest: "CLQCITY2026USB000409", auditUser: "Diana Lim", auditDate: "2026-07-16T09:30:00", isQuitClaim: false, isVerified: true, verifiedBy: "Diana Lim", verifiedDate: "2026-07-17T08:40:00", benefits: "USB" },
@@ -1235,36 +1293,60 @@ export const claimsHdrDCSeed: ClaimsHdrDCRecord[] = [
 
 /* ============================== ClaimsPayee ============================== */
 
-// One payee row per death claim — the person(s) claiming that ClaimNo. A claim
-// can name a second (joint) payee via payeeTwoId.
+// AT LEAST ONE PAYEE ROW PER CLAIM REQUEST — the person(s) claiming it, filed
+// with the request. A claim can name a second (joint) payee via payeeTwoId.
+// `claimNo` is carried once a death-claim header exists.
 export const claimsPayeeSeed: ClaimsPayeeRecord[] = [
-  { idx: 1, claimNo: "NCT1DC26009785", payeeOneId: "P-016", payeeTwoId: "P-028", amount: 125000, relation: "Spouse", isOnHold: false },
-  { idx: 2, claimNo: "VCTDC26009786", payeeOneId: "P-018", amount: 56000, relation: "Child", isOnHold: false },
-  { idx: 3, claimNo: "NCT2DC26009787", payeeOneId: "P-017", amount: 165000, relation: "Spouse", isOnHold: true, remarks: "Payment held — awaiting valid ID of claimant." },
-  { idx: 4, claimNo: "CLBZTDC26009788", payeeOneId: "P-019", amount: 105000, relation: "Child", isOnHold: false },
-  { idx: 5, claimNo: "VWT1DC26009789", payeeOneId: "P-020", amount: 85000, relation: "Spouse", isOnHold: false },
-  { idx: 6, claimNo: "CLT1DC26009790", payeeOneId: "P-021", amount: 60000, relation: "Child", isOnHold: false },
-  { idx: 7, claimNo: "NCT2DC26009791", payeeOneId: "P-022", amount: 100000, relation: "Spouse", isOnHold: false },
-  { idx: 8, claimNo: "BTDC26009792", payeeOneId: "P-023", amount: 125000, relation: "Spouse", isOnHold: false },
-  { idx: 9, claimNo: "CLBZTDC26009793", payeeOneId: "P-024", amount: 57000, relation: "Child", isOnHold: false },
-  { idx: 10, claimNo: "CLT2DC26009794", payeeOneId: "P-025", amount: 56000, relation: "Child", isOnHold: false },
-  { idx: 11, claimNo: "CLT1DC26009795", payeeOneId: "P-026", amount: 85000, relation: "Spouse", isOnHold: false },
-  { idx: 12, claimNo: "MCETDC26009796", payeeOneId: "P-027", payeeTwoId: "P-029", amount: 80000, relation: "Parent", isOnHold: true, remarks: "Payout on hold pending settlement of prior dismemberment claims." },
-  { idx: 13, claimNo: "CLT2DC26009797", payeeOneId: "P-028", amount: 60000, relation: "Child", isOnHold: false },
-  { idx: 14, claimNo: "MCETDC26009798", payeeOneId: "P-029", amount: 165000, relation: "Parent", isOnHold: false },
-  { idx: 15, claimNo: "VETDC26009799", payeeOneId: "P-030", amount: 12500, relation: "Parent", isOnHold: false },
+  { idx: 1, claimRequest: "CLQCITY2026CAB000001", claimNo: "NCT1DC26009785", payeeOneId: "P-016", payeeTwoId: "P-028", amount: 125000, relation: "Spouse", isOnHold: false },
+  { idx: 2, claimRequest: "CLCEBU2026CAB000002", claimNo: "VCTDC26009786", payeeOneId: "P-018", amount: 56000, relation: "Child", isOnHold: false },
+  { idx: 3, claimRequest: "CLMANILA2026CAB000003", claimNo: "NCT2DC26009787", payeeOneId: "P-017", amount: 165000, relation: "Spouse", isOnHold: true, remarks: "Payment held — awaiting valid ID of claimant." },
+  { idx: 4, claimRequest: "CLBATANGAS2026ECAB000004", claimNo: "CLBZTDC26009788", payeeOneId: "P-019", amount: 105000, relation: "Child", isOnHold: false },
+  { idx: 5, claimRequest: "CLILOILO2026CAB000005", claimNo: "VWT1DC26009789", payeeOneId: "P-020", amount: 85000, relation: "Spouse", isOnHold: false },
+  { idx: 6, claimRequest: "CLSANFER2026CAB000006", claimNo: "CLT1DC26009790", payeeOneId: "P-021", amount: 60000, relation: "Child", isOnHold: false },
+  { idx: 7, claimRequest: "CLMANILA2026CAB000007", claimNo: "NCT2DC26009791", payeeOneId: "P-022", amount: 100000, relation: "Spouse", isOnHold: false },
+  { idx: 8, claimRequest: "CLNAGA2026CAB000008", claimNo: "BTDC26009792", payeeOneId: "P-023", amount: 125000, relation: "Spouse", isOnHold: false },
+  { idx: 9, claimRequest: "CLLUCENA2026USB000009", claimNo: "CLBZTDC26009793", payeeOneId: "P-024", amount: 57000, relation: "Child", isOnHold: false },
+  { idx: 10, claimRequest: "CLVIGAN2026CAB000010", claimNo: "CLT2DC26009794", payeeOneId: "P-025", amount: 56000, relation: "Child", isOnHold: false },
+  { idx: 11, claimRequest: "CLANGELES2026CAB000011", claimNo: "CLT1DC26009795", payeeOneId: "P-026", amount: 85000, relation: "Spouse", isOnHold: false },
+  { idx: 12, claimRequest: "CLDAVAO2026ADB000012", claimNo: "MCETDC26009796", payeeOneId: "P-027", payeeTwoId: "P-029", amount: 80000, relation: "Parent", isOnHold: true, remarks: "Payout on hold pending settlement of prior dismemberment claims." },
+  { idx: 13, claimRequest: "CLBAGUIO2026ADB000013", claimNo: "CLT2DC26009797", payeeOneId: "P-028", amount: 60000, relation: "Child", isOnHold: false },
+  { idx: 14, claimRequest: "CLCDO2026ADB000014", claimNo: "MCETDC26009798", payeeOneId: "P-029", amount: 165000, relation: "Parent", isOnHold: false },
+  { idx: 15, claimRequest: "CLTACLOBAN2026ADB000015", claimNo: "VETDC26009799", payeeOneId: "P-030", amount: 12500, relation: "Parent", isOnHold: false },
   // Payees on the endorsed (For Approval) death claims.
-  { idx: 16, claimNo: "NCT1DC26009800", payeeOneId: "P-016", amount: 56000, relation: "Spouse", isOnHold: false },
-  { idx: 17, claimNo: "VCTDC26009801", payeeOneId: "P-018", amount: 85000, relation: "Child", isOnHold: false },
-  { idx: 18, claimNo: "NCT2DC26009802", payeeOneId: "P-022", amount: 125000, relation: "Spouse", isOnHold: false },
-  { idx: 19, claimNo: "MCETDC26009803", payeeOneId: "P-027", amount: 60000, relation: "Parent", isOnHold: false },
-  { idx: 20, claimNo: "VWT1DC26009804", payeeOneId: "P-020", amount: 100000, relation: "Spouse", isOnHold: false },
+  { idx: 16, claimRequest: "CLQCITY2026CAB000016", claimNo: "NCT1DC26009800", payeeOneId: "P-016", amount: 56000, relation: "Spouse", isOnHold: false },
+  { idx: 17, claimRequest: "CLCEBU2026CAB000017", claimNo: "VCTDC26009801", payeeOneId: "P-018", amount: 85000, relation: "Child", isOnHold: false },
+  { idx: 18, claimRequest: "CLMANILA2026ECAB000018", claimNo: "NCT2DC26009802", payeeOneId: "P-022", amount: 125000, relation: "Spouse", isOnHold: false },
+  { idx: 19, claimRequest: "CLDAVAO2026ADB000019", claimNo: "MCETDC26009803", payeeOneId: "P-027", amount: 60000, relation: "Parent", isOnHold: false },
+  { idx: 20, claimRequest: "CLILOILO2026CAB000020", claimNo: "VWT1DC26009804", payeeOneId: "P-020", amount: 100000, relation: "Spouse", isOnHold: false },
   // The showcase plan holder's claims. The main plan is claimed JOINTLY by the
   // widower and the elder child — the two-payee case — and the denied claim on
   // the lapsed plan is on hold with the reason on the record.
-  { idx: 21, claimNo: "NCT1DC26009810", payeeOneId: "P-042", payeeTwoId: "P-043", amount: 165000, relation: "Spouse", isOnHold: false },
-  { idx: 22, claimNo: "NCT1DC26009811", payeeOneId: "P-042", amount: 80000, relation: "Spouse", isOnHold: false },
-  { idx: 23, claimNo: "NCT1DC26009812", payeeOneId: "P-043", amount: 56000, relation: "Child", isOnHold: true, remarks: "Plan lapsed as of due date 01 Feb 2026 — claim denied, release suspended." },
+  { idx: 21, claimRequest: "CLQCITY2026CAB000406", claimNo: "NCT1DC26009810", payeeOneId: "P-042", payeeTwoId: "P-043", amount: 165000, relation: "Spouse", isOnHold: false },
+  { idx: 22, claimRequest: "CLQCITY2026CAB000407", claimNo: "NCT1DC26009811", payeeOneId: "P-042", amount: 80000, relation: "Spouse", isOnHold: false },
+  { idx: 23, claimRequest: "CLQCITY2026USB000409", claimNo: "NCT1DC26009812", payeeOneId: "P-043", amount: 56000, relation: "Child", isOnHold: true, remarks: "Plan lapsed as of due date 01 Feb 2026 — claim denied, release suspended." },
+  // Living-benefit claims — dismemberment and waiver of installment. The plan
+  // holder was alive when these were filed, so the plan holder is the payee.
+  // No death-claim header exists for them, so no claim no.
+  // A WAIVER RELEASES NO CASH — it waives the installments still due — so its
+  // payee row carries 0. The row still exists: a request is never filed
+  // without a payee.
+  { idx: 24, claimRequest: "CLQCITY2025DM000112", payeeOneId: "P-001", amount: 25000, relation: "Self", isOnHold: false },
+  { idx: 25, claimRequest: "CLQCITY2025WOI000098", payeeOneId: "P-001", amount: 0, relation: "Self", isOnHold: false },
+  { idx: 26, claimRequest: "CLQCITY2025DM000067", payeeOneId: "P-001", amount: 25000, relation: "Self", isOnHold: false },
+  { idx: 27, claimRequest: "CLQCITY2025WOI000041", payeeOneId: "P-001", amount: 0, relation: "Self", isOnHold: false },
+  { idx: 28, claimRequest: "CLQCITY2024DM000305", payeeOneId: "P-001", amount: 25000, relation: "Self", isOnHold: false },
+  { idx: 29, claimRequest: "CLQCITY2024WOI000254", payeeOneId: "P-001", amount: 0, relation: "Self", isOnHold: false },
+  { idx: 30, claimRequest: "CLMANILA2026WOI000022", payeeOneId: "P-003", amount: 0, relation: "Self", isOnHold: false },
+  { idx: 31, claimRequest: "CLMANILA2025DM000187", payeeOneId: "P-003", amount: 25000, relation: "Self", isOnHold: false },
+  { idx: 32, claimRequest: "CLBATANGAS2025WOI000143", payeeOneId: "P-004", amount: 0, relation: "Self", isOnHold: false },
+  { idx: 33, claimRequest: "CLQCITY2023DM000401", payeeOneId: "P-041", amount: 25000, relation: "Self", isOnHold: false },
+  { idx: 34, claimRequest: "CLQCITY2024WOI000402", payeeOneId: "P-041", amount: 0, relation: "Self", isOnHold: false },
+  { idx: 35, claimRequest: "CLQCITY2024DM000403", payeeOneId: "P-041", amount: 25000, relation: "Self", isOnHold: false },
+  { idx: 36, claimRequest: "CLQCITY2025WOI000404", payeeOneId: "P-041", amount: 0, relation: "Self", isOnHold: false },
+  { idx: 37, claimRequest: "CLQCITY2026DM000405", payeeOneId: "P-041", amount: 25000, relation: "Self", isOnHold: false },
+  { idx: 38, claimRequest: "CLQCITY2025DM000408", payeeOneId: "P-041", amount: 25000, relation: "Self", isOnHold: false },
+  // The bulk claims' payees — one per request, pending ones included.
+  ...bulkPayees,
 ];
 
 /* ========================= RefPayoutChannel ========================= */

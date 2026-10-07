@@ -33,6 +33,10 @@ import { addressSeed, claimsHdrDCSeed } from "../data/seed";
 // status it was last reported at.
 import { openedClaimPhases, openedClaimReferences } from "./claim-activity";
 import {
+  getRaisedDeficiencies,
+  getWaivedDocumentCodes,
+} from "./planholder-deficiency-store";
+import {
   getClaimEdit,
   getClaimEndorsement,
   getClaimNotes,
@@ -573,6 +577,11 @@ export function getClaimRequests(lpaNo: string): ClaimRequest[] {
       )}`;
     }
 
+    // The payee is filed WITH the request, so every claim request has one —
+    // any type, pending or not. On a death claim it may well not be the
+    // beneficiary; on a living benefit it is the plan holder.
+    view.payees = payeeViewsForRequest(request.requestNo);
+
     // Death claims carry extra header detail (claim no, dates, age). The
     // header comes from the store for claims opened this session, and from the
     // mock database for ones that were already processed.
@@ -581,10 +590,6 @@ export function getClaimRequests(lpaNo: string): ClaimRequest[] {
       view.dateOfDeathISO = request.incidentDateISO.slice(0, 10);
       view.natureOfClaim = natureOfClaim(request);
       view.ageOfDeath = ageOfDeathFor(request);
-
-      // The payee is filed WITH the request, so every death claim has one —
-      // pending or not. It may well not be the beneficiary.
-      view.payees = payeeViewsForRequest(request.requestNo);
 
       const created = getCreatedDeathClaim(request.requestNo);
       const hdr = created
@@ -642,7 +647,7 @@ export function getClaimRequests(lpaNo: string): ClaimRequest[] {
           {
             personId: ph.personId,
             name: toFullName(ph.person.name),
-            relation: "Plan Holder",
+            relation: "Planholder",
             amount: ph.planDetail.contractPrice,
           },
         ];
@@ -707,15 +712,12 @@ function payeePersonIds(p: {
  * has a named payee long before a processor opens its header. The payee is not
  * the beneficiary: it can be someone else entirely.
  *
- * In the source model `ClaimsPayee` references both the request and the header
- * (`ClaimsPayee.ClaimsRequest` / `.ClaimNo`). The seed rows only carry
- * `claimNo`, so the request's header row is used as the join table that
- * `ClaimsRequest` will replace. That is the ONLY reason the seed keeps a header
- * on a pending request — see the note in `death/death-claims-data.ts`.
+ * Joined by `ClaimsPayee.ClaimsRequest`, as the source model does — not
+ * through the header, which a pending request does not have. Never empty for a
+ * request on file: the database refuses to load one without a payee.
  */
 function payeeRecordsForRequest(requestNo: string): ClaimsPayeeRecord[] {
-  const claimNo = db.getDeathClaimByRequest(requestNo)?.claimNo;
-  return claimNo ? db.getPayees(claimNo) : [];
+  return db.getPayeesByRequest(requestNo);
 }
 
 /**
@@ -794,7 +796,9 @@ function toClaimPayees(
         person?.payoutAccounts[0];
       return {
         idx: p.idx,
-        claimNo: p.claimNo,
+        // The request stands in until a header issues a claim no — the same
+        // fallback every claim screen uses for its label.
+        claimNo: p.claimNo ?? p.claimRequest,
         personId: pid,
         name: person ? toFullName(person.name) : pid,
         relation: p.relation,
@@ -851,8 +855,11 @@ export function getClaimPayeesForRequest(requestNo: string): ClaimPayee[] {
       : toClaimPayees(records);
   }
 
-  // No payee on file. A USB claim can name one on the create form, so fall
-  // back to that; otherwise the claim genuinely has no payee yet.
+  // NO PAYEE ON FILE IS AN ERROR — every request on file has one, and the
+  // database will not load otherwise. This covers only a request that is not
+  // on file at all, where the create form's payee is the one there is. An
+  // empty result reaching a screen is a data fault, and the payee sections say
+  // so rather than showing an empty state.
   if (created?.payee) {
     const amount = created.computation.netProceeds;
     return [
@@ -937,7 +944,26 @@ export function getDocumentTypes(): DocumentType[] {
  */
 export function getOutstandingDocumentTypes(personId: string): DocumentType[] {
   const filed = new Set(getPlanholderDocuments(personId).map((d) => d.code));
-  return getDocumentTypes().filter((type) => !filed.has(type.code));
+  // Less what the processor withdrew — see `planholder-deficiency-store`.
+  const waived = getWaivedDocumentCodes(personId);
+  return getDocumentTypes().filter(
+    (type) => !filed.has(type.code) && !waived.has(type.code),
+  );
+}
+
+/**
+ * Every outstanding deficiency's name — the derived list above, then what was
+ * raised by hand and has not been answered by a file. What a return for
+ * compliance is about.
+ */
+export function getOutstandingDeficiencyNames(personId: string): string[] {
+  const filed = new Set(getPlanholderDocuments(personId).map((d) => d.code));
+  return [
+    ...getOutstandingDocumentTypes(personId).map((t) => t.name),
+    ...getRaisedDeficiencies(personId)
+      .filter((d) => !d.code || !filed.has(d.code))
+      .map((d) => d.description),
+  ];
 }
 
 /** Documents filed for a person, joined to their document type. */

@@ -1,23 +1,12 @@
 "use client";
 
 import * as React from "react";
-import {
-  Box,
-  Button,
-  Carousel,
-  Flex,
-  HStack,
-  IconButton,
-  SimpleGrid,
-  Text,
-} from "@chakra-ui/react";
+import { Button, Flex, HStack } from "@chakra-ui/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   Bandage,
   Check,
   CheckCircle,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Files,
   HandCoins,
@@ -38,21 +27,17 @@ import { ApprovalDetailContent } from "./ApprovalDetailContent";
 import { ApprovalStatusBadge } from "./ApprovalStatusBadge";
 import type { ApprovalView } from "../data/types";
 import { useMessageDialog } from "osp-ui-kit";
+import {
+  FilterCards,
+  type FilterCardSpec,
+} from "../../components/filter-cards";
 
 function getApprovalStatus(row: any) {
   return row.status;
 }
 
-type CardSpec = {
-  label: string;
-  value: number;
-  /** What pressing it narrows the table to. "All" clears the filter. */
-  filter: string;
-  sub: string;
-  icon: typeof Files;
-  /** A Chakra palette name — the card reads `${accent}.50` and friends. */
-  accent: string;
-};
+/** "All" as a card's `filter` clears the filter. */
+type CardSpec = FilterCardSpec;
 
 /**
  * THE THREE NATURES A CLAIM CAN BE (user, 2026-09-15), in the order they were
@@ -137,26 +122,9 @@ export function ApprovalsTable({
   const [cardFilter, setCardFilter] = React.useState<string>(() =>
     defaultCardFilter(facet),
   );
-  const [carouselIdx, setCarouselIdx] = React.useState(
-    facet === "kind" ? 0 : 1,
-  );
-  const carouselReady = React.useRef(false);
-
-  // Only mount the mobile carousel on mobile viewports. When hidden with
-  // `display: none` on desktop it can't measure its slides and re-emits
-  // onPageChange(0), which would clobber the default with the first card.
-  const [isMobile, setIsMobile] = React.useState(false);
-  React.useEffect(() => {
-    const mq = window.matchMedia("(max-width: 47.99em)"); // below Chakra `md`
-    const update = () => setIsMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
 
   React.useEffect(() => {
     setCardFilter(defaultCardFilter(facet));
-    setCarouselIdx(facet === "kind" ? 0 : 1);
   }, [facet, view]);
 
   const filteredData = React.useMemo(() => {
@@ -504,150 +472,13 @@ export function ApprovalsTable({
     ];
   }, [config.canDeny, countOf, data.length, facet]);
 
-  const renderCardContent = (card: CardSpec, i: number) => {
-    const isActive = cardFilter === card.filter;
-    return (
-      <Box
-        position="relative"
-        bg={isActive ? `${card.accent}.100` : `${card.accent}.50`}
-        border="2px solid"
-        borderColor={isActive ? `${card.accent}.500` : `${card.accent}.200`}
-        borderRadius="xl"
-        p={4}
-        mt={2}
-        boxShadow={isActive ? "lg" : "xs"}
-        cursor="pointer"
-        transform={isActive ? "translateY(-2px)" : "none"}
-        onClick={() => {
-          setCardFilter(card.filter);
-          setCarouselIdx(i);
-        }}
-        transition="all 0.15s ease"
-        _hover={{
-          bg: `${card.accent}.100`,
-          borderColor: `${card.accent}.400`,
-        }}
-      >
-        {isActive && (
-          <Box
-            position="absolute"
-            top={-2}
-            right={-2}
-            zIndex={2}
-            w="22px"
-            h="22px"
-            borderRadius="full"
-            bg={`${card.accent}.500`}
-            color="white"
-            border="2px solid"
-            borderColor="white"
-            display={{ base: "none", md: "flex" }}
-            alignItems="center"
-            justifyContent="center"
-            fontSize="11px"
-            fontWeight="800"
-            boxShadow="sm"
-          >
-            ✓
-          </Box>
-        )}
-        <Flex justify="space-between" align="flex-start">
-          <Box>
-            <Text
-              fontSize="10px"
-              fontWeight={isActive ? "800" : "700"}
-              letterSpacing="0.08em"
-              textTransform="uppercase"
-              color={isActive ? `${card.accent}.600` : `${card.accent}.500`}
-              mb={1}
-            >
-              {card.label}
-            </Text>
-            <Text
-              fontSize={isActive ? "4xl" : "2xl"}
-              fontWeight="bold"
-              color={isActive ? `${card.accent}.700` : `${card.accent}.600`}
-              lineHeight="1"
-              mb={1}
-              transition="font-size 0.15s ease"
-            >
-              {card.value}
-            </Text>
-            <Text fontSize="xs" color={`gray.600`} fontWeight="medium">
-              {card.sub}
-            </Text>
-          </Box>
-          <Box
-            p={2}
-            borderRadius="lg"
-            bg={isActive ? `${card.accent}.200` : `${card.accent}.100`}
-            color={`${card.accent}.500`}
-          >
-            <card.icon size={18} />
-          </Box>
-        </Flex>
-      </Box>
-    );
-  };
-
   return (
     <Flex direction="column" gap={4}>
-      {/* Desktop: one column per card — three where the queue has no denial. */}
-      <SimpleGrid
-        columns={cards.length}
-        gap={3}
-        display={{ base: "none", md: "grid" }}
-      >
-        {cards.map((card, i) => (
-          <Box key={card.label}>{renderCardContent(card, i)}</Box>
-        ))}
-      </SimpleGrid>
-
-      {/* Mobile: carousel (only mounted on mobile so its page events can't
-          leak into cardFilter on desktop) */}
-      {isMobile && (
-        <Box>
-          <Carousel.Root
-            slideCount={cards.length}
-            page={carouselIdx}
-            onPageChange={(details: { page: number }) => {
-              // The carousel emits an initial onPageChange(0) on mount (even while
-              // hidden on desktop), which would clobber the Pending default. Skip
-              // that first firing and only react to real page changes afterward.
-              if (!carouselReady.current) {
-                carouselReady.current = true;
-                return;
-              }
-              setCarouselIdx(details.page);
-              setCardFilter(cards[details.page].filter);
-            }}
-          >
-            <Carousel.ItemGroup>
-              {cards.map((card, i) => (
-                <Carousel.Item key={card.label} index={i}>
-                  {renderCardContent(card, i)}
-                </Carousel.Item>
-              ))}
-            </Carousel.ItemGroup>
-
-            <Carousel.Control justifyContent="center" gap="4">
-              <Carousel.PrevTrigger asChild>
-                <IconButton size="xs" variant="ghost" aria-label="Previous">
-                  <ChevronLeft size={16} />
-                </IconButton>
-              </Carousel.PrevTrigger>
-
-              <Carousel.Indicators />
-
-              <Carousel.NextTrigger asChild>
-                <IconButton size="xs" variant="ghost" aria-label="Next">
-                  <ChevronRight size={16} />
-                </IconButton>
-              </Carousel.NextTrigger>
-            </Carousel.Control>
-          </Carousel.Root>
-        </Box>
-      )}
+      <FilterCards
+        cards={cards}
+        active={cardFilter}
+        onSelect={setCardFilter}
+      />
 
       <DataTable<any>
         key={view}

@@ -25,12 +25,21 @@
 // the chapel — are not on this form at all. They identify the record and are
 // shown above it, on the plan holder block and the billing line.
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import { Controller, useForm, type Control } from "react-hook-form";
 import { Box, chakra, Checkbox, Field, Flex, SimpleGrid } from "@chakra-ui/react";
-import { FloatingLabelInput, FloatingLabelSelect } from "osp-ui-kit";
+import {
+  FloatingLabelInput,
+  FloatingLabelSelect,
+  useMessageDialog,
+} from "osp-ui-kit";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { db } from "../../../data";
+import { db, formatFiledDate } from "../../../data";
+import {
+  EditedFieldsButton,
+  EditedInput,
+  type EditedItem,
+} from "../../components/edit-mark";
 import { FloatingLabelDate } from "../../components/floating-fields";
 import { SectionTitle } from "../../components/section-title";
 import {
@@ -55,7 +64,11 @@ import {
   useServiceDocumentsStore,
 } from "../service-documents-store";
 import type { ServiceRecordDetails } from "../service-payables-store";
-import { getSavedServiceRecord } from "../service-payables-store";
+import {
+  getSavedServiceRecord,
+  getServiceDraft,
+  setServiceDraft,
+} from "../service-payables-store";
 
 /**
  * The form element's id, and the handle the Terminate button holds it by.
@@ -269,23 +282,34 @@ function DateField({
  * and there is no manager on a branch record in this data layer — inventing a
  * name to fill the box would be worse than an empty box a processor types into.
  */
-function defaultsFor(
+/**
+ * THE RECORD AS IT WOULD BE POSTED RIGHT NOW — the processor's draft, else a
+ * saved record, else the facts on file.
+ *
+ * EXPORTED FOR PROCESS BILLING (user, 2026-09-25), which terminates every
+ * account on the billing in one press — most of them never edited, and none of
+ * them with the form mounted. It has to post exactly what the form would have
+ * opened on, so both read this one function.
+ */
+export function serviceRecordDetailsFor(
   service: ServiceRecord,
   billing: ServiceBilling,
-): FormValues {
+): ServiceRecordDetails {
+  const draft = getServiceDraft(service.id);
+  if (draft) return draft;
   const saved = getSavedServiceRecord(service.id);
   if (saved) {
     return {
       status: saved.status,
-      dateFiled: saved.dateFiledISO,
-      dateOfDeath: saved.dateOfDeathISO,
+      dateFiledISO: saved.dateFiledISO,
+      dateOfDeathISO: saved.dateOfDeathISO,
       requestingBranchCode: saved.requestingBranchCode,
       branchManager: saved.branchManager,
       deceasedLastName: saved.deceasedLastName,
       deceasedFirstName: saved.deceasedFirstName,
       mortuaryCode: saved.mortuaryCode,
       cspCode: saved.cspCode,
-      cspAmount: String(saved.cspAmount),
+      cspAmount: saved.cspAmount,
       natureOfService: saved.natureOfService,
       withWreath: saved.withWreath,
       creditOfService: saved.creditOfService,
@@ -293,10 +317,22 @@ function defaultsFor(
     };
   }
 
+  return serviceRecordOnFile(service, billing);
+}
+
+/**
+ * THE RECORD AS FILED — what the form opens on before anybody has touched it.
+ * The baseline an edit is measured against: a field whose value differs from
+ * this one was changed by the processor, and is marked so (see `EditedInput`).
+ */
+function serviceRecordOnFile(
+  service: ServiceRecord,
+  billing: ServiceBilling,
+): ServiceRecordDetails {
   return {
     status: SERVICE_RECORD_DEFAULTS.status,
-    dateFiled: service.filedDateISO,
-    dateOfDeath: service.dateOfDeathISO,
+    dateFiledISO: service.filedDateISO,
+    dateOfDeathISO: service.dateOfDeathISO,
     requestingBranchCode: service.servicingBranchCode,
     branchManager: "",
     deceasedLastName: service.deceased.lastName,
@@ -313,7 +349,7 @@ function defaultsFor(
       getBillingMortCode(billing.billingCode) ||
       defaultMortCodeFor(service.chapelCode),
     cspCode: service.cspCode,
-    cspAmount: String(service.csp),
+    cspAmount: service.csp,
     natureOfService: SERVICE_RECORD_DEFAULTS.natureOfService,
     withWreath: SERVICE_RECORD_DEFAULTS.withWreath,
     // OFF THE ENDORSEMENT, not off the defaults: the request already carries a
@@ -323,6 +359,51 @@ function defaultsFor(
       service.creditOfService || SERVICE_RECORD_DEFAULTS.creditOfService,
     doubleUsed: false,
   };
+}
+
+/** The record as the form's fields hold it — dates renamed, money as text. */
+function toFormValues(details: ServiceRecordDetails): FormValues {
+  return {
+    status: details.status,
+    dateFiled: details.dateFiledISO,
+    dateOfDeath: details.dateOfDeathISO,
+    requestingBranchCode: details.requestingBranchCode,
+    branchManager: details.branchManager,
+    deceasedLastName: details.deceasedLastName,
+    deceasedFirstName: details.deceasedFirstName,
+    mortuaryCode: details.mortuaryCode,
+    cspCode: details.cspCode,
+    cspAmount: String(details.cspAmount),
+    natureOfService: details.natureOfService,
+    withWreath: details.withWreath,
+    creditOfService: details.creditOfService,
+    doubleUsed: details.doubleUsed,
+  };
+}
+
+/** Back from the fields to the record — the money a number again. */
+function toDetails(values: FormValues): ServiceRecordDetails {
+  return {
+    status: values.status,
+    dateFiledISO: values.dateFiled,
+    dateOfDeathISO: values.dateOfDeath,
+    requestingBranchCode: values.requestingBranchCode,
+    branchManager: values.branchManager,
+    deceasedLastName: values.deceasedLastName,
+    deceasedFirstName: values.deceasedFirstName,
+    mortuaryCode: values.mortuaryCode,
+    cspCode: values.cspCode,
+    cspAmount: Number(values.cspAmount) || 0,
+    natureOfService: values.natureOfService,
+    withWreath: values.withWreath,
+    creditOfService: values.creditOfService,
+    doubleUsed: values.doubleUsed,
+  };
+}
+
+/** What the form opens with — see {@link serviceRecordDetailsFor}. */
+function defaultsFor(service: ServiceRecord, billing: ServiceBilling): FormValues {
+  return toFormValues(serviceRecordDetailsFor(service, billing));
 }
 
 /* ------------------------------ the form ------------------------------ */
@@ -392,6 +473,29 @@ export interface ServiceRecordFormProps {
    */
   onShowDeficiencies?: () => void;
 }
+
+/**
+ * THE FIELDS AN EDIT IS MARKED ON — the facts that came in on file, which the
+ * processor corrects off the paperwork.
+ *
+ * Left out on purpose: Branch Manager opens empty and is always typed, and
+ * Status, Nature of Service and With Wreath open on the module's defaults, so
+ * setting any of them is filling the form in, not correcting it. Double Used is
+ * the processor's own tick. Marking those would mark nearly every record.
+ */
+const TRACKED_FIELDS = {
+  dateFiled: "Date Filed",
+  dateOfDeath: "Date of Death",
+  requestingBranchCode: "Requesting Branch",
+  deceasedLastName: "Deceased Lastname",
+  deceasedFirstName: "Deceased Firstname",
+  mortuaryCode: "Mortuary",
+  cspCode: "CSP Code",
+  cspAmount: "CSP Amount",
+  creditOfService: "Credit of Service",
+} as const satisfies Partial<Record<keyof FormValues, string>>;
+
+type TrackedField = keyof typeof TRACKED_FIELDS;
 
 /** The pair the CSP amount is priced by — see the re-pricing effect below. */
 function pricedPair(values: Pick<FormValues, "mortuaryCode" | "cspCode">) {
@@ -527,32 +631,111 @@ export function ServiceRecordForm({
 
   const branches = db.getBranches();
 
+  /**
+   * WHAT THE PROCESSOR CHANGED — each tracked field against the record as
+   * filed. Shown on every queue: the processor sees their own edits, and the
+   * verifier, whose form is read-only, sees what they are verifying.
+   *
+   * Revert is the processor's alone while the record still takes edits. Past
+   * Process Billing every account is terminated and the form is locked, so the
+   * verifier reads the marks but cannot revert or override here.
+   */
+  const { messageBox } = useMessageDialog();
+  const onFile = useMemo(
+    () => toFormValues(serviceRecordOnFile(service, billing)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [service.id],
+  );
+  const current = watch();
+  const show = (name: TrackedField, value: string): string => {
+    if (!value) return "";
+    switch (name) {
+      case "requestingBranchCode":
+        return branchLabel(branches, value);
+      case "mortuaryCode":
+        return getMortuary(value)?.mortuary ?? value;
+      case "cspCode":
+        return labelFor(CSP_CODES, value);
+      case "creditOfService":
+        return labelFor(CREDIT_OF_SERVICE_OPTIONS, value);
+      case "cspAmount":
+        return `₱${(Number(value) || 0).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
+      case "dateFiled":
+      case "dateOfDeath":
+        return formatFiledDate(value);
+      default:
+        return value;
+    }
+  };
+  const isEdited = (name: TrackedField) =>
+    String(current[name] ?? "") !== String(onFile[name] ?? "");
+  const saved = getSavedServiceRecord(service.id);
+  const editedBy = `Processor${saved?.savedBy ? ` · ${saved.savedBy}` : ""}`;
+  const editedItems: EditedItem[] = (Object.keys(TRACKED_FIELDS) as TrackedField[])
+    .filter(isEdited)
+    .map((name) => ({
+      key: name,
+      label: TRACKED_FIELDS[name],
+      from: show(name, String(onFile[name] ?? "")),
+      to: show(name, String(current[name] ?? "")),
+      by: editedBy,
+    }));
+  const canRevert = !locked && !verifying;
+  const mark = (name: TrackedField, field: ReactNode) => (
+    <EditedInput
+      edited={isEdited(name)}
+      markKey={name}
+      title={TRACKED_FIELDS[name]}
+      from={show(name, String(onFile[name] ?? ""))}
+      to={show(name, String(current[name] ?? ""))}
+      by={editedBy}
+      onRevert={
+        canRevert
+          ? async () => {
+              // Every revert asks first, as the death claim's do.
+              const from = show(name, String(current[name] ?? ""));
+              const to = show(name, String(onFile[name] ?? ""));
+              const confirmed = await messageBox({
+                title: "REVERT CHANGE",
+                message: `Revert ${TRACKED_FIELDS[name]} to what is on file? ${from || "—"} → ${to || "—"}.`,
+                confirmText: "Revert",
+                cancelText: "Keep change",
+                variant: "confirmation",
+              });
+              if (confirmed) setValue(name, onFile[name], { shouldDirty: true });
+            }
+          : undefined
+      }
+    >
+      {field}
+    </EditedInput>
+  );
+
   const submit = handleSubmit((values) => {
     // A closed record has no submit path — `RecordActions` disables the button
     // that reaches this form. Checked here as well because the association is an
     // HTML one (`form="<id>"`) and any button anywhere on the page could carry
     // it: the guard belongs with the thing being guarded.
     if (locked) return;
-
-    onSave({
-      status: values.status,
-      dateFiledISO: values.dateFiled,
-      dateOfDeathISO: values.dateOfDeath,
-      requestingBranchCode: values.requestingBranchCode,
-      branchManager: values.branchManager,
-      deceasedLastName: values.deceasedLastName,
-      deceasedFirstName: values.deceasedFirstName,
-      mortuaryCode: values.mortuaryCode,
-      cspCode: values.cspCode,
-      // Back to a number at the boundary. The field holds a string because that
-      // is what an input holds, and every reader of the record wants the money.
-      cspAmount: Number(values.cspAmount) || 0,
-      natureOfService: values.natureOfService,
-      withWreath: values.withWreath,
-      creditOfService: values.creditOfService,
-      doubleUsed: values.doubleUsed,
-    });
+    onSave(toDetails(values));
   });
+
+  /**
+   * EVERY EDIT IS KEPT AS A DRAFT, on For Process only (user, 2026-09-25) —
+   * there is no per-account save to press before stepping to the next account,
+   * so the draft is what Process Billing posts. See `setServiceDraft`.
+   *
+   * Changes only: the subscription fires on user edits and on the re-pricing
+   * effect's `setValue`, not on the initial values, so an account nobody
+   * touched keeps no draft and is posted off the facts on file.
+   */
+  useEffect(() => {
+    if (locked || verifying) return;
+    const subscription = watch((values) =>
+      setServiceDraft(service.id, toDetails(values as FormValues)),
+    );
+    return () => subscription.unsubscribe();
+  }, [watch, service.id, locked, verifying]);
 
   return (
     // A REAL `<form>`, with an id, because the button that submits it is not
@@ -575,6 +758,7 @@ export function ServiceRecordForm({
       <SectionTitle
         title={verifying ? "Service Records" : "Create Service Record"}
         subtitle="What the chapel is owed for this service, and under what terms."
+        action={<EditedFieldsButton items={editedItems} />}
       />
 
       {/* Paired from `sm`. These are short fields — a code, a date, an amount —
@@ -589,23 +773,31 @@ export function ServiceRecordForm({
             options={SERVICE_RECORD_STATUSES}
             readOnly={locked}
           />
-          <DateField
-            control={control}
-            name="dateFiled"
-            label="Date Filed"
-            readOnly={locked}
-          />
+          {mark(
+            "dateFiled",
+            <DateField
+              control={control}
+              name="dateFiled"
+              label="Date Filed"
+              readOnly={locked}
+            />,
+          )}
         </SimpleGrid>
 
         <SimpleGrid columns={{ base: 1, sm: 2 }} gap={5}>
-          <DateField
-            control={control}
-            name="dateOfDeath"
-            label="Date of Death"
-            readOnly={locked}
-          />
+          {mark(
+            "dateOfDeath",
+            <DateField
+              control={control}
+              name="dateOfDeath"
+              label="Date of Death"
+              readOnly={locked}
+            />,
+          )}
           {/* Every branch, not only the territory's: a family can file at a
               branch anywhere, and the service is still this chapel's. */}
+          {mark(
+            "requestingBranchCode",
           <Field.Root css={{ "& option[value='']": { display: "none" } }}>
             <Controller
               control={control}
@@ -635,7 +827,8 @@ export function ServiceRecordForm({
                 )
               }
             />
-          </Field.Root>
+          </Field.Root>,
+          )}
         </SimpleGrid>
 
         <TextField
@@ -651,24 +844,32 @@ export function ServiceRecordForm({
             which is also why it is editable at all: the certificate is the
             record, and the seed's spelling is not. */}
         <SimpleGrid columns={{ base: 1, sm: 2 }} gap={5}>
-          <TextField
-            control={control}
-            name="deceasedLastName"
-            label="Deceased Lastname"
-            readOnly={locked}
-          />
-          <TextField
-            control={control}
-            name="deceasedFirstName"
-            label="Deceased Firstname"
-            readOnly={locked}
-          />
+          {mark(
+            "deceasedLastName",
+            <TextField
+              control={control}
+              name="deceasedLastName"
+              label="Deceased Lastname"
+              readOnly={locked}
+            />,
+          )}
+          {mark(
+            "deceasedFirstName",
+            <TextField
+              control={control}
+              name="deceasedFirstName"
+              label="Deceased Firstname"
+              readOnly={locked}
+            />,
+          )}
         </SimpleGrid>
 
         {/* Mortuary and its code, one above the other — the same pairing the
             create-billing form makes, where choosing the name fills the code
             and the two cannot disagree. */}
         <SimpleGrid columns={{ base: 1, sm: 2 }} gap={5}>
+          {mark(
+            "mortuaryCode",
           <Field.Root>
             <Controller
               control={control}
@@ -699,7 +900,8 @@ export function ServiceRecordForm({
                 )
               }
             />
-          </Field.Root>
+          </Field.Root>,
+          )}
           <Field.Root>
             <FloatingLabelInput
               label="Mortuary Code"
@@ -718,20 +920,26 @@ export function ServiceRecordForm({
             nothing to fill in, and somebody has to answer that from the
             paperwork. */}
         <SimpleGrid columns={{ base: 1, sm: 2 }} gap={5}>
-          <SelectField
-            control={control}
-            name="cspCode"
-            label="CSP Code"
-            options={CSP_CODES}
-            readOnly={locked}
-          />
-          <TextField
-            control={control}
-            name="cspAmount"
-            label="CSP Amount"
-            type="number"
-            readOnly={locked}
-          />
+          {mark(
+            "cspCode",
+            <SelectField
+              control={control}
+              name="cspCode"
+              label="CSP Code"
+              options={CSP_CODES}
+              readOnly={locked}
+            />,
+          )}
+          {mark(
+            "cspAmount",
+            <TextField
+              control={control}
+              name="cspAmount"
+              label="CSP Amount"
+              type="number"
+              readOnly={locked}
+            />,
+          )}
         </SimpleGrid>
 
         <SimpleGrid columns={{ base: 1, sm: 2 }} gap={5}>
@@ -759,13 +967,16 @@ export function ServiceRecordForm({
               EDITABLE, THOUGH IT ARRIVES ANSWERED. The endorsement carries a
               credit of service and this field opens on it; the processor is
               authorised to correct it, so it is not shown read-only. */}
-          <SelectField
-            control={control}
-            name="creditOfService"
-            label="Credit of Service"
-            options={CREDIT_OF_SERVICE_OPTIONS}
-            readOnly={locked}
-          />
+          {mark(
+            "creditOfService",
+            <SelectField
+              control={control}
+              name="creditOfService"
+              label="Credit of Service"
+              options={CREDIT_OF_SERVICE_OPTIONS}
+              readOnly={locked}
+            />,
+          )}
           {/* Beside its field rather than under the row, so the row is two
               controls wide like every other row on the form. Both ticks share
               the cell — see `Deficient`, which stands next to Double Used

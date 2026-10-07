@@ -4,11 +4,14 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import {
   Box,
   Button,
+  CloseButton,
   Drawer,
   Flex,
+  Image,
   Portal,
   SimpleGrid,
   Text,
+  useBreakpointValue,
   VStack,
 } from "@chakra-ui/react";
 import {
@@ -19,12 +22,19 @@ import {
 } from "react-icons/lu";
 import { StaticCard } from "osp-ui-kit";
 import { RowItem } from "@/components/info-card/row-item";
+import { BRAND_COLORS } from "@/lib/theme/brand-colors";
+import { mockAvatarUrl } from "@/lib/mock-avatar";
 import { isAccountInGoodStanding } from "../../../data";
 import { GroupLabel } from "../../components/group-label";
 import { InfoLabel } from "../../components/info-label";
 import { SectionTitle } from "../../components/section-title";
-import type { Planholder } from "../../claims-data";
+import { SHEET_HEIGHT } from "../../components/sheet-height";
+import { SheetTabs } from "../../components/sheet-tabs";
+import { useSwipeStep } from "../../components/use-swipe-step";
+import { toSurnameFirst, type Planholder } from "../../claims-data";
 import { DrawerPageHeader } from "./DrawerPageHeader";
+import { DetailCard } from "../../components/detail-card";
+import { PlanholderCardHeader } from "./PlanholderCardHeader";
 import { PlanholderProfileHeader } from "./PlanholderProfileHeader";
 
 /* ------------------------------ formatting ------------------------------ */
@@ -275,7 +285,16 @@ function planDetailItems(planholder: Planholder): DetailItem[] {
 
 function demographicItems(planholder: Planholder): DetailItem[] {
   const p = planholder.person;
+  const name = planholder.name;
   return [
+    // THE NAME IN ITS PARTS, first. The card's heading already reads it whole,
+    // but a whole name has no label to say WHICH part a correction touched —
+    // and the death claim's corrections are made part by part. See
+    // `CORRECTABLE_PLANHOLDER_FIELDS`.
+    { label: "Last Name", value: name?.lastName || "—" },
+    { label: "First Name", value: name?.firstName || "—" },
+    { label: "Middle Name", value: name?.middleName || "—" },
+    { label: "Suffix", value: name?.suffix || "—" },
     { label: "Date of Birth", value: formatDate(planholder.dateOfBirth) },
     { label: "Place of Birth", value: p?.placeOfBirth ?? "—" },
     {
@@ -329,10 +348,13 @@ const asText = (item: DetailItem): string =>
 function DetailPanel({
   title,
   items,
+  marks,
   titled = true,
 }: {
   title: string;
   items: DetailItem[];
+  /** See {@link PlanholderInfoCard}'s `labelMarks`. */
+  marks?: LabelMarks;
   /**
    * Whether the heading is showing.
    *
@@ -359,7 +381,7 @@ function DetailPanel({
         {items.map((item) => (
           <InfoLabel
             key={item.label}
-            label={item.label}
+            label={marks?.[item.label] ?? item.label}
             value={asText(item)}
             color={item.tone}
           />
@@ -368,6 +390,13 @@ function DetailPanel({
     </Box>
   );
 }
+
+/**
+ * Labels to draw as something other than their plain text, keyed by the label
+ * as the card writes it ("Date of Birth"). The value under a marked label is
+ * untouched — see {@link PlanholderInfoCard}'s `labelMarks`.
+ */
+export type LabelMarks = Partial<Record<string, ReactNode>>;
 
 /* ------------------------------ drawer section ------------------------------ */
 
@@ -384,6 +413,311 @@ function DrawerSection({
       <SectionTitle title={title} />
       <InfoGrid items={items} />
     </Box>
+  );
+}
+
+/* ------------------------------ identity shell ------------------------------ */
+
+/**
+ * The card headed by WHO it is about — {@link PlanholderCardHeader}, the same
+ * header Service Payables' planholder card carries — in place of the kit
+ * card's icon / title / subtitle. See `identity`.
+ *
+ * The header's own clicks (the contact icon, and its sheet and hover card,
+ * which React bubbles through their portals) stop here, so opening the address
+ * never also opens or folds the details.
+ */
+function IdentityCard({
+  planholder,
+  edits,
+  action,
+  actionAtFoot = false,
+  children,
+}: {
+  planholder: Planholder;
+  /** See {@link PlanholderInfoCard}'s `headerEdits`. */
+  edits?: ReactNode;
+  /** The chevron, or Show more. */
+  action: ReactNode;
+  /**
+   * Under the facts rather than at the right of the header — where Show more
+   * goes (user, 2026-10-02: "place the show more at the bottom of the labels
+   * and icon"), so the header's right edge is the badges' alone.
+   */
+  actionAtFoot?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <DetailCard>
+      <Flex align="center" gap={3} mb={{ base: 4, md: 5 }} cursor="pointer">
+        <Box
+          flex={1}
+          minW={0}
+          cursor="auto"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <PlanholderCardHeader planholder={planholder} edits={edits} />
+        </Box>
+        {!actionAtFoot && action}
+      </Flex>
+      {children}
+      {actionAtFoot && (
+        <Flex justify="center" mt={4}>
+          {action}
+        </Flex>
+      )}
+    </DetailCard>
+  );
+}
+
+/** The kit card's icon / title / subtitle shell, or the identity card. */
+function DetailsShell({
+  identity,
+  planholder,
+  edits,
+  title,
+  subtitle,
+  action,
+  actionAtFoot,
+  children,
+}: {
+  identity: boolean;
+  planholder: Planholder;
+  /** The identity header's edited-fields icon. The kit card has no place for it. */
+  edits?: ReactNode;
+  title: string;
+  subtitle: string;
+  action: ReactNode;
+  /** See {@link IdentityCard}. The kit card keeps its action in the header. */
+  actionAtFoot?: boolean;
+  children: ReactNode;
+}) {
+  if (identity) {
+    return (
+      <IdentityCard
+        planholder={planholder}
+        edits={edits}
+        action={action}
+        actionAtFoot={actionAtFoot}
+      >
+        {children}
+      </IdentityCard>
+    );
+  }
+  return (
+    <StaticCard
+      // No colour set: react-icons draw with `currentColor`, so the mark
+      // takes the card's text rather than a value hard-coded here.
+      activeIcon={
+        <Box display="flex">
+          <LuIdCard size={16} />
+        </Box>
+      }
+      title={title}
+      subtitle={subtitle}
+      headerAction={action}
+    >
+      {children}
+    </StaticCard>
+  );
+}
+
+/**
+ * The three places the kit card differs from the card this area already had,
+ * put back. Written as CSS because the card takes no style props. Typed
+ * selectors and never `nth-child`: emotion inserts its own <style> among these
+ * children when the page is rendered on the server, which shifts every child
+ * index by one.
+ */
+const KIT_CARD_CSS = {
+  // 1. No 4px inset: the rule under the header runs edge to edge.
+  "& > div": { padding: 0 },
+  // 2. The icon has NO chip — the card's own title is beside it.
+  "& > div > div:first-of-type > div:first-of-type > div:first-of-type": {
+    background: "transparent",
+  },
+  // 3. The body: 8px under the rule, 16px around and below.
+  "& > div > div:nth-of-type(2)": { padding: "8px 16px 16px" },
+} as const;
+
+/* ------------------------------ phone sheet ------------------------------ */
+
+/**
+ * WHO THE SHEET IS ABOUT, on the sheet and not in a card — the mock-up's line:
+ * the photo, the name surname-first, and under it the LPA.
+ */
+function PlanholderIdentity({ planholder }: { planholder: Planholder }) {
+  // The LPA only. Address and contact are behind the card header's icon, not
+  // on a line under the name (user, 2026-10-02: "not that important").
+  const line = planholder.lpaNo;
+
+  return (
+    <Flex flexShrink={0} align="center" gap={3} px={4} pt={1} pb={3}>
+      <Image
+        src={mockAvatarUrl(planholder.personId)}
+        alt=""
+        boxSize="44px"
+        borderRadius="full"
+        objectFit="cover"
+        borderWidth="2px"
+        borderColor={BRAND_COLORS.primaryGreen}
+        flexShrink={0}
+      />
+      <Box minW={0}>
+        <Text fontSize="sm" fontWeight="700" color="gray.800" lineClamp={1}>
+          {planholder.name ? toSurnameFirst(planholder.name) : planholder.lpaNo}
+        </Text>
+        <Text fontSize="11px" color="gray.500" lineClamp={2}>
+          {line}
+        </Text>
+      </Box>
+    </Flex>
+  );
+}
+
+type DetailTab = "summary" | "personal" | "plan";
+
+const DETAIL_TABS: { key: DetailTab; label: string }[] = [
+  { key: "summary", label: "Summary" },
+  { key: "personal", label: "Personal" },
+  { key: "plan", label: "Plan" },
+];
+
+/**
+ * THE PHONE'S PLANHOLDER DETAIL — option B of the mock-up (user, 2026-10-02): a
+ * bottom sheet with the drawer's three panels as tabs, Summary first. Tap a
+ * tab or swipe the list. The same fields the drawer shows and nothing more.
+ *
+ * THE MOCK-UP'S SHAPE (user, same day, after trying the other: "the planholder
+ * is the one who is not in the card and the details is in the card"). Who it
+ * is sits on the sheet as one line of identity; the rows are in the card.
+ *
+ * FITTED TO ITS TALLEST TAB, under the shared cap — no white space under the
+ * rows, and no jump between tabs; see the body.
+ *
+ * Mounted always, `open` driving it — see `SectionPopup`.
+ */
+function PlanholderDetailSheet({
+  planholder,
+  deceased,
+  deficient,
+  open,
+  onClose,
+}: {
+  planholder: Planholder;
+  deceased?: DeceasedFacts;
+  deficient?: boolean;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [tab, setTab] = useState<DetailTab>("summary");
+  const [body, setBody] = useState<HTMLDivElement | null>(null);
+
+  // Summary each time it opens — what the card was showing.
+  useEffect(() => {
+    if (open) setTab("summary");
+  }, [open]);
+  // A new tab starts at its top.
+  useEffect(() => {
+    if (body) body.scrollTop = 0;
+  }, [tab, body]);
+
+  const index = DETAIL_TABS.findIndex((t) => t.key === tab);
+  const swipe = useSwipeStep({
+    canGo: (dir) =>
+      dir === "next" ? index < DETAIL_TABS.length - 1 : index > 0,
+    onStep: (dir) => {
+      const next = DETAIL_TABS[index + (dir === "next" ? 1 : -1)];
+      if (next) setTab(next.key);
+    },
+  });
+
+  const tabItems: Record<DetailTab, DetailItem[]> = {
+    summary: summaryItems(planholder, deceased, deficient),
+    personal: demographicItems(planholder),
+    plan: planDetailItems(planholder),
+  };
+
+  return (
+    <Drawer.Root
+      open={open}
+      onOpenChange={(e) => {
+        if (!e.open) onClose();
+      }}
+      placement="bottom"
+    >
+      <Portal>
+        <Drawer.Backdrop />
+        <Drawer.Positioner>
+          <Drawer.Content
+            borderTopRadius="2xl"
+            bg={BRAND_COLORS.subtleBg}
+            maxH={SHEET_HEIGHT}
+            pb="env(safe-area-inset-bottom, 0px)"
+          >
+            <Drawer.Header
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              px={4}
+              pt={3}
+              pb={2}
+            >
+              <Drawer.Title fontSize="md" fontWeight="700" color="gray.800">
+                Planholder Detail
+              </Drawer.Title>
+              <Drawer.CloseTrigger asChild position="static">
+                <CloseButton size="sm" />
+              </Drawer.CloseTrigger>
+            </Drawer.Header>
+
+            {/* WHO, then the tabs — both stay put while the rows scroll. */}
+            <PlanholderIdentity planholder={planholder} />
+            <Box
+              flexShrink={0}
+              px={4}
+              pb={3}
+              borderBottomWidth="1px"
+              borderColor="gray.100"
+            >
+              <SheetTabs
+                label="Planholder Detail"
+                tabs={DETAIL_TABS}
+                active={tab}
+                onChange={(key) => setTab(key as DetailTab)}
+              />
+            </Box>
+
+            <Drawer.Body ref={setBody} px={4} pt={2} pb={4} overflowY="auto">
+              {/* THE SWIPE SURFACE is the whole list — see `useSwipeStep`. */}
+              <Box {...swipe.cardProps}>
+                {/* THE ROWS IN THE PAGE'S OWN CARD — `InfoGrid`, the box the
+                    drawer's panels use.
+
+                    ALL THREE TABS IN ONE GRID CELL, only the one on show
+                    visible — so the sheet is as tall as the TALLEST tab and no
+                    taller. It fits its rows the way the History sheet does
+                    (user: "remove the white space … same as the history
+                    drawer"), and switching tab never changes its height. */}
+                <Box style={swipe.contentStyle} display="grid">
+                  {DETAIL_TABS.map((t) => (
+                    <Box
+                      key={t.key}
+                      gridArea="1 / 1"
+                      visibility={t.key === tab ? "visible" : "hidden"}
+                      aria-hidden={t.key !== tab}
+                    >
+                      <InfoGrid items={tabItems[t.key]} />
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Drawer.Body>
+          </Drawer.Content>
+        </Drawer.Positioner>
+      </Portal>
+    </Drawer.Root>
   );
 }
 
@@ -418,8 +752,38 @@ export function PlanholderInfoCard({
   onOpenChange,
   asDetails = false,
   summaryAsPairs = false,
+  identity = false,
+  labelMarks,
+  headerEdits,
 }: {
   planholder: Planholder;
+  /**
+   * The edited-fields icon for the identity header — see `EditedFieldsButton`.
+   * The death claim passes it; nothing else tracks edits to a planholder.
+   */
+  headerEdits?: ReactNode;
+  /**
+   * Labels drawn as something other than their text — the death claim's
+   * corrected fields, whose NAME is coloured and carries what changed (user,
+   * 2026-09-29: only the label is highlighted, never the value). Keyed by the
+   * label as written, so "Date of Birth" marks it in Summary and Personal Info
+   * alike.
+   *
+   * THE PHONE'S ROWS TOO. A marked row is drawn as an `InfoLabel`, which is the
+   * same leader row below `lg`, because the shared `RowItem` takes only a string.
+   *
+   * A mark on a label that only Personal Info carries — a part of the name —
+   * opens Show more, so a correction is never folded away where nobody sees it.
+   */
+  labelMarks?: LabelMarks;
+  /**
+   * Head the card with WHO it is about — the photo, name, LPA, Insurable and
+   * the address/contact icon of {@link PlanholderCardHeader} — in place of
+   * "Planholder Summary" / "Planholder Details", where a screen has no other
+   * place that says whose facts these are (the death claim). The same header
+   * Service Payables' planholder card carries (user, 2026-10-02).
+   */
+  identity?: boolean;
   /**
    * Whether the folder read against this record is short anything — drawn as a
    * Deficient / Yes-No pair at the end of the summary.
@@ -500,10 +864,26 @@ export function PlanholderInfoCard({
    * is not part of this and never closes.
    */
   const [detailsOpen, setDetailsOpen] = useState(false);
+
+  // Opened when a mark lands where only the folded panels would show it — see
+  // `labelMarks`. On the change, not on every render, so shutting it again after
+  // reading is the reader's to do.
+  const summaryLabels = summaryItems(planholder, deceased, deficient).map(
+    (item) => item.label,
+  );
+  const marksHidden = Object.keys(labelMarks ?? {}).some(
+    (label) => !summaryLabels.includes(label),
+  );
+  useEffect(() => {
+    if (marksHidden) setDetailsOpen(true);
+  }, [marksHidden]);
   /** The card's own body, so a click can be told from a click on the header. */
   const bodyRef = useRef<HTMLDivElement>(null);
   /** Ties the toggle to the region it opens, for anything reading the page. */
   const extraPanelsId = useId();
+
+  /** Below `lg` the details open as the phone's tabbed sheet. */
+  const isPhone = useBreakpointValue({ base: true, lg: false }) ?? false;
 
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -553,84 +933,77 @@ export function PlanholderInfoCard({
             setOpen(true);
           }
         }}
-        // The three places the shared card differs from the card this area
-        // already had, put back — the structure and the behaviour come from
-        // `StaticCard`, the finished look stays exactly as designed.
-        //
-        // Written as CSS because the card takes no style props: `activeIcon`,
-        // `title`, `subtitle`, `headerAction`, `children`, `h`, and nothing else.
-        // Each rule is measured against what this card rendered before the swap,
-        // and each is anchored to a numbered child of the card's own structure —
-        // header first, body second — so a change to that structure upstream is
-        // what would break them.
-        // `of-type` and never `nth-child`: emotion inserts its own <style> among
-        // these children when the page is rendered on the server, which shifts
-        // every child index by one and lands each rule on the wrong box. Typed
-        // selectors count only the divs, so the insert cannot move them.
-        css={{
-          // 1. The card insets itself by 4px. Ours does not: the rule under the
-          //    header runs edge to edge, and 4px of inset is exactly what would
-          //    stop it doing that.
-          "& > div": { padding: 0 },
-          // 2. The icon has NO chip — not the card's grey, and not the pale
-          //    green this used to override it to. A chip holds a small mark
-          //    steady inside a row of text; the icon here has the card's own
-          //    title beside it and needs no holding. Same treatment as the
-          //    beneficiary card's mark, so the profile's cards agree.
-          "& > div > div:first-of-type > div:first-of-type > div:first-of-type":
-            { background: "transparent" },
-          // 3. The body sits closer under the rule and further from the edges
-          //    than the card's even 12px — 8px above, 16px around and below.
-          "& > div > div:nth-of-type(2)": { padding: "8px 16px 16px" },
-        }}
+        // See `KIT_CARD_CSS`. Only for the kit card.
+        css={identity ? undefined : KIT_CARD_CSS}
       >
-        <StaticCard
-          // No colour set: react-icons draw with `currentColor`, so the mark
-          // takes the card's text rather than a value hard-coded here.
-          activeIcon={
-            <Box display="flex">
-              <LuIdCard size={16} />
-            </Box>
-          }
+        <DetailsShell
+          identity={identity}
+          planholder={planholder}
+          edits={headerEdits}
           title="Planholder Summary"
           subtitle="Tap to view full details"
-          // The card stops the action's clicks from reaching the wrapper — it
-          // assumes an action does something of its own — so the chevron opens
-          // the drawer itself rather than being the one place on the card that
-          // does nothing.
-          headerAction={
-            <Box
-              display="flex"
-              color="gray.400"
-              cursor="pointer"
-              onClick={() => setOpen(true)}
-            >
-              <LuChevronRight size={18} />
-            </Box>
+          // WITH IDENTITY, A FULL-WIDTH "View full details" AT THE FOOT (user,
+          // 2026-10-02, option A of the mock-up): a chevron in the header took
+          // width from the name beside the badges and the contact icon. The
+          // phone's version of the desktop's Show more; the card stays tappable.
+          actionAtFoot={identity}
+          action={
+            identity ? (
+              <Button
+                w="full"
+                size="sm"
+                variant="subtle"
+                bg="green.50"
+                color={BRAND_COLORS.primaryGreen}
+                _hover={{ bg: "green.100" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpen(true);
+                }}
+              >
+                View full details
+                <LuChevronRight size={16} />
+              </Button>
+            ) : (
+              // The kit card stops the action's clicks from reaching the
+              // wrapper — it assumes an action does something of its own — so
+              // the chevron opens the drawer itself.
+              <Box
+                display="flex"
+                color="gray.400"
+                cursor="pointer"
+                onClick={() => setOpen(true)}
+              >
+                <LuChevronRight size={18} />
+              </Box>
+            )
           }
         >
-          {/* Body — Summary detail only. The card rules it off and pads it.
-
-              Two shapes of the same ten facts; see `summaryAsPairs`. The pairs
-              take the panel's own gaps rather than gaps of their own, so the
-              card reads as the details panel does on the profile. */}
+          {/* Summary detail only. Two shapes of the same ten facts; see
+              `summaryAsPairs`. */}
           {summaryAsPairs ? (
             <SimpleGrid columns={2} gapX={4} gapY={3}>
               {summaryItems(planholder, deceased, deficient).map((item) => (
                 <InfoLabel
                   key={item.label}
-                  label={item.label}
+                  label={labelMarks?.[item.label] ?? item.label}
                   value={asText(item)}
                   color={item.tone}
                 />
               ))}
             </SimpleGrid>
           ) : (
-            summaryItems(planholder, deceased, deficient).map((item) => (
-              <RowItem key={item.label} label={item.label} value={item.value} />
-            ))
+            summaryItems(planholder, deceased, deficient).map((item) =>
+              labelMarks?.[item.label] ? (
+                <Box key={item.label} py={1.5}>
+                  <InfoLabel label={labelMarks[item.label]} value={item.value} />
+                </Box>
+              ) : (
+                <RowItem key={item.label} label={item.label} value={item.value} />
+              ),
+            )
           )}
-        </StaticCard>
+        </DetailsShell>
       </Box>
 
       {/* The same card as a details panel, from `md` up — see `asDetails`.
@@ -665,31 +1038,25 @@ export function PlanholderInfoCard({
             e.preventDefault();
             setDetailsOpen((v) => !v);
           }}
-          // Typed selectors, for the reason given on the card above.
-          css={{
-            "& > div": { padding: 0 },
-            // No chip — see the note on the card above.
-            "& > div > div:first-of-type > div:first-of-type > div:first-of-type":
-              { background: "transparent" },
-            "& > div > div:nth-of-type(2)": { padding: "8px 16px 16px" },
-          }}
+          // Typed selectors, for the reason given on the card above. Only for
+          // the kit card; the identity card is ours and needs none.
+          css={identity ? undefined : KIT_CARD_CSS}
         >
-          <StaticCard
-            activeIcon={
-              <Box display="flex">
-                <LuIdCard size={16} />
-              </Box>
-            }
+          <DetailsShell
+            identity={identity}
+            planholder={planholder}
+            edits={headerEdits}
             title="Planholder Details"
+            actionAtFoot
             // Names what the card holds rather than telling the processor to
             // tap: they can see the control, and on a desktop they are not
             // tapping anything.
             subtitle="Summary, personal info and plan detail"
-            // The card stops this from bubbling, so it carries the toggle
+            // The kit card stops this from bubbling, so it carries the toggle
             // itself. It is also the only part of the control a screen reader
             // is told about — the card's header row has no `aria-expanded` to
             // set — so the state and the region it owns live here.
-            headerAction={
+            action={
               <Button
                 size="xs"
                 // `plain`, not `ghost`: a ghost button is transparent until it
@@ -699,7 +1066,10 @@ export function PlanholderInfoCard({
                 variant="plain"
                 aria-expanded={detailsOpen}
                 aria-controls={extraPanelsId}
-                onClick={() => setDetailsOpen((v) => !v)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDetailsOpen((v) => !v);
+                }}
               >
                 {detailsOpen ? "Show less" : "Show more"}
                 {detailsOpen ? (
@@ -716,6 +1086,7 @@ export function PlanholderInfoCard({
               <DetailPanel
                 title="Summary"
                 items={summaryItems(planholder, deceased, deficient)}
+                marks={labelMarks}
                 titled={detailsOpen}
               />
 
@@ -733,6 +1104,7 @@ export function PlanholderInfoCard({
                     <DetailPanel
                       title="Personal Info"
                       items={demographicItems(planholder)}
+                      marks={labelMarks}
                     />
                     <DetailPanel
                       title="Plan Detail"
@@ -742,15 +1114,26 @@ export function PlanholderInfoCard({
                 </Box>
               </Box>
             </Box>
-          </StaticCard>
+          </DetailsShell>
         </Box>
       )}
 
-      {/* Details drawer — built the same way the claim detail drawer is: same
-          root sizing, same content shell, and the shared page-style header, so
-          the two read as one flow. */}
+      {/* THE PHONE'S SHEET — see `PlanholderDetailSheet`. Below `lg`, where
+          every claims screen takes its phone layout. */}
+      <PlanholderDetailSheet
+        planholder={planholder}
+        deceased={deceased}
+        deficient={deficient}
+        open={open && isPhone}
+        onClose={() => setOpen(false)}
+      />
+
+      {/* Details drawer, from `lg` — built the same way the claim detail
+          drawer is: same root sizing, same content shell, and the shared
+          page-style header, so the two read as one flow. Both always mounted,
+          `open` choosing between them. */}
       <Drawer.Root
-        open={open}
+        open={open && !isPhone}
         onOpenChange={(e) => setOpen(e.open)}
         size={{ base: "full", md: "md" }}
       >

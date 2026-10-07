@@ -14,7 +14,7 @@
 import { useMemo } from "react";
 import {
   getClaimPayeesForRequest,
-  getOutstandingDocumentTypes,
+  getOutstandingDeficiencyNames,
   getPlanholder,
   getPlanholderDocuments,
   type ClaimPayee,
@@ -25,6 +25,7 @@ import {
   toSurnameFirst,
   type DeathClaim,
 } from "../death-claims-data";
+import { usePlanholderDeficiencyStore } from "../../planholder-deficiency-store";
 
 export interface ClaimEvidence {
   /** Surname-first, the way every claims screen writes a plan holder. */
@@ -64,6 +65,7 @@ const NOTHING: ClaimEvidence = {
  * there was no claim.
  */
 export function useClaimEvidence(claim: DeathClaim | undefined): ClaimEvidence {
+  const deficiencyVersion = usePlanholderDeficiencyStore();
   return useMemo(() => {
     if (!claim) return NOTHING;
 
@@ -84,9 +86,12 @@ export function useClaimEvidence(claim: DeathClaim | undefined): ClaimEvidence {
       lapsed: planholder?.accountStatusLabel === "Lapsed",
       payees: getClaimPayeesForRequest(claim.reference),
       documents: personId ? getPlanholderDocuments(personId) : [],
-      missing: personId
-        ? getOutstandingDocumentTypes(personId).map((type) => type.name)
-        : [],
+      // Raised-by-hand ones included, and waived ones out — see
+      // `planholder-deficiency-store`.
+      missing: personId ? getOutstandingDeficiencyNames(personId) : [],
     };
-  }, [claim]);
+    // `deficiencyVersion` is a dependency for what it MEANS: a removal or a
+    // raise changes `missing` without changing the claim.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claim, deficiencyVersion]);
 }

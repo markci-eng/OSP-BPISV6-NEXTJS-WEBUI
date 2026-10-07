@@ -20,11 +20,10 @@ import {
   getPlanholderPayments,
   getPlanholderRemarks,
 } from "../../claims-data";
-import { SectionCard } from "../../components/section-card";
+import { KitCardShape, SectionCard } from "../../components/section-card";
 import { SectionLauncher, SectionPopup } from "../../components/section-popup";
 import { PlanholderClaimDetail } from "../components/PlanholderClaimDetail";
 import { PlanholderSwapSkeleton } from "../components/PlanholderSwapSkeleton";
-import { PlanholderProfileHeader } from "../components/PlanholderProfileHeader";
 import { PlanholderInfoCard } from "../components/PlanholderInfoCard";
 import { PlanholderRemarks } from "../components/PlanholderRemarks";
 import { PlanholderPendingRequests } from "../components/PlanholderPendingRequests";
@@ -75,7 +74,7 @@ function PlanholderNotFound({ lpaNo }: { lpaNo: string }) {
         <LuUserX size={28} />
       </Box>
       <Text fontSize="lg" fontWeight="700" color="gray.800">
-        Plan Holder Not Found
+        Planholder Not Found
       </Text>
       <Text fontSize="sm" color="gray.500" maxW="360px">
         {lpaNo ? (
@@ -211,7 +210,7 @@ export default function ClaimsPlanholderPage() {
       // `subtitle` is still the area, because that is what the route is under
       // and what every other header in this area says; it names where the page
       // LIVES, not who is allowed to read it.
-      description="Explore the plan holder's details, requests, and documents."
+      description="Explore the planholder's details, requests, and documents."
       // Phone only, the same as the dashboard and the create form: a desktop
       // has the sidebar and the browser's own back button, and the arrow beside
       // the title says nothing the page does not.
@@ -336,18 +335,25 @@ export default function ClaimsPlanholderPage() {
                     again, the orders stop applying, and each column stacks its
                     own — which is why the DOM order here already matches. */}
                 <Box display={{ base: "contents", xl: "block" }}>
-                  {/* Who this is. In the left column rather than across both,
-                      so it is the width of the summary that follows it — and,
-                      more to the point, so the rail starts at the TOP of the
-                      page: a pending request is the thing worth reaching from
-                      anywhere, and a full-width header above it would push it a
-                      header's height down before it could be seen at all. */}
-                  <Box order={0}>
-                    <PlanholderProfileHeader planholder={planholder} />
-                  </Box>
+                  {/* WHO THIS IS AND WHAT IS ON RECORD, AS ONE CARD — the
+                      Death Claim's planholder card (user, 2026-10-02: "use the
+                      design of planholder details of death claim"). `identity`
+                      heads it with the photo, name, LPA, Insurable and the
+                      address/contact icon, where a separate profile header card
+                      over a "Planholder Summary" card stood before.
 
-                  <Box mt={4} order={1}>
-                    <PlanholderInfoCard planholder={planholder} asDetails />
+                      In the left column rather than across both, so the rail
+                      starts at the TOP of the page: a pending request is the
+                      thing worth reaching from anywhere. `KitCardShape` for the
+                      same edge and lift the death claim gives it. */}
+                  <Box order={0}>
+                    <KitCardShape>
+                      <PlanholderInfoCard
+                        planholder={planholder}
+                        asDetails
+                        identity
+                      />
+                    </KitCardShape>
                   </Box>
 
                   {/* IN A CARD, THE DEATH CLAIM'S (user, 2026-09-16: "place

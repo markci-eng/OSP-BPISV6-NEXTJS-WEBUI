@@ -12,6 +12,7 @@
 
 import { LuClipboardCheck, LuPrinter, LuRotateCcw } from "react-icons/lu";
 import type { ActionButtonItem } from "@/components/primitives/ActionButtons";
+import { PRINT_SOA_LABEL } from "./print-soa";
 
 /** An entry in the "More" sheet, before its onClick is bound to the plan. */
 export type PlanAction = Omit<
@@ -25,7 +26,8 @@ export type PlanAction = Omit<
  */
 export const PLAN_ACTIONS: PlanAction[] = [
   {
-    label: "Print SOA",
+    // Run by `printSoa` wherever it is drawn — the one plan action that is.
+    label: PRINT_SOA_LABEL,
     icon: LuPrinter,
     description: "Print the statement of account",
   },

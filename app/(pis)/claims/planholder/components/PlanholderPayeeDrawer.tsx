@@ -14,13 +14,22 @@ import {
   Textarea,
   VStack,
 } from "@chakra-ui/react";
+import type { IconType } from "react-icons";
 import {
   LuBadgeCheck,
+  LuBanknote,
+  LuCalendar,
   LuCheck,
+  LuChevronRight,
+  LuCreditCard,
   LuEye,
   LuEyeOff,
+  LuPause,
   LuPencil,
+  LuPhone,
+  LuPlus,
   LuTrash2,
+  LuUser,
 } from "react-icons/lu";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 // THE KIT, AND ONLY THE KIT. These four came from `st-peter-ui`, which the kit
@@ -32,20 +41,31 @@ import {
   PrimarySmButton,
   SecondaryMdButton,
   SecondarySmButton,
-  TertiarySmButton,
   useMessageDialog,
 } from "osp-ui-kit";
 import { SectionTitle } from "../../components/section-title";
 import { ClaimsToaster, toaster } from "../../components/toaster";
 import { type ClaimPayee } from "../../claims-data";
 import { DrawerPageHeader } from "./DrawerPageHeader";
-import { PlanholderPayeeEditDrawer } from "./PlanholderPayeeEditDrawer";
-import { DIALOG_SHEET_CSS } from "./dialog-sheet";
+import { BottomSheet } from "../../components/bottom-sheet";
+import {
+  PAYEE_EDIT_PART_TITLES,
+  PlanholderPayeeEditDrawer,
+  type PayeeEditPart,
+} from "./PlanholderPayeeEditDrawer";
+import { DIALOG_SHEET_FROM_LG_CSS, POPUP_FROM_LG } from "./dialog-sheet";
 
 /** Display name for the fallback "check" payout channel (seed code 104). */
 const CHECK_CHANNEL_NAME = "CHECK";
 
 type Verification = "valid" | "invalid" | null;
+
+/**
+ * The pop-up's width from `lg` — option A of the PC mock-up (user, 2026-10-02):
+ * the phone's one column in a 560px box. The shared 840 was for the old
+ * two-column body; one column across it would stretch every row.
+ */
+const PAYEE_DIALOG_MAX_W = { base: "100%", lg: "560px" };
 
 /**
  * A labelled fact, as a row.
@@ -137,6 +157,252 @@ function StateChip({
   );
 }
 
+/** The phone's edit picker, in the order the details read. */
+const EDIT_PARTS: { part: PayeeEditPart; icon: IconType }[] = [
+  { part: "identity", icon: LuUser },
+  { part: "birthDate", icon: LuCalendar },
+  { part: "amount", icon: LuBanknote },
+  { part: "contact", icon: LuPhone },
+  { part: "hold", icon: LuPause },
+  { part: "payout", icon: LuCreditCard },
+];
+
+/** What a picker row shows under its title — the part as it stands now. */
+function currentValue(payee: ClaimPayee, part: PayeeEditPart): string {
+  const blank = (v?: string) => !v || v === "—" || v === "-";
+  switch (part) {
+    case "identity":
+      return [payee.name, payee.relation].filter((v) => !blank(v)).join(" · ");
+    case "birthDate":
+      return payee.birthDate;
+    case "amount":
+      return payee.amountDisplay;
+    case "contact": {
+      const on = [payee.address, payee.contact, payee.email].filter(
+        (v) => !blank(v),
+      );
+      return on.length ? on.join(" · ") : "None on file";
+    }
+    case "hold":
+      return payee.isOnHold ? "On hold" : "Not on hold";
+    case "payout":
+      return [payee.channelName, payee.payoutBranch]
+        .filter((v) => !blank(v))
+        .join(" · ");
+  }
+}
+
+/** A labelled fact as a tile — the two the phone's identity block leads with. */
+function FactTile({ label, value }: { label: string; value: string }) {
+  return (
+    <Box
+      bg="gray.50"
+      borderWidth="1px"
+      borderColor="gray.200"
+      borderRadius="lg"
+      px={3}
+      py={2.5}
+      minW={0}
+    >
+      <Text fontSize="xs" color="gray.500">
+        {label}
+      </Text>
+      <Text
+        fontSize="md"
+        fontWeight="700"
+        color="gray.900"
+        css={{ fontVariantNumeric: "tabular-nums" }}
+      >
+        {value}
+      </Text>
+    </Box>
+  );
+}
+
+/**
+ * THE PAYEE DETAILS — the approved phone mock-up (user, 2026-10-02), and since
+ * the same day PC's too ("A the phone layout"): one layout at every width.
+ *
+ * Read in the order a payee is checked: who they are, their relationship, a
+ * hold (a tag only when there IS one), whether anyone has verified them, then
+ * date of birth and the amount as tiles. Contact, then Remarks as a text box
+ * with a button big enough to find. The payout account last — it is the part
+ * least often changed — and, on a phone, Delete under everything, nowhere near
+ * Verify. From `lg` Delete is the footer's far-left link instead.
+ */
+function PayeeDetails({
+  payee,
+  verificationChip,
+  hasContact,
+  channel,
+  isInvalid,
+  accountDisplay,
+  showAccountNo,
+  hasAccountNo,
+  onToggleAccountNo,
+  savedRemarks,
+  onRemarks,
+  onDelete,
+}: {
+  payee: ClaimPayee;
+  verificationChip: { tone: "ok" | "bad" | "warn"; label: string };
+  hasContact: boolean;
+  channel: string;
+  isInvalid: boolean;
+  accountDisplay: string;
+  showAccountNo: boolean;
+  hasAccountNo: boolean;
+  onToggleAccountNo: () => void;
+  savedRemarks: string;
+  onRemarks: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <VStack align="stretch" gap={5}>
+      <Box>
+        <Text fontSize="lg" fontWeight="700" color="gray.900" lineHeight="1.25">
+          {payee.name}
+        </Text>
+        <Flex align="center" gap={2} wrap="wrap" mt={2}>
+          <StateChip tone="neutral">{payee.relation}</StateChip>
+          {payee.isOnHold && <StateChip tone="warn">On hold</StateChip>}
+          <StateChip tone={verificationChip.tone}>
+            {verificationChip.label}
+          </StateChip>
+        </Flex>
+        <Grid templateColumns="1fr 1fr" gap={2.5} mt={4}>
+          <FactTile label="Date of birth" value={payee.birthDate} />
+          <FactTile label="Payable" value={payee.amountDisplay} />
+        </Grid>
+      </Box>
+
+      <Box>
+        <SectionTitle title="Contact" />
+        {hasContact ? (
+          <Box>
+            <DetailRow label="Address">
+              <DetailValue>{payee.address}</DetailValue>
+            </DetailRow>
+            <DetailRow label="Contact">
+              <DetailValue>{payee.contact}</DetailValue>
+            </DetailRow>
+            <DetailRow label="Email">
+              <DetailValue>{payee.email}</DetailValue>
+            </DetailRow>
+          </Box>
+        ) : (
+          <Box
+            px={3}
+            py={2.5}
+            borderWidth="1px"
+            borderStyle="dashed"
+            borderColor="gray.200"
+            borderRadius="lg"
+            bg="gray.50"
+          >
+            <Text fontSize="xs" color="gray.500">
+              No address, contact number or email on file.
+            </Text>
+          </Box>
+        )}
+      </Box>
+
+      {/* REMARKS AS A TEXT BOX, with a button you cannot miss under it. */}
+      <Box>
+        <SectionTitle title="Remarks" />
+        <Box
+          as="button"
+          w="full"
+          textAlign="left"
+          minH="64px"
+          px={3}
+          py={2.5}
+          borderWidth="1px"
+          borderColor="gray.200"
+          borderRadius="lg"
+          bg="gray.50"
+          onClick={onRemarks}
+        >
+          {savedRemarks ? (
+            <Text fontSize="sm" color="gray.700" whiteSpace="pre-wrap">
+              {savedRemarks}
+            </Text>
+          ) : (
+            <Text fontSize="sm" color="gray.400">
+              No remarks on this payee.
+            </Text>
+          )}
+        </Box>
+        <Button
+          mt={2}
+          w="full"
+          h="42px"
+          variant="outline"
+          borderStyle="dashed"
+          borderColor={BRAND_COLORS.primaryGreen}
+          color={BRAND_COLORS.primaryGreen}
+          bg="green.50"
+          onClick={onRemarks}
+        >
+          {savedRemarks ? <LuPencil /> : <LuPlus />}
+          {savedRemarks ? "Edit remarks" : "Add remarks"}
+        </Button>
+      </Box>
+
+      {/* THE PAYOUT ACCOUNT, LAST — the part least often changed. */}
+      <Box>
+        <SectionTitle title="Payout account" />
+        <DetailRow label="Channel">
+          <DetailValue>{channel}</DetailValue>
+        </DetailRow>
+        {!isInvalid && (
+          <DetailRow label="Account no.">
+            <Text
+              fontWeight="600"
+              textAlign="right"
+              whiteSpace="nowrap"
+              fontFamily={showAccountNo ? "mono" : undefined}
+            >
+              {accountDisplay}
+            </Text>
+            {hasAccountNo && (
+              <IconButton
+                aria-label={
+                  showAccountNo
+                    ? "Hide account number"
+                    : "Show full account number"
+                }
+                size="xs"
+                variant="ghost"
+                color="gray.500"
+                onClick={onToggleAccountNo}
+              >
+                {showAccountNo ? <LuEyeOff size={16} /> : <LuEye size={16} />}
+              </IconButton>
+            )}
+          </DetailRow>
+        )}
+        <DetailRow label="Branch">
+          <DetailValue>{payee.payoutBranch}</DetailValue>
+        </DetailRow>
+      </Box>
+
+      <Button
+        display={{ base: "flex", lg: "none" }}
+        w="full"
+        h="42px"
+        variant="ghost"
+        bg={BRAND_COLORS.errorBg}
+        color={BRAND_COLORS.destructiveRed}
+        onClick={onDelete}
+      >
+        <LuTrash2 />
+        Delete payee
+      </Button>
+    </VStack>
+  );
+}
+
 interface PlanholderPayeeDrawerProps {
   /** The payee being viewed. `null`/`undefined` keeps the drawer closed. */
   payee?: ClaimPayee | null;
@@ -171,6 +437,9 @@ export function PlanholderPayeeDrawer({
 
   // The edit form drawer, slid up over this one when "Edit" is tapped.
   const [editOpen, setEditOpen] = useState(false);
+  // The phone's edit: the picker, then the one part picked.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [editPart, setEditPart] = useState<PayeeEditPart | null>(null);
 
   // Verify flow: the Valid/Invalid picker, then the committed result. When
   // "invalid", the payout falls back to a check and the account is withheld.
@@ -351,27 +620,17 @@ export function PlanholderPayeeDrawer({
       >
         <Portal>
           <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
-          <Drawer.Positioner
-            alignItems={asDialog ? "center" : undefined}
-            justifyContent={asDialog ? "center" : undefined}
-            p={asDialog ? 3 : undefined}
-          >
+          <Drawer.Positioner {...(asDialog ? POPUP_FROM_LG.positioner : {})}>
             <Drawer.Content
               display="flex"
               flexDirection="column"
-              // A full-height sheet, or a centred one sized to its content —
-              // see `asDialog`. The dialog's numbers are `SectionPopup`'s, so
-              // the sheets on that page are the same size and corner.
-              h={asDialog ? "auto" : "100dvh"}
-              maxH={asDialog ? { base: "88dvh", md: "82vh" } : "100dvh"}
-              w={asDialog ? "full" : undefined}
-              maxW={
-                asDialog
-                  ? { base: "calc(100dvw - 24px)", md: "840px" }
-                  : undefined
-              }
-            css={asDialog ? DIALOG_SHEET_CSS : undefined}
-              borderRadius={asDialog ? "xl" : 0}
+              // A full-height sheet, or — `asDialog` — a centred pop-up from
+              // `lg` and a bottom sheet that slides up below it. See
+              // `POPUP_FROM_LG`.
+              {...(asDialog
+                ? { ...POPUP_FROM_LG.content, maxW: PAYEE_DIALOG_MAX_W }
+                : POPUP_FROM_LG.fullHeight)}
+              css={asDialog ? DIALOG_SHEET_FROM_LG_CSS : undefined}
               overflow="hidden"
             >
               {/* The same page-style bar the claim detail drawer carries — this
@@ -384,231 +643,29 @@ export function PlanholderPayeeDrawer({
               />
 
               <Drawer.Body py={5} overflowY="auto">
+                {/* ONE LAYOUT AT EVERY WIDTH — the approved phone one (user,
+                    2026-10-02: "A the phone layout"). PC used to draw its own:
+                    Payable at the top right, Payee / Paid by in two columns,
+                    Remarks as a link. Now only the presentation differs — a
+                    sheet on a phone, a centred pop-up from `lg` — and the foot.
+                    See `PayeeDetails`. */}
                 {payee ? (
-                  <VStack align="stretch" gap={5}>
-                    {/* WHO IS BEING PAID, AND HOW MUCH — the two facts the rest
-                        of the sheet is detail about, and the two that were
-                        hardest to find in it. The name was row one of eight in
-                        the same 13.5px as every other row; the amount was row
-                        four, set identically to an empty Email.
-
-                        THE STATES RIDE WITH THE NAME. Relation, on-hold and the
-                        verification verdict are not things you look up — they
-                        change what you do next, so they sit where the eye lands
-                        rather than filed among the fields. "Not verified" is
-                        stated from the moment the sheet opens: it used to appear
-                        only AFTER somebody verified, which left the one fact
-                        that decides what to do here as the one fact never shown.
-
-                        Not in `DrawerPageHeader`: that bar is shared with the
-                        claim drawer this sheet stacks over, and the two must not
-                        style headers apart. */}
-                    <Flex
-                      align="flex-start"
-                      justify="space-between"
-                      gap={{ base: 3, md: 6 }}
-                      direction={{ base: "column", md: "row" }}
-                    >
-                      <Box minW={0}>
-                        <Text
-                          fontSize={{ base: "lg", md: "xl" }}
-                          fontWeight="700"
-                          color="gray.900"
-                          lineHeight="1.25"
-                        >
-                          {payee.name}
-                        </Text>
-                        <Flex align="center" gap={2} wrap="wrap" mt={2}>
-                          <StateChip tone="neutral">{payee.relation}</StateChip>
-                          <StateChip tone={verificationChip.tone}>
-                            {verificationChip.label}
-                          </StateChip>
-                          {payee.isOnHold && (
-                            <StateChip tone="warn">On hold</StateChip>
-                          )}
-                        </Flex>
-                      </Box>
-
-                      {/* The figure that actually gets paid, in the weight it
-                          earns. Tabular, so a column of payees lines up. */}
-                      <Box
-                        textAlign={{ base: "left", md: "right" }}
-                        flexShrink={0}
-                      >
-                        <Text
-                          fontSize="10px"
-                          fontWeight="700"
-                          letterSpacing="0.1em"
-                          textTransform="uppercase"
-                          color="gray.400"
-                        >
-                          Payable
-                        </Text>
-                        <Text
-                          fontSize={{ base: "xl", md: "2xl" }}
-                          fontWeight="700"
-                          letterSpacing="-0.02em"
-                          lineHeight="1.2"
-                          color={
-                            payee.isOnHold
-                              ? BRAND_COLORS.warningText
-                              : "gray.900"
-                          }
-                          css={{ fontVariantNumeric: "tabular-nums" }}
-                        >
-                          {payee.amountDisplay}
-                        </Text>
-                      </Box>
-                    </Flex>
-
-                    {/* TWO COLUMNS WHERE THERE IS ROOM: who the payee is, and
-                        how they are paid. One stack on the sheet, which is the
-                        width this component also has to hold at.
-
-                        It is what stops the dialog scrolling — the whole record
-                        used to run down a single column inside an 840px sheet
-                        and cut Payout Channel off at the fold. */}
-                    <Grid
-                      templateColumns={{
-                        base: "1fr",
-                        md: asDialog ? "1fr 1fr" : "1fr",
-                      }}
-                      gap={{ base: 5, md: 8 }}
-                    >
-                      <Box>
-                        <SectionTitle title="Payee" />
-                        <Box>
-                          <DetailRow label="Date of birth">
-                            <DetailValue>{payee.birthDate}</DetailValue>
-                          </DetailRow>
-
-                          {/* THE THREE FIELDS MOST PAYEES LEAVE BLANK, asked as
-                              one question — see `hasContact`. */}
-                          {hasContact ? (
-                            <>
-                              <DetailRow label="Address">
-                                <DetailValue>{payee.address}</DetailValue>
-                              </DetailRow>
-                              <DetailRow label="Contact">
-                                <DetailValue>{payee.contact}</DetailValue>
-                              </DetailRow>
-                              <DetailRow label="Email">
-                                <DetailValue>{payee.email}</DetailValue>
-                              </DetailRow>
-                            </>
-                          ) : (
-                            <Box
-                              mt={2}
-                              px={3}
-                              py={2.5}
-                              borderWidth="1px"
-                              borderStyle="dashed"
-                              borderColor="gray.200"
-                              borderRadius="lg"
-                              bg="gray.50"
-                            >
-                              <Text fontSize="xs" color="gray.500">
-                                No address, contact number or email on file.
-                              </Text>
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
-
-                      <Box>
-                      {/* THE VERDICT HAS MOVED to the chip beside the name, where
-                          it is stated whether or not anyone has verified yet —
-                          it used to render here only once a verdict existed. */}
-                      <SectionTitle title="Paid by" />
-                      <Box>
-                        {/* Channel — in full, wrapping if it must. See `channel`. */}
-                        <DetailRow label="Channel">
-                          <DetailValue>{channel}</DetailValue>
-                        </DetailRow>
-
-                        {/* Account number — masked until revealed with the eye.
-                          Withheld entirely for an invalid (check) payout.
-
-                          THE BEST THING IN THE OLD SHEET, and untouched: a payout
-                          account is the one field here somebody could be
-                          shoulder-reading, and revealing it should be an act. */}
-                        {!isInvalid ? (
-                          <DetailRow label="Account no.">
-                              <Text
-                                fontWeight="600"
-                                textAlign="right"
-                                whiteSpace="nowrap"
-                                fontFamily={showAccountNo ? "mono" : undefined}
-                              >
-                                {accountDisplay}
-                              </Text>
-                              {hasAccountNo ? (
-                                <IconButton
-                                  aria-label={
-                                    showAccountNo
-                                      ? "Hide account number"
-                                      : "Show full account number"
-                                  }
-                                  size="xs"
-                                  variant="ghost"
-                                  color="gray.500"
-                                  _hover={{
-                                    color: "green.600",
-                                    bg: "green.50",
-                                  }}
-                                  onClick={() => setShowAccountNo((v) => !v)}
-                                >
-                                  {showAccountNo ? (
-                                    <LuEyeOff size={16} />
-                                  ) : (
-                                    <LuEye size={16} />
-                                  )}
-                                </IconButton>
-                              ) : null}
-                          </DetailRow>
-                        ) : null}
-
-                        <DetailRow label="Branch">
-                          <DetailValue>{payee.payoutBranch}</DetailValue>
-                        </DetailRow>
-                      </Box>
-                      </Box>
-                    </Grid>
-
-                    {/* Remarks — read-only here. Writing them happens in the
-                      sheet Edit Remarks opens, so the section stays a panel of
-                      text instead of carrying a Save button of its own.
-
-                      TEXT, NOT A DISABLED TEXTAREA. It was a grey read-only
-                      field with a placeholder, which is the exact shape of a form
-                      control somebody has switched off — so an empty remark read
-                      as "you cannot write here" rather than "nothing is written
-                      here". The button above it is what writes. */}
-                    <Box>
-                      <SectionTitle
-                        title="Remarks"
-                        action={
-                          <TertiarySmButton onClick={openRemarks}>
-                            <LuPencil /> Edit Remarks
-                          </TertiarySmButton>
-                        }
-                      />
-                      {savedRemarks ? (
-                        <Text
-                          fontSize="sm"
-                          color="gray.700"
-                          lineHeight="1.6"
-                          whiteSpace="pre-wrap"
-                        >
-                          {savedRemarks}
-                        </Text>
-                      ) : (
-                        <Text fontSize="sm" color="gray.400" fontStyle="italic">
-                          No remarks on this payee.
-                        </Text>
-                      )}
-                    </Box>
-                  </VStack>
+                  <Box>
+                    <PayeeDetails
+                      payee={payee}
+                      verificationChip={verificationChip}
+                      hasContact={hasContact}
+                      channel={channel}
+                      isInvalid={isInvalid}
+                      accountDisplay={accountDisplay}
+                      showAccountNo={showAccountNo}
+                      hasAccountNo={hasAccountNo}
+                      onToggleAccountNo={() => setShowAccountNo((v) => !v)}
+                      savedRemarks={savedRemarks}
+                      onRemarks={openRemarks}
+                      onDelete={handleDelete}
+                    />
+                  </Box>
                 ) : null}
               </Drawer.Body>
 
@@ -629,8 +686,65 @@ export function PlanholderPayeeDrawer({
                   all, drawn exactly like the two that worked. An inert control
                   that looks live is worse than an absent one — it comes back the
                   day it does something. */}
+              {/* THE PHONE'S FOOT: Edit and Verify, full size, Verify on the
+                  right where the thumb is. Delete is the last row of the body
+                  there, never beside Verify. */}
               {payee ? (
                 <Flex
+                  display={{ base: "flex", lg: "none" }}
+                  gap={3}
+                  px={4}
+                  py={3}
+                  borderTopWidth="1px"
+                  borderColor="gray.200"
+                  bg="gray.50"
+                  flexShrink={0}
+                >
+                  {verification ? (
+                    <Flex align="center" justify="center" gap={2} flex={1} h="44px">
+                      <Box
+                        color={
+                          isInvalid
+                            ? BRAND_COLORS.destructiveRed
+                            : BRAND_COLORS.darkGreen
+                        }
+                      >
+                        <LuCheck size={15} />
+                      </Box>
+                      <Text fontSize="sm" fontWeight="700" color="gray.800">
+                        {isInvalid ? "Verified invalid" : "Verified valid"}
+                      </Text>
+                    </Flex>
+                  ) : (
+                    <>
+                      <Button
+                        flex={1}
+                        h="44px"
+                        variant="outline"
+                        borderColor={BRAND_COLORS.primaryGreen}
+                        color={BRAND_COLORS.primaryGreen}
+                        onClick={() => setPickerOpen(true)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        flex={1}
+                        h="44px"
+                        bg={BRAND_COLORS.primaryGreen}
+                        color="white"
+                        _hover={{ bg: BRAND_COLORS.darkGreen }}
+                        onClick={() => setVerifyChoiceOpen(true)}
+                      >
+                        Verify
+                      </Button>
+                    </>
+                  )}
+                </Flex>
+              ) : null}
+
+              {payee ? (
+                <Flex
+                  display={{ base: "none", lg: "flex" }}
                   align="center"
                   gap={3}
                   px={{ base: 4, md: 5 }}
@@ -701,6 +815,68 @@ export function PlanholderPayeeDrawer({
         open={editOpen}
         onClose={() => setEditOpen(false)}
         asDialog={asDialog}
+      />
+
+      {/* THE PHONE'S EDIT: what to change first, then only those fields. */}
+      <BottomSheet
+        title="What do you want to edit?"
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+      >
+        {payee ? (
+          <VStack align="stretch" gap={2}>
+            {EDIT_PARTS.map(({ part, icon: Icon }) => (
+              <Flex
+                key={part}
+                as="button"
+                align="center"
+                gap={3}
+                textAlign="left"
+                bg="white"
+                borderWidth="1px"
+                borderColor="gray.200"
+                borderRadius="lg"
+                px={3.5}
+                py={3}
+                _active={{ bg: "gray.50" }}
+                onClick={() => {
+                  setPickerOpen(false);
+                  setEditPart(part);
+                }}
+              >
+                <Flex
+                  boxSize="34px"
+                  flexShrink={0}
+                  align="center"
+                  justify="center"
+                  borderRadius="full"
+                  bg="green.50"
+                  color={BRAND_COLORS.primaryGreen}
+                >
+                  <Icon size={16} />
+                </Flex>
+                <Box flex={1} minW={0}>
+                  <Text fontSize="sm" fontWeight="semibold" color="gray.800">
+                    {PAYEE_EDIT_PART_TITLES[part]}
+                  </Text>
+                  <Text fontSize="xs" color="gray.500" truncate>
+                    {currentValue(payee, part)}
+                  </Text>
+                </Box>
+                <Box color="gray.400" flexShrink={0}>
+                  <LuChevronRight size={16} />
+                </Box>
+              </Flex>
+            ))}
+          </VStack>
+        ) : null}
+      </BottomSheet>
+      <PlanholderPayeeEditDrawer
+        payee={payee}
+        open={editPart !== null}
+        onClose={() => setEditPart(null)}
+        asDialog={asDialog}
+        part={editPart}
       />
 
       {/* Write the remarks — the same sheet "Add Note" uses, so the form and its

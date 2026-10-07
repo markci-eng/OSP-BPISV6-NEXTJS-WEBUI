@@ -19,24 +19,16 @@
 // show a broken-image glyph and let the user think the file was corrupt. Those
 // say what they are instead.
 //
-// Built as the plan holder page's document sheet is built — bottom drawer,
-// grabber, green chip in the header, `RowItem` details — because it is the same
-// object seen the same way.
+// Drawn in `DocumentDetailSheet`, the frame the planholder page's document
+// sheet uses too, because it is the same object seen the same way.
 
-import { useEffect } from "react";
+import { Box, Flex, Text } from "@chakra-ui/react";
+import { LuFileText } from "react-icons/lu";
+import { SecondarySmButton } from "osp-ui-kit";
 import {
-  Box,
-  Button,
-  CloseButton,
-  Drawer,
-  Flex,
-  Portal,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
-import { LuFileText, LuTrash2 } from "react-icons/lu";
-import { BRAND_COLORS } from "@/lib/theme/brand-colors";
-import { RowItem } from "@/components/info-card/row-item";
+  DOCUMENT_ACTION_HEIGHT,
+  DocumentDetailSheet,
+} from "../../components/document-detail-sheet";
 import type { ServiceDocument } from "../service-documents-store";
 
 /** Tallest the preview pane runs before the sheet's own scroll takes over. */
@@ -146,153 +138,63 @@ export interface ServiceDocumentPreviewProps {
   onDelete: () => void;
 }
 
+/**
+ * THE SAME FRAME AS THE PLANHOLDER PROFILE'S AND DEATH CLAIM'S (user,
+ * 2026-10-02: "check it in the death and service. They should have similar
+ * design") — `DocumentDetailSheet`, option A of the mock-up. What is Service's
+ * own stays: the file rendered above the rows, Added By, and Delete beside
+ * Close rather than Preview / Download / Print.
+ */
 export function ServiceDocumentPreview({
   document: doc,
   open,
   onClose,
   onDelete,
 }: ServiceDocumentPreviewProps) {
-  // Safety net for Chakra v3 (zag-js) leaving `pointer-events: none` /
-  // `data-inert` on <body> after a modal closes — the same guard every overlay
-  // in this module carries. The query keeps it from firing while the remove
-  // confirmation is still up over this sheet.
-  useEffect(() => {
-    if (open) return;
-    const t = window.setTimeout(() => {
-      const anyModalOpen = window.document.querySelector(
-        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
-      );
-      if (!anyModalOpen) {
-        window.document.body.style.pointerEvents = "";
-        window.document.body.removeAttribute("data-inert");
-      }
-    }, 50);
-    return () => window.clearTimeout(t);
-  }, [open]);
-
   return (
-    <Drawer.Root
-      open={open}
-      onOpenChange={(e) => {
-        if (!e.open) onClose();
-      }}
-      placement="bottom"
+    <DocumentDetailSheet
+      open={open && !!doc}
+      onClose={onClose}
+      title={doc?.documentDesc ?? "Document"}
+      code={doc?.documentCode ?? ""}
+      fileName={doc?.fileName ?? ""}
+      format={doc ? formatOf(doc.fileName) : ""}
+      facts={
+        doc
+          ? [
+              {
+                label: "Document Code",
+                value: <Box as="span" fontFamily="mono">{doc.documentCode}</Box>,
+              },
+              { label: "Format", value: formatOf(doc.fileName) },
+              // Only on one added this session. A seeded document has no
+              // audit trail in this data layer, and printing "—" says the file
+              // has no author rather than that nobody recorded one.
+              ...(doc.origin === "added" && doc.addedBy
+                ? [{ label: "Added By", value: doc.addedBy, wide: true }]
+                : []),
+            ]
+          : []
+      }
+      onRemove={onDelete}
+      removeVerb="Delete"
+      // CLOSE is here as well as in the header corner: this sheet's whole job
+      // on a desktop is to be the place a document is acted on, and "I am done
+      // looking" deserves a real target rather than a 16px × in the corner.
+      actions={
+        <SecondarySmButton
+          flex={{ base: "1", lg: "none" }}
+          h={DOCUMENT_ACTION_HEIGHT}
+          minH={DOCUMENT_ACTION_HEIGHT}
+          px={4}
+          onClick={onClose}
+        >
+          Close
+        </SecondarySmButton>
+      }
     >
-      <Portal>
-        <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
-        <Drawer.Positioner>
-          <Drawer.Content
-            roundedTop="2xl"
-            maxH="85vh"
-            overflow="hidden"
-            display="flex"
-            flexDirection="column"
-          >
-            <Box pt={3} pb={1} display="flex" justifyContent="center">
-              <Box
-                w="36px"
-                h="4px"
-                bg="gray.300"
-                borderRadius="full"
-                opacity={0.7}
-              />
-            </Box>
-
-            <Drawer.Header
-              pt={2}
-              pb={3}
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-              gap={3}
-            >
-              <Flex align="center" gap={3} minW={0}>
-                <Box
-                  p={2.5}
-                  borderRadius="full"
-                  bg="#eaf5ee"
-                  color={BRAND_COLORS.darkGreen}
-                  flexShrink={0}
-                >
-                  <LuFileText size={18} />
-                </Box>
-                <Box minW={0}>
-                  <Drawer.Title>
-                    <Text
-                      fontWeight="bold"
-                      color={BRAND_COLORS.darkGreen}
-                      truncate
-                    >
-                      {doc ? doc.documentDesc : "Document"}
-                    </Text>
-                  </Drawer.Title>
-                  <Text fontSize="xs" color="gray.500" truncate>
-                    {doc ? doc.fileName : ""}
-                  </Text>
-                </Box>
-              </Flex>
-              <Drawer.CloseTrigger asChild>
-                <CloseButton size="sm" />
-              </Drawer.CloseTrigger>
-            </Drawer.Header>
-
-            <Drawer.Body pb={6} overflowY="auto">
-              {doc && (
-                <VStack align="stretch" gap={4}>
-                  <PreviewPane document={doc} />
-
-                  <Box>
-                    <RowItem label="Document" value={doc.documentDesc} />
-                    <RowItem label="Document Code" value={doc.documentCode} />
-                    <RowItem label="File Name" value={doc.fileName} />
-                    <RowItem label="Format" value={formatOf(doc.fileName)} />
-                    {/* Only on one added this session. A seeded document has no
-                        audit trail in this data layer, and printing "—" against
-                        two rows says the file has no author rather than that
-                        nobody recorded one. */}
-                    {doc.origin === "added" && doc.addedBy && (
-                      <RowItem label="Added By" value={doc.addedBy} />
-                    )}
-                  </Box>
-
-                  {/* The two things that can be done, side by side, with the
-                      destructive one drawn as the destructive one. Close is
-                      here as well as in the header corner: this sheet's whole
-                      job on a desktop is to be the place a document is acted
-                      on, and "I am done looking" deserves a real target rather
-                      than a 16px × in the corner. */}
-                  <Flex gap={3} direction={{ base: "column", sm: "row" }}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      borderRadius="full"
-                      flex="1"
-                      color="red.600"
-                      borderColor="gray.200"
-                      _hover={{ bg: "red.50", borderColor: "red.200" }}
-                      onClick={onDelete}
-                    >
-                      <LuTrash2 size={14} />
-                      Delete Document
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      borderRadius="full"
-                      flex="1"
-                      borderColor="gray.200"
-                      onClick={onClose}
-                    >
-                      Close
-                    </Button>
-                  </Flex>
-                </VStack>
-              )}
-            </Drawer.Body>
-          </Drawer.Content>
-        </Drawer.Positioner>
-      </Portal>
-    </Drawer.Root>
+      {doc && <PreviewPane document={doc} />}
+    </DocumentDetailSheet>
   );
 }
 

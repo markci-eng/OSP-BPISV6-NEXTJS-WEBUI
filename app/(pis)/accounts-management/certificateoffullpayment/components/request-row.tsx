@@ -2,10 +2,7 @@
 
 // One row of a COFP rail list.
 //
-// Its own file because the screen has TWO rail cards — the action's requests
-// and the accounts with a deficiency under them — and a plan holder must read
-// the same in both. The deficiency card differs only in what it puts on the
-// right of the row, which it passes as `trailing`.
+// A caller can put something on the right of the row by passing `trailing`.
 
 import { Box, Flex, Text } from "@chakra-ui/react";
 

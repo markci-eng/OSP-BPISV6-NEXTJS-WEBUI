@@ -21,10 +21,9 @@
 // caveat the drawer carries.
 
 import { useEffect, useState } from "react";
-import { Box, Flex, Text, VStack } from "@chakra-ui/react";
-import { LuFolderOpen, LuPlus } from "react-icons/lu";
+import { Box, useBreakpointValue, VStack } from "@chakra-ui/react";
 import { toast } from "sonner";
-import { TertiarySmButton, useMessageDialog } from "osp-ui-kit";
+import { useMessageDialog } from "osp-ui-kit";
 import type { BeneficiaryPayout, ClaimPayee } from "../claims-data";
 import { getClaimPayeesForRequest } from "../claims-data";
 import { PlanholderSectionHeader } from "../planholder/components/PlanholderSectionHeader";
@@ -36,6 +35,9 @@ import {
 } from "../planholder/components/PlanholderPayeeAddDrawer";
 import { claimPayeeFromForm } from "../planholder/components/claim-payee-from-form";
 import type { DeathClaim } from "../death-claim/death-claims-data";
+import { LAST_PAYEE_MESSAGE, MissingPayee } from "./missing-payee";
+import { SectionAddAction, SectionAddFoot } from "./section-add-button";
+import { AddPayeeSheet } from "./add-payee-sheet";
 
 export function ClaimPayees({ claim }: { claim: DeathClaim }) {
   const { messageBox } = useMessageDialog();
@@ -58,6 +60,8 @@ export function ClaimPayees({ claim }: { claim: DeathClaim }) {
 
   const [selected, setSelected] = useState<ClaimPayee | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  /** Below `lg` Add opens the phone's bottom sheet instead of the dialog. */
+  const isPhone = useBreakpointValue({ base: true, lg: false }) ?? false;
 
   /**
    * Confirm, then drop the payee. Resolves whether it was actually removed,
@@ -68,6 +72,12 @@ export function ClaimPayees({ claim }: { claim: DeathClaim }) {
    * sharing an `idx`.
    */
   const remove = async (payee: ClaimPayee): Promise<boolean> => {
+    if (payees.length <= 1) {
+      toast.error("Cannot remove the only payee", {
+        description: LAST_PAYEE_MESSAGE,
+      });
+      return false;
+    }
     const confirmed = await messageBox({
       title: "REMOVE PAYEE",
       message: `Remove ${payee.name} from this claim's payees?`,
@@ -110,34 +120,16 @@ export function ClaimPayees({ claim }: { claim: DeathClaim }) {
     <Box>
       <PlanholderSectionHeader
         title="Payee's Information"
+        // The heading's control on a desktop, a full-width button under the
+        // rows on a phone — see `SectionAddAction`.
         action={
-          <TertiarySmButton onClick={() => setAddOpen(true)}>
-            <LuPlus /> Add Payee
-          </TertiarySmButton>
+          <SectionAddAction label="Add Payee" onClick={() => setAddOpen(true)} />
         }
       />
 
       {payees.length === 0 ? (
-        <Flex
-          direction="column"
-          align="center"
-          justify="center"
-          textAlign="center"
-          py={8}
-          gap={3}
-        >
-          <Box p={4} borderRadius="full" bg="gray.100" color="gray.500">
-            <LuFolderOpen size={24} />
-          </Box>
-          <Box>
-            <Text fontSize="sm" fontWeight="600" color="gray.700">
-              No payees yet
-            </Text>
-            <Text fontSize="xs" color="gray.500" mt={1} maxW="280px">
-              Payees named on this claim will appear here.
-            </Text>
-          </Box>
-        </Flex>
+        // An error, not an empty state — see `MissingPayee`.
+        <MissingPayee />
       ) : (
         <VStack align="stretch" gap={2}>
           {payees.map((payee) => (
@@ -150,6 +142,7 @@ export function ClaimPayees({ claim }: { claim: DeathClaim }) {
           ))}
         </VStack>
       )}
+      <SectionAddFoot label="Add Payee" onClick={() => setAddOpen(true)} />
 
       {/* BOTH SHEETS ALWAYS MOUNTED, with `open` driving them — never
           `{selected && <Drawer/>}`. A dialog mounted at the moment it opens has
@@ -167,11 +160,17 @@ export function ClaimPayees({ claim }: { claim: DeathClaim }) {
       />
 
       <PlanholderPayeeAddDrawer
-        open={addOpen}
+        open={addOpen && !isPhone}
         onClose={() => setAddOpen(false)}
         claimNo={claimNo}
         onSave={add}
         asDialog
+      />
+      {/* The phone's own sheet — see `AddPayeeSheet`. */}
+      <AddPayeeSheet
+        open={addOpen && isPhone}
+        onClose={() => setAddOpen(false)}
+        onSave={add}
       />
     </Box>
   );

@@ -88,6 +88,8 @@ export function stageSince(billing: ServiceBilling): string {
       return row.dateVerified || fallback;
     case "processed":
       return row.cisUploadDate || fallback;
+    case "for-deduction":
+      return row.dateProcessed || fallback;
     default:
       return fallback;
   }

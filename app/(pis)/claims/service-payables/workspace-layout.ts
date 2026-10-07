@@ -17,6 +17,13 @@
 // THE SPLIT IS MEASURED AGAINST THE WORKSPACE, NOT THE VIEWPORT — see
 // {@link TWO_COLUMN_MIN}, which is the correction this module exists to hold.
 
+import {
+  CONVEYOR_GAP,
+  CONVEYOR_TRACK,
+  CONVEYOR_TRACK_COLLAPSED,
+  CONVEYOR_VIEW_MAX,
+} from "../components/conveyor-columns";
+import { RAIL_TRACK_TRANSITION } from "../components/rail-strip";
 import { scrollParentOf, visibleBandOf } from "../components/scroll-parent";
 
 /**
@@ -315,19 +322,30 @@ const desktopShell = (styles: Record<string, unknown>) => ({
 });
 
 /**
- * The conveyor's tracks — the rail first, and FLUID rather than clamped to 340.
+ * {@link WORKSPACE_GRID} with the rail on the left, split on the viewport.
  *
- * 32% with a 280 floor is what makes the viewport split survivable: at a 605px
- * workspace the rail takes its floor and hands the record 300px, where a fixed
- * 340 would have left 241. On a wide monitor 32% passes 360 and the ceiling
- * holds it there, which is about where the old two-step rule ended up anyway.
+ * The tracks are `CONVEYOR_TRACK` — the rail first, FLUID rather than clamped
+ * to 340. 32% with a 280 floor is what makes the viewport split survivable: at
+ * a 605px workspace the rail takes its floor and hands the record 300px, where
+ * a fixed 340 would have left 241. Shared with the death claim since 2026-10-05.
  */
-const CONVEYOR_TRACK = "clamp(280px, 32%, 360px) minmax(0, 1fr)";
-
-/** {@link WORKSPACE_GRID} with the rail on the left, split on the viewport. */
 export const CONVEYOR_GRID = {
   ...STACKED_GRID,
-  ...desktopShell({ gridTemplateColumns: CONVEYOR_TRACK, gap: "24px" }),
+  ...desktopShell({
+    gridTemplateColumns: CONVEYOR_TRACK,
+    gap: CONVEYOR_GAP,
+    ...RAIL_TRACK_TRANSITION,
+  }),
+};
+
+/** {@link CONVEYOR_GRID} with the rail folded to its icon strip — see `RailStrip`. */
+export const CONVEYOR_GRID_COLLAPSED = {
+  ...STACKED_GRID,
+  ...desktopShell({
+    gridTemplateColumns: CONVEYOR_TRACK_COLLAPSED,
+    gap: CONVEYOR_GAP,
+    ...RAIL_TRACK_TRANSITION,
+  }),
 };
 
 /**
@@ -353,20 +371,48 @@ export const CONVEYOR_GRID = {
  * commit that is on screen in every state of the page rather than in all but
  * one.
  */
-export const CONVEYOR_RAIL_MAX = "calc(100vh - 156px)";
+export const CONVEYOR_RAIL_MAX = CONVEYOR_VIEW_MAX;
 
-/** {@link workspaceRail} in the left-hand track. */
-export const conveyorRail = (maxHeight: string = RAIL_MAX_VIEWPORT) => ({
+/**
+ * {@link workspaceRail} in the left-hand track.
+ *
+ * IT SCROLLS WHEN IT RUNS OUT OF SCREEN (2026-09-30). Stage card, accounts,
+ * Process Billing and History together are taller than a short monitor's
+ * bound, and none of them can shrink without its controls overlapping the next
+ * — so on that monitor the pinned column scrolls on its own, the way a sidebar
+ * does, and on a tall one it never needs to. The inline padding and the
+ * matching negative margin give focus rings and count bubbles room inside the
+ * scroll box, which clips at its edges.
+ */
+//
+// TWO BOXES, SHELL AND BODY (2026-10-05). The sticky shell pins the rail and
+// clips nothing; the body inside it is what scrolls. Anything that has to sit
+// outside the rail's edge belongs on the shell — a scroll box clips everything
+// outside itself, since `overflow-y: auto` forces the other axis off
+// `visible` too.
+
+/** The sticky outer box — pins the rail. */
+export const CONVEYOR_RAIL_SHELL = {
   ...STACKED_ITEM,
   ...desktopShell({
     order: 0,
     position: "sticky",
     top: "16px",
+  }),
+};
+
+/** The bounded, scrolling column inside {@link CONVEYOR_RAIL_SHELL}. */
+export const conveyorRailBody = (maxHeight: string = RAIL_MAX_VIEWPORT) =>
+  desktopShell({
     maxHeight,
     display: "flex",
     flexDirection: "column",
-  }),
-});
+    overflowY: "auto",
+    overscrollBehavior: "contain",
+    scrollbarWidth: "thin",
+    padding: "6px",
+    margin: "-6px",
+  });
 
 /**
  * {@link MAIN_COLUMN_TAIL} in the right-hand track.
@@ -456,11 +502,20 @@ export const RAIL_GIVES = {
   ...twoColumn({ flex: "0 1 auto", minHeight: 0 }),
 };
 
-/** {@link RAIL_GIVES} on the conveyor's viewport condition. */
+/**
+ * The conveyor rail's accounts card — it NO LONGER GIVES (2026-09-30).
+ *
+ * It was {@link RAIL_GIVES} while the card held a scrolling list of accounts.
+ * It holds the account stepper now, which has a fixed height and nothing inside
+ * that can scroll, so shrinking it only slid its Prev / Jump / Next row under
+ * Process Billing on a short monitor once History joined the rail. Every item
+ * in the conveyor rail holds its size; the rail itself scrolls instead — see
+ * {@link conveyorRail}.
+ */
 export const CONVEYOR_GIVES = {
   display: "flex",
   flexDirection: "column",
-  [DESKTOP_SHELL]: { flex: "0 1 auto", minHeight: 0 },
+  [DESKTOP_SHELL]: { flex: "0 0 auto" },
 };
 
 /**

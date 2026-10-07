@@ -1,11 +1,6 @@
 import { COFP_MEMOS, COFP_REQUESTS } from "../../cofp/data/data";
 import type { CofpRequest } from "../../cofp/data/types";
-import type {
-  CofpDeficiencyRequest,
-  CofpPayment,
-  CofpPlanholder,
-  CofpView,
-} from "./types";
+import type { CofpPayment, CofpPlanholder, CofpView } from "./types";
 
 /**
  * One plan holder to draw the card against while the screen has no source.
@@ -66,17 +61,18 @@ const PENDING_MEMO_NOS = new Set(
  * screens list the same idea of a request. Each view is the set of certificates
  * its action can be taken on:
  *
- * - GENERATE is every request — the accounts a certificate can be raised for.
- *   Until the rail has a plan holder source of its own this is the whole list,
- *   which is what the screen showed before it had views.
  * - BATCH TRANSMITTAL is the printed certificates whose memo has not gone out.
+ * - DEFICIENT is the queued certificates held back for a missing requirement.
+ *   The sibling module has no such status yet, so every fourth queued request
+ *   stands in for one until a real source flags them.
  * - REPLACEMENT is the released ones: a certificate is only reissued once it has
  *   been handed over and then lost or damaged.
  * - The rest are the status of the same name.
  */
 const VIEW_FILTERS: Record<CofpView, (request: CofpRequest) => boolean> = {
-  GENERATE: () => true,
   FOR_PRINTING: (r) => r.status === "FOR_PRINTING",
+  DEFICIENT: (r) =>
+    r.status === "FOR_PRINTING" && Number(r.id.replace(/\D/g, "")) % 4 === 0,
   PRINTED: (r) => r.status === "PRINTED",
   BATCH_TRANSMITTAL: (r) =>
     r.status === "PRINTED" && !!r.memoNo && PENDING_MEMO_NOS.has(r.memoNo),
@@ -89,38 +85,6 @@ const VIEW_FILTERS: Record<CofpView, (request: CofpRequest) => boolean> = {
 /** The requests the rail lists under a view. */
 export function requestsFor(view: CofpView): CofpRequest[] {
   return COFP_REQUESTS.filter(VIEW_FILTERS[view]).slice(0, RAIL_ROW_CAP);
-}
-
-/**
- * Accounts a certificate was asked for that are still short (user, 2026-09-22).
- *
- * A SECOND LIST UNDER GENERATE, not rows mixed into the first: these are the
- * requests Generate cannot act on, and the whole reason to show them is that
- * somebody has to chase the balance before the certificate can be raised.
- *
- * Taken from the tail of the module's records so the two lists under Generate
- * are different accounts, and the amounts are spread across the small change a
- * final billing leaves behind up to a whole missed installment. `balance` on
- * the plan holder card is this figure, so a picked row explains itself.
- */
-export const COFP_DEFICIENCY_REQUESTS: CofpDeficiencyRequest[] =
-  COFP_REQUESTS.slice(-14).map((request, i) => ({
-    ...request,
-    // Still queued whatever the source record was: nothing has been printed
-    // for one of these, so the card shows no COFP number against it.
-    status: "FOR_PRINTING",
-    memoNo: undefined,
-    deficiency: 250 + (i % 7) * 675,
-  }));
-
-/**
- * The deficiency rows a view lists under its own.
- *
- * Only Generate has any: every other view is a certificate that has already
- * been raised, by which point the account was settled.
- */
-export function deficienciesFor(view: CofpView): CofpDeficiencyRequest[] {
-  return view === "GENERATE" ? COFP_DEFICIENCY_REQUESTS : [];
 }
 
 /** Pay classes a payment is collected under. */
@@ -180,14 +144,7 @@ function surnameFirst(name: string): string {
  * so the card stays whole and only what the request actually knows changes with
  * the selection.
  */
-export function planholderFor(
-  request: CofpRequest | CofpDeficiencyRequest,
-): CofpPlanholder {
-  // A row off the deficiency list carries what it is short, and the card's own
-  // Balance and Account Status are exactly where that belongs — the two fields
-  // a processor reads to see why the certificate cannot go out.
-  const deficiency = "deficiency" in request ? request.deficiency : 0;
-
+export function planholderFor(request: CofpRequest): CofpPlanholder {
   return {
     profile: {
       ...SAMPLE_COFP_PLANHOLDER.profile,
@@ -204,12 +161,6 @@ export function planholderFor(
       planCode: request.planType,
       planDesc: request.planName,
       totalAmountPaid: request.totalAmountPaid,
-      balance: deficiency,
-      // "FP" only while there is nothing left to pay. The card colours
-      // anything else as a warning, which is the point: an account with a
-      // deficiency is one the certificate cannot be raised on.
-      accountStatusCode: deficiency ? "AC" : "FP",
-      accountStatusLabel: deficiency ? "Active" : "Fully Paid",
       // Numbered only once the certificate has been printed; a request still
       // queued for printing has no number yet and shows the dash.
       cofpNumber:

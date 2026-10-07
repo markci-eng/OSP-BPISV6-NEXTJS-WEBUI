@@ -89,6 +89,64 @@ function StageTab({
   );
 }
 
+/**
+ * The stage row on its own — tabs, or a heading when there is one stage.
+ *
+ * SHARED WITH THE PHONE'S PINNED BAR (see `MobileQuickAccess`), so the tabs a
+ * processor scrolled past and the ones pinned over the claim are one control
+ * drawn twice rather than two that could drift apart.
+ */
+export function StageTabs({
+  stages,
+  active,
+  onStageChange,
+}: {
+  stages: Stage[];
+  active: string;
+  onStageChange: (key: string) => void;
+}) {
+  const current = stages.find((stage) => stage.key === active) ?? stages[0];
+
+  return stages.length < 2 ? (
+    // ONE STAGE — a heading, not a control. See the note at the top.
+    <Flex align="baseline" justify="space-between" gap={3}>
+      <Text
+        fontSize="10px"
+        fontWeight="700"
+        letterSpacing="0.12em"
+        textTransform="uppercase"
+        color="gray.400"
+        truncate
+      >
+        {current?.label}
+      </Text>
+      <Text fontSize="xs" fontWeight="700" color="gray.600" flexShrink={0}>
+        {current?.count}
+      </Text>
+    </Flex>
+  ) : (
+    // TWO OR MORE — tabs, in a track, so the pair reads as one choice
+    // rather than as two buttons that happen to be adjacent.
+    <Flex
+      gap={1}
+      p="3px"
+      bg="gray.100"
+      borderRadius={SURFACE_RADIUS}
+      role="tablist"
+      aria-label="Queue"
+    >
+      {stages.map((stage) => (
+        <StageTab
+          key={stage.key}
+          stage={stage}
+          active={stage.key === current?.key}
+          onSelect={() => onStageChange(stage.key)}
+        />
+      ))}
+    </Flex>
+  );
+}
+
 export function StageCard({
   stages,
   active,
@@ -106,50 +164,15 @@ export function StageCard({
   /** Running the search — the magnifier, and Enter. */
   onSearch: () => void;
 }) {
-  const current = stages.find((stage) => stage.key === active) ?? stages[0];
-  const single = stages.length < 2;
-
   return (
     <Box {...CARD_SHAPE} bg="white" px={4} py={3}>
-      {single ? (
-        // ONE STAGE — a heading, not a control. See the note at the top.
-        <Flex align="baseline" justify="space-between" gap={3} mb={2.5}>
-          <Text
-            fontSize="10px"
-            fontWeight="700"
-            letterSpacing="0.12em"
-            textTransform="uppercase"
-            color="gray.400"
-            truncate
-          >
-            {current?.label}
-          </Text>
-          <Text fontSize="xs" fontWeight="700" color="gray.600" flexShrink={0}>
-            {current?.count}
-          </Text>
-        </Flex>
-      ) : (
-        // TWO OR MORE — tabs, in a track, so the pair reads as one choice
-        // rather than as two buttons that happen to be adjacent.
-        <Flex
-          gap={1}
-          p="3px"
-          mb={2.5}
-          bg="gray.100"
-          borderRadius={SURFACE_RADIUS}
-          role="tablist"
-          aria-label="Queue"
-        >
-          {stages.map((stage) => (
-            <StageTab
-              key={stage.key}
-              stage={stage}
-              active={stage.key === current?.key}
-              onSelect={() => onStageChange(stage.key)}
-            />
-          ))}
-        </Flex>
-      )}
+      <Box mb={2.5}>
+        <StageTabs
+          stages={stages}
+          active={active}
+          onStageChange={onStageChange}
+        />
+      </Box>
 
       {/* THE AREA'S OWN FIELD — the kit's `LookupField` trigger to the number,
           which is why it matches the plan holder lookup a column away. The

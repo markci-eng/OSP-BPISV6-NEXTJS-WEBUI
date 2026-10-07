@@ -50,9 +50,8 @@
 // the wrong door for the action behind it, and the preview is somewhere the
 // user can see what they are about to delete before they do.
 //
-// A hand-raised deficiency has nothing to preview, so its desktop control is a
-// trash button on the row. It is the only icon-button in either list, which is
-// what keeps it from reading as one option among several.
+// A deficiency has nothing to preview, so its desktop control is a trash button
+// on the row — on every deficiency, required ones included (user, 2026-10-01).
 //
 // WHAT CHANGED FROM "SUBMITTED DOCUMENTS" / "TO BE SUBMITTED". Those were two
 // read-only lists and the right-hand one was every document type in the
@@ -74,8 +73,13 @@
 
 import { useState } from "react";
 import { Box, Flex, IconButton, Text, VStack } from "@chakra-ui/react";
-import { TertiarySmButton, useMessageDialog } from "osp-ui-kit";
 import {
+  PrimarySmButton,
+  TertiarySmButton,
+  useMessageDialog,
+} from "osp-ui-kit";
+import {
+  LuChevronRight,
   LuFileText,
   LuFileWarning,
   LuPlus,
@@ -89,6 +93,8 @@ import {
   type DocumentTab,
 } from "../../components/document-folder";
 import { ScrollFade } from "../../components/scroll-fade";
+import { AddDocumentSheet } from "../../components/add-document-sheet";
+import { MobileDocumentFolder } from "../../components/mobile-document-folder";
 import { toaster } from "../../components/toaster";
 import { SwipeToRemoveRow } from "../../planholder/components/SwipeToRemoveRow";
 import {
@@ -111,11 +117,12 @@ import {
 import {
   AddDeficiencyDialog,
   type AddDeficiencySubmission,
-} from "./AddDeficiencyDialog";
+} from "../../components/add-deficiency-dialog";
 import {
   AddDocumentDialog,
   type AddDocumentSubmission,
 } from "./AddDocumentDialog";
+import { AddDeficiencySheet } from "../../components/add-deficiency-sheet";
 import {
   ServiceDocumentPreview,
   formatOf,
@@ -337,10 +344,7 @@ function DeficiencyBody({
   onWithdraw,
 }: {
   deficiency: ServiceDeficiencyItem;
-  /**
-   * The desktop withdraw control. Omitted on the narrow layout, where the row
-   * swipes instead, and on required rows, which cannot be withdrawn at all.
-   */
+  /** The desktop withdraw control. Omitted on the narrow layout, where the row swipes instead. */
   onWithdraw?: () => void;
 }) {
   const isManual = deficiency.source === "manual";
@@ -398,16 +402,11 @@ function DeficiencyBody({
 }
 
 /**
- * One outstanding requirement, in whichever frame its source calls for.
+ * One outstanding requirement, required or hand-raised.
  *
- * REQUIRED — a clickable card that opens the add flow for its document. Never
- * removable, on any layout: the requirement is the company's, and it is cleared
- * by SUBMITTING the document, not by deleting the line that says it is missing.
- *
- * MANUAL — the same card, plus a way to withdraw it, because this one WAS
- * somebody's to raise. A trash button on a desktop, the swipe below `xl`. It
- * still opens the add flow on a tap when it names a document; a special case
- * has nothing to open, so it is not a button at all.
+ * A tap opens the add flow for its document; a special case has nothing to
+ * open, so it is not a button at all. Either kind can be withdrawn — a trash
+ * button on a desktop, the swipe below `xl`.
  */
 function ServiceDeficiencyRow({
   deficiency,
@@ -424,57 +423,24 @@ function ServiceDeficiencyRow({
   /** The narrow layout's swipe, which waits on the confirmation. */
   onRequestWithdraw: () => Promise<boolean>;
 }) {
-  const isManual = deficiency.source === "manual";
   const openable = Boolean(deficiency.documentCode);
-  const body = (
-    <DeficiencyBody
-      deficiency={deficiency}
-      onWithdraw={isManual && isDesktop ? onWithdraw : undefined}
-    />
-  );
 
-  if (isManual) {
-    return (
-      <RowFrame
-        isDesktop={isDesktop}
-        onClick={openable ? onUpload : undefined}
-        ariaLabel={`Submit ${deficiency.description}`}
-        onRequestRemove={onRequestWithdraw}
-      >
-        {body}
-      </RowFrame>
-    );
-  }
-
-  // Required, and so never swipeable at any width — the frame above would give
-  // it a remove gesture below `xl` that must not exist.
+  // EVERY DEFICIENCY IS REMOVABLE NOW (user, 2026-10-01: "user can remove the
+  // deficiency freely… the same with document"), required ones included — so
+  // they all wear the document's frame: a swipe left below `xl`, the trash
+  // button on a desktop.
   return (
-    <Flex
-      role="button"
-      tabIndex={0}
-      onClick={onUpload}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onUpload();
-        }
-      }}
-      aria-label={`Submit ${deficiency.description}`}
-      direction="column"
-      borderWidth="1px"
-      borderColor="gray.200"
-      borderRadius="xl"
-      bg="white"
-      boxShadow="xs"
-      px={3}
-      py="10px"
-      cursor="pointer"
-      transition="all 0.15s ease"
-      _hover={{ borderColor: BRAND_COLORS.primaryGreen, bg: "#f4faf6" }}
-      css={{ "&:hover .deficiency-upload": { color: BRAND_COLORS.darkGreen } }}
+    <RowFrame
+      isDesktop={isDesktop}
+      onClick={openable ? onUpload : undefined}
+      ariaLabel={`Submit ${deficiency.description}`}
+      onRequestRemove={onRequestWithdraw}
     >
-      {body}
-    </Flex>
+      <DeficiencyBody
+        deficiency={deficiency}
+        onWithdraw={isDesktop ? onWithdraw : undefined}
+      />
+    </RowFrame>
   );
 }
 
@@ -502,7 +468,6 @@ function ListFrame({ children }: { children: React.ReactNode }) {
     </ScrollFade>
   );
 }
-
 
 export interface ServiceRecordDocumentsProps {
   service: ServiceRecord;
@@ -566,7 +531,34 @@ export function ServiceRecordDocuments({
    * by making the lookup fail rather than by a second piece of state agreeing.
    */
   const [openDocId, setOpenDocId] = useState<string | null>(null);
+
+  /** The phone's list sheet — which list it shows, or `null` when closed. */
+  const [sheet, setSheet] = useState<DocumentTab | null>(null);
+
+  // THE DEFICIENT TICK OPENS THE SHEET ON A PHONE (user, 2026-10-01). The tick
+  // reaches this section by setting `tab`, which on a desktop picks the pill;
+  // there are no pills here, so the change opens the deficiency sheet instead.
+  // Watched while rendering, the Jump sheet's way, rather than in an effect.
+  const [seenTab, setSeenTab] = useState(tab);
+  if (tab !== seenTab) {
+    setSeenTab(tab);
+    if (!isDesktop && tab === "deficiencies") setSheet("deficiencies");
+  }
+
+  /**
+   * Closing hands `tab` back to Documents on a phone, so the NEXT tick is a
+   * change again and opens the sheet again.
+   */
+  const closeSheet = () => {
+    setSheet(null);
+    if (!isDesktop && tab === "deficiencies") onTabChange?.("documents");
+  };
   const openDocument = documents.find((d) => d.id === openDocId) ?? null;
+
+  const addableTypes = personId ? getAddableDocumentTypes(personId) : [];
+  const raisableTypes = (
+    personId ? getRaisableDocumentTypes(personId, service) : []
+  ).map((t) => ({ code: t.documentCode, name: t.documentDesc }));
 
   const openAddDocument = (code?: string) => {
     setPresetCode(code);
@@ -658,81 +650,107 @@ export function ServiceRecordDocuments({
 
   /* ------------------------------ render ------------------------------ */
 
+  const documentRows = documents.map((document) => (
+    <ServiceDocumentRow
+      key={document.id}
+      document={document}
+      isDesktop={isDesktop}
+      onOpen={() => setOpenDocId(document.id)}
+      onRequestRemove={() => handleRemoveDocument(document)}
+    />
+  ));
+
+  const deficiencyRows = deficiencies.map((deficiency) => (
+    <ServiceDeficiencyRow
+      key={deficiency.id}
+      deficiency={deficiency}
+      isDesktop={isDesktop}
+      onUpload={() => openAddDocument(deficiency.documentCode)}
+      onWithdraw={() => void handleWithdrawDeficiency(deficiency)}
+      onRequestWithdraw={() => handleWithdrawDeficiency(deficiency)}
+    />
+  ));
+
+  /* THE FOLDER IS `DocumentFolder`, shared with the death claim's — see the
+     note at the top of that file. What is passed in is what is genuinely this
+     screen's: the rows, the counts, the two Adds, and the admission below.
+
+     THE STAND-IN, ADMITTED WHERE IT IS READ. Every service is checked against
+     the same six documents because there is no per-service requirement table
+     yet, and a checklist that does not say so is a checklist a processor would
+     be right to trust. One 11px line, on the tab it is true of, and it goes on
+     its own the day the rule arrives — see `REQUIRED_DOCUMENTS_RULE_PENDING`. */
+  const desktopFolder = (
+    <DocumentFolder
+      tab={tab}
+      onTabChange={onTabChange}
+      documents={{
+        count: documents.length,
+        action: (
+          <TertiarySmButton onClick={() => openAddDocument()}>
+            <LuPlus /> Add
+          </TertiarySmButton>
+        ),
+        isEmpty: documents.length === 0,
+        empty: {
+          title: "No documents yet",
+          description: "Documents received for this service will appear here.",
+        },
+        children: <ListFrame>{documentRows}</ListFrame>,
+      }}
+      deficiencies={{
+        count: deficiencies.length,
+        action: (
+          <TertiarySmButton onClick={() => setAddDefOpen(true)}>
+            <LuPlus /> Add
+          </TertiarySmButton>
+        ),
+        note: REQUIRED_DOCUMENTS_RULE_PENDING
+          ? "Provisional requirement list"
+          : undefined,
+        isEmpty: deficiencies.length === 0,
+        empty: {
+          title: "Nothing outstanding",
+          description:
+            "Everything this service was asked for has been received.",
+        },
+        children: <ListFrame>{deficiencyRows}</ListFrame>,
+      }}
+    />
+  );
+
   return (
     <Box>
-      {/* THE FOLDER IS `DocumentFolder`, shared with the death claim's — see the
-          note at the top of that file. What is passed in is what is genuinely
-          this screen's: the rows, the counts, the two Adds, and the admission
-          below.
-
-          THE STAND-IN, ADMITTED WHERE IT IS READ. Every service is checked
-          against the same six documents because there is no per-service
-          requirement table yet, and a checklist that does not say so is a
-          checklist a processor would be right to trust. One 11px line, on the
-          tab it is true of, and it goes on its own the day the rule arrives —
-          see `REQUIRED_DOCUMENTS_RULE_PENDING`. */}
-      <DocumentFolder
-        tab={tab}
-        onTabChange={onTabChange}
-        documents={{
-          count: documents.length,
-          action: (
-            <TertiarySmButton onClick={() => openAddDocument()}>
-              <LuPlus /> Add
-            </TertiarySmButton>
-          ),
-          isEmpty: documents.length === 0,
-          empty: {
-            title: "No documents yet",
-            description:
-              "Documents received for this service will appear here.",
-          },
-          children: (
-            <ListFrame>
-              {documents.map((document) => (
-                <ServiceDocumentRow
-                  key={document.id}
-                  document={document}
-                  isDesktop={isDesktop}
-                  onOpen={() => setOpenDocId(document.id)}
-                  onRequestRemove={() => handleRemoveDocument(document)}
-                />
-              ))}
-            </ListFrame>
-          ),
-        }}
-        deficiencies={{
-          count: deficiencies.length,
-          action: (
-            <TertiarySmButton onClick={() => setAddDefOpen(true)}>
-              <LuPlus /> Add
-            </TertiarySmButton>
-          ),
-          note: REQUIRED_DOCUMENTS_RULE_PENDING
-            ? "Provisional requirement list"
-            : undefined,
-          isEmpty: deficiencies.length === 0,
-          empty: {
-            title: "Nothing outstanding",
-            description:
-              "Everything this service was asked for has been received.",
-          },
-          children: (
-            <ListFrame>
-              {deficiencies.map((deficiency) => (
-                <ServiceDeficiencyRow
-                  key={deficiency.id}
-                  deficiency={deficiency}
-                  isDesktop={isDesktop}
-                  onUpload={() => openAddDocument(deficiency.documentCode)}
-                  onWithdraw={() => void handleWithdrawDeficiency(deficiency)}
-                  onRequestWithdraw={() => handleWithdrawDeficiency(deficiency)}
-                />
-              ))}
-            </ListFrame>
-          ),
-        }}
-      />
+      {isDesktop ? (
+        desktopFolder
+      ) : (
+        /* THE PHONE'S CARD IS A SUMMARY (user, 2026-10-01, option B of the
+           mock-up) — `MobileDocumentFolder`, shared with the death claim. The
+           sheet is driven from here so the Deficient tick can open it. */
+        <MobileDocumentFolder
+          sheet={sheet}
+          onSheetChange={(next) => (next ? setSheet(next) : closeSheet())}
+          documents={{
+            count: documents.length,
+            names: documents.map((d) => d.documentDesc),
+            rows: documentRows,
+            addLabel: "Add document",
+            onAdd: () => openAddDocument(),
+            emptyText: "Nothing received yet",
+          }}
+          deficiencies={{
+            count: deficiencies.length,
+            names: deficiencies.map((d) => d.description),
+            rows: deficiencyRows,
+            addLabel: "Raise deficiency",
+            onAdd: () => setAddDefOpen(true),
+            emptyText: "Nothing outstanding",
+            note: REQUIRED_DOCUMENTS_RULE_PENDING
+              ? "Provisional requirement list"
+              : undefined,
+          }}
+        />
+      )}
 
       {/* A SECOND "NOTES" SECTION STOOD HERE and is gone. It listed the plan
           holder's notes — `getPlanholderNotes`, written on the plan itself —
@@ -758,16 +776,42 @@ export function ServiceRecordDocuments({
           on the state above. The type lists are recomputed each render, so a
           document added a moment ago is already gone from what they offer. */}
       <AddDocumentDialog
-        types={personId ? getAddableDocumentTypes(personId) : []}
+        types={addableTypes}
         presetCode={presetCode}
-        open={addDocOpen}
+        open={isDesktop && addDocOpen}
         onOpenChange={setAddDocOpen}
         onSubmit={handleAddDocument}
       />
 
+      {/* THE PHONE'S ADD, a bottom sheet — option A of the mock-up. Both
+          mounted; the layout picks which one `addDocOpen` opens. */}
+      <AddDocumentSheet
+        types={addableTypes.map((t) => ({
+          code: t.documentCode,
+          name: t.documentDesc,
+        }))}
+        outstandingCodes={deficiencies
+          .map((d) => d.documentCode)
+          .filter(Boolean)}
+        presetCode={presetCode}
+        open={!isDesktop && addDocOpen}
+        onOpenChange={setAddDocOpen}
+        onSubmit={({ code, file }) =>
+          handleAddDocument({ documentCode: code, file })
+        }
+      />
+
       <AddDeficiencyDialog
-        types={personId ? getRaisableDocumentTypes(personId, service) : []}
-        open={addDefOpen}
+        types={raisableTypes}
+        open={isDesktop && addDefOpen}
+        onOpenChange={setAddDefOpen}
+        onSubmit={handleAddDeficiency}
+      />
+
+      {/* The phone's Raise, the Add sheet's twin. Both mounted. */}
+      <AddDeficiencySheet
+        types={raisableTypes}
+        open={!isDesktop && addDefOpen}
         onOpenChange={setAddDefOpen}
         onSubmit={handleAddDeficiency}
       />

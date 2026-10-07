@@ -20,7 +20,12 @@
 // there is only that it wraps four tabs to 2x2 until `xl`, which `columns`
 // covers.
 
-import { SimpleGrid, Text, chakra, type SimpleGridProps } from "@chakra-ui/react";
+import {
+  chakra,
+  SimpleGrid,
+  Text,
+  type SimpleGridProps,
+} from "@chakra-ui/react";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 
 export interface SegmentedTabOption<T extends string> {
@@ -63,9 +68,6 @@ export function SegmentedTabs<T extends string>({
         const active = option.value === value;
 
         return (
-          // `chakra.button` rather than `<Flex as="button">`: `as` does not
-          // widen the props to the element's own, so `type` — which keeps this
-          // from submitting any form it is dropped into — is a type error there.
           <chakra.button
             key={option.value}
             type="button"
@@ -81,6 +83,9 @@ export function SegmentedTabs<T extends string>({
             gap={1.5}
             flex="1"
             minW={0}
+            // A THUMB-SIZED TAB ON A PHONE (user, 2026-10-01: "it is hard to
+            // click each selection"). The rail's 5px is a mouse target.
+            minH={{ base: "40px", lg: "auto" }}
             py="5px"
             borderRadius="md"
             bg={active ? "white" : "transparent"}
@@ -95,7 +100,7 @@ export function SegmentedTabs<T extends string>({
             }}
           >
             <Text
-              fontSize="xs"
+              fontSize={{ base: "sm", lg: "xs" }}
               fontWeight={active ? "700" : "600"}
               color={active ? BRAND_COLORS.darkGreen : "gray.600"}
               truncate
@@ -104,7 +109,7 @@ export function SegmentedTabs<T extends string>({
             </Text>
             {option.count !== undefined && (
               <Text
-                fontSize="xs"
+                fontSize={{ base: "sm", lg: "xs" }}
                 fontWeight="600"
                 flexShrink={0}
                 color={active ? BRAND_COLORS.darkGreen : "gray.400"}

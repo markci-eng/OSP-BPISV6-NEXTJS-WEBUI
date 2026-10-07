@@ -19,6 +19,10 @@ import {
   BsFileEarmarkSpreadsheetFill,
 } from "react-icons/bs";
 import {
+  RiArrowLeftRightFill,
+  RiArrowLeftRightLine,
+  RiBillFill,
+  RiBillLine,
   RiBookShelfFill,
   RiBookShelfLine,
   RiClipboardFill,
@@ -29,6 +33,8 @@ import {
   RiFileCheckLine,
   RiHome4Fill,
   RiHome4Line,
+  RiRefreshFill,
+  RiRefreshLine,
   RiToolsFill,
   RiToolsLine,
   RiUser2Fill,
@@ -37,7 +43,6 @@ import {
 import { FaHandHoldingUsd } from "react-icons/fa";
 import { BiCoin, BiSolidCoin } from "react-icons/bi";
 import { TbReceiptDollar, TbReceiptDollarFilled } from "react-icons/tb";
-import { MdOutlineSyncLock } from "react-icons/md";
 import { NavItem } from "osp-ui-kit";
 
 export const SideBarItemsBranch: NavItem[] = [
@@ -176,20 +181,9 @@ export const SideBarItemsBranch: NavItem[] = [
   {
     icon: HiOutlineShieldCheck,
     activeIcon: HiShieldCheck,
-    label: "Access Group Management",
+    label: "User Access Management",
     displayName: "Access",
-    subItems: [
-      {
-        label: "Access Groups",
-        href: "/role-access-management/access-groups",
-        displayName: "Groups",
-      },
-      {
-        label: "User Assignment",
-        href: "/role-access-management/user-assignment",
-        displayName: "Assign",
-      },
-    ],
+    href: "/user-access-management",
   },
 
   // {
@@ -346,6 +340,17 @@ export const SideBarItemsClaims: NavItem[] = [
     bottomNavOrder: 3,
   },
   {
+    // ITS OWN ENTRY, NOT UNDER SERVICE PAYABLES (user, 2026-10-01) — it is
+    // worked by somebody outside that team. Right after it because that is
+    // where a franchise billing goes next: processed, then its deductions, then
+    // approval. No phone tab, like Approvals.
+    icon: RiBillLine,
+    activeIcon: RiBillFill,
+    label: "Franchise Deductions",
+    href: "/claims/franchise-deductions",
+    bottomNavOrder: 4,
+  },
+  {
     // NUMBERED THOUGH IT HAS NO BOTTOM NAV ENTRY — see the note above. The
     // number is what orders the DESKTOP rail; `bottomNav` is what decides
     // whether a phone also gets a tab for it, and these two facts share one
@@ -355,7 +360,7 @@ export const SideBarItemsClaims: NavItem[] = [
     activeIcon: RiUser2Fill,
     label: "Approvals",
     href: "/claims/approvals",
-    bottomNavOrder: 4,
+    bottomNavOrder: 5,
   },
   {
     // LAST IN THE RAIL (user, 2026-09-14: "make the planholder at the bottom").
@@ -377,31 +382,11 @@ export const SideBarItemsClaims: NavItem[] = [
     label: "Planholder Profile",
     href: "/claims/planholder-profile",
     bottomNav: true,
-    bottomNavOrder: 5,
+    bottomNavOrder: 6,
     displayName: "Planholder",
   },
-  {
-    // BELOW THE PLANHOLDER, AND IT DOES NOT CONTRADICT "MAKE THE PLANHOLDER AT
-    // THE BOTTOM" (user, 2026-09-14) — because that instruction was about the
-    // rail of WORK, and this entry has no `bottomNav`.
-    //
-    // The phone is the half that instruction was really about, and the phone
-    // never sees this: its tabs are the `bottomNav` items, so Planholder is
-    // still the last one there. On the desktop rail it now sits sixth, which is
-    // where setup belongs — the five above it are places a claim is worked or
-    // looked up, and this is where the rules those five obey are edited.
-    //
-    // A CATEGORY, NOT A TASK, unlike every other entry here. Territory
-    // assignment is the only view in it today; the reference tables that follow
-    // it (nature codes, holiday calendars, rate tables) become views inside the
-    // same page rather than entries of their own, so this rail stops growing at
-    // six.
-    icon: RiToolsLine,
-    activeIcon: RiToolsFill,
-    label: "Utilities",
-    href: "/claims/utilities",
-    bottomNavOrder: 6,
-  },
+  // NO UTILITIES ENTRY (user, 2026-10-01). Territory assignment is implemented
+  // elsewhere now; the page is kept unrouted at `claims/_archive/utilities/`.
 ];
 
 export const SideBarItemsAMD: NavItem[] = [
@@ -428,23 +413,23 @@ export const SideBarItemsAMD: NavItem[] = [
     bottomNav: true,
   },
   {
-    icon: MdOutlineSyncLock,
-    activeIcon: MdOutlineSyncLock,
-    label: "RITF",
-    href: "/accounts-management/ritf",
+    icon: RiRefreshLine,
+    activeIcon: RiRefreshFill,
+    label: "Re-Instatement",
+    href: "/accounts-management/reinstatement",
     bottomNav: true,
+  },
+  {
+    icon: RiArrowLeftRightLine,
+    activeIcon: RiArrowLeftRightFill,
+    label: "Transfer",
+    href: "/accounts-management/transfer",
   },
   {
     icon: TbReceiptDollar,
     activeIcon: TbReceiptDollarFilled,
     label: "ROP",
-    href: "/accounts-management/rop",
-  },
-  {
-    icon: BsFileEarmarkExcel,
-    activeIcon: BsFileEarmarkExcelFill,
-    label: "Plan Termination",
-    href: "/accounts-management/plan-termination",
+    href: "/accounts-management/return-of-premium",
   },
   {
     icon: BsFileEarmarkSpreadsheet,
@@ -456,13 +441,13 @@ export const SideBarItemsAMD: NavItem[] = [
     icon: RiClipboardLine,
     activeIcon: RiClipboardFill,
     label: "COFP",
-    href: "/accounts-management/cofp",
+    href: "/accounts-management/certificateoffullpayment",
   },
   {
     icon: RiClipboardLine,
     activeIcon: RiClipboardFill,
-    label: "COFP2",
-    href: "/accounts-management/certificateoffullpayment",
+    label: "COIC",
+    href: "/accounts-management/coic",
   },
   {
     icon: BsFileEarmarkPlus,

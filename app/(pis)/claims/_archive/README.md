@@ -124,3 +124,22 @@ That is a real cost and it is the deliberate one. Deleting the set would take
 `ServiceRecordView`'s two-column record and the accordion's table with it, and
 both are worth having on file the first time somebody asks why the conveyor does
 not let you see two chapels at once.
+
+---
+
+# `utilities/`
+
+The territory assignment screen, served at `/claims/utilities` until 2026-10-01,
+when the user reported the utilities are implemented elsewhere now. Kept for its
+ladder model — rank 1 is the primary, lower ranks are fallbacks tried only when
+the one above has nothing waiting — and for the coverage panel that reports
+territories nobody holds.
+
+### What stayed live
+
+The **roster** — the department's seven names, by team — is read by the claims
+dashboard's leaderboard, so it moved to `../staff-roster.ts` rather than here.
+`utilities/territory-assignment-store.ts` imports and re-exports it, so the
+archived components compile unchanged and cannot drift from the live list.
+Everything else in the folder — the ladders, their seed, the standings in
+`territory-assignment-data.ts` — is on no served path.

@@ -9,6 +9,11 @@ import { PlanholderSectionHeader } from "./PlanholderSectionHeader";
 import { PlanholderPaymentListDrawer } from "./PlanholderPaymentListDrawer";
 import { PlanholderPaymentsTable } from "./PlanholderPaymentsTable";
 import { PaymentRow } from "./PaymentRow";
+import {
+  PaymentsNoMatch,
+  PaymentsToolbar,
+  usePaymentsLedger,
+} from "../../components/payments-ledger";
 
 /** Rows shown inline before "View all" opens the full-list drawer. */
 const COLLAPSED_LIMIT = 5;
@@ -29,7 +34,9 @@ interface PlanholderPaymentsProps {
  * inline and the rest live behind "View all", which opens the full list in its
  * own drawer.
  *
- * From `lg` it is a paged table instead — see {@link PlanholderPaymentsTable}.
+ * From `lg` it is the Payments look-up's toolbar and table — OR search, pay
+ * class, Print SOA, and a table that scrolls or pages by the user's choice; see
+ * `payments-ledger` and {@link PlanholderPaymentsTable}.
  * A receipt is four short fields, which is what a table is for, and the width is
  * there to put them side by side rather than two to a line. The drawer goes with
  * the row list: the pager reaches every receipt without leaving the page.
@@ -41,6 +48,8 @@ export function PlanholderPayments({ lpaNo }: PlanholderPaymentsProps) {
   useEffect(() => {
     setPayments(lpaNo ? getPlanholderPayments(lpaNo) : []);
   }, [lpaNo]);
+  // The desktop's search and pay class — the Payments look-up's own.
+  const ledger = usePaymentsLedger(lpaNo ?? "");
 
   /**
    * `lg`, the same width the claim queue swaps its cards for a table at — a
@@ -77,7 +86,14 @@ export function PlanholderPayments({ lpaNo }: PlanholderPaymentsProps) {
             description="Official receipts posted for this plan will appear here."
           />
         ) : isDesktop ? (
-          <PlanholderPaymentsTable payments={payments} />
+          // The look-up's own toolbar and table — see `PaymentsLookup`.
+          <Flex direction="column" gap={3}>
+            <PaymentsToolbar ledger={ledger} />
+            <PlanholderPaymentsTable
+              payments={ledger.rows}
+              emptyState={<PaymentsNoMatch ledger={ledger} />}
+            />
+          </Flex>
         ) : (
           <>
             <VStack align="stretch" gap={2}>

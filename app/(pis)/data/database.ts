@@ -309,6 +309,14 @@ export class PisDatabase {
     return claimsPayeeSeed.filter((p) => p.claimNo === claimNo);
   }
 
+  /**
+   * Payees filed with a claim request — any claim type, header or not. Never
+   * empty for a request on file: see {@link assertEveryRequestHasAPayee}.
+   */
+  getPayeesByRequest(requestNo: string): ClaimsPayeeRecord[] {
+    return claimsPayeeSeed.filter((p) => p.claimRequest === requestNo);
+  }
+
   /* ------------------------------ Branches ------------------------------ */
 
   getBranches(): BranchRecord[] {
@@ -885,6 +893,27 @@ export class PisDatabase {
     return PROCESSORS;
   }
 }
+
+/**
+ * A CLAIM REQUEST WITHOUT A PAYEE IS AN ERROR (user, 2026-09-29), not an empty
+ * state. The payee is filed with the request, so there is no moment at which a
+ * real one has none — a seed that says otherwise is wrong, and it fails here at
+ * load rather than rendering "No payees" on a screen somebody trusts.
+ */
+function assertEveryRequestHasAPayee(): void {
+  const withPayee = new Set(claimsPayeeSeed.map((p) => p.claimRequest));
+  const missing = claimRequestSeed
+    .map((r) => r.requestNo)
+    .filter((requestNo) => !withPayee.has(requestNo));
+  if (missing.length > 0) {
+    throw new Error(
+      `Claim request(s) with no payee: ${missing.join(", ")}. ` +
+        "Every claim request must have at least one ClaimsPayee row.",
+    );
+  }
+}
+
+assertEveryRequestHasAPayee();
 
 /** Shared singleton — the app's handle on the mock database. */
 export const db = new PisDatabase();

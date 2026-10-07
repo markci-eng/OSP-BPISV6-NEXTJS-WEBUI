@@ -3,6 +3,7 @@
 import { toast } from "sonner";
 import { ActionButtonRow } from "../../components/action-button-row";
 import { PLAN_ACTIONS } from "../../components/plan-action-items";
+import { PRINT_SOA_LABEL, printSoa } from "../../components/print-soa";
 import type { Planholder } from "../../claims-data";
 
 /**
@@ -37,9 +38,11 @@ export function PlanholderPlanActions({
   planholder: Planholder;
 }) {
   const notWired = (label: string) =>
-    toast.info(`${label} is not available yet`, {
-      description: `LPA No. ${planholder.lpaNo}`,
-    });
+    label === PRINT_SOA_LABEL
+      ? printSoa(planholder.lpaNo)
+      : toast.info(`${label} is not available yet`, {
+          description: `LPA No. ${planholder.lpaNo}`,
+        });
 
   return (
     <ActionButtonRow

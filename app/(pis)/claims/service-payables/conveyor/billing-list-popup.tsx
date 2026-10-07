@@ -1,7 +1,8 @@
 "use client";
 
-// ANY LIST OF BILLINGS, over the page — the queue being served, the ones worked
-// past, and the ones endorsed out to accounting. One sheet, six tabs.
+// ANY LIST OF BILLINGS, over the page — the queue being served and the ones
+// worked past. One sheet, five tabs (All and the four stages; the Endorsed tab
+// went on 2026-09-30, when approval began endorsing on its own).
 //
 // WHY IT IS NOT SIX CONTROLS IN THE RAIL. The death claim answers the same need
 // with `WorkLists`, a card of five rows sitting last in its rail — and that rail
@@ -56,12 +57,20 @@
 // the search is gone.
 
 import { useEffect, useMemo, useState } from "react";
-import { Box, Flex, Text } from "@chakra-ui/react";
+import { Box, Flex, Text, useBreakpointValue } from "@chakra-ui/react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "osp-ui-kit";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { db } from "../../../data";
 import { FilterSelect } from "../../components/filter-select";
 import { SearchBar } from "../../components/search-bar";
-import { SectionPopup } from "../../components/section-popup";
+import { SegmentedTabs } from "../../components/segmented-tabs";
+import { alignHeadersRight } from "../../components/table-align";
+import {
+  QueueSearchSheet,
+  SheetChoiceGroup,
+} from "../../components/queue-search-sheet";
+import { ListPopup } from "../../components/section-popup";
 import { TabPill } from "../../components/tab-pill";
 import { EmptyPanel } from "../components/EmptyPanel";
 import {
@@ -81,7 +90,6 @@ import {
 } from "../service-payables-data";
 import {
   getCreatedBilling,
-  getEndorsedBilling,
   useServicePayablesStore,
 } from "../service-payables-store";
 // `isLongWait` and `waitingFor` came out with the per-row wait (2026-09-17).
@@ -90,31 +98,28 @@ import {
 import { stageSince } from "./billing-queue";
 
 /**
- * Which list of billings is on show.
+ * Which list of billings is on show — the four stages, and `all`: every billing
+ * this module knows of, at any stage. The one list that always has an answer,
+ * which is why it leads.
  *
- * THE FOUR STAGES, PLUS THE TWO THE STAGES CANNOT NAME:
- *
- *   all       every billing this module knows of, at any stage. The one list
- *             that always has an answer, which is why it leads — the death
- *             claim's "All claims" is first in its card for the same reason.
- *   endorsed  gone to accounting. Not a fifth `BillingStage` — the model has
- *             four and accounting's own desk is not described — so it is read
- *             off the endorsement signature, exactly as `billingQueue` reads it
- *             to keep an endorsed billing from being served twice.
+ * NO ENDORSED TAB (user, 2026-09-30). Approval endorses on its own now, so an
+ * endorsed billing is simply an approved one and lives under Approved.
  */
-export type BillingScope = "all" | BillingStage | "endorsed";
+export type BillingScope = "all" | BillingStage;
 
-export const BILLING_SCOPES: BillingScope[] = [
-  "all",
-  ...BILLING_STAGES,
-  "endorsed",
-];
+export const BILLING_SCOPES: BillingScope[] = ["all", ...BILLING_STAGES];
 
-/** The tab's word. See the note at the top on why these are not the queue's. */
+/**
+ * The tab's word. See the note at the top on why these are not the queue's.
+ *
+ * EXCEPT PROCESSED (user, 2026-10-01: "change the processed into for
+ * verification"). The tab reads For Verification; the chip on a row still
+ * says Processed, because that one describes the billing.
+ */
 const SCOPE_LABEL: Record<BillingScope, string> = {
   all: "All",
   ...BILLING_STAGE_LABELS,
-  endorsed: "Endorsed",
+  processed: "For Verification",
 };
 
 /**
@@ -219,27 +224,19 @@ function partialProgress(billing: ServiceBilling): string | undefined {
  * — see the note where it is drawn. `PARTIAL_ACCENT` is still what colours it,
  * and still amber for the same reason: this is work outstanding. */
 
-/** Endorsed billings are out of every stage list — see {@link inScope}. */
-const isEndorsed = (billing: ServiceBilling) =>
-  Boolean(getEndorsedBilling(billing.billingCode));
-
 /**
  * The billings of one list, unsorted.
  *
- * A STAGE LIST EXCLUDES THE ENDORSED, and that is not tidying. An endorsed
- * billing is still `approved` on the model — endorsement writes a signature, not
- * a fifth stage — so without this every endorsed billing would appear on two
- * tabs at once, with the Approved tab counting work that has left the building.
+ * An endorsed billing is `approved` on the model — endorsement writes a
+ * signature, not a fifth stage — and with approval endorsing on its own it is
+ * listed under Approved like any other.
  */
 function inScope(
   billings: ServiceBilling[],
   scope: BillingScope,
 ): ServiceBilling[] {
   if (scope === "all") return billings;
-  if (scope === "endorsed") return billings.filter(isEndorsed);
-  return billings.filter(
-    (billing) => billing.stage === scope && !isEndorsed(billing),
-  );
+  return billings.filter((billing) => billing.stage === scope);
 }
 
 /**
@@ -294,14 +291,6 @@ function ordered(
   // first — because no such date had been identified; see {@link fileDate}.
   if (scope === "all") return oldestFirst(fileDate);
 
-  // ENDORSED BY ITS SIGNATURE, oldest first. It was newest first until
-  // 2026-09-15; the note above says what that traded away.
-  if (scope === "endorsed") {
-    return oldestFirst(
-      (billing) => getEndorsedBilling(billing.billingCode)?.dateVerified ?? "",
-    );
-  }
-
   // The queue's order, and deliberately the same comparator as `billingQueue`:
   // the For Process tab and the For Process conveyor must agree about which
   // billing is at the head, or the list is describing a different queue from
@@ -352,9 +341,314 @@ function matches(billing: ServiceBilling, needle: string): boolean {
   );
 }
 
+/**
+ * WHO RUNS THE CHAPEL, as a filter (user, 2026-10-05: "we need to add a filter
+ * for chapel own and franchisee"). Two choices and All, not the three
+ * `BillingKind`s: Franchisee takes both franchises, on the system and on paper
+ * — the reader's question is "theirs or ours", and the paper kind still shows
+ * on its row's chip.
+ */
+type OwnerFilter = "all" | "own" | "franchisee";
+
+const OWNER_LABEL: Record<OwnerFilter, string> = {
+  all: "All",
+  // "Own" AND NOT "Own chapel" (user, 2026-10-05: "just Own is enough").
+  own: "Own",
+  franchisee: "Franchisee",
+};
+
+function ownedBy(billing: ServiceBilling, owner: OwnerFilter): boolean {
+  if (owner === "all") return true;
+  return (billingKind(billing) === "owned") === (owner === "own");
+}
+
 /** What a row says about itself on a tab that mixes states. */
 const statusOf = (billing: ServiceBilling): string =>
-  isEndorsed(billing) ? "Endorsed" : BILLING_STAGE_LABELS[billing.stage];
+  BILLING_STAGE_LABELS[billing.stage];
+
+/**
+ * The FRANCHISE mark beside a chapel — the phone row's and the PC table's.
+ *
+ * ONLY WHERE THERE IS SOMETHING TO SAY. A company-owned chapel is the ordinary
+ * case — most of this file — and a chip on every row saying "ordinary" is a
+ * column of noise that makes the few that matter harder to see. The word is
+ * still searchable; see `BILLING_KIND_TERMS`.
+ *
+ * THE MODULE'S FRANCHISE AMBER: it marks a FACT about the chapel here, as it
+ * does on the territory card and the billing card.
+ */
+function KindChip({ billing }: { billing: ServiceBilling }) {
+  const kind = billingKind(billing);
+  if (kind === "owned") return null;
+  return (
+    <Text
+      as="span"
+      flexShrink={0}
+      fontSize="9.5px"
+      fontWeight="700"
+      letterSpacing="0.04em"
+      textTransform="uppercase"
+      color={FRANCHISE_ACCENT}
+      borderWidth="1px"
+      borderColor="#e7d3b5"
+      bg="#fdf6ec"
+      borderRadius="sm"
+      px={1.5}
+      py="1px"
+      title={`${BILLING_KIND_LABEL[kind]} — RefMortuary class ${BILLING_KIND_CODE[kind]}`}
+    >
+      {BILLING_KIND_LABEL[kind]}
+    </Text>
+  );
+}
+
+/**
+ * Under the money: how far down the billing somebody got (see
+ * {@link partialProgress}), and on a tab that mixes states, which state it is
+ * in. Both silent almost always. Shared by the phone row and the PC table.
+ */
+function AmountNotes({
+  billing,
+  showStatus,
+}: {
+  billing: ServiceBilling;
+  showStatus: boolean;
+}) {
+  const partial = partialProgress(billing);
+  return (
+    <>
+      {partial && (
+        <Text
+          mt={0.5}
+          fontSize="10.5px"
+          fontWeight="600"
+          color={PARTIAL_ACCENT}
+          title="Some accounts on this billing are terminated and some are not — it was started and not finished."
+        >
+          {partial}
+        </Text>
+      )}
+      {showStatus && (
+        <Text mt="1px" fontSize="10.5px" color="gray.400">
+          {statusOf(billing)}
+        </Text>
+      )}
+    </>
+  );
+}
+
+/**
+ * One billing on the PHONE's sheet (redesigned 2026-10-05, option A of the
+ * mock-up). Three lines where it had two: the number and period, then the
+ * chapel with its franchise mark, then the territory. Territory and chapel
+ * used to share a grey line that wrapped mid-name on a phone.
+ *
+ * The PC dialog is a table now — see `billingColumns`.
+ */
+function BillingRow({
+  billing,
+  served,
+  showStatus,
+  onClick,
+}: {
+  billing: ServiceBilling;
+  /** The one on the conveyor now — washed green, see `SERVED_BG`. */
+  served: boolean;
+  /** The state under the money — only on a tab that mixes states. */
+  showStatus: boolean;
+  onClick: () => void;
+}) {
+  const territory =
+    db.getTerritoryName(billing.territoryCode) || billing.territoryCode;
+  return (
+    <Flex
+      as="button"
+      align="flex-start"
+      gap={3}
+      textAlign="left"
+      px={3}
+      py={2.5}
+      borderRadius="lg"
+      cursor="pointer"
+      bg={served ? SERVED_BG : "white"}
+      borderWidth="1px"
+      borderColor={served ? SERVED_EDGE : "gray.100"}
+      transition="background 0.12s ease"
+      _hover={served ? undefined : { bg: BRAND_COLORS.subtleBg }}
+      _focusVisible={{
+        outline: "2px solid",
+        outlineColor: BRAND_COLORS.primaryGreen,
+        outlineOffset: "-2px",
+      }}
+      onClick={onClick}
+    >
+      <Box flex="1" minW={0}>
+        {/* The number never shrinks (user, 2026-09-30: "billing number is
+            important"); the period follows it, lighter. */}
+        <Flex align="baseline" columnGap={2} wrap="wrap">
+          <Text
+            fontSize="13.5px"
+            fontWeight="700"
+            fontFamily="mono"
+            color="gray.800"
+            flexShrink={0}
+          >
+            {billing.billingNo ?? "—"}
+          </Text>
+          <Text
+            fontSize="11px"
+            fontWeight="600"
+            color="gray.500"
+            letterSpacing="0.01em"
+            whiteSpace="nowrap"
+          >
+            {billing.periodLabel}
+          </Text>
+        </Flex>
+
+        <Flex mt={1} align="center" gap={2} minW={0}>
+          <Text
+            fontSize="13px"
+            fontWeight="600"
+            color="gray.700"
+            minW={0}
+            truncate
+          >
+            {billing.chapelDesc}
+          </Text>
+          <KindChip billing={billing} />
+        </Flex>
+
+        <Text mt="1px" fontSize="11.5px" color="gray.400" truncate>
+          {[territory, billing.processedBy].filter(Boolean).join(" · ")}
+        </Text>
+      </Box>
+
+      <Box flexShrink={0} textAlign="right">
+        <Text
+          fontSize="13.5px"
+          fontWeight="700"
+          fontVariantNumeric="tabular-nums"
+          color="gray.800"
+          whiteSpace="nowrap"
+        >
+          {formatCSP(billing.totalCSP)}
+        </Text>
+        <AmountNotes billing={billing} showStatus={showStatus} />
+      </Box>
+    </Flex>
+  );
+}
+
+/**
+ * THE PC DIALOG'S TABLE (redesigned 2026-10-05). The same facts the old row
+ * carried, each in its own column, so a reader scanning for a territory or a
+ * period reads straight down one edge.
+ *
+ * NOT SORTABLE: every list here is oldest-first, the module's FIFO rule — see
+ * `ordered`. A header that re-sorts would let the table disagree with the
+ * conveyor about which billing is at the head.
+ *
+ * `showProcessor` drops the column where nobody has put a billing through yet —
+ * For Process, where it would be a column of dashes.
+ */
+function billingColumns({
+  showStatus,
+  showProcessor,
+  servedCode,
+}: {
+  showStatus: boolean;
+  showProcessor: boolean;
+  servedCode?: string;
+}): ColumnDef<ServiceBilling>[] {
+  const cols: (ColumnDef<ServiceBilling> | false)[] = [
+    {
+      id: "billingNo",
+      header: "Billing No.",
+      cell: ({ row }) => (
+        <Text
+          // THE SERVED ROW is found by this mark — the kit's table has no
+          // per-row style, so the wash is applied from outside with `:has`.
+          data-served={row.original.billingCode === servedCode || undefined}
+          fontSize="13px"
+          fontWeight="600"
+          fontFamily="mono"
+          color="gray.800"
+          whiteSpace="nowrap"
+        >
+          {row.original.billingNo ?? "—"}
+        </Text>
+      ),
+    },
+    {
+      id: "period",
+      header: "Period",
+      cell: ({ row }) => (
+        <Text
+          fontSize="11.5px"
+          fontWeight="600"
+          color="gray.500"
+          letterSpacing="0.01em"
+          whiteSpace="nowrap"
+        >
+          {row.original.periodLabel}
+        </Text>
+      ),
+    },
+    {
+      // TERRITORY BEFORE CHAPEL (user, 2026-09-17: "territory first") — the
+      // wide thing, then the place inside it.
+      id: "territory",
+      header: "Territory",
+      cell: ({ row }) => (
+        <Text fontSize="12px" color="gray.500">
+          {db.getTerritoryName(row.original.territoryCode) ||
+            row.original.territoryCode}
+        </Text>
+      ),
+    },
+    {
+      id: "chapel",
+      header: "Chapel",
+      cell: ({ row }) => (
+        <Flex align="center" gap={2}>
+          <Text fontSize="13px" fontWeight="600" color="gray.800">
+            {row.original.chapelDesc}
+          </Text>
+          <KindChip billing={row.original} />
+        </Flex>
+      ),
+    },
+    showProcessor && {
+      id: "processor",
+      header: "Processor",
+      cell: ({ row }) => (
+        <Text fontSize="12px" color="gray.600" whiteSpace="nowrap">
+          {row.original.processedBy ?? "—"}
+        </Text>
+      ),
+    },
+    {
+      id: "totalCSP",
+      header: "Total CSP",
+      cell: ({ row }) => (
+        <Box textAlign="right">
+          <Text
+            fontSize="13px"
+            fontWeight="700"
+            fontVariantNumeric="tabular-nums"
+            color="gray.800"
+            whiteSpace="nowrap"
+          >
+            {formatCSP(row.original.totalCSP)}
+          </Text>
+          <AmountNotes billing={row.original} showStatus={showStatus} />
+        </Box>
+      ),
+    },
+  ];
+  return cols.filter(Boolean) as ColumnDef<ServiceBilling>[];
+}
 
 export interface BillingListPopupProps {
   open: boolean;
@@ -372,6 +666,13 @@ export interface BillingListPopupProps {
    * second half to tell a reader why a billing it cannot act on is on screen.
    */
   onOpenBilling: (billing: ServiceBilling, from: string) => void;
+  /**
+   * A FIXED LIST instead of the six tabs — a History row's billings (user,
+   * 2026-09-30). Shown in the order given, with no tab strip: the row that was
+   * tapped already chose the list, and tabs over it would offer the whole file
+   * back. The search and the three filters still narrow it.
+   */
+  list?: { title: string; billings: ServiceBilling[] };
 }
 
 export function BillingListPopup({
@@ -383,6 +684,7 @@ export function BillingListPopup({
   query,
   onQueryChange,
   onOpenBilling,
+  list,
 }: BillingListPopupProps) {
   // Endorsing a billing moves it between two of these tabs, so the sheet reads
   // the store itself rather than trusting a parent's render to be the thing
@@ -405,6 +707,8 @@ export function BillingListPopup({
    * happens to be written.
    */
   const [periods, setPeriods] = useState<string[]>([]);
+  /** Own chapel or franchisee — see {@link OwnerFilter}. Cleared like the rest. */
+  const [owner, setOwner] = useState<OwnerFilter>("all");
 
   /**
    * CLOSING THE DIALOG CLEARS THEM — and so does CHANGING TAB.
@@ -424,13 +728,15 @@ export function BillingListPopup({
     setTerritories([]);
     setProcessors([]);
     setPeriods([]);
+    setOwner("all");
   }, [open, scope]);
 
   const universe = useMemo(
-    () => getServiceBillings(),
+    () => list?.billings ?? getServiceBillings(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [version],
+    [version, list],
   );
+  const title = list?.title ?? scopeTitle(scope);
 
   const needle = query.trim().toUpperCase();
 
@@ -455,9 +761,9 @@ export function BillingListPopup({
 
   /** This tab's billings, before the filters — what the filters may offer. */
   const listed = useMemo(
-    () => ordered(inScope(searched, scope), scope),
+    () => (list ? searched : ordered(inScope(searched, scope), scope)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [searched, scope, version],
+    [searched, scope, version, list],
   );
 
   /**
@@ -514,11 +820,32 @@ export function BillingListPopup({
     return names.map((name) => ({ value: name, label: name }));
   }, [listed]);
 
+  /**
+   * The owner switch's numbers — the tab and the search, like the tab counts,
+   * and not the other filters, for the same reason: see the top of file.
+   */
+  const ownerOptions = useMemo(
+    () =>
+      (["all", "own", "franchisee"] as const).map((value) => ({
+        value,
+        label: OWNER_LABEL[value],
+        count: listed.filter((billing) => ownedBy(billing, value)).length,
+      })),
+    [listed],
+  );
+
+  /**
+   * The Processor column, only where a row could fill it — nobody's name is on
+   * a For Process billing yet, and a column of dashes says nothing.
+   */
+  const showProcessor = listed.some((billing) => billing.processedBy);
+
   // EVERY CONDITION NARROWS THE LAST, which is what a reader expects of a
-  // toolbar: the tab, then the text, then the period, then the territory, then
-  // the staff member. An empty group is not a condition — it means the question
-  // was not asked.
+  // toolbar: the tab, then the text, then who runs the chapel, then the period,
+  // then the territory, then the staff member. An empty group is not a
+  // condition — it means the question was not asked.
   const rows = listed.filter((billing) => {
+    if (!ownedBy(billing, owner)) return false;
     if (periods.length && !periods.includes(periodKey(billing.period))) {
       return false;
     }
@@ -536,402 +863,298 @@ export function BillingListPopup({
 
   /** Whether anything is being narrowed — what the empty state has to explain. */
   const filtered =
-    periods.length > 0 || territories.length > 0 || processors.length > 0;
+    owner !== "all" ||
+    periods.length > 0 ||
+    territories.length > 0 ||
+    processors.length > 0;
+
+  /** The owner switch — the PC toolbar's and the phone sheet's foot. */
+  const ownerSwitch = (
+    <SegmentedTabs
+      label="Chapel"
+      options={ownerOptions}
+      value={owner}
+      onChange={setOwner}
+    />
+  );
 
   /** Stage tabs report a wait; the mixed ones report what the billing IS. */
-  const showsWait = scope !== "all" && scope !== "endorsed";
+  const showsWait = !list && scope !== "all";
+
+  const columns = useMemo(
+    () => billingColumns({ showStatus: !showsWait, showProcessor, servedCode }),
+    [showsWait, showProcessor, servedCode],
+  );
+
+  /**
+   * Why the list is empty — the three causes, in the order they win. Said by
+   * the desktop's empty panel and the phone sheet's alike.
+   */
+  const emptyBody = filtered
+    ? "No billing in this list matches the filters set above. Clear them to see the rest."
+    : needle
+      ? "No billing in this list carries that code, number, chapel, kind of chapel, plan number or name. The counts on the tabs above say which list does."
+      : "There is no billing in this list.";
+
+  /**
+   * THE PHONE'S SHEET below `lg` — see `QueueSearchSheet`. The same tabs, the
+   * same one query and the same three filters, with the controls at the foot;
+   * the dialog below stays the desktop's. Both always mounted, `open` choosing.
+   */
+  const isPhone = useBreakpointValue({ base: true, lg: false }) ?? false;
 
   return (
-    <SectionPopup
-      title={scopeTitle(scope)}
-      open={open}
-      onClose={onClose}
-      // WIDE ENOUGH FOR THE ROW. Two identifiers, a chapel, a period, a
-      // territory and a name on the left; the money and the state on the right.
-      // The sheet is still capped by the screen, so a narrow window gets a
-      // narrow sheet.
-      maxW="1100px"
-      header={
-        <Box>
-          {/* THE SIX LISTS. A strip that SCROLLS rather than wraps: inside a
-              dialog header a second row of tabs pushes the search down on
-              exactly the narrow screens that have least height to give, and a
-              tab strip is a thing the hand already expects to swipe. */}
-          <Flex
-            gap={1.5}
-            overflowX="auto"
-            pb="2px"
-            role="tablist"
-            aria-label="Billing lists"
-            css={{
-              scrollbarWidth: "none",
-              "&::-webkit-scrollbar": { display: "none" },
-            }}
-          >
-            {BILLING_SCOPES.map((key) => (
-              <TabPill
-                key={key}
-                label={SCOPE_LABEL[key]}
-                count={counts[key]}
-                active={key === scope}
-                onClick={() => onScopeChange(key)}
-              />
-            ))}
-          </Flex>
-
-          {/* THE FIELD AND THE TWO FILTERS ON ONE ROW, under the tabs that
-              scope the list: what narrows stands together, below what chooses.
-
-              TWO NAMED CONTROLS RATHER THAN ONE FUNNEL (user, 2026-09-14:
-              "since it is wide we can remove it in the filter button and have
-              dedicated [controls] in here"). The funnel exists because the
-              claims TABLE's toolbar is full — a type dropdown, a branch
-              dropdown, a view toggle and a search box — and three more labelled
-              controls there is a row that wraps. This sheet is 1100px carrying a
-              search field and nothing else, so the reason does not apply, and
-              what the collapse costs is the words: behind an icon, "Territory"
-              is a heading nobody reads until they open a panel they had no
-              reason to open. See `FilterSelect`.
-
-              NO MAGNIFIER BUTTON ON THE FIELD. The rail's has one because that
-              search GOES somewhere — it opens this sheet. Here the rows narrow
-              as the query is typed, so a button would be a control that visibly
-              does nothing. See `onSearch` on `SearchBar`.
-
-              IT WRAPS RATHER THAN SQUEEZES. On a phone the sheet is the screen
-              less 24px, where a field and two dropdowns cannot share a line; the
-              field keeps a floor of 200px and the filters drop beneath it. */}
-          <Flex gap={2} mt={2.5} align="center" wrap="wrap">
-            <SearchBar
-              size="sm"
-              flex="1"
-              minW="200px"
-              value={query}
-              onChange={onQueryChange}
-              label="Search billings"
-              // THE IDENTIFIER IS IN THE LIST because a placeholder is where a
-              // reader finds out what a search box will answer, and "franchise"
-              // is not a thing anyone would guess a billing search accepts. It
-              // costs one word and it is the newest of the six fields.
-              placeholder="Billing code, no., chapel, franchise, plan no. or deceased"
-            />
-            {/* FIRST OF THE THREE, because it is the one a processor reaches
-                for most: a payable is chased by the cut it belongs to — "what
-                is still open from the first week of June" — where territory and
-                processor answer questions about WHO rather than WHEN.
-
-                It is also the only one whose options are a sequence, so it sits
-                where the eye starts rather than at the end of a row of
-                unordered menus. */}
-            <FilterSelect
+    <>
+      <QueueSearchSheet
+        title={title}
+        open={open && isPhone}
+        onClose={onClose}
+        // No tabs over a fixed list — see `list`.
+        tabs={
+          list
+            ? undefined
+            : BILLING_SCOPES.map((key) => ({
+                key,
+                label: SCOPE_LABEL[key],
+                count: counts[key],
+              }))
+        }
+        activeTab={list ? undefined : scope}
+        onTabChange={(key) => onScopeChange(key as BillingScope)}
+        query={query}
+        onQueryChange={onQueryChange}
+        placeholder="Billing no., code, chapel, plan no.…"
+        // ALWAYS AT THE FOOT, not in the funnel (user, 2026-10-05: option A
+        // of the mock-up) — one tap, so the funnel's count leaves it out.
+        quickFilter={ownerSwitch}
+        items={rows}
+        getKey={(billing) => billing.billingCode}
+        renderItem={(billing) => (
+          <BillingRow
+            billing={billing}
+            served={billing.billingCode === servedCode}
+            showStatus={!showsWait}
+            onClick={() => onOpenBilling(billing, title)}
+          />
+        )}
+        empty={<EmptyPanel title="Nothing matches" body={emptyBody} />}
+        filterCount={periods.length + territories.length + processors.length}
+        onClearFilters={() => {
+          setPeriods([]);
+          setTerritories([]);
+          setProcessors([]);
+        }}
+        renderFilters={() => (
+          <>
+            {/* Period first — the one a processor reaches for most; see the
+                desktop's row below for why. */}
+            <SheetChoiceGroup
               label="Period"
+              multi
               options={periodOptions}
               selected={periods}
               onChange={setPeriods}
-              emptyNote="No billing in this list carries a period."
             />
-            {/* Filtered by CODE and listed by NAME — the billing carries the
-                code, and the reference table is the only place the name it is
-                called by is written down. */}
-            <FilterSelect
+            <SheetChoiceGroup
               label="Territory"
+              multi
               options={territoryOptions}
               selected={territories}
               onChange={setTerritories}
-              emptyNote="No billing in this list carries a territory."
             />
-            {/* Filtered and listed by the same string: who put a billing
-                through is a name on the row and nothing else. */}
-            <FilterSelect
+            <SheetChoiceGroup
               label="Processor"
+              multi
               options={processorOptions}
               selected={processors}
               onChange={setProcessors}
-              // THE ORDINARY CASE ON FOR PROCESS, and it is not a fault: a
-              // billing waiting to be put through has nobody's name on it yet.
-              emptyNote="No billing in this list has been put through by anyone yet."
             />
-          </Flex>
-
-          {/* NO COUNT LINE (user, 2026-09-17: "remove the number of billings
-              and the longest wait first. it is redundant"), and both halves of
-              it were.
-
-              THE COUNT IS ON THE TAB the reader just pressed, and that number
-              follows the search, so "23 billings" under a pill reading
-              "For Process 23" was the same figure twice, eighteen pixels apart.
-
-              THE ORDER STOPPED BEING NEWS when every tab became oldest-first on
-              2026-09-15. It was written when the six lists were sorted three
-              different ways and the sentence changed as you moved between them.
-              One rule everywhere does not need restating per tab — it is on
-              `ordered`, which is what enforces it.
-
-              THE TWO FILTERS STILL ANNOUNCE THEMSELVES, which is what this line
-              was doing that nothing else did: `FilterSelect` carries the number
-              of things ticked on its own button, so a narrowed list is still
-              accounted for. */}
-        </Box>
-      }
-    >
-      <Box>
-        {rows.length === 0 ? (
-          <EmptyPanel
-            title="Nothing matches"
-            // THE EMPTY STATE NAMES THE CAUSE, and now it has three to choose
-            // between. A reader who has emptied a list must not be told the
-            // list is empty when what is actually true is that they narrowed
-            // it — and with six tabs there is a third case the queue pop-up
-            // never had: the search found nothing HERE, and the tab strip above
-            // is already saying where it did find something.
-            body={
-              filtered
-                ? "No billing in this list matches the filters set above. Clear them to see the rest."
-                : needle
-                  ? "No billing in this list carries that code, number, chapel, kind of chapel, plan number or name. The counts on the tabs above say which list does."
-                  : "There is no billing in this list."
-            }
-          />
-        ) : (
-          <Flex direction="column" gap={1}>
-            {rows.map((billing) => {
-              const served = billing.billingCode === servedCode;
-              const kind = billingKind(billing);
-              const partial = partialProgress(billing);
-              return (
-                <Flex
-                  as="button"
-                  key={billing.billingCode}
-                  align="center"
-                  gap={4}
-                  textAlign="left"
-                  px={3}
-                  py={2.5}
-                  borderRadius="lg"
-                  cursor="pointer"
-                  // THE ROW ON SCREEN SAYS SO BY ITS COLOUR (user, 2026-09-17:
-                  // "make the bg color of the onscreen different"), which is
-                  // what pays for the "on screen" label being gone.
-                  //
-                  // IT HAD TO GET STRONGER TO DO THAT JOB. It was #F0F9F3 — a
-                  // wash two shades off white, which was legible as "this one"
-                  // only because a line of text underneath was also saying it.
-                  // Alone it has to carry the fact on its own, so it is the
-                  // module's own tint with an edge in the brand green: the row
-                  // is picked out whether the reader is scanning the numbers or
-                  // the amounts.
-                  bg={served ? SERVED_BG : "transparent"}
-                  boxShadow={served ? `inset 0 0 0 1px ${SERVED_EDGE}` : undefined}
-                  transition="background 0.12s ease"
-                  _hover={served ? undefined : { bg: BRAND_COLORS.subtleBg }}
-                  _focusVisible={{
-                    outline: "2px solid",
-                    outlineColor: BRAND_COLORS.primaryGreen,
-                    outlineOffset: "-2px",
-                  }}
-                  onClick={() => onOpenBilling(billing, scopeTitle(scope))}
-                >
-                  <Box flex="1" minW={0}>
-                    <Flex align="center" gap={2} minW={0}>
-                      <Text
-                        fontSize="13px"
-                        fontWeight="600"
-                        fontFamily="mono"
-                        color="gray.800"
-                        truncate
-                      >
-                        {/* THE BILLING NUMBER LEADS, ALWAYS (user, 2026-09-17:
-                            "show the billing number instead of the billing
-                            code"). It used to be `billingNo ?? billingCode`,
-                            which reads as one column and is two: a reader
-                            scanning down the list met a number, then a code,
-                            then a number, with nothing saying why they were
-                            different kinds of string.
-
-                            THE DASH SHOULD NEVER BE SEEN NOW. Every
-                            chapel-period is numbered in the seed, so the
-                            fallback is for a billing raised in a session with
-                            no number yet — and if one ever shows here, "not
-                            issued" is the honest thing for it to say rather
-                            than a gap. */}
-                        {billing.billingNo ?? "—"}
-                      </Text>
-
-                      {/* THE PERIOD, BESIDE THE NUMBER (user, 2026-09-17:
-                          "place the period beside the billing number then the
-                          terminated is below the total CSP like a book").
-
-                          THE TWO TOGETHER ARE THE BILLING'S NAME. A billing IS
-                          a chapel and a cut — the number is the key it was
-                          issued under, the period is what it covers — so the
-                          identifier line now carries the whole of what a
-                          processor would say out loud to name this row. It was
-                          under the amount before, where it qualified the money
-                          rather than the billing.
-
-                          LIGHTER THAN THE NUMBER on purpose. Two facts of equal
-                          weight side by side make a line with no beginning; the
-                          number leads and the period follows it. */}
-                      <Text
-                        flexShrink={0}
-                        fontSize="11px"
-                        fontWeight="600"
-                        color="gray.500"
-                        letterSpacing="0.01em"
-                      >
-                        {billing.periodLabel}
-                      </Text>
-
-                      {/* WHO RUNS THE CHAPEL (user, 2026-09-15). Beside the
-                          number rather than down in the grey line, because it is
-                          not another attribute of the billing — it says which
-                          PROCESS produced it, and that changes what the reader
-                          should expect of everything else on the row: a paper
-                          franchise's accounts were typed in by hand and its
-                          identifier is a number where every other row's may be a
-                          code.
-
-                          ONLY WHERE THERE IS SOMETHING TO SAY. A company-owned
-                          chapel is the ordinary case — most of this file — and a
-                          chip on every row saying "ordinary" is a column of
-                          noise that makes the two that matter harder to see. The
-                          word is still searchable; see `BILLING_KIND_TERMS`.
-
-                          THE MODULE'S FRANCHISE AMBER, which is where this
-                          colour genuinely belongs: it marks a FACT about the
-                          chapel here, as it does on the territory card and the
-                          billing card. It was wrong on a button, which is what
-                          those became the kit's green for. */}
-                      {kind !== "owned" && (
-                        <Text
-                          flexShrink={0}
-                          fontSize="9.5px"
-                          fontWeight="700"
-                          letterSpacing="0.04em"
-                          textTransform="uppercase"
-                          color={FRANCHISE_ACCENT}
-                          borderWidth="1px"
-                          borderColor="#e7d3b5"
-                          bg="#fdf6ec"
-                          borderRadius="sm"
-                          px={1.5}
-                          py="1px"
-                          title={`${BILLING_KIND_LABEL[kind]} — RefMortuary class ${BILLING_KIND_CODE[kind]}`}
-                        >
-                          {BILLING_KIND_LABEL[kind]}
-                        </Text>
-                      )}
-
-                    </Flex>
-                    {/* JOINED FROM WHAT IS ACTUALLY THERE, rather than written
-                        out with separators between fixed slots. A paper
-                        franchise is billed to a MORTUARY, and a franchise
-                        mortuary's own chapel often does not resolve — one row in
-                        `RefMortuary` has none at all — so the territory is
-                        legitimately empty and the hand-written "· ·" left a
-                        dangling separator in the middle of the line.
-
-                        NO BILLING CODE (user, 2026-09-17: "remove the billing
-                        code in the details"). It stood at the head of this line
-                        for an hour, put there when the number took the line
-                        above. Every billing in the file is numbered now, so the
-                        code is no longer the thing that identifies a row to a
-                        reader — it is a derived key, and one whose chapel and
-                        period are spelled out in words beside it anyway. The
-                        SEARCH still matches it, which is where a code is
-                        actually used: typed in, not read off.
-
-                        THE PERIOD HAS GONE TOO, up beside the number, where the
-                        two of them name the billing between them.
-
-                        TERRITORY BEFORE CHAPEL (user, 2026-09-17: "territory
-                        first"). It reads as an address now — the wide thing
-                        first, then the place inside it — and it puts the word
-                        the Territory filter above is named after at the start
-                        of every line, where a column of them can be scanned
-                        without reading past a chapel name to reach it. */}
-                    <Text
-                      mt={0.5}
-                      fontSize="11.5px"
-                      color="gray.500"
-                      lineHeight="1.4"
-                    >
-                      {[
-                        db.getTerritoryName(billing.territoryCode) ||
-                          billing.territoryCode,
-                        billing.chapelDesc,
-                        billing.processedBy,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </Text>
-                  </Box>
-
-                  <Box flexShrink={0} textAlign="right">
-                    <Text
-                      fontSize="13px"
-                      fontWeight="700"
-                      fontVariantNumeric="tabular-nums"
-                      color="gray.800"
-                    >
-                      {formatCSP(billing.totalCSP)}
-                    </Text>
-                    {/* HOW FAR DOWN IT SOMEBODY GOT, under the money (user,
-                        2026-09-17: "the terminated is below the total csp like
-                        a book"). The two belong together: the amount is what
-                        the chapel is owed for the whole billing, and this is
-                        how much of it has actually been posted — the figure and
-                        its progress, one under the other.
-
-                        IT READS AS TEXT RATHER THAN AS A CHIP now that it has
-                        left the identifier line. Up there it had to hold its own
-                        beside the FRANCHISE chip and needed a border to do it;
-                        here it is the second line of a two-line figure, and a
-                        boxed word would be the only framed thing in the column.
-
-                        SILENT ALMOST ALWAYS — see {@link partialProgress}. What
-                        stands here on an untouched billing is nothing at all,
-                        which is why the amount does not look lonely: most rows
-                        are one line on this side.
-
-                        NO WAIT, AND NO "ON SCREEN". The days ranked a list that
-                        is already SORTED by them — see `ordered` — so the number
-                        was restating the order it had just been put in, row
-                        after row. The served row says it is the served row by
-                        its own colour; see the row's background.
-
-                        THE STATE SURVIVES ON THE MIXED TABS, and only there. On
-                        All and Endorsed the rows are at different stages and
-                        nothing else on the row says which, so "Processed" is
-                        the one thing a reader cannot work out for themselves.
-                        On a stage tab every row is at the same stage as the tab
-                        they clicked, and printing it per row would be the tab's
-                        own name repeated fifty times. */}
-                    {partial && (
-                      <Text
-                        mt={0.5}
-                        fontSize="10.5px"
-                        fontWeight="600"
-                        color={PARTIAL_ACCENT}
-                        title="Some accounts on this billing are terminated and some are not — it was started and not finished."
-                      >
-                        {partial}
-                      </Text>
-                    )}
-
-                    {!showsWait && (
-                      <Text mt="1px" fontSize="10.5px" color="gray.400">
-                        {statusOf(billing)}
-                      </Text>
-                    )}
-                  </Box>
-                </Flex>
-              );
-            })}
-          </Flex>
+          </>
         )}
-      </Box>
-    </SectionPopup>
+      />
+
+      <ListPopup
+        title={title}
+        open={open && !isPhone}
+        onClose={onClose}
+        // WIDE ENOUGH FOR THE TABLE — six columns, and a toolbar holding the
+        // search, the owner switch and three dropdowns on one line. Still
+        // capped by the screen.
+        maxW="1100px"
+        header={
+          <Box>
+            {/* THE SIX LISTS. A strip that SCROLLS rather than wraps: inside a
+                dialog header a second row of tabs pushes the search down on
+                exactly the narrow screens that have least height to give, and a
+                tab strip is a thing the hand already expects to swipe. */}
+            <Flex
+              // No tabs over a fixed list — see `list`.
+              display={list ? "none" : "flex"}
+              gap={1.5}
+              overflowX="auto"
+              pb="2px"
+              role="tablist"
+              aria-label="Billing lists"
+              css={{
+                scrollbarWidth: "none",
+                "&::-webkit-scrollbar": { display: "none" },
+              }}
+            >
+              {BILLING_SCOPES.map((key) => (
+                <TabPill
+                  key={key}
+                  label={SCOPE_LABEL[key]}
+                  count={counts[key]}
+                  active={key === scope}
+                  onClick={() => onScopeChange(key)}
+                />
+              ))}
+            </Flex>
+
+            {/* THE FIELD AND THE TWO FILTERS ON ONE ROW, under the tabs that
+                scope the list: what narrows stands together, below what chooses.
+
+                TWO NAMED CONTROLS RATHER THAN ONE FUNNEL (user, 2026-09-14:
+                "since it is wide we can remove it in the filter button and have
+                dedicated [controls] in here"). The funnel exists because the
+                claims TABLE's toolbar is full — a type dropdown, a branch
+                dropdown, a view toggle and a search box — and three more labelled
+                controls there is a row that wraps. This sheet is 1100px carrying a
+                search field and nothing else, so the reason does not apply, and
+                what the collapse costs is the words: behind an icon, "Territory"
+                is a heading nobody reads until they open a panel they had no
+                reason to open. See `FilterSelect`.
+
+                NO MAGNIFIER BUTTON ON THE FIELD. The rail's has one because that
+                search GOES somewhere — it opens this sheet. Here the rows narrow
+                as the query is typed, so a button would be a control that visibly
+                does nothing. See `onSearch` on `SearchBar`.
+
+                IT WRAPS RATHER THAN SQUEEZES. On a phone the sheet is the screen
+                less 24px, where a field and two dropdowns cannot share a line; the
+                field keeps a floor of 200px and the filters drop beneath it. */}
+            <Flex gap={2} mt={list ? 0 : 2.5} align="center" wrap="wrap">
+              <SearchBar
+                size="sm"
+                flex="1"
+                minW="200px"
+                value={query}
+                onChange={onQueryChange}
+                label="Search billings"
+                // THE IDENTIFIER IS IN THE LIST because a placeholder is where a
+                // reader finds out what a search box will answer, and "franchise"
+                // is not a thing anyone would guess a billing search accepts. It
+                // costs one word and it is the newest of the six fields.
+                placeholder="Billing code, no., chapel, franchise, plan no. or deceased"
+              />
+              {/* WHO RUNS THE CHAPEL (user, 2026-10-05) — a switch and not a
+                  fourth dropdown: three choices, all worth seeing at once. */}
+              <Box flexShrink={0}>{ownerSwitch}</Box>
+              {/* FIRST OF THE THREE, because it is the one a processor reaches
+                  for most: a payable is chased by the cut it belongs to — "what
+                  is still open from the first week of June" — where territory and
+                  processor answer questions about WHO rather than WHEN.
+
+                  It is also the only one whose options are a sequence, so it sits
+                  where the eye starts rather than at the end of a row of
+                  unordered menus. */}
+              <FilterSelect
+                label="Period"
+                options={periodOptions}
+                selected={periods}
+                onChange={setPeriods}
+                emptyNote="No billing in this list carries a period."
+              />
+              {/* Filtered by CODE and listed by NAME — the billing carries the
+                  code, and the reference table is the only place the name it is
+                  called by is written down. */}
+              <FilterSelect
+                label="Territory"
+                options={territoryOptions}
+                selected={territories}
+                onChange={setTerritories}
+                emptyNote="No billing in this list carries a territory."
+              />
+              {/* Filtered and listed by the same string: who put a billing
+                  through is a name on the row and nothing else. */}
+              <FilterSelect
+                label="Processor"
+                options={processorOptions}
+                selected={processors}
+                onChange={setProcessors}
+                // THE ORDINARY CASE ON FOR PROCESS, and it is not a fault: a
+                // billing waiting to be put through has nobody's name on it yet.
+                emptyNote="No billing in this list has been put through by anyone yet."
+              />
+            </Flex>
+
+            {/* NO COUNT LINE (user, 2026-09-17: "remove the number of billings
+                and the longest wait first. it is redundant"), and both halves of
+                it were.
+
+                THE COUNT IS ON THE TAB the reader just pressed, and that number
+                follows the search, so "23 billings" under a pill reading
+                "For Process 23" was the same figure twice, eighteen pixels apart.
+
+                THE ORDER STOPPED BEING NEWS when every tab became oldest-first on
+                2026-09-15. It was written when the six lists were sorted three
+                different ways and the sentence changed as you moved between them.
+                One rule everywhere does not need restating per tab — it is on
+                `ordered`, which is what enforces it.
+
+                THE TWO FILTERS STILL ANNOUNCE THEMSELVES, which is what this line
+                was doing that nothing else did: `FilterSelect` carries the number
+                of things ticked on its own button, so a narrowed list is still
+                accounted for. */}
+          </Box>
+        }
+      >
+        <Box>
+          {rows.length === 0 ? (
+            <EmptyPanel
+              title="Nothing matches"
+              // THE EMPTY STATE NAMES THE CAUSE, and now it has three to choose
+              // between. A reader who has emptied a list must not be told the
+              // list is empty when what is actually true is that they narrowed
+              // it — and with six tabs there is a third case the queue pop-up
+              // never had: the search found nothing HERE, and the tab strip above
+              // is already saying where it did find something.
+              body={emptyBody}
+            />
+          ) : (
+            <Box
+              css={{
+                // Total CSP's heading to the figures' edge.
+                ...alignHeadersRight(":last-of-type"),
+                // THE ROW ON SCREEN, by its colour — see `SERVED_BG`. Found by
+                // the mark on its Billing No. cell; the kit has no row style.
+                "& tbody tr:has([data-served]) td": { bg: SERVED_BG },
+                "& tbody tr:has([data-served]) td:first-of-type": {
+                  boxShadow: `inset 3px 0 0 ${BRAND_COLORS.primaryGreen}`,
+                },
+              }}
+            >
+              <DataTable<ServiceBilling>
+                columns={columns}
+                data={rows}
+                getRowId={(billing) => billing.billingCode}
+                onRowClick={(billing) => onOpenBilling(billing, title)}
+                size="sm"
+                features={{
+                  search: false,
+                  filtering: false,
+                  sorting: false,
+                  pagination: false,
+                  columnToggle: false,
+                  selection: false,
+                  detailSidebar: false,
+                }}
+              />
+            </Box>
+          )}
+        </Box>
+      </ListPopup>
+    </>
   );
 }
 

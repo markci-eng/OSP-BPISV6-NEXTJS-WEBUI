@@ -189,7 +189,7 @@ const BILLED_STAGE_LADDER = [0, 0, 1, 0, 0, 2, 0, 1];
  * that existed only so the dashboard's per-processor grouping had more than one
  * row to draw. These three are the actual team, and they are the same three the
  * territory ladders are assigned to — `ROSTER.SERVICE_PAYABLE` in
- * `app/(pis)/claims/utilities/territory-assignment-store.ts`. A name stamped on
+ * `app/(pis)/claims/staff-roster.ts`. A name stamped on
  * a billing and a name holding the territory that billing came from are now the
  * same person, which is the whole reason to prefer the real list: the invented
  * one could never line up with an assignment.
@@ -368,6 +368,29 @@ const DEMO_BILLED_DISCREPANCIES = 1;
  * step this by one.
  */
 const DEMO_BILLED_HELD_CHAPEL = 1;
+
+/*
+ * THE FRANCHISE BILLED HISTORY (2026-10-01) — what the Franchise Deductions page
+ * has to show. Every billed block above is company-owned, so without this no
+ * franchise billing ever got past For Process, and a processed franchise billing
+ * is exactly what waits at `for-deduction`.
+ *
+ * EIGHT BILLINGS, AND THE NUMBER IS LOAD-BEARING. `alreadyBilled` deals
+ * {@link BILLED_STAGE_LADDER} over every worked code oldest first, and the
+ * ladder is eight long — so a block of exactly eight dated BEFORE the MIMAROPA
+ * history takes one whole turn of it and leaves every later billing on the
+ * stage it had: {@link DEMO_BILLED_HELD_CHAPEL}'s discrepancy stays in For
+ * Verification. One turn gives five processed (→ For Deduction), two verified
+ * and one approved.
+ *
+ * SYSTEM-CAPABLE FRANCHISES ONLY, priced, and with the endorsed name the plan's
+ * own — a franchise's NAME discrepancy is For Process's case, not this block's.
+ */
+const DEMO_FRANCHISE_CHAPELS = 4;
+const DEMO_FRANCHISE_PERIODS = 2;
+const DEMO_FRANCHISE_SERVICES = 3;
+/** Older than the MIMAROPA block's two periods, so this one sorts first. */
+const DEMO_FRANCHISE_LAG_DAYS = 90;
 
 /* =============================== the build =============================== */
 
@@ -721,6 +744,11 @@ function endorsements(db: PisDatabase): Endorsement[] {
   // cannot move the file's latest service date (every row in it is dated months
   // back), so the staging of every real billing behind it is untouched.
   if (DEMO_OVERLOAD) rows.push(...demoBilledEndorsements(db, rows));
+
+  // ── Pass 6b: the franchise billed history — see DEMO_FRANCHISE_CHAPELS ──
+  //
+  // After the MIMAROPA block so it sees that block's borrowings as taken.
+  if (DEMO_OVERLOAD) rows.push(...demoFranchiseEndorsements(db, rows));
 
   // ── Pass 7: the assigned plans go in, at the end ──
   //
@@ -1121,6 +1149,73 @@ function demoBilledEndorsements(
     });
   }
 
+  return rows;
+}
+
+/**
+ * The franchise billed-history rows — see {@link DEMO_FRANCHISE_CHAPELS}. Built
+ * the way {@link demoBilledEndorsements} is, one closed period at a time.
+ */
+function demoFranchiseEndorsements(
+  db: PisDatabase,
+  derived: Endorsement[],
+): Endorsement[] {
+  const chapels = db
+    .getChapels()
+    .filter(
+      (chapel) =>
+        chapel.isFranchise &&
+        !chapel.isManualFranchise &&
+        Boolean(db.getDesignatedMortCode(chapel.chapelCode)),
+    )
+    .slice(0, DEMO_FRANCHISE_CHAPELS);
+  if (!chapels.length) return [];
+
+  const anchorISO = derived.reduce(
+    (latest, s) => (s.serviceDateISO > latest ? s.serviceDateISO : latest),
+    "",
+  );
+  if (!anchorISO) return [];
+
+  const periods: BillingPeriod[] = [];
+  let cursorISO = daysAfter(anchorISO, -DEMO_FRANCHISE_LAG_DAYS);
+  for (let i = 0; i < DEMO_FRANCHISE_PERIODS; i++) {
+    const period = periodOf(cursorISO);
+    periods.push(period);
+    cursorISO = daysAfter(cutRange(period).fromISO, -1);
+  }
+
+  const pool = borrowablePlans(db, derived, false);
+  if (!pool.length) return [];
+
+  const rows: Endorsement[] = [];
+  let next = 0;
+  for (const period of periods) {
+    const serviceISO = cutRange(period).toISO;
+    for (const chapel of chapels) {
+      const branchCode =
+        db.getBranchesByTerritory(chapel.territoryCode)[0]?.branchCode ?? "";
+      for (let i = 0; i < DEMO_FRANCHISE_SERVICES; i++) {
+        const planholder = pool[next++ % pool.length];
+        const name = planholder.name;
+        if (!name) continue;
+        const onFileName = toFullName(name);
+        rows.push({
+          chapel,
+          planholder,
+          endorsedName: onFileName,
+          deceasedName: onFileName,
+          dateOfDeathISO: daysAfter(serviceISO, -3),
+          serviceDateISO: serviceISO,
+          period,
+          reportPeriod: period,
+          isHeld: false,
+          phBranchCode: branchCode,
+          servicingBranchCode: branchCode,
+        });
+      }
+    }
+  }
   return rows;
 }
 

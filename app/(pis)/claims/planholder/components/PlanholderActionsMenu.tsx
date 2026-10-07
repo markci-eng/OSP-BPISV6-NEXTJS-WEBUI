@@ -5,6 +5,7 @@ import ActionButtons, {
   type ActionButtonItem,
 } from "@/components/primitives/ActionButtons";
 import { PLAN_ACTIONS } from "../../components/plan-action-items";
+import { PRINT_SOA_LABEL, printSoa } from "../../components/print-soa";
 import type { Planholder } from "../../claims-data";
 
 interface PlanholderActionsMenuProps {
@@ -24,9 +25,11 @@ export function PlanholderActionsMenu({
   planholder,
 }: PlanholderActionsMenuProps) {
   const notWired = (label: string) =>
-    toast.info(`${label} is not available yet`, {
-      description: `LPA No. ${planholder.lpaNo}`,
-    });
+    label === PRINT_SOA_LABEL
+      ? printSoa(planholder.lpaNo)
+      : toast.info(`${label} is not available yet`, {
+          description: `LPA No. ${planholder.lpaNo}`,
+        });
 
   const actions: ActionButtonItem[] = PLAN_ACTIONS.map((action) => ({
     ...action,

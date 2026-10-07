@@ -77,6 +77,8 @@ export type UserAssignmentInput = {
   currentGroups: string[];
   /** AccessGroupCodes being asked for. */
   requestedGroups: string[];
+  /** Area codes chosen for each requested group that has a data scope. */
+  dataScopes?: Record<string, string[]>;
   /** Permissions the change would grant and revoke. */
   granted: number;
   revoked: number;
@@ -118,6 +120,10 @@ export async function submitUserAssignment(
     branch: input.branch,
     currentGroups: input.currentGroups.join(", ") || "—",
     requestedGroups: input.requestedGroups.join(", ") || "—",
+    dataScopes:
+      Object.entries(input.dataScopes ?? {})
+        .map(([group, areas]) => `${group}: ${areas.join(", ")}`)
+        .join("; ") || undefined,
     permissionEffect: `+${input.granted} / −${input.revoked}`,
     status: "Pending",
     date: today,

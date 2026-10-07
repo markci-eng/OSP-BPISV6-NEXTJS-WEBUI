@@ -7,40 +7,112 @@
 // PIS data layer. When a real source turns up, it maps onto this and the card
 // does not change.
 
-import type { CofpRequest } from "../../cofp/data/types";
-
 /** Whether the plan is still inside its contestable year. */
 export type CofpContestability = "within" | "over";
-
-/**
- * An account a certificate was asked for that is NOT fully paid yet.
- *
- * It is the same request, plus what it is still short. A certificate cannot be
- * raised on one of these, which is why the Generate view lists them apart from
- * the accounts it can be raised on rather than mixed in with them.
- */
-export interface CofpDeficiencyRequest extends CofpRequest {
-  /** Pesos still owed before the certificate can go out. */
-  deficiency: number;
-}
 
 /**
  * Which list the request rail is showing.
  *
  * THE ACTION BUTTONS ARE THE RAIL'S TABS (user, 2026-09-22): pressing one does
  * not run anything, it decides which requests the rows below are. One value per
- * button, in the order a certificate moves — raised, printed, transmitted,
- * released — then the three ways one comes back.
+ * button, in the order a certificate moves — printed, transmitted, released —
+ * then the three ways one comes back.
  */
 export type CofpView =
-  | "GENERATE"
   | "FOR_PRINTING"
+  | "DEFICIENT"
   | "PRINTED"
   | "BATCH_TRANSMITTAL"
   | "RELEASED"
   | "REPLACEMENT"
   | "RETURN"
   | "CONFISCATED";
+
+/**
+ * Where a Replacement request came from (user, 2026-10-05) — the three
+ * buttons under the Replacement view's title. SPFC and Confiscated are one
+ * list each; Branch is picked from a combo box first.
+ */
+export type CofpReplacementSource = "SPFC" | "CONFISCATED" | "BRANCH";
+
+/** A region the For Printing view lists — its code and the branches under it. */
+export interface CofpRegion {
+  /** e.g. "NCT1-1". */
+  code: string;
+  /** The region's branches, comma-separated, as the reference table has them. */
+  description: string;
+  /**
+   * The Special Request queue (user, 2026-10-05) — not a region, but listed
+   * like one, pinned above the regions and drawn to stand out from them.
+   */
+  special?: boolean;
+}
+
+/** A branch the Deficient view lists. */
+export interface CofpBranch {
+  /** e.g. "ABRA". */
+  code: string;
+  description: string;
+}
+
+/**
+ * A transmittal memo the Printed view lists under a branch (user, 2026-10-05)
+ * — the printed certificates that went out to the branch together.
+ */
+export interface CofpMemo {
+  /** Unique across branches. */
+  id: string;
+  /** The branch code the memo went to. */
+  branch: string;
+  memoNo: string;
+  /** ISO. */
+  dateTransmitted: string;
+  /** The printed certificates the memo carried. */
+  rows: CofpForPrinting[];
+}
+
+/** One certificate queued for printing under a region. */
+export interface CofpForPrinting {
+  /** Unique within the region. */
+  id: string;
+  branch: string;
+  lpaNo: string;
+  lastName: string;
+  firstName: string;
+  middleName: string;
+  /**
+   * Held in its parts — the Edit PH Info dialog edits each one — and joined
+   * into one line only where it is shown.
+   */
+  address: CofpAddress;
+  /** The number the certificate prints under, e.g. "CFPWT126-007077". */
+  cofpNo: string;
+  /** Plan name as the certificate prints it, before "LIFE PLAN". */
+  planName: string;
+  planValue: number;
+  /** e.g. "MEMORIAL SERVICE ONLY". */
+  coverage: string;
+  /** ISO. The "Given this … day of …" date. */
+  fullPaidDate: string;
+}
+
+/** A Replacement request — the certificate to reissue, and when it was asked for. */
+export interface CofpReplacementRequest extends CofpForPrinting {
+  /** ISO. */
+  dateRequested: string;
+}
+
+/** A plan holder's address as the Edit PH Info dialog edits it. */
+export interface CofpAddress {
+  province: string;
+  /** Municipality or city. */
+  city: string;
+  district: string;
+  barangay: string;
+  street: string;
+  /** Optional — blank when the address has none. */
+  houseNo: string;
+}
 
 /** The person the certificate is printed for. */
 export interface CofpPlanholderProfile {

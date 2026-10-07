@@ -192,24 +192,51 @@ export function ListOfPlans({
   personId,
   planholderAddress,
   selectedLpaNumber,
+  part = "all",
+  selected,
+  onSelect,
 }: {
   plans: PlanDetailType[];
   deletePlanFunction?: (lpaNumber: string) => void;
   personId?: string;
   planholderAddress?: string;
   selectedLpaNumber?: string;
+  /**
+   * Which half to draw. `"all"` (the default) is the picker and the details
+   * panel side by side, as every caller has always had it. `"picker"` is only
+   * the LPA search and the plan cards; `"details"` is only the panel for the
+   * selected plan — for a screen that lays the two out apart (PIS planholder
+   * profile, 2026-10-06). Two halves drawn apart must share the selection, so
+   * pass `selected` and `onSelect` to both.
+   */
+  part?: "all" | "picker" | "details";
+  /** The selected plan's LPA number, when the caller owns the selection. */
+  selected?: string;
+  /** Called with the LPA number of a plan the user picks. */
+  onSelect?: (lpaNumber: string) => void;
 }) {
   const isMobile = useBreakpointValue({ base: true, lg: false });
   const [searchVal, setSearchVal] = useState<string>("");
+  const initialLpaNumber = selected ?? selectedLpaNumber;
   const initialPlanIndex = Math.max(
-    selectedLpaNumber
-      ? plans.findIndex((p) => p.lpaNumber === selectedLpaNumber)
+    initialLpaNumber
+      ? plans.findIndex((p) => p.lpaNumber === initialLpaNumber)
       : 0,
     0,
   );
-  const [planDetails, setPlanDetails] = useState<PlanDetailType | null>(
+  const [ownPlanDetails, setOwnPlanDetails] = useState<PlanDetailType | null>(
     plans[initialPlanIndex] ?? null,
   );
+  // The caller's selection when it has one, falling back to the first plan
+  // for an LPA number that is not in the list.
+  const planDetails =
+    selected !== undefined
+      ? (plans.find((p) => p.lpaNumber === selected) ?? plans[0] ?? null)
+      : ownPlanDetails;
+  const setPlanDetails = (plan: PlanDetailType) => {
+    setOwnPlanDetails(plan);
+    onSelect?.(plan.lpaNumber);
+  };
   const [filteredPlans, setFilteredPlans] = useState<PlanDetailType[]>(plans);
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -273,137 +300,154 @@ export function ListOfPlans({
     },
   ];
 
+  const picker = (
+    <>
+      <Show when={!isMobile}>
+        <InputGroup startElement={<LuSearch />}>
+          <Input
+            placeholder="Search LPA Number"
+            value={searchVal}
+            onChange={(e) => setSearchVal(e.currentTarget.value)}
+          />
+        </InputGroup>
+        <Separator my={3} />
+        <Flex direction={"column"} gap={2}>
+          <Show when={filteredPlans.length === 0}>
+            <EmptyStateCard
+              title={"No Plans Found"}
+              description={"No Plans match your search criteria."}
+            />
+          </Show>
+          {filteredPlans.map((plan) => (
+            <LPANumberButton
+              key={plan.lpaNumber}
+              plan={plan}
+              isSelected={planDetails?.lpaNumber === plan.lpaNumber}
+              onClick={() => setPlanDetails(plan)}
+              personId={personId}
+            />
+          ))}
+        </Flex>
+      </Show>
+
+      <Show when={isMobile}>
+        <Carousel.Root
+          slideCount={plans.length}
+          defaultPage={initialPlanIndex}
+          // Follows the caller's selection when it owns one, so a plan picked
+          // somewhere else on the screen turns the carousel to it.
+          page={
+            selected !== undefined && planDetails
+              ? Math.max(plans.indexOf(planDetails), 0)
+              : undefined
+          }
+          onPageChange={(details) => {
+            setPlanDetails(plans[details.page]);
+          }}
+        >
+          <Box position="relative" overflow="visible">
+            <Carousel.ItemGroup w="full">
+              {plans.map((plan, index) => (
+                <Carousel.Item key={plan.lpaNumber} index={index} minW={0}>
+                  <LPANumberButton
+                    plan={plan}
+                    isSelected={true}
+                    onClick={() => {
+                      setPlanDetails(plan);
+                      setModalOpen(true);
+                    }}
+                    personId={personId}
+                  />
+                </Carousel.Item>
+              ))}
+            </Carousel.ItemGroup>
+          </Box>
+
+          <Carousel.Control justifyContent="center" gap="4">
+            <Carousel.PrevTrigger asChild>
+              <IconButton size="xs" variant="ghost">
+                <LuChevronLeft />
+              </IconButton>
+            </Carousel.PrevTrigger>
+
+            <Carousel.Indicators />
+
+            <Carousel.NextTrigger asChild>
+              <IconButton size="xs" variant="ghost">
+                <LuChevronRight />
+              </IconButton>
+            </Carousel.NextTrigger>
+          </Carousel.Control>
+        </Carousel.Root>
+      </Show>
+    </>
+  );
+
+  const details = planDetails && (
+    <Box
+      p={3}
+      borderRadius={"sm"}
+      border={"1px solid"}
+      borderColor={"gray.200"}
+    >
+      <Flex align={"center"} justify={"space-between"}>
+        <Flex gap={2} my={2} align={"center"}>
+          <FaRegFileAlt size={40} color="var(--chakra-colors-primary)" />
+          <Flex direction={"column"}>
+            <Small mb={-1}>LPA Number</Small>
+            <H4>{planDetails!.lpaNumber}</H4>
+            <Flex gap={2} mt={2}>
+              <OSPBadge
+                type={
+                  planDetails!.accountStatus === "LAPSED"
+                    ? "warning"
+                    : "success"
+                }
+              >
+                {planDetails!.accountStatus}
+              </OSPBadge>
+              <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
+            </Flex>
+          </Flex>
+        </Flex>
+        <AccountQuickActions actions={resolvedActions} />
+      </Flex>
+      <Separator my={2} />
+      <PlanTabs
+        planDetails={planDetails!}
+        planholderAddress={planholderAddress}
+      />
+    </Box>
+  );
+
+  const noPlans = (
+    <Card.MainContent>
+      <EmptyStateCard
+        title={"No Plans Found"}
+        description={"This person does not have any plans."}
+      />
+    </Card.MainContent>
+  );
+
+  // Drawn apart, the details half has nothing to show without a plan — the
+  // picker beside it already says so.
+  if (part === "details") return details || null;
+  if (part === "picker") return plans.length > 0 ? picker : noPlans;
+
   return (
     <Box my={{ base: 0, lg: 5 }}>
       {plans.length > 0 ? (
         <Grid templateColumns={"repeat(4, 1fr)"} gap={2}>
           {/* Plan list / carousel column */}
-          <GridItem colSpan={isMobile ? 4 : 1}>
-            <Show when={!isMobile}>
-              <InputGroup startElement={<LuSearch />}>
-                <Input
-                  placeholder="Search LPA Number"
-                  value={searchVal}
-                  onChange={(e) => setSearchVal(e.currentTarget.value)}
-                />
-              </InputGroup>
-              <Separator my={3} />
-              <Flex direction={"column"} gap={2}>
-                <Show when={filteredPlans.length === 0}>
-                  <EmptyStateCard
-                    title={"No Plans Found"}
-                    description={"No Plans match your search criteria."}
-                  />
-                </Show>
-                {filteredPlans.map((plan) => (
-                  <LPANumberButton
-                    key={plan.lpaNumber}
-                    plan={plan}
-                    isSelected={planDetails?.lpaNumber === plan.lpaNumber}
-                    onClick={() => setPlanDetails(plan)}
-                    personId={personId}
-                  />
-                ))}
-              </Flex>
-            </Show>
-
-            <Show when={isMobile}>
-              <Carousel.Root
-                slideCount={plans.length}
-                defaultPage={initialPlanIndex}
-                onPageChange={(details) => {
-                  setPlanDetails(plans[details.page]);
-                }}
-              >
-                <Box position="relative" overflow="visible">
-                  <Carousel.ItemGroup w="full">
-                    {plans.map((plan, index) => (
-                      <Carousel.Item
-                        key={plan.lpaNumber}
-                        index={index}
-                        minW={0}
-                      >
-                        <LPANumberButton
-                          plan={plan}
-                          isSelected={true}
-                          onClick={() => {
-                            setPlanDetails(plan);
-                            setModalOpen(true);
-                          }}
-                          personId={personId}
-                        />
-                      </Carousel.Item>
-                    ))}
-                  </Carousel.ItemGroup>
-                </Box>
-
-                <Carousel.Control justifyContent="center" gap="4">
-                  <Carousel.PrevTrigger asChild>
-                    <IconButton size="xs" variant="ghost">
-                      <LuChevronLeft />
-                    </IconButton>
-                  </Carousel.PrevTrigger>
-
-                  <Carousel.Indicators />
-
-                  <Carousel.NextTrigger asChild>
-                    <IconButton size="xs" variant="ghost">
-                      <LuChevronRight />
-                    </IconButton>
-                  </Carousel.NextTrigger>
-                </Carousel.Control>
-              </Carousel.Root>
-            </Show>
-          </GridItem>
+          <GridItem colSpan={isMobile ? 4 : 1}>{picker}</GridItem>
 
           {/* Tabs panel — desktop only */}
           <GridItem colSpan={3} display={{ base: "none", lg: "block" }}>
-            <Box
-              p={3}
-              borderRadius={"sm"}
-              border={"1px solid"}
-              borderColor={"gray.200"}
-            >
-              <Flex align={"center"} justify={"space-between"}>
-                <Flex gap={2} my={2} align={"center"}>
-                  <FaRegFileAlt
-                    size={40}
-                    color="var(--chakra-colors-primary)"
-                  />
-                  <Flex direction={"column"}>
-                    <Small mb={-1}>LPA Number</Small>
-                    <H4>{planDetails!.lpaNumber}</H4>
-                    <Flex gap={2} mt={2}>
-                      <OSPBadge
-                        type={
-                          planDetails!.accountStatus === "LAPSED"
-                            ? "warning"
-                            : "success"
-                        }
-                      >
-                        {planDetails!.accountStatus}
-                      </OSPBadge>
-                      <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
-                    </Flex>
-                  </Flex>
-                </Flex>
-                <AccountQuickActions actions={resolvedActions} />
-              </Flex>
-              <Separator my={2} />
-              <PlanTabs
-                planDetails={planDetails!}
-                planholderAddress={planholderAddress}
-              />
-            </Box>
+            {details}
           </GridItem>
         </Grid>
       ) : (
-        <Card.MainContent>
-          <EmptyStateCard
-            title={"No Plans Found"}
-            description={"This person does not have any plans."}
-          />
-        </Card.MainContent>
+        noPlans
       )}
 
       {/* Mobile full-screen plan detail drawer */}

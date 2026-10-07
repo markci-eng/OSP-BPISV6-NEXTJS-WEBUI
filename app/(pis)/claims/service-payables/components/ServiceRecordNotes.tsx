@@ -27,12 +27,10 @@
 // here. That flag is exactly the case the death claim's own column has, which is
 // why this is a call to the claim's component rather than a copy of it.
 //
-// WHAT WAS GIVEN UP is the phone sheet, which came up from the bottom edge where
-// a thumb is (user-confirmed 2026-08-26, when this section owned both overlays).
-// `asDialog` is centred at every width; on a handset it is a box at
-// `100dvw - 24px`, which is the box the claim's processors already write notes in
-// on the same handsets. One design across the two screens was the ask, and this
-// is the half of it that had to give.
+// THE PHONE SHEET CAME BACK, for both screens at once (user, 2026-10-02): below
+// `lg`, `asDialog` opens a bottom sheet instead of the centred box — see
+// `PlanholderRemarks`. One design across the two screens still holds; it is
+// simply a better one on a handset.
 //
 // IT IS NOT INSIDE THE FORM, and that is deliberate rather than incidental. The
 // service record is a real `<form>` whose submit button is Terminate; a
@@ -72,6 +70,7 @@ export function ServiceRecordNotes({ service }: ServiceRecordNotesProps) {
       showSubtitles={false}
       // A centred dialog rather than the kit's sheet — the claim's gesture.
       asDialog
+      noteSubtitle={service.lpaNo}
       // ONE TO A LINE, where remarks are separated by a blank one: a note is a
       // short line in a running log, and a blank line between each would make
       // five of them a page. The claim joins its own with a blank line because

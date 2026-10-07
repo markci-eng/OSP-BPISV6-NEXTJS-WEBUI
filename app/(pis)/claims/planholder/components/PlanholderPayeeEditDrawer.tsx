@@ -22,7 +22,7 @@ import { LuChevronLeft, LuPencil } from "react-icons/lu";
 import { toast } from "sonner";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { FloatingLabelInput } from "osp-ui-kit";
-import { DIALOG_SHEET_CSS } from "./dialog-sheet";
+import { DIALOG_SHEET_FROM_LG_CSS, POPUP_FROM_LG } from "./dialog-sheet";
 import {
   getPayoutChannelOptions,
   type ClaimPayee,
@@ -40,7 +40,32 @@ interface PlanholderPayeeEditDrawerProps {
    * as a full page over a dialog would read as having left the dialog behind.
    */
   asDialog?: boolean;
+  /**
+   * Edit only this part of the payee — what the phone's "What do you want to
+   * edit?" picker opens (user, 2026-10-02: "instead of a form when press edit
+   * there is a pop-up what it is needed to edit"). Omit it for the whole form.
+   */
+  part?: PayeeEditPart | null;
 }
+
+/** The parts the payee record is edited in, one at a time on a phone. */
+export type PayeeEditPart =
+  | "identity"
+  | "birthDate"
+  | "amount"
+  | "contact"
+  | "hold"
+  | "payout";
+
+/** What each part is called, as the picker and the part's sheet name it. */
+export const PAYEE_EDIT_PART_TITLES: Record<PayeeEditPart, string> = {
+  identity: "Name and relationship",
+  birthDate: "Date of birth",
+  amount: "Payable amount",
+  contact: "Contact",
+  hold: "Hold payout",
+  payout: "Payout account",
+};
 
 type Option = { label: string; value: string };
 
@@ -206,6 +231,7 @@ export function PlanholderPayeeEditDrawer({
   open,
   onClose,
   asDialog = false,
+  part = null,
 }: PlanholderPayeeEditDrawerProps) {
   const channelOptions = useMemo(() => getPayoutChannelOptions(), []);
 
@@ -260,6 +286,80 @@ export function PlanholderPayeeEditDrawer({
     return () => window.clearTimeout(t);
   }, [open]);
 
+  /** The fields of each part — laid out whole, or one part on its own. */
+  const fields: Record<PayeeEditPart, React.ReactNode> = {
+    identity: (
+      <>
+        <TextField control={control} name="name" label="Payee Name" />
+        <TextField control={control} name="relation" label="Relation" />
+      </>
+    ),
+    birthDate: (
+      <TextField
+        control={control}
+        name="birthDate"
+        label="Date of Birth"
+        type="date"
+      />
+    ),
+    amount: (
+      <TextField control={control} name="amount" label="Amount" type="number" />
+    ),
+    contact: (
+      <>
+        <TextField control={control} name="address" label="Address" />
+        <TextField control={control} name="contact" label="Contact" />
+        <TextField control={control} name="email" label="Email" />
+      </>
+    ),
+    // On Hold — toggle the payout hold for this payee.
+    hold: (
+      <Controller
+        control={control}
+        name="isOnHold"
+        render={({ field }) => (
+          <Flex
+            align="center"
+            justify="space-between"
+            gap={3}
+            borderWidth="1px"
+            borderColor="gray.200"
+            borderRadius="lg"
+            px={4}
+            py={3}
+          >
+            <Text fontSize="sm" fontWeight="medium" color="gray.800">
+              On Hold
+            </Text>
+            <Switch.Root
+              checked={field.value}
+              onCheckedChange={(e) => field.onChange(e.checked)}
+              colorPalette="green"
+              flexShrink={0}
+            >
+              <Switch.HiddenInput onBlur={field.onBlur} />
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch.Root>
+          </Flex>
+        )}
+      />
+    ),
+    payout: (
+      <>
+        <SelectField
+          control={control}
+          name="channelCode"
+          label="Channel"
+          items={channelOptions}
+        />
+        <TextField control={control} name="accountNo" label="Account No." />
+        <TextField control={control} name="payoutBranch" label="Branch" />
+      </>
+    ),
+  };
+
   const onSubmit = (values: PayeeFormValues) => {
     // No backend yet — acknowledge the edit and close.
     console.log("Payee edited", { claimNo: payee?.claimNo, ...values });
@@ -279,26 +379,14 @@ export function PlanholderPayeeEditDrawer({
     >
       <Portal>
         <Drawer.Backdrop bg="blackAlpha.400" backdropFilter="blur(4px)" />
-        <Drawer.Positioner
-          alignItems={asDialog ? "center" : undefined}
-          justifyContent={asDialog ? "center" : undefined}
-          p={asDialog ? 3 : undefined}
-        >
+        <Drawer.Positioner {...(asDialog ? POPUP_FROM_LG.positioner : {})}>
           <Drawer.Content
             display="flex"
             flexDirection="column"
-            // Full-height sheet, or a centred one sized to its content — see
-            // `asDialog`, and the same note on the two payee drawers.
-            h={asDialog ? "auto" : "100dvh"}
-            maxH={asDialog ? { base: "88dvh", md: "82vh" } : "100dvh"}
-            w={asDialog ? "full" : undefined}
-            maxW={
-              asDialog
-                ? { base: "calc(100dvw - 24px)", md: "840px" }
-                : undefined
-            }
-            css={asDialog ? DIALOG_SHEET_CSS : undefined}
-            borderRadius={asDialog ? "xl" : 0}
+            // Full-height sheet, or a pop-up from `lg` that is a bottom sheet
+            // below it — see `POPUP_FROM_LG`, and the payee details drawer.
+            {...(asDialog ? POPUP_FROM_LG.content : POPUP_FROM_LG.fullHeight)}
+            css={asDialog ? DIALOG_SHEET_FROM_LG_CSS : undefined}
             overflow="hidden"
           >
             <Drawer.Header
@@ -351,11 +439,11 @@ export function PlanholderPayeeEditDrawer({
                       color={BRAND_COLORS.darkGreen}
                       truncate
                     >
-                      Edit Payee
+                      {part ? PAYEE_EDIT_PART_TITLES[part] : "Edit Payee"}
                     </Text>
                   </Drawer.Title>
                   <Text fontSize="xs" color="gray.500" truncate>
-                    {payee ? payee.claimNo : ""}
+                    {payee ? (part ? payee.name : payee.claimNo) : ""}
                   </Text>
                 </Box>
               </Flex>
@@ -367,102 +455,26 @@ export function PlanholderPayeeEditDrawer({
 
             <Drawer.Body py={5} overflowY="auto">
               <form id="payee-edit-form" onSubmit={handleSubmit(onSubmit)}>
-                <Flex direction="column" gap={6}>
-                  <Section title="Details">
-                    <TextField control={control} name="name" label="Payee Name" />
-                    <TextField
-                      control={control}
-                      name="relation"
-                      label="Relation"
-                    />
-                    <TextField
-                      control={control}
-                      name="birthDate"
-                      label="Date of Birth"
-                      type="date"
-                    />
-                    <TextField
-                      control={control}
-                      name="amount"
-                      label="Amount"
-                      type="number"
-                    />
-                    <TextField
-                      control={control}
-                      name="address"
-                      label="Address"
-                    />
-                    <TextField
-                      control={control}
-                      name="contact"
-                      label="Contact"
-                    />
-                    <TextField control={control} name="email" label="Email" />
+                {part ? (
+                  // ONE PART, bare — the sheet's title says which.
+                  <Flex direction="column" gap={5} pt={2}>
+                    {fields[part]}
+                  </Flex>
+                ) : (
+                  <Flex direction="column" gap={6}>
+                    <Section title="Details">
+                      {fields.identity}
+                      {fields.birthDate}
+                      {fields.amount}
+                      {fields.contact}
+                      {fields.hold}
+                    </Section>
 
-                    {/* On Hold — toggle the payout hold for this payee. */}
-                    <Controller
-                      control={control}
-                      name="isOnHold"
-                      render={({ field }) => (
-                        <Flex
-                          align="center"
-                          justify="space-between"
-                          gap={3}
-                          borderWidth="1px"
-                          borderColor="gray.200"
-                          borderRadius="lg"
-                          px={4}
-                          py={3}
-                        >
-                          <Box minW={0}>
-                            <Text
-                              fontSize="sm"
-                              fontWeight="medium"
-                              color="gray.800"
-                            >
-                              On Hold
-                            </Text>
-                            <Text fontSize="xs" color="gray.500">
-                              Hold the payout for this payee.
-                            </Text>
-                          </Box>
-                          <Switch.Root
-                            checked={field.value}
-                            onCheckedChange={(e) => field.onChange(e.checked)}
-                            colorPalette="green"
-                            flexShrink={0}
-                          >
-                            <Switch.HiddenInput onBlur={field.onBlur} />
-                            <Switch.Control>
-                              <Switch.Thumb />
-                            </Switch.Control>
-                          </Switch.Root>
-                        </Flex>
-                      )}
-                    />
-                  </Section>
+                    <Separator />
 
-                  <Separator />
-
-                  <Section title="Payout Channel">
-                    <SelectField
-                      control={control}
-                      name="channelCode"
-                      label="Channel"
-                      items={channelOptions}
-                    />
-                    <TextField
-                      control={control}
-                      name="accountNo"
-                      label="Account No."
-                    />
-                    <TextField
-                      control={control}
-                      name="payoutBranch"
-                      label="Branch"
-                    />
-                  </Section>
-                </Flex>
+                    <Section title="Payout Channel">{fields.payout}</Section>
+                  </Flex>
+                )}
               </form>
             </Drawer.Body>
 

@@ -10,9 +10,60 @@ import {
 } from "@chakra-ui/react";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { CONTROL_HEIGHT } from "../../components/control-height";
-import type { DeathClaimType } from "../death-claims-data";
+import type { DeathClaim, DeathClaimType } from "../death-claims-data";
 
-export type DeathClaimFilter = "special" | "regular" | "all";
+/**
+ * WHAT THE QUEUE IS NARROWED TO — the death claim's two categories and the two
+ * other natures, as one choice (user, 2026-10-05: "add a filter for
+ * Dismemberment and Waiver of Installment beside the special and regular").
+ *
+ * SPECIAL AND REGULAR ARE DEATH CLAIMS ONLY. The split is the seven-day filing
+ * rule, which a waiver or a dismemberment does not have — so picking Special
+ * never lets one of those through on the strength of a `type` it carries by
+ * default. See {@link matchesClaimFilter}.
+ */
+export type DeathClaimFilter =
+  | "all"
+  | "special"
+  | "regular"
+  | "woi"
+  | "dismemberment";
+
+/**
+ * Each filter's count. The two natures are optional so the archived v1 / v2
+ * queues, which only ever counted Special and Regular, still type-check; an
+ * absent count reads as 0.
+ */
+export type ClaimFilterCounts = Record<"all" | DeathClaimType, number> &
+  Partial<Record<"woi" | "dismemberment", number>>;
+
+/** Whether a claim belongs under a filter — the one place that decides it. */
+export function matchesClaimFilter(
+  claim: DeathClaim,
+  filter: DeathClaimFilter,
+): boolean {
+  switch (filter) {
+    case "all":
+      return true;
+    case "woi":
+      return claim.kind === "Waiver of Installment";
+    case "dismemberment":
+      return claim.kind === "Dismemberment";
+    default:
+      return claim.kind === "Death Claim" && claim.type === filter;
+  }
+}
+
+/** Every filter's count over a list, for the pills and the dropdown. */
+export function claimFilterCounts(
+  claims: DeathClaim[],
+): Record<DeathClaimFilter, number> {
+  const out = {} as Record<DeathClaimFilter, number>;
+  for (const opt of FILTER_OPTIONS) {
+    out[opt.value] = claims.filter((c) => matchesClaimFilter(c, opt.value)).length;
+  }
+  return out;
+}
 
 /**
  * Dot colour that tells Special from Regular wherever the two appear together —
@@ -55,21 +106,29 @@ interface FilterOption {
   selectLabel: string;
 }
 
-const FILTER_OPTIONS: FilterOption[] = [
+// The user's order (2026-10-05): All, Special, Regular, Waiver of
+// Installment, Dismemberment.
+export const FILTER_OPTIONS: FilterOption[] = [
+  { value: "all", label: "All", selectLabel: "All Types" },
   { value: "special", label: "Special", selectLabel: "Special" },
   { value: "regular", label: "Regular", selectLabel: "Regular" },
-  { value: "all", label: "All", selectLabel: "All Types" },
+  {
+    value: "woi",
+    label: "Waiver of Installment",
+    selectLabel: "Waiver of Installment",
+  },
+  { value: "dismemberment", label: "Dismemberment", selectLabel: "Dismemberment" },
 ];
 
 interface DeathClaimsFilterProps {
   value: DeathClaimFilter;
   onChange: (value: DeathClaimFilter) => void;
-  counts: Record<DeathClaimFilter, number>;
+  counts: ClaimFilterCounts;
 }
 
 /**
- * Compact segmented control — three small tabs (Special / Regular / All),
- * each showing its count and label side by side. The active tab is ringed green.
+ * Compact pill row — one pill per filter, each showing its count and label
+ * side by side, three to a row. The active pill is ringed green.
  */
 export function DeathClaimsFilter({
   value,
@@ -111,7 +170,7 @@ export function DeathClaimsFilter({
                 lineHeight="1"
                 color={active ? BRAND_COLORS.darkGreen : "gray.800"}
               >
-                {counts[opt.value]}
+                {counts[opt.value] ?? 0}
               </Text>
               <Text
                 fontSize="sm"
@@ -168,7 +227,7 @@ export function DeathClaimsFilterSelect({
       >
         {FILTER_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>
-            {opt.selectLabel} ({counts[opt.value]})
+            {opt.selectLabel} ({counts[opt.value] ?? 0})
           </option>
         ))}
       </NativeSelect.Field>

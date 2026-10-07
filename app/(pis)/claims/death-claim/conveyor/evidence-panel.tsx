@@ -55,7 +55,7 @@ export function EvidencePanel({ evidence }: { evidence: ClaimEvidence }) {
         color="gray.400"
         mb={2}
       >
-        Plan Holder
+        Planholder
       </Text>
 
       {/* The claim card names the claim; this names the person, and the two

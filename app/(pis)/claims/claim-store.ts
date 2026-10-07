@@ -24,6 +24,7 @@ import {
   type DeathBenefit,
 } from "../data";
 import type { ClaimPhase } from "../data";
+import { CURRENT_USER } from "../data/current-user";
 
 /* ------------------------------ model ------------------------------ */
 
@@ -233,6 +234,66 @@ export interface ClaimEditValues {
 /** A recorded edit — the corrected values, plus who changed them and when. */
 export interface ClaimEdit extends ClaimEditValues {
   requestNo: string;
+  editedBy: string;
+  editedAtISO: string;
+}
+
+/* ------------------------------ planholder corrections ------------------------------ */
+
+/**
+ * The planholder facts a processor may correct while working a death claim,
+ * mapped to how they read on screen and in the trail.
+ *
+ * THE NAME AND THE DATE OF BIRTH, AND NOTHING ELSE. They are the two things a
+ * branch copies off a death certificate by hand, and the two a claim is checked
+ * against — the name against the certificate, the birth date against the age at
+ * death that contestability turns on. Everything else on the record is the
+ * plan's, not the paperwork's.
+ *
+ * The name in its PARTS, so a correction names exactly which one changed: a
+ * verifier told "the name changed" has to re-read all of it to find the letter.
+ */
+export const CORRECTABLE_PLANHOLDER_FIELDS = {
+  lastName: "Last Name",
+  firstName: "First Name",
+  middleName: "Middle Name",
+  suffix: "Suffix",
+  dateOfBirthISO: "Date of Birth",
+} as const;
+
+export type PlanholderField = keyof typeof CORRECTABLE_PLANHOLDER_FIELDS;
+
+/** The correctable facts as the edit form holds them. Blank is "", dates ISO. */
+export type PlanholderValues = Record<PlanholderField, string>;
+
+/**
+ * Which desk made a correction.
+ *
+ * BOTH MAY (user, 2026-09-29: "the verifier can also edit the information").
+ * NO ACCEPT OR REJECT (user, 2026-10-01): the verifier does not answer the
+ * processor's changes one by one. A change the verifier lets stand is checked by
+ * being left; one they disagree with they OVERRIDE (edit it to what it should
+ * say, which makes it theirs) or REVERT (back to the record).
+ */
+export type CorrectionStage = "process" | "verification";
+
+/**
+ * One corrected field, ON THE CLAIM.
+ *
+ * NOT WRITTEN TO THE RECORD. The planholder record is the plan's, and one
+ * claim's reading of its paperwork is carried on the claim, with the value it
+ * replaces kept beside it. Reverting therefore needs nothing undone: the record
+ * never moved.
+ */
+export interface PlanholderCorrection {
+  requestNo: string;
+  field: PlanholderField;
+  /** What the record says. */
+  from: string;
+  /** What the corrector says it should say. */
+  to: string;
+  /** Which desk made it last — see {@link CorrectionStage}. */
+  stage: CorrectionStage;
   editedBy: string;
   editedAtISO: string;
 }
@@ -488,9 +549,10 @@ export const OTHER_DENIAL_REASON = "OTHER";
  *
  * Hard-coded until the claims screens can read the signed-in user: the session
  * cookie carries a role, not a name, so there is nobody real to attribute an
- * action to yet.
+ * action to yet. Read from `CURRENT_USER` so the seed's history and this
+ * session's actions name the same person.
  */
-export const CLAIM_AUDIT_USER = "Jimwell Ocsio";
+export const CLAIM_AUDIT_USER = CURRENT_USER;
 
 /* ------------------------------ store ------------------------------ */
 
@@ -552,6 +614,16 @@ const reworkByRequest = new Map<string, ClaimRework>();
  * and so the read model can tell "as filed" from "as corrected".
  */
 const editsByRequest = new Map<string, ClaimEdit>();
+
+/**
+ * Planholder corrections, keyed by request number and then by field. At most one
+ * per field: correcting a field again replaces the proposal rather than stacking
+ * a second one on it — see {@link correctPlanholder}.
+ */
+const planholderCorrectionsByRequest = new Map<
+  string,
+  Map<PlanholderField, PlanholderCorrection>
+>();
 
 const listeners = new Set<() => void>();
 
@@ -938,6 +1010,120 @@ export function editClaim(
   return edit;
 }
 
+/** The fields in the order the form and the lists show them. */
+const PLANHOLDER_FIELDS = Object.keys(
+  CORRECTABLE_PLANHOLDER_FIELDS,
+) as PlanholderField[];
+
+/** How a planholder value reads in the trail. Dates get a friendly date. */
+export function planholderValueLabel(
+  field: PlanholderField,
+  value: string,
+): string {
+  if (!value) return "—";
+  return field === "dateOfBirthISO" ? formatFiledDate(value) : value;
+}
+
+/**
+ * Save the processor's corrections to a claim's planholder.
+ *
+ * `onFile` is what the record says and `values` what the form now holds; every
+ * field is compared against the RECORD, not against the last proposal. So a field
+ * typed back to what is on file drops its correction instead of becoming one that
+ * changes nothing, and a field corrected twice keeps one correction — the latest.
+ *
+ * A VERIFIER'S SAVE OVERRIDES — see {@link CorrectionStage}. It replaces a
+ * processor's correction on the same field outright, and the field is the
+ * verifier's from then on.
+ *
+ * Returns the fields whose proposal changed; saving with none changed is a no-op
+ * and writes nothing to the trail.
+ */
+export function correctPlanholder(
+  requestNo: string,
+  onFile: PlanholderValues,
+  values: PlanholderValues,
+  stage: CorrectionStage = "process",
+  editedBy: string = CLAIM_AUDIT_USER,
+): PlanholderField[] {
+  const corrections =
+    planholderCorrectionsByRequest.get(requestNo) ??
+    new Map<PlanholderField, PlanholderCorrection>();
+  const editedAtISO = new Date().toISOString();
+
+  const changed = PLANHOLDER_FIELDS.filter((field) => {
+    const proposed = corrections.get(field)?.to ?? onFile[field];
+    return values[field] !== proposed;
+  });
+  if (changed.length === 0) return changed;
+
+  for (const field of changed) {
+    if (values[field] === onFile[field]) corrections.delete(field);
+    else
+      corrections.set(field, {
+        requestNo,
+        field,
+        from: onFile[field],
+        to: values[field],
+        stage,
+        editedBy,
+        editedAtISO,
+      });
+  }
+  planholderCorrectionsByRequest.set(requestNo, corrections);
+
+  const summary = changed
+    .map(
+      (field) =>
+        `${CORRECTABLE_PLANHOLDER_FIELDS[field]} ${planholderValueLabel(field, onFile[field])} → ${planholderValueLabel(field, values[field])}`,
+    )
+    .join("; ");
+  appendRemark(
+    requestNo,
+    `${formatFiledDate(editedAtISO)} — Planholder corrected by ${editedBy}${stage === "verification" ? " at verification" : ""}: ${summary}.`,
+  );
+  emit();
+  return changed;
+}
+
+/**
+ * Take corrections back off a claim, so those fields read as the record does.
+ *
+ * The processor's undo, and the verifier's — on any change, whoever made it.
+ * Asked for field by field from a label's tooltip, or all at once from the
+ * change list. Recorded, because a change that was made and taken back is part
+ * of how the claim was worked.
+ */
+export function revertPlanholderCorrections(
+  requestNo: string,
+  fields: PlanholderField[],
+  revertedBy: string = CLAIM_AUDIT_USER,
+): void {
+  const corrections = planholderCorrectionsByRequest.get(requestNo);
+  const reverted = fields.filter((field) => corrections?.delete(field));
+  if (reverted.length === 0) return;
+
+  appendRemark(
+    requestNo,
+    `${formatFiledDate(new Date().toISOString())} — Planholder correction reverted by ${revertedBy}: ${reverted
+      .map((field) => CORRECTABLE_PLANHOLDER_FIELDS[field])
+      .join(", ")}.`,
+  );
+  emit();
+}
+
+/** A claim's planholder corrections, in form order. */
+export function getPlanholderCorrections(
+  requestNo: string,
+): PlanholderCorrection[] {
+  const corrections = planholderCorrectionsByRequest.get(requestNo);
+  if (!corrections) return [];
+  return PLANHOLDER_FIELDS.flatMap((field) => {
+    const correction = corrections.get(field);
+    return correction ? [correction] : [];
+  });
+}
+
 /* ------------------------------ reads ------------------------------ */
 
 /** The claim opened against a request, if the processor has created one. */
@@ -1027,6 +1213,62 @@ export function hasProcessorActivity(requestNo: string): boolean {
     verdictsByRequest.has(requestNo) ||
     reworkByRequest.has(requestNo)
   );
+}
+
+/**
+ * Where a claim sits in a user's history — the rows of the card.
+ *
+ *   approval / denial  SENT FOR one: a processor's endorsement, or a
+ *                      supervisor verifying for approval. Not final.
+ *   approved / denied  FINAL. `denied` is also a supervisor's denial verdict,
+ *                      which ends the claim at verification. `approved` is only
+ *                      ever read off the record: the approver's desk writes
+ *                      nothing to this store yet.
+ *   compliance         BOTH returns — a processor's to the branch and a
+ *                      supervisor's to the processor. To the person pressing
+ *                      it, it is one act, so their history counts it once.
+ */
+export type ClaimActionKind =
+  | ClaimOutcome
+  | "approved"
+  | "denied"
+  | "compliance";
+
+export interface ClaimAction {
+  kind: ClaimActionKind;
+  atISO: string;
+}
+
+/**
+ * What a user last did to a claim THIS SESSION.
+ *
+ * THE LATEST ACT WINS. A claim endorsed and then returned is in the user's
+ * history once, under what they did last, not under both.
+ */
+export function getClaimActionBy(
+  requestNo: string,
+  user: string = CLAIM_AUDIT_USER,
+): ClaimAction | undefined {
+  const decision = decisionsByRequest.get(requestNo);
+  const verdict = verdictsByRequest.get(requestNo);
+  const compliance = complianceByRequest.get(requestNo);
+  const rework = reworkByRequest.get(requestNo);
+
+  const actions: ClaimAction[] = [];
+  if (decision?.decidedBy === user)
+    actions.push({ kind: decision.outcome, atISO: decision.decidedAtISO });
+  if (verdict?.verifiedBy === user)
+    actions.push({
+      // A supervisor's denial is final; their approval only verifies it on.
+      kind: verdict.outcome === "denial" ? "denied" : "approval",
+      atISO: verdict.verifiedAtISO,
+    });
+  if (compliance?.returnedBy === user)
+    actions.push({ kind: "compliance", atISO: compliance.returnedAtISO });
+  if (rework?.returnedBy === user)
+    actions.push({ kind: "compliance", atISO: rework.returnedAtISO });
+
+  return actions.sort((a, b) => b.atISO.localeCompare(a.atISO))[0];
 }
 
 /* ------------------------------ react binding ------------------------------ */

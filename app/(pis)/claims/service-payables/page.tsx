@@ -52,7 +52,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Button, Flex, Grid, GridItem, Text } from "@chakra-ui/react";
 import { Page, SecondarySmButton, useMessageDialog } from "osp-ui-kit";
-import { LuInbox, LuPlus, LuUndo2 } from "react-icons/lu";
+import {
+  LuCheck,
+  LuClipboardList,
+  LuHistory,
+  LuShieldCheck,
+  LuInbox,
+  LuLayoutGrid,
+  LuPlus,
+  LuReceiptText,
+  LuSearch,
+  LuUndo2,
+} from "react-icons/lu";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { db } from "../../data";
 import { scrollParentOf } from "../components/scroll-parent";
@@ -60,14 +71,22 @@ import { CARD_SHAPE, SectionCard } from "../components/section-card";
 import { ClaimsToaster } from "../components/toaster";
 import { PlanholderRemarks } from "../planholder/components/PlanholderRemarks";
 import { useClaimSwap } from "../death-claim/conveyor/use-claim-swap";
+import { WorkLists } from "../death-claim/conveyor/work-lists";
+import {
+  CountBubble,
+  MobileQuickAccess,
+} from "../death-claim/conveyor/mobile-quick-access";
+import {
+  currentRange,
+  inRange,
+  rangeFor,
+  rangeSteps,
+  type HistoryRange,
+} from "../death-claim/conveyor/history-range";
 import { AddManualServiceDialog } from "./components/AddManualServiceDialog";
 import { EmptyPanel } from "./components/EmptyPanel";
 import { FranchiseIntakeDialog } from "./components/FranchiseIntakeDialog";
 import { PlanholderPanel } from "./components/PlanholderPanel";
-import {
-  LIST_MAX_HEIGHT_COMPACT,
-  PlanholderServiceList,
-} from "./components/PlanholderServiceList";
 import { RecordActions } from "./components/RecordActions";
 import { RecordLookups } from "./components/RecordLookups";
 import { type DocumentTab } from "../components/document-folder";
@@ -87,7 +106,37 @@ import {
   BillingListPopup,
   type BillingScope,
 } from "./conveyor/billing-list-popup";
+import {
+  BILLING_HISTORY_ROWS,
+  billingHistory,
+  historyRow,
+  type BillingHistoryKey,
+} from "./conveyor/billing-history";
 import { StageSwitch } from "./conveyor/stage-switch";
+import { DeductionSummary } from "./conveyor/deduction-summary";
+import {
+  AccountActions,
+  AccountJumpSheet,
+  AccountStateChips,
+  AccountStepper,
+  AccountStepperBar,
+  AccountStepperStrip,
+  tallyAccounts,
+} from "./conveyor/account-stepper";
+import { useRailCollapsed } from "../components/use-rail-collapsed";
+import {
+  RAIL_FADE_IN,
+  RailCount,
+  RailFlyout,
+  RailHint,
+  RailSpine,
+  RailStagePair,
+  RailStrip,
+  RailStripButton,
+  RailStripCommit,
+  RailStripDivider,
+} from "../components/rail-strip";
+import { type JumpFilter } from "./conveyor/account-jump-list";
 import {
   AccountsCardSkeleton,
   RecordColumnSkeleton,
@@ -103,6 +152,7 @@ import {
   defaultMortCodeFor,
   getBilling,
   getBillingMortCode,
+  getServiceBillings,
   getMortuary,
   formatCSP,
   isServiceTerminated,
@@ -112,9 +162,8 @@ import {
   type ServiceRecord,
 } from "./service-payables-data";
 import {
-  getSavedServiceRecord,
   hasCreatedBilling,
-  getVerifiedAccount,
+  markAccountOpened,
   useServicePayablesStore,
   type ServiceRecordDetails,
 } from "./service-payables-store";
@@ -129,26 +178,25 @@ import {
   useCreateFranchiseBilling,
 } from "./use-franchise-billing";
 import {
+  unviewedAccounts,
+  useProcessBilling,
+  useVerifyWholeBilling,
+} from "./use-process-billing";
+import {
   canTerminateInto,
   terminationBlocker,
   useSaveServiceRecord,
 } from "./use-save-service-record";
 import {
-  canEndorseBilling,
-  canVerifyBilling,
-  useEndorseBilling,
-  useVerifyBilling,
-  verifiableAccounts,
-} from "./use-verify-accounts";
-import {
   CONVEYOR_GIVES,
   CONVEYOR_GRID,
+  CONVEYOR_GRID_COLLAPSED,
   CONVEYOR_MAIN_TAIL,
   CONVEYOR_RAIL_MAX,
+  CONVEYOR_RAIL_SHELL,
   STACKED_ITEM,
   WORKSPACE_ROOT,
-  conveyorListBox,
-  conveyorRail,
+  conveyorRailBody,
   scrollDetailIntoView,
 } from "./workspace-layout";
 
@@ -165,6 +213,8 @@ const STAGE_ACTION: Record<
   "terminate" | "verify" | "approve" | "endorse"
 > = {
   "for-process": "terminate",
+  // Never served here — a held billing is read, so this is never asked.
+  "for-deduction": "verify",
   processed: "verify",
   verified: "approve",
   approved: "endorse",
@@ -175,7 +225,7 @@ const STAGE_ACTION: Record<
  * whether or not the page has been scrolled. See {@link CONVEYOR_RAIL_MAX},
  * where the two candidate figures are measured against each other.
  */
-const CONVEYOR_RAIL = conveyorRail(CONVEYOR_RAIL_MAX);
+const CONVEYOR_RAIL_BODY = conveyorRailBody(CONVEYOR_RAIL_MAX);
 
 /** Fades the arriving billing in behind the placeholder rather than cutting. */
 const SWAP_FADE = {
@@ -189,6 +239,7 @@ const SWAP_FADE = {
 
 const EMPTY_POSITIONS: Record<BillingStage, number> = {
   "for-process": 0,
+  "for-deduction": 0,
   processed: 0,
   verified: 0,
   approved: 0,
@@ -200,11 +251,11 @@ export default function ServicePayablesPage() {
   const storeVersion = useServicePayablesStore();
   const { messageBox } = useMessageDialog();
   const saveRecord = useSaveServiceRecord();
-  const verifyBilling = useVerifyBilling();
-  const endorseBilling = useEndorseBilling();
+  const verifyWholeBilling = useVerifyWholeBilling();
   const createFranchiseBilling = useCreateFranchiseBilling();
   const closeFranchiseEntry = useCloseFranchiseEntry();
   const addManualService = useAddManualService();
+  const processBilling = useProcessBilling();
 
   /**
    * Which queue is being served, and how far into EACH one this session has
@@ -248,8 +299,6 @@ export default function ServicePayablesPage() {
    */
   const [openByBilling, setOpenByBilling] = useState<Record<string, string>>({});
 
-  /** The verifier's ticks. See the effect below that seeds them. */
-  const [checkedIds, setCheckedIds] = useState<string[]>([]);
 
   /**
    * THE PAGE OWNS THE QUERY, and both fields that show it are views of this one
@@ -344,6 +393,12 @@ export default function ServicePayablesPage() {
    * See `DocumentFolder`, which keeps its own when nobody drives it.
    */
   const [docsTab, setDocsTab] = useState<DocumentTab>("documents");
+  /**
+   * The phone's Jump sheet — what it opens on, or `null` when closed. Held
+   * here because the row's Jump, the billing card's chips and the Actions
+   * sheet all open it. See `AccountJumpSheet`.
+   */
+  const [jumpFilter, setJumpFilter] = useState<JumpFilter | null>(null);
 
   /** The folder's card, which is what the tick scrolls to. */
   const documentsRef = useRef<HTMLDivElement>(null);
@@ -372,12 +427,20 @@ export default function ServicePayablesPage() {
   const workspaceRef = useRef<HTMLDivElement>(null);
   const isDesktop = useDesktopShell();
 
+  /**
+   * The rail folded to its icon strip — remembered, and shared with the death
+   * claim; see `RailStrip`. Only ever on a desktop: stacked, there is no rail.
+   */
+  const [railCollapsed, setRailCollapsed] = useRailCollapsed();
+  const folded = isDesktop && railCollapsed;
+
   /* ------------------------------ the queues ------------------------------ */
 
   const queues = useMemo(
     () =>
       ({
         "for-process": billingQueue("for-process"),
+        "for-deduction": billingQueue("for-deduction"),
         processed: billingQueue("processed"),
         verified: billingQueue("verified"),
         approved: billingQueue("approved"),
@@ -388,6 +451,74 @@ export default function ServicePayablesPage() {
 
   const queue = queues[stage];
   const served = servedByStage[stage];
+
+  /* ------------------------------ the history ----------------------------- */
+
+  /**
+   * THE BILLINGS THIS USER PUT THROUGH — the History card at the foot of the
+   * rail, the death claim's card with a billing's rows. See `billing-history`.
+   *
+   * WEEKLY BY DEFAULT, ON THE CURRENT WEEK, and cut by the AUDIT DATE (user,
+   * 2026-09-30) — the day it was signed, not the period it bills.
+   */
+  const history = useMemo(
+    () => billingHistory(getServiceBillings()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [storeVersion],
+  );
+  const historyDates = useMemo(() => history.map((e) => e.atISO), [history]);
+  const [historyRange, setHistoryRange] = useState<HistoryRange>(() =>
+    currentRange("week"),
+  );
+  const historySteps = rangeSteps(historyRange, historyDates);
+  const historyInRange = useMemo(
+    () => history.filter((entry) => inRange(historyRange, entry.atISO)),
+    [history, historyRange],
+  );
+  const historyCounts = Object.fromEntries(
+    BILLING_HISTORY_ROWS.map((row) => [
+      row.key,
+      historyRow(historyInRange, row.key).length,
+    ]),
+  ) as Record<BillingHistoryKey, number>;
+
+  /**
+   * Which History row's list is open, and its own search — kept apart from the
+   * rail's query, which belongs to the queue.
+   */
+  const [historyKey, setHistoryKey] = useState<BillingHistoryKey | null>(null);
+  const [historyQuery, setHistoryQuery] = useState("");
+  const historyList = useMemo(() => {
+    const row = BILLING_HISTORY_ROWS.find((r) => r.key === historyKey);
+    return {
+      title: row?.title ?? "Your billings",
+      billings: historyKey
+        ? historyRow(historyInRange, historyKey).map((e) => e.billing)
+        : [],
+    };
+  }, [historyKey, historyInRange]);
+
+  /** A History row, opened — its own search starts empty. */
+  const openHistoryRow = (key: BillingHistoryKey) => {
+    setHistoryQuery("");
+    setHistoryKey(key);
+  };
+
+  /**
+   * The History card, once for the rail and once for the phone's sheet — only
+   * what a tapped row does differs, since the sheet has to close first.
+   */
+  const historyCard = (onOpen: (key: BillingHistoryKey) => void) => (
+    <WorkLists
+      rows={BILLING_HISTORY_ROWS}
+      counts={historyCounts}
+      range={historyRange}
+      steps={historySteps}
+      onRangeChange={setHistoryRange}
+      onKindChange={(kind) => setHistoryRange(rangeFor(kind, historyDates))}
+      onOpen={onOpen}
+    />
+  );
 
   /**
    * The billing on screen: whatever is being held, else the conveyor's own.
@@ -536,20 +667,6 @@ export default function ServicePayablesPage() {
   const verifying = stage === "processed" && !reading;
 
   /**
-   * The accounts still signable. An account is signed once — `verifyServices`
-   * refuses to re-stamp — so a signed one drops out of the box, the Check all
-   * and the count alike.
-   */
-  const verifiable = useMemo(
-    () => (billing && verifying ? verifiableAccounts(billing) : []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [billing, verifying, storeVersion],
-  );
-
-  /** A selection belongs to ONE billing — see the swap that clears it. */
-  useEffect(() => setCheckedIds([]), [billing?.billingCode]);
-
-  /**
    * A NEW BILLING OPENS ON THE DOCUMENTS TAB, whatever the last one was left
    * on. The folder's own reasoning, now that the page holds the state: the tab
    * a processor left the previous record on is not where they want the next
@@ -569,6 +686,9 @@ export default function ServicePayablesPage() {
    */
   const showDeficiencies = () => {
     setDocsTab("deficiencies");
+    // ON A PHONE THE TAB OPENS THE DEFICIENCY SHEET instead (user,
+    // 2026-10-01) — see `ServiceRecordDocuments` — so there is nowhere to go.
+    if (!isDesktop) return;
     // ANIMATED (user, 2026-09-14). This jump is different in kind from the
     // rail's: nothing is being replaced, the record stays exactly as it was,
     // and the reader is being MOVED within it — so the travel is the thing that
@@ -578,40 +698,16 @@ export default function ServicePayablesPage() {
   };
 
   /**
-   * THE ACCOUNT BEING READ IS IN THE LIST TO BE SIGNED — opening one ticks it,
-   * so working down the rail builds the selection behind you and nothing has to
-   * be gathered as a separate pass. On the open account CHANGING, not on every
-   * render: unticking the row you are reading has to stick.
+   * THE STEPPER'S "OPENED" MARK — written the moment an account's record is on
+   * screen, including the one the conveyor opens on arrival (user, 2026-09-25).
+   *
+   * NOT FOR A HELD BILLING: it is not at the stage the rail shows, so marking it
+   * would put a mark on this stage for an account nobody here is working.
    */
   useEffect(() => {
-    if (!verifying || !service || getVerifiedAccount(service.id)) return;
-    if (service.discrepancy) return;
-    setCheckedIds((prev) =>
-      prev.includes(service.id) ? prev : [...prev, service.id],
-    );
-  }, [verifying, service]);
-
-  /** The ticks that are still real — filtered on read, never pruned. */
-  const checked = useMemo(
-    () => checkedIds.filter((id) => verifiable.some((s) => s.id === id)),
-    [checkedIds, verifiable],
-  );
-  const selection = useMemo(
-    () => verifiable.filter((s) => checked.includes(s.id)),
-    [verifiable, checked],
-  );
-  const allChecked =
-    verifiable.length > 0 && checked.length === verifiable.length;
-
-  const toggleChecked = (serviceId: string) =>
-    setCheckedIds((prev) =>
-      prev.includes(serviceId)
-        ? prev.filter((id) => id !== serviceId)
-        : [...prev, serviceId],
-    );
-
-  const toggleAll = () =>
-    setCheckedIds(allChecked ? [] : verifiable.map((s) => s.id));
+    if (!service || reading) return;
+    markAccountOpened(stage, service.id);
+  }, [service, stage, reading]);
 
   /* ------------------------------- the acts ------------------------------- */
 
@@ -644,7 +740,6 @@ export default function ServicePayablesPage() {
       // an entry left under it is exactly the one that hands the next desk the
       // bottom of the list. See {@link openByBilling}.
       setOpenByBilling({});
-      setCheckedIds([]);
     });
 
   /**
@@ -708,6 +803,9 @@ export default function ServicePayablesPage() {
    */
   const handleSave = async (details: ServiceRecordDetails) => {
     if (!billing || !service) return;
+    // FOR PROCESS HAS NO PER-ACCOUNT COMMIT (2026-09-25) — edits are drafts and
+    // Process Billing posts them. A stray submit (Enter in a field) does nothing.
+    if (stage === "for-process") return;
     const terminates = canTerminateInto(billing, service);
     const who = `${deceasedName(service)} · ${service.lpaNo}`;
 
@@ -753,7 +851,6 @@ export default function ServicePayablesPage() {
       // started at the bottom of the list. Every queue reads from the top. See
       // {@link openByBilling}.
       setOpenByBilling({});
-      setCheckedIds([]);
     });
   };
 
@@ -804,7 +901,6 @@ export default function ServicePayablesPage() {
         // A billing taken out of turn is a fresh reading too, and it may well be
         // one this session has already been in and left part-way down.
         setOpenByBilling({});
-        setCheckedIds([]);
       });
       return;
     }
@@ -828,7 +924,6 @@ export default function ServicePayablesPage() {
         // `stage` is still the one being left.
         setServedByStage((all) => ({ ...all, [elsewhere]: there }));
         setOpenByBilling({});
-        setCheckedIds([]);
       });
       return;
     }
@@ -836,7 +931,6 @@ export default function ServicePayablesPage() {
     swap(() => {
       setHeld({ billingCode: picked.billingCode, from });
       setOpenByBilling({});
-      setCheckedIds([]);
     });
   };
 
@@ -882,7 +976,6 @@ export default function ServicePayablesPage() {
       // correction `openFromList` makes.
       setServedByStage((all) => ({ ...all, "for-process": at }));
       setOpenByBilling({});
-      setCheckedIds([]);
     });
   };
 
@@ -967,188 +1060,45 @@ export default function ServicePayablesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [billing?.billingCode, billing?.chapelCode, storeVersion]);
 
-  return (
-    // A fragment: the toaster cannot live INSIDE `Page.Root`, which keeps only
-    // its tool and main content children and silently drops the rest.
+  /**
+   * THE BILLING'S COMMIT — Process Billing, or Verify Billing on the Verify
+   * tab — for the rail's button and the phone's bar alike. Absent where the
+   * desk has no such act: a held billing, or a stage this screen only reads.
+   */
+  // The desk has the act; whether it can be pressed yet is `services.length`,
+  // which the rail's button shows as disabled and the phone simply omits.
+  const canCommit = (stage === "for-process" || verifying) && !reading;
+  const commitLabel = verifying ? "Verify Billing" : "Process Billing";
+  const commitBilling = async () => {
+    if (!billing) return;
+    const result = verifying
+      ? await verifyWholeBilling(billing)
+      : await processBilling(billing);
+    if (result.outcome === "done") {
+      releaseBilling();
+    } else if (result.outcome === "unviewed" && result.goTo) {
+      openAccount(result.goTo);
+    }
+  };
+
+  /** Where the open account is and how far the billing has got — see `tallyAccounts`. */
+  const tally = billing
+    ? tallyAccounts(billing, services, stage, service?.id)
+    : null;
+  /** Not opened yet, where the commit waits on it — the Actions bubble. */
+  const unviewedLeft = tally && canCommit ? tally.counts.untouched : 0;
+
+  /**
+   * THE ACCOUNTS CARD — one element for both layouts: the rail draws it on a
+   * desktop, and on a phone it sits in the page under the strip (user,
+   * 2026-10-01). Built here, narrowed on `billing`, so the two cannot drift.
+   *
+   * ON A PHONE IT STOPS AT THE CHIPS. Prev · Jump · Next, the bar and the
+   * commit are at the foot of the record, and Next unviewed is in the Actions
+   * sheet — see `AccountStepperBar` and `AccountActions`.
+   */
+  const accountsCard = billing && tally ? (
     <>
-      {/*
-       * THE PAGE KEEPS ITS OWN HEADING, and it did not for a day.
-       *
-       * It was hidden with a `css` override while `BillingHead` stood at the top
-       * of the record column: that block named what was being worked and carried
-       * the money, so a second title reading "Service Payables" over it would
-       * have named the module rather than the work and cost a whole row doing
-       * it.
-       *
-       * The billing moved to the rail (see the note at the top of this file) and
-       * the reason went with it. Without the title the record column opened
-       * straight onto a plan holder's name with nothing above it saying what
-       * screen this is — the override outliving the thing it was for, which is
-       * how a page ends up headless for no stated reason.
-       */}
-      <Page.Root
-        title="Service Payables"
-        headerButton="menu"
-        /*
-         * ZERO, AND THE RESERVE IS INSIDE THE GRID INSTEAD — see
-         * `CONVEYOR_MAIN_TAIL`, which carries it on the record column.
-         *
-         * `Page.Root` pads every page for the mobile bottom navigation unless it
-         * is given a value, and that padding lands OUTSIDE the grid row. The
-         * rail is `position: sticky` and may not leave its row, so the reserve
-         * came straight off its pinning range: measured at 1440x620 the rail
-         * held at 108px for the whole scroll and then lurched to 48 over the
-         * last tenth — the head of the column, and the billing it names, shoved
-         * off the top of a element that cannot be scrolled to.
-         *
-         * Zero rather than a smaller number, because the reserve has MOVED
-         * rather than gone. The death claim's own `Page.Root` says the same.
-         */
-        paddingBottom={0}
-      >
-        {/* NOTHING IN `Page.ToolContent`, AND THERE WAS FOR AN HOUR (user,
-            2026-09-14: "remove the search bar in the tool content").
-
-            An "All billings" button stood on the title row — the page-level door
-            to the lists, put there because the header costs no vertical space
-            while the rail is bounded. What it looked like on the row was a
-            SECOND SEARCH FIELD: an outlined pill with a magnifier and a label,
-            eighteen pixels from the rail's actual search field, which is the one
-            thing this whole change was asked not to become ("instead of another
-            search bar").
-
-            THE DOOR IS THE RAIL'S FIELD, and one door is enough now that the
-            sheet has tabs. It opens on the queue it stands in and every other
-            list is one pill away — where before the sheet WAS the queue and a
-            second entrance was the only way to reach anything else. */}
-        <Page.MainContent>
-          <Page.Row>
-            <Box ref={workspaceRef} css={WORKSPACE_ROOT}>
-              <Box ref={topRef}>
-                {/* THE SWAP NO LONGER REPLACES THE PAGE (user, 2026-09-14:
-                    "only do the skeleton loading with the component that are
-                    changing"). A `swapping ?` branch stood here and rendered a
-                    placeholder INSTEAD of the whole grid, so the queue tabs, the
-                    search field and the commit all went off screen for 380ms to
-                    announce that a different billing had arrived — including on
-                    a stage change, where the tabs are the control that was just
-                    clicked.
-
-                    The beat is now inside the grid, on the two blocks a new
-                    billing actually replaces: the accounts card and the record
-                    column. Everything else stays mounted, so the rail keeps its
-                    height and its pinning across the swap. See
-                    `conveyor/swap-skeleton`. */}
-                {/* THE GUARD ASKS FOR A BILLING AND NO LONGER FOR AN ACCOUNT
-                    (2026-09-15), which is the first of the three things the
-                    paper franchise corrected here.
-
-                    It read `!billing || !service`, and the second half was true
-                    of every billing this module could produce — accounts arrive
-                    with the endorsement, so a billing with none did not exist.
-                    A franchise billing is RAISED EMPTY: the number is minted
-                    before a single plan holder is keyed in, because a terminated
-                    plan has to be posted against something. Read the old way,
-                    the processor raised a billing and the page answered "queue
-                    clear" over the billing they had just made.
-
-                    So the grid draws whenever there is a billing, and the two
-                    places that need an account — the commit, and the record
-                    column — say so themselves. */}
-                {!billing ? (
-                  <QueueClear
-                    stage={stage}
-                    worked={queue.length}
-                    counts={counts}
-                    onChangeStage={changeStage}
-                    query={query}
-                    onQueryChange={setQuery}
-                    // ON THE QUEUE THAT IS EMPTY, which is not a wasted door:
-                    // the sheet's tabs are where a reader goes from a clear
-                    // queue to find what they worked, and the count on each one
-                    // says where it went.
-                    onSearch={() => {
-                      setScope(stage);
-                      setBrowseOpen(true);
-                    }}
-                    onRestart={() =>
-                      swap(() =>
-                        setServedByStage((all) => ({ ...all, [stage]: 0 })),
-                      )
-                    }
-                    // AND THE INTAKE IS HERE TOO, which is not a second door in
-                    // the sense the header's button was. It is the SAME control
-                    // in the rail's own card — `QueueClear` draws `StageSwitch`,
-                    // and the button belongs to that card wherever it is drawn.
-                    // A clear For Process queue is also exactly when somebody
-                    // sits down with a stack of a franchise's paperwork: there
-                    // is nothing waiting because nothing was endorsed.
-                    onFranchiseEntry={() => setIntakeOpen(true)}
-                  />
-                ) : (
-                  <Grid css={CONVEYOR_GRID}>
-                    {/* THE RAIL, and it is the LEFT column now — written
-                        first so that stacked it still comes above the record,
-                        which is the order of the task either way: what am I
-                        working, then work it. `CONVEYOR_GRID` puts the rail
-                        track first, so nothing has to be re-ordered. */}
-                    <GridItem css={isDesktop ? CONVEYOR_RAIL : STACKED_ITEM}>
-                      {/* WHICH QUEUE, OVER THE FIELD THAT SEARCHES IT — one
-                          card, the death claim's `StageCard` exactly.
-
-                          THE QUERY IS HELD BY THE PAGE and not by the field,
-                          because the two are halves of one gesture: it is
-                          typed here and RUN in the pop-up, and a field that
-                          forgot what it was asked the moment the list opened
-                          would make the second half unreadable. */}
-                      <Box flexShrink={0} mb={4}>
-                        <StageSwitch
-                          active={stage}
-                          counts={counts}
-                          onChange={changeStage}
-                          query={query}
-                          onQueryChange={setQuery}
-                          // THE FIELD UNDER THE QUEUE TABS OPENS THE QUEUE IT
-                          // STANDS IN. The sheet can show any of six lists now,
-                          // and the tabs on it are one click from here — but the
-                          // door a reader came through has to land where its
-                          // label promised. "All billings" is the header's
-                          // button, a column away.
-                          onSearch={() => {
-                            setScope(stage);
-                            setBrowseOpen(true);
-                          }}
-                          // THE FRANCHISE INTAKE, at the end of the tab row —
-                          // see `StageSwitch`, which owns the placement and the
-                          // widths behind it.
-                          onFranchiseEntry={() => setIntakeOpen(true)}
-                        />
-                      </Box>
-
-                      {/* THE ACCOUNTS, AS ONE CARD (user, 2026-09-11).
-                          The label, the progress and the list were three
-                          loose pieces in a rail where every other block has
-                          an edge — the same complaint the stage card above
-                          answered. One card, and it holds the list the way
-                          that one holds its search field.
-
-                          `RAIL_GIVES`, so the card is the flex child that
-                          SHRINKS: the rail is bounded and sticky, and the
-                          list inside is the only thing in the column allowed
-                          to give up height so the card stays inside the
-                          rail's bound rather than running off the bottom of a
-                          sticky column that cannot be scrolled to.
-
-                          ONE OF THE TWO BLOCKS THE SWAP STANDS IN FOR. The
-                          placeholder takes the same slot in the same flex
-                          column, and clips rather than grows — a beat that
-                          pushed the commit down and pulled it back would be a
-                          worse flicker than the one it is there to prevent.
-
-                          `key` on the billing code so the arriving card is a
-                          NEW element: that is what replays the fade. Without it
-                          React updates the card in place and the animation,
-                          having already run once, never runs again. */}
                       {swapping ? (
                         <Box css={CONVEYOR_GIVES} overflow="hidden">
                           <AccountsCardSkeleton withProgress={counting} />
@@ -1328,6 +1278,10 @@ export default function ServicePayablesPage() {
                           </Flex>
                         </Flex>
 
+                        {/* A franchise's royalty and loan, read-only — posted
+                            on Franchise Deductions, checked here. */}
+                        <DeductionSummary billing={billing} />
+
                         <Box
                           my={3}
                           borderTopWidth="1px"
@@ -1335,58 +1289,14 @@ export default function ServicePayablesPage() {
                           flexShrink={0}
                         />
 
-                        {/* HOW FAR THROUGH, directly over the list it counts.
-                            THE "PLANHOLDERS" LABEL ABOVE IT IS GONE (user,
-                            2026-09-11) and nothing is lost: a list of people's
-                            names under a count of terminations does not need
-                            to be told it is a list of people. The label was
-                            the last thing in this card that named a thing
-                            rather than said something about it.
+                        {/* HOW FAR THROUGH, directly over the stepper it
+                            counts. Check all takes the row's right.
 
-                            Check all takes the row's right, which is where the
-                            label's own row used to put it. */}
-                        <Box mb={2.5} flexShrink={0}>
-                          {/* NO BAR ON THE READING QUEUES (user, 2026-09-14:
-                              "when in approved and endorsement remove the
-                              counter bar. since it is not needed").
-
-                              A progress bar answers "how far through am I",
-                              and For Approval and For Endorsement have no
-                              "through": the accounts are read and the BILLING
-                              is signed, so `isAccountDone` returns true for
-                              every row the moment the billing arrives. The bar
-                              was therefore full, always, on every billing at
-                              those two stages — a control that can only ever
-                              report 100% is not reporting anything, and a
-                              finished green bar over a queue where nothing has
-                              been done yet actively says the wrong thing.
-
-                              WHAT IT LEAVES IS THE COUNT, which is worth
-                              keeping: how many accounts this billing carries is
-                              the first thing an approver sizes it up by. See
-                              the sentence below. */}
-                          {counting && (
-                            <Box
-                              h="4px"
-                              borderRadius="full"
-                              bg="gray.200"
-                              overflow="hidden"
-                            >
-                              <Box
-                                h="full"
-                                borderRadius="full"
-                                bg={BRAND_COLORS.primaryGreen}
-                                transition="width 0.3s ease"
-                                w={
-                                  progress.total
-                                    ? `${(progress.done / progress.total) * 100}%`
-                                    : "0%"
-                                }
-                              />
-                            </Box>
-                          )}
+                            THE PROGRESS BAR IS GONE (user, 2026-09-25) — the
+                            stepper's strip under this line is the progress
+                            now, one tick per account instead of one fill. */}
+                        <Box mb={3} flexShrink={0}>
                           <Flex
-                            mt={counting ? 1.5 : 0}
                             align="center"
                             justify="space-between"
                             gap={2}
@@ -1402,7 +1312,27 @@ export default function ServicePayablesPage() {
                                 instead of num of num accounts"), because "8 of
                                 8 accounts" is a fraction whose numerator can
                                 never be anything but its denominator. */}
-                            {counting ? (
+                            {/* THE WORKING STAGES COUNT VIEWS (user,
+                                2026-09-25): nothing is terminated or verified
+                                until the billing is committed, so "0 of 9
+                                terminated" would read 0 all the way through.
+                                What the commit waits on is every account being
+                                viewed — so that is the count. */}
+                            {(stage === "for-process" || verifying) &&
+                            !reading ? (
+                              <Text>
+                                <Text
+                                  as="span"
+                                  fontWeight="600"
+                                  color="gray.700"
+                                >
+                                  {services.length -
+                                    unviewedAccounts(billing, stage).length}{" "}
+                                  of {services.length}
+                                </Text>{" "}
+                                viewed
+                              </Text>
+                            ) : counting ? (
                               <Text>
                                 <Text
                                   as="span"
@@ -1425,65 +1355,34 @@ export default function ServicePayablesPage() {
                                 {progress.total === 1 ? "account" : "accounts"}
                               </Text>
                             )}
-                            {/* ONE SLOT, AND THE WORK WINS IT.
-                                Check all is drawn while there is a selection
-                                to gather; otherwise the slot names WHO PUT
-                                THE BILLING THROUGH.
-
-                                They share it rather than stacking because a
-                                bounded sticky rail spends every line on the
-                                account list, and the two are wanted at
-                                different moments: the control while a verifier
-                                is working down the rows, the name when reading
-                                a billing somebody else processed. The name is
-                                on every row of the queue pop-up as well, so
-                                nothing is out of reach while Check all has the
-                                slot.
+                            {/* WHO PUT THE BILLING THROUGH. Check all shared
+                                this slot until verification stopped being per
+                                account (user, 2026-09-25).
 
                                 "PROCESSOR", NOT "BY" (user, 2026-09-11). "by
-                                JACKIE PANES" beside a count of
-                                terminations reads as though they did the
-                                terminating — which on a billing being worked
-                                right now by somebody else is exactly wrong.
-                                The label names the ROLE on the billing. */}
-                            {verifying && verifiable.length > 0 ? (
-                              <Box
-                                as="button"
-                                onClick={toggleAll}
-                                fontSize="11px"
-                                fontWeight="600"
-                                color="gray.600"
-                                px={1}
-                                borderRadius="md"
-                                cursor="pointer"
-                                flexShrink={0}
-                                _hover={{ color: "gray.800" }}
-                              >
-                                {allChecked ? "Clear" : "Check all"}
-                              </Box>
-                            ) : (
-                              billing.processedBy && (
-                                <Text truncate maxW="170px">
-                                  <Text as="span" color="gray.400">
-                                    Processor{" "}
-                                  </Text>
-                                  <Text as="span" color="gray.600">
-                                    {billing.processedBy}
-                                  </Text>
+                                JACKIE PANES" beside a count reads as though
+                                they did the work on screen — which on a
+                                billing being worked right now by somebody else
+                                is exactly wrong. The label names the ROLE. */}
+                            {billing.processedBy && (
+                              <Text truncate maxW="170px">
+                                <Text as="span" color="gray.400">
+                                  Processor{" "}
                                 </Text>
-                              )
+                                <Text as="span" color="gray.600">
+                                  {billing.processedBy}
+                                </Text>
+                              </Text>
                             )}
                           </Flex>
                         </Box>
 
-                        {/* THE ONE THING IN THE CARD THAT GIVES — `0 1 auto`
-                            with `minH: 0`, so it takes every row a long screen
-                            has room for and is shrunk by the browser, alone
-                            among the rail's blocks, the moment the column
-                            would outrun the screen. The controls below it
-                            never move. The cap it is passed is the PHONE's,
-                            where there is no bounded column to be shrunk
-                            inside of; see `conveyorListBox`. */}
+                        {/* THE STEPPER REPLACES THE PLANHOLDER LIST (user,
+                            2026-09-25). The list showed five rows of a
+                            billing and took most of the rail doing it; the
+                            strip shows every account at once, Prev / Next
+                            walk them, and Jump is the full list for the
+                            out-of-turn pick. See `conveyor/account-stepper`. */}
                         {services.length === 0 ? (
                           /* NOTHING KEYED IN YET — the first state of a paper
                              franchise's billing, and the only empty account list
@@ -1528,86 +1427,377 @@ export default function ServicePayablesPage() {
                                 : "Nothing has been endorsed against this billing."}
                             </Text>
                           </Flex>
+                        ) : folded ? (
+                          // IN THE FOLDED RAIL'S BILLING FLYOUT the walk is
+                          // not repeated — it is on the strip itself, and two
+                          // steppers would answer every key twice.
+                          null
+                        ) : isDesktop ? (
+                        <AccountStepper
+                          billing={billing}
+                          services={services}
+                          stage={stage}
+                          currentId={service?.id}
+                          onOpen={openAccount}
+                          disabled={recordBusy}
+                        />
                         ) : (
-                        <Box css={conveyorListBox(LIST_MAX_HEIGHT_COMPACT)}>
-                          <PlanholderServiceList
-                            services={services}
-                            selected={service?.id ?? ""}
-                            onSelect={openAccount}
-                            isSaved={(id) =>
-                              Boolean(getSavedServiceRecord(id))
-                            }
-                            selectable={verifying}
-                            checkedIds={checked}
-                            onToggle={toggleChecked}
-                            isVerified={(id) =>
-                              Boolean(getVerifiedAccount(id))
-                            }
-                            // THE DECEASED HEADS EACH ROW (user,
-                            // 2026-09-11). What this chapel is being paid for
-                            // is a funeral, and the funeral was for the
-                            // deceased — which is also the name on the report
-                            // the processor is matching the rail against. It
-                            // takes the labelled "Deceased" third line off an
-                            // assigned plan's row, because that line existed
-                            // to name the person now on top. See
-                            // `ServiceRowLead`.
-                            lead="deceased"
-                            // TIGHTER ROWS, because this rail has more in it
-                            // than the workspaces the row was drawn for and
-                            // now splits at a narrower shell. See `compact`.
-                            compact
-                            fills
+                          <AccountStateChips
+                            stage={stage}
+                            tally={tally}
+                            onFilter={setJumpFilter}
                           />
-                        </Box>
-                        )}
-
-                        {/* ADD PLANHOLDER — the paper franchise's entry, and
-                            the last thing INSIDE the accounts card because it
-                            adds to the list directly above it (user,
-                            2026-09-15).
-
-                            DRAWN ONLY WHERE THE RULES ALLOW IT, and that rule
-                            was written months before there was anywhere to draw
-                            it: `canAddManualService` — a manual franchise, with
-                            a number already minted, not yet endorsed. A service
-                            typed in beside services that arrived on their own
-                            would be a payable somebody invented, so the button
-                            appears exactly where the system cannot reach and
-                            nowhere else.
-
-                            THE KIT'S SECONDARY BUTTON (user, 2026-09-15: "make
-                            it an outline button instead of dash button... the
-                            color should be the same as the osp-ui theme"). It
-                            was dashed and amber, saying "this is an entry, not a
-                            commit" in a vocabulary the design system does not
-                            have — where what the kit calls a secondary action is
-                            precisely what this is. The rail now has one
-                            grammar: the kit's outline for the acts that are not
-                            the primary one, the kit's fill for the one that is.
-
-                            THE RAIL'S HEIGHT, THE KIT'S COLOURS. `h` and the
-                            type size are overridden because this column is built
-                            to the death claim's 26px button and the kit's own is
-                            40 — a control that set the card's height would move
-                            the account list every time it appeared. Nothing
-                            about the colour is touched. */}
-                        {canAddManualService(billing) && !reading && (
-                          <SecondarySmButton
-                            onClick={() => setAddOpen(true)}
-                            mt={2.5}
-                            w="full"
-                            h="30px"
-                            minH="30px"
-                            fontSize="12px"
-                            borderRadius="lg"
-                            flexShrink={0}
-                          >
-                            <LuPlus size={13} />
-                            Add Planholder
-                          </SecondarySmButton>
                         )}
                       </Box>
+                      )}
+    </>
+  ) : null;
+
+  return (
+    // A fragment: the toaster cannot live INSIDE `Page.Root`, which keeps only
+    // its tool and main content children and silently drops the rest.
+    <>
+      {/*
+       * THE PAGE KEEPS ITS OWN HEADING, and it did not for a day.
+       *
+       * It was hidden with a `css` override while `BillingHead` stood at the top
+       * of the record column: that block named what was being worked and carried
+       * the money, so a second title reading "Service Payables" over it would
+       * have named the module rather than the work and cost a whole row doing
+       * it.
+       *
+       * The billing moved to the rail (see the note at the top of this file) and
+       * the reason went with it. Without the title the record column opened
+       * straight onto a plan holder's name with nothing above it saying what
+       * screen this is — the override outliving the thing it was for, which is
+       * how a page ends up headless for no stated reason.
+       */}
+      <Page.Root
+        title="Service Payables"
+        headerButton="menu"
+        /*
+         * ZERO, AND THE RESERVE IS INSIDE THE GRID INSTEAD — see
+         * `CONVEYOR_MAIN_TAIL`, which carries it on the record column.
+         *
+         * `Page.Root` pads every page for the mobile bottom navigation unless it
+         * is given a value, and that padding lands OUTSIDE the grid row. The
+         * rail is `position: sticky` and may not leave its row, so the reserve
+         * came straight off its pinning range: measured at 1440x620 the rail
+         * held at 108px for the whole scroll and then lurched to 48 over the
+         * last tenth — the head of the column, and the billing it names, shoved
+         * off the top of a element that cannot be scrolled to.
+         *
+         * Zero rather than a smaller number, because the reserve has MOVED
+         * rather than gone. The death claim's own `Page.Root` says the same.
+         */
+        paddingBottom={0}
+      >
+        {/* NOTHING IN `Page.ToolContent`, AND THERE WAS FOR AN HOUR (user,
+            2026-09-14: "remove the search bar in the tool content").
+
+            An "All billings" button stood on the title row — the page-level door
+            to the lists, put there because the header costs no vertical space
+            while the rail is bounded. What it looked like on the row was a
+            SECOND SEARCH FIELD: an outlined pill with a magnifier and a label,
+            eighteen pixels from the rail's actual search field, which is the one
+            thing this whole change was asked not to become ("instead of another
+            search bar").
+
+            THE DOOR IS THE RAIL'S FIELD, and one door is enough now that the
+            sheet has tabs. It opens on the queue it stands in and every other
+            list is one pill away — where before the sheet WAS the queue and a
+            second entrance was the only way to reach anything else. */}
+        <Page.MainContent>
+          <Page.Row>
+            <Box ref={workspaceRef} css={WORKSPACE_ROOT}>
+              <Box ref={topRef}>
+                {/* THE SWAP NO LONGER REPLACES THE PAGE (user, 2026-09-14:
+                    "only do the skeleton loading with the component that are
+                    changing"). A `swapping ?` branch stood here and rendered a
+                    placeholder INSTEAD of the whole grid, so the queue tabs, the
+                    search field and the commit all went off screen for 380ms to
+                    announce that a different billing had arrived — including on
+                    a stage change, where the tabs are the control that was just
+                    clicked.
+
+                    The beat is now inside the grid, on the two blocks a new
+                    billing actually replaces: the accounts card and the record
+                    column. Everything else stays mounted, so the rail keeps its
+                    height and its pinning across the swap. See
+                    `conveyor/swap-skeleton`. */}
+                {/* THE GUARD ASKS FOR A BILLING AND NO LONGER FOR AN ACCOUNT
+                    (2026-09-15), which is the first of the three things the
+                    paper franchise corrected here.
+
+                    It read `!billing || !service`, and the second half was true
+                    of every billing this module could produce — accounts arrive
+                    with the endorsement, so a billing with none did not exist.
+                    A franchise billing is RAISED EMPTY: the number is minted
+                    before a single plan holder is keyed in, because a terminated
+                    plan has to be posted against something. Read the old way,
+                    the processor raised a billing and the page answered "queue
+                    clear" over the billing they had just made.
+
+                    So the grid draws whenever there is a billing, and the two
+                    places that need an account — the commit, and the record
+                    column — say so themselves. */}
+                {!billing ? (
+                  <QueueClear
+                    stage={stage}
+                    worked={queue.length}
+                    counts={counts}
+                    onChangeStage={changeStage}
+                    query={query}
+                    onQueryChange={setQuery}
+                    // ON THE QUEUE THAT IS EMPTY, which is not a wasted door:
+                    // the sheet's tabs are where a reader goes from a clear
+                    // queue to find what they worked, and the count on each one
+                    // says where it went.
+                    onSearch={() => {
+                      setScope(stage);
+                      setBrowseOpen(true);
+                    }}
+                    onRestart={() =>
+                      swap(() =>
+                        setServedByStage((all) => ({ ...all, [stage]: 0 })),
+                      )
+                    }
+                    // NO FRANCHISE INTAKE (user, 2026-09-25): manual encoding
+                    // of paper franchises is being removed. The dialog and its
+                    // wiring are left for that clean-up.
+                  />
+                ) : (
+                  <Grid css={folded ? CONVEYOR_GRID_COLLAPSED : CONVEYOR_GRID}>
+                    {/* FOLDED, THE RAIL IS AN ICON STRIP (user, 2026-10-05).
+                        The consulted blocks — the queue, the billing, the
+                        history — open beside their icons; Prev · Jump · Next
+                        and the commit are pressed straight from the strip,
+                        since they are used on every account. See `RailStrip`
+                        and `AccountStepperStrip`. */}
+                    {/* ONE RAIL ELEMENT IN BOTH STATES — the sticky shell,
+                        with the scrolling body inside; see
+                        `CONVEYOR_RAIL_SHELL`. */}
+                    <GridItem css={isDesktop ? CONVEYOR_RAIL_SHELL : STACKED_ITEM}>
+                      {/* THE SPINE — the line to the rail's left, as tall as
+                          the rail (capped at the screen), the fold's button at
+                          its middle. On the SHELL, which clips nothing — the
+                          body scrolls, and would cut it off. See `RailSpine`. */}
+                      {isDesktop && (
+                        <RailSpine
+                          collapsed={folded}
+                          onToggle={() => setRailCollapsed(!railCollapsed)}
+                        />
+                      )}
+                      <Box css={isDesktop ? CONVEYOR_RAIL_BODY : undefined}>
+                    {folded ? (
+                        <RailStrip>
+                          {/* THE QUEUE AS ICONS, and the search goes straight
+                              to the list (user, 2026-10-05). */}
+                          <RailStagePair
+                            stages={CONVEYOR_STAGES.map((key) => ({
+                              key,
+                              label: key === "for-process" ? "For Process" : "Verify",
+                              count: counts[key],
+                              icon:
+                                key === "for-process"
+                                  ? LuClipboardList
+                                  : LuShieldCheck,
+                            }))}
+                            active={stage}
+                            onChange={(key) => changeStage(key as BillingStage)}
+                          />
+                          <RailHint label="Search the queue">
+                            <RailStripButton
+                              icon={LuSearch}
+                              label="Search the queue"
+                              onClick={() => {
+                                setScope(stage);
+                                setBrowseOpen(true);
+                              }}
+                            />
+                          </RailHint>
+                          <RailStripDivider />
+                          <RailFlyout icon={LuReceiptText} label="Billing">
+                            {() => accountsCard}
+                          </RailFlyout>
+
+                          {services.length > 0 && (
+                            <>
+                              <RailStripDivider />
+                              <AccountStepperStrip
+                                billing={billing}
+                                services={services}
+                                stage={stage}
+                                currentId={service?.id}
+                                onOpen={openAccount}
+                                disabled={recordBusy}
+                              />
+                            </>
+                          )}
+
+                          <RailStripDivider />
+                          <RailFlyout
+                            icon={LuHistory}
+                            label="History"
+                            badge={<RailCount count={historyCounts.all} />}
+                          >
+                            {(close) =>
+                              historyCard((key) => {
+                                close();
+                                openHistoryRow(key);
+                              })
+                            }
+                          </RailFlyout>
+
+                          {canCommit && (
+                            <>
+                              <RailStripDivider />
+                              <RailStripCommit
+                                icon={LuCheck}
+                                label={commitLabel}
+                                disabled={services.length === 0 || recordBusy}
+                                onClick={commitBilling}
+                              />
+                            </>
+                          )}
+                        </RailStrip>
+                    ) : (
+                    <Box
+                      display="contents"
+                      // The expanded blocks fade in once the column opens.
+                      css={isDesktop ? { "& > *": RAIL_FADE_IN } : undefined}
+                    >
+                    {/* THE RAIL, and it is the LEFT column now — written
+                        first so that stacked it still comes above the record,
+                        which is the order of the task either way: what am I
+                        working, then work it. `CONVEYOR_GRID` puts the rail
+                        track first, so nothing has to be re-ordered. */}
+                      {/* WHICH QUEUE, OVER THE FIELD THAT SEARCHES IT — one
+                          card, the death claim's `StageCard` exactly.
+
+                          THE QUERY IS HELD BY THE PAGE and not by the field,
+                          because the two are halves of one gesture: it is
+                          typed here and RUN in the pop-up, and a field that
+                          forgot what it was asked the moment the list opened
+                          would make the second half unreadable. */}
+                      <Box flexShrink={0} mb={4}>
+                        <StageSwitch
+                          active={stage}
+                          counts={counts}
+                          onChange={changeStage}
+                          query={query}
+                          onQueryChange={setQuery}
+                          // THE FIELD UNDER THE QUEUE TABS OPENS THE QUEUE IT
+                          // STANDS IN. The sheet can show any of six lists now,
+                          // and the tabs on it are one click from here — but the
+                          // door a reader came through has to land where its
+                          // label promised. "All billings" is the header's
+                          // button, a column away.
+                          onSearch={() => {
+                            setScope(stage);
+                            setBrowseOpen(true);
+                          }}
+                          // NO FRANCHISE INTAKE — manual franchise encoding is
+                          // being removed (user, 2026-09-25).
+                        />
+                      </Box>
+
+                      {/* THE ACCOUNTS, AS ONE CARD (user, 2026-09-11).
+                          The label, the progress and the list were three
+                          loose pieces in a rail where every other block has
+                          an edge — the same complaint the stage card above
+                          answered. One card, and it holds the list the way
+                          that one holds its search field.
+
+                          `RAIL_GIVES`, so the card is the flex child that
+                          SHRINKS: the rail is bounded and sticky, and the
+                          list inside is the only thing in the column allowed
+                          to give up height so the card stays inside the
+                          rail's bound rather than running off the bottom of a
+                          sticky column that cannot be scrolled to.
+
+                          ONE OF THE TWO BLOCKS THE SWAP STANDS IN FOR. The
+                          placeholder takes the same slot in the same flex
+                          column, and clips rather than grows — a beat that
+                          pushed the commit down and pulled it back would be a
+                          worse flicker than the one it is there to prevent.
+
+                          `key` on the billing code so the arriving card is a
+                          NEW element: that is what replays the fade. Without it
+                          React updates the card in place and the animation,
+                          having already run once, never runs again. */}
+                      {/* ON A PHONE, THE DEATH CLAIM'S STRIP (user,
+                          2026-09-30): Actions and History, each opening a
+                          sheet. Prev · Jump · Next and the commit are at the
+                          foot of the record. See `MobileQuickAccess`.
+
+                          THE BILLING CARD IS IN THE PAGE, UNDER THE STRIP
+                          (user, 2026-10-01: "since the billing number is
+                          important it should be the first one to get
+                          viewed") — option A of the mock-up. It was the
+                          strip's first button and a sheet; that slot is
+                          Actions now. */}
+                      {isDesktop ? (
+                        accountsCard
+                      ) : (
+                        <>
+                        <MobileQuickAccess
+                          stages={CONVEYOR_STAGES.map((key) => ({
+                            key,
+                            label: key === "for-process" ? "For Process" : "Verify",
+                            count: counts[key],
+                          }))}
+                          stage={stage}
+                          onStageChange={(key) => changeStage(key as BillingStage)}
+                          onSearch={() => {
+                            setScope(stage);
+                            setBrowseOpen(true);
+                          }}
+                          primary={{
+                            icon: LuLayoutGrid,
+                            label: "Actions",
+                            title: "Actions",
+                            // THE BUBBLE IS WHAT IS STILL NOT OPENED, and only
+                            // where opening them is what the commit waits on —
+                            // so on the bar a red number always means something
+                            // is left to read.
+                            ariaLabel:
+                              unviewedLeft > 0
+                                ? `Actions, ${unviewedLeft} not opened`
+                                : "Actions",
+                            badge:
+                              unviewedLeft > 0 ? (
+                                <CountBubble count={unviewedLeft} />
+                              ) : undefined,
+                            render: (close) =>
+                              tally && (
+                              <AccountActions
+                                services={services}
+                                tally={tally}
+                                disabled={recordBusy || services.length === 0}
+                                // The sheet goes down first, so the Jump sheet
+                                // does not stack on top of it.
+                                onJump={() => {
+                                  close();
+                                  setJumpFilter("all");
+                                }}
+                                onOpen={(id) => {
+                                  close();
+                                  openAccount(id);
+                                }}
+                              />
+                            ),
+                          }}
+                          historyCount={historyCounts.all}
+                          renderHistory={(close) =>
+                            historyCard((key) => {
+                              close();
+                              openHistoryRow(key);
+                            })
+                          }
+                        />
+                        <Box mt={4}>{accountsCard}</Box>
+                        </>
                       )}
 
                       {/* WHAT CAN BE DONE, AT THE FOOT OF THE RAIL — the
@@ -1647,6 +1837,9 @@ export default function ServicePayablesPage() {
                           control that silently declines is worse than one that
                           plainly cannot be pressed. */}
                       <Box
+                        // On a phone the commit lives in the bar and the Billing
+                        // sheet, so this block only speaks for a held billing.
+                        display={!isDesktop && !reading ? "none" : undefined}
                         mt={4}
                         flexShrink={0}
                         opacity={recordBusy ? 0.5 : 1}
@@ -1662,7 +1855,38 @@ export default function ServicePayablesPage() {
                             which is exactly right: with nothing keyed in, the
                             only things to do are add a plan holder or close the
                             billing, and both are elsewhere in this rail. */}
-                        {service && (
+                        {/* ONE BILLING COMMIT ON THE TWO WORKING STAGES
+                            (user, 2026-09-25). Accounts are no longer
+                            terminated or verified one at a time: the desk
+                            views every account and then commits the billing —
+                            Process Billing (terminates all, drafts included)
+                            or Verify Billing (signs all). Always pressable;
+                            the restriction is the pop-up raised when an
+                            account has not been viewed. See
+                            `use-process-billing`. */}
+                        {/* A PHONE COMMITS FROM THE END OF THE RECORD — the
+                            button under Prev · Jump · Next; see
+                            `AccountStepperBar`. */}
+                        {isDesktop && canCommit && (
+                          <Button
+                            w="full"
+                            h="30px"
+                            minH="30px"
+                            fontSize="12px"
+                            borderRadius="lg"
+                            bg={BRAND_COLORS.primaryGreen}
+                            color="white"
+                            _hover={{ bg: BRAND_COLORS.darkGreen }}
+                            disabled={services.length === 0}
+                            onClick={commitBilling}
+                          >
+                            {commitLabel}
+                          </Button>
+                        )}
+
+                        {service &&
+                          (reading ||
+                            (stage !== "for-process" && !verifying)) && (
                         <RecordActions
                           service={service}
                           billing={billing}
@@ -1686,268 +1910,25 @@ export default function ServicePayablesPage() {
                           captions={false}
                           // The death claim's button size — see `compact`.
                           compact
-                          // THE ACCOUNT'S SIGNATURE IS THE SMALLER OF THE TWO
-                          // ACTS IN THIS COLUMN (user, 2026-09-11), so on For
-                          // Verification it is drawn as an outline and the
-                          // solid fill goes to Verify Billing below. See
-                          // `subordinate`, which is ignored on every other
-                          // stage because no other stage has two commits.
-                          subordinate={verifying}
-                          selection={selection}
-                          onVerified={() => {
-                            setCheckedIds([]);
-                            // Moves to the next unread account. It does NOT
-                            // let go of the billing when they run out — that
-                            // is Verify Billing's job, below.
-                            advance(billing);
-                          }}
                           // Approving DOES end the visit: there is no second
                           // act at that stage, and the billing has left the
                           // queue by the time this fires.
                           onApproved={() => releaseBilling()}
                         />
                         )}
+                      </Box>
 
-                        {/* CLOSE ENTRY — the paper franchise's LOCK, in the slot
-                            Terminate and Verify Billing occupy.
-
-                            IT SEALS THE LIST, IT DOES NOT FINISH THE BILLING
-                            (user, 2026-09-15: "what the close billing does? it
-                            should be clickable if that was the locking of
-                            billing in order not allowed to be added"). It was
-                            called Close Billing and meant both, which is why it
-                            sat greyed out: a control that also completes the
-                            billing cannot be offered until every account is
-                            terminated, and by then there is nothing left to lock
-                            out. Now it means one thing — no more plan holders —
-                            and it is live from the first account onwards.
-
-                            WHAT FINISHES THE BILLING is the module's ordinary
-                            rule, unchanged: every plan that can be terminated
-                            has been. Closing the entry is what makes that rule
-                            answerable, by freezing a list that would otherwise
-                            keep growing under it. See `getServiceBillings`.
-
-                            DRAWN ONLY WHILE THE ENTRY IS OPEN, and gone once it
-                            is closed — at which point this is an ordinary For
-                            Process billing and Terminate takes back the fill.
-                            The rail changes height once, on a press the
-                            processor made; what it must never do is change under
-                            somebody who is still working, which is why Verify
-                            Billing one queue along is drawn throughout instead.
-
-                            AN OUTLINE, NOT THE FILL, and that is what the lock
-                            being a lock actually looks like. It shares the
-                            column with Terminate, and Terminate is the COMMIT —
-                            the thing that posts a plan onto the billing. This
-                            says which accounts exist. Giving it the fill made
-                            Terminate the quiet one on a screen whose whole
-                            purpose is terminating, and made the two read as
-                            rival commits when only one of them is one.
-
-                            THE SAME OUTLINE AS ADD PLANHOLDER, deliberately: the
-                            rail now has one grammar, and these two are the pair
-                            it applies to. One opens the list, the other closes
-                            it; between them sits the green button that works
-                            through it. */}
-                        {/* NOT DRAWN AT ALL UNTIL IT CAN BE PRESSED, where every
-                            other commit in this rail is drawn throughout and
-                            disabled. Two reasons, and the second is the reason:
-
-                            THE EMPTY STATE ALREADY SAYS IT. A billing with no
-                            accounts shows "No accounts yet — key the plan
-                            holders in", six lines above. A greyed Close Entry
-                            under that is the same instruction in a weaker voice.
-
-                            AND THE KIT'S BUTTON DOES NOT RESTYLE IN PLACE. This
-                            one mounts on an empty billing and comes alive the
-                            moment the first account lands — and rendered that
-                            way it kept its disabled colouring, a pale green
-                            label on a live control. The same failure the
-                            `subordinate` flag hit on Terminate. Mounting it
-                            already-live sidesteps it, and the moment the height
-                            changes is the same moment the empty panel becomes a
-                            list, so nothing shifts under a working hand. */}
-                        {canCloseFranchiseEntry(billing) && !reading && (
-                          <SecondarySmButton
-                            mt={2.5}
-                            w="full"
-                            h="30px"
-                            minH="30px"
-                            fontSize="12px"
-                            borderRadius="lg"
-                            onClick={async () => {
-                              if (!(await closeFranchiseEntry(billing))) return;
-
-                              // CLOSING THE ENTRY USUALLY CHANGES NOTHING ABOUT
-                              // WHICH BILLING IS ON SCREEN, and that is the
-                              // whole of what it means for this to be a lock
-                              // rather than a completion. The accounts are still
-                              // there and still have to be terminated; swapping
-                              // away would abandon the processor's own work
-                              // mid-sitting, which is exactly what it did for
-                              // one run.
-                              //
-                              // THE EXCEPTION IS AN ENTRY CLOSED WITH EVERYTHING
-                              // ALREADY DONE — the ordinary path, where a
-                              // processor terminates each sheet as they key it
-                              // in and closes the entry last. The ordinary
-                              // completion rule then fires on the same write and
-                              // the billing leaves; nothing else would notice,
-                              // because no per-account act ran.
-                              //
-                              // ASKED OF THE STORE AND NOT OF `queues`, for the
-                              // reason `goToBilling` gives: the write happened a
-                              // line ago and React has not re-rendered, so the
-                              // memo cannot know about it yet.
-                              const stillHere = billingQueue("for-process").some(
-                                (b) => b.billingCode === billing.billingCode,
-                              );
-                              if (!stillHere) releaseBilling();
-                            }}
-                            title={`Seals ${billing.billingNo}: no further plan holders can be keyed into it. The accounts already on it are still terminated here.`}
-                          >
-                            Close Entry
-                          </SecondarySmButton>
-                        )}
-
-                        {/* THE BILLING'S OWN SIGNATURE, under the accounts'.
-                            Reading the accounts and putting the billing
-                            through are two acts (user, 2026-08-27) — the last
-                            tick must not post the document out from under the
-                            person taking the decision — so this is a second
-                            control and deliberately so. It is NOT a second way
-                            to write the same fact: one signs accounts, this
-                            signs the billing.
-
-                            For Approval's equivalent is inside `RecordActions`
-                            already, because approval has no per-account act to
-                            share the slot with.
-
-                            AND IT IS THE PRIMARY BUTTON OF THE COLUMN (user,
-                            2026-09-11: "the verified account would be a outline
-                            button then the verified billing would be the
-                            primary button"). It was the quiet one — a white
-                            outline under a filled green Verify Account — which
-                            had the two acts the wrong way round: this is the
-                            one that ends the visit and sends the document to
-                            For Approval, where the button above it signs one
-                            plan holder out of five. Worse, the filled one was
-                            usually DEAD by the time a verifier looked at it,
-                            reading "Verified" in past tense over the live
-                            control they actually wanted next.
-
-                            The two swapped rather than both being loud: one
-                            primary to a column is the whole point of the
-                            arrangement. See `subordinate` on `RecordActions`. */}
-                        {/* NO RULE ABOVE IT (user, 2026-09-11: "also remove
-                            the separator"). A dashed line stood here to say
-                            that the accounts' act had finished and the
-                            billing's had begun — which the two buttons now say
-                            themselves: one is an outline and the one under it
-                            is filled, and a reader who can see that does not
-                            need a line drawn between them. It was also the
-                            third horizontal rule in a column of four blocks. */}
-                        {verifying && (
-                          <Box mt={2.5}>
-                            <Button
-                              w="full"
-                              borderRadius="lg"
-                              bg={BRAND_COLORS.primaryGreen}
-                              color="white"
-                              _hover={{ bg: BRAND_COLORS.darkGreen }}
-                              // DISABLED RATHER THAN DIMMED BY HAND. It was a
-                              // `Box as="button"` carrying its own opacity and
-                              // a `not-allowed` cursor, and a filled button
-                              // needs the real thing: the kit's disabled state
-                              // also stops the press, the hover and the focus
-                              // ring, where the hand-rolled version left a
-                              // green button that looked pressable and
-                              // silently returned.
-                              disabled={!canVerifyBilling(billing)}
-                              onClick={async () => {
-                                if (!canVerifyBilling(billing)) return;
-                                // THIS is what ends the billing's visit — the
-                                // signature, not the last account's tick. See
-                                // `advance`, which deliberately does not.
-                                if (await verifyBilling(billing)) {
-                                  releaseBilling();
-                                }
-                              }}
-                              /* THE CAPTION UNDER THIS BUTTON IS GONE, for
-                                 the reason every other one in this column is:
-                                 it said one of two sentences depending on
-                                 whether the accounts were all read, so the
-                                 rail changed height the moment a verifier
-                                 ticked the last box.
-
-                                 WHAT IT SAID IS STILL ON SCREEN. "3 of 4
-                                 verified" is the progress line directly above
-                                 the list — the same fact, in the place that
-                                 already owns it — and the rest is here, on
-                                 hover, where it costs nothing. */
-                              title={
-                                canVerifyBilling(billing)
-                                  ? `All ${billing.services.length} accounts read — signing sends ${billing.billingNo} to For Approval.`
-                                  : "The billing is signed once every account on it has been verified."
-                              }
-                            >
-                              Verify Billing
-                            </Button>
-                          </Box>
-                        )}
-
-                        {/* FOR ENDORSEMENT HAS AN ACT NOW (user, 2026-09-14:
-                            "instead of Next billing, Endorse is the name of the
-                            button and make it primary").
-
-                            WHAT STOOD HERE WAS A PAGER. The endorsement had
-                            never been described, so the last queue offered
-                            "Next billing" — a quiet outline button that stepped
-                            over the billing without writing anything, leaving it
-                            in the queue to be served again on the next restart.
-                            It existed so the screen was not stuck, which is a
-                            reason for a control to exist but not a reason to
-                            give it the foot of the rail.
-
-                            IT IS A SIGNATURE, SO IT LOOKS LIKE ONE. Primary and
-                            full width, in the slot Terminate and Verify Billing
-                            occupy on the queues before it — one commit to a
-                            column, and this is the commit.
-
-                            AND IT ASKS FIRST (user, 2026-09-14: "when click
-                            there is a pop-up to confirm the endorsement"), which
-                            is what the other three do: the dialog names the
-                            billing, the accounts and the money, and says the
-                            billing leaves for accounting. See
-                            `useEndorseBilling`. */}
-                        {stage === "approved" && !reading && (
-                          <Button
-                            mt={2.5}
-                            w="full"
-                            borderRadius="lg"
-                            bg={BRAND_COLORS.primaryGreen}
-                            color="white"
-                            _hover={{ bg: BRAND_COLORS.darkGreen }}
-                            disabled={!canEndorseBilling(billing)}
-                            onClick={async () => {
-                              if (await endorseBilling(billing)) {
-                                // Endorsing ENDS the visit — the billing has
-                                // left the last queue by the time this fires,
-                                // so the conveyor brings the next one.
-                                releaseBilling();
-                              }
-                            }}
-                            title={`Endorsing sends ${
-                              billing.billingNo ?? billing.billingCode
-                            } to accounting. It does not come back to this desk.`}
-                          >
-                            {/* NO ICON (user, 2026-09-14: "remove the icons in
-                                the buttons") — a plain label, like Terminate
-                                and Verify Billing in the same slot. */}
-                            Endorse
-                          </Button>
-                        )}
+                      {/* HISTORY, LAST IN THE RAIL (user, 2026-09-30) — the
+                          death claim's order: consulted rather than worked
+                          from, so it sits under the controls used on every
+                          account. See `billing-history`. */}
+                      {isDesktop && (
+                        <Box mt={4} flexShrink={0}>
+                          {historyCard(openHistoryRow)}
+                        </Box>
+                      )}
+                    </Box>
+                    )}
                       </Box>
                     </GridItem>
 
@@ -2166,6 +2147,27 @@ export default function ServicePayablesPage() {
                         </Box>
                       </Flex>
                       )}
+
+                      {/* STACKED, THE STEPPER SITS AT THE END OF THE RECORD
+                          (user, 2026-10-01) — inline now, since the quick bar
+                          took the bottom of the screen. See
+                          `AccountStepperBar`. */}
+                      {!isDesktop && service && (
+                        <AccountStepperBar
+                          billing={billing}
+                          services={services}
+                          stage={stage}
+                          currentId={service.id}
+                          onOpen={openAccount}
+                          onJump={() => setJumpFilter("all")}
+                          disabled={recordBusy}
+                          commit={
+                            canCommit && services.length > 0
+                              ? { label: commitLabel, onCommit: commitBilling }
+                              : undefined
+                          }
+                        />
+                      )}
                     </GridItem>
                   </Grid>
                 )}
@@ -2177,6 +2179,20 @@ export default function ServicePayablesPage() {
 
       {/* Mounted always, `open` driving them — never `{open && <Dialog/>}`,
           which has left this app with the page behind it unclickable. */}
+      {/* The phone's Jump sheet. Mounted with the billing, never on `open` —
+          the desktop simply never sets a filter. */}
+      {billing && (
+        <AccountJumpSheet
+          billing={billing}
+          services={services}
+          stage={stage}
+          currentId={service?.id}
+          onOpen={openAccount}
+          disabled={recordBusy}
+          filter={jumpFilter}
+          onClose={() => setJumpFilter(null)}
+        />
+      )}
       <SoaDrawer
         lpaNo={service?.lpaNo ?? ""}
         planholder={planholder}
@@ -2199,6 +2215,25 @@ export default function ServicePayablesPage() {
         query={query}
         onQueryChange={setQuery}
         onOpenBilling={openFromList}
+      />
+
+      {/* A HISTORY ROW'S BILLINGS — the same sheet on a fixed list, with its
+          own search. Mounted always and driven by `open`. A pick goes through
+          `openFromList`, so a billing still in a queue this desk works is
+          served, and anything else is held read-only. */}
+      <BillingListPopup
+        open={historyKey !== null}
+        onClose={() => setHistoryKey(null)}
+        scope="all"
+        onScopeChange={() => undefined}
+        servedCode={billing?.billingCode}
+        query={historyQuery}
+        onQueryChange={setHistoryQuery}
+        list={historyList}
+        onOpenBilling={(picked, from) => {
+          setHistoryKey(null);
+          openFromList(picked, from);
+        }}
       />
 
       {/* THE FRANCHISE INTAKE — the one place in this module a billing is made.
@@ -2272,7 +2307,7 @@ function QueueClear({
   onQueryChange: (value: string) => void;
   onSearch: () => void;
   onRestart: () => void;
-  onFranchiseEntry: () => void;
+  onFranchiseEntry?: () => void;
 }) {
   return (
     <Box maxW="760px">
