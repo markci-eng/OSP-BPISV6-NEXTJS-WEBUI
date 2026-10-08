@@ -26,6 +26,7 @@ import {
   KIT_SHADOW,
   SectionCard,
 } from "../../components/section-card";
+import { formatTerminationStatus } from "../../data/termination-status";
 import type { RopRecord } from "../data/types";
 import { RopPaymentHistoryDialog } from "./rop-payment-history-dialog";
 
@@ -108,7 +109,7 @@ export function RopDetailsCard({ record }: RopDetailsCardProps) {
             label="Loan Status"
             value={record.loanStatus === "CLEARED" ? "Cleared" : "Outstanding"}
           />
-          <InfoRow label="Termi Status" value={record.terminationStatus} />
+          <InfoRow label="Termi Status" value={formatTerminationStatus(record.terminationStatus)} />
           {/* PRINTED AS THE LEDGER STORES IT. "01/01/1900" is the PIS stand-in
               for an account that was never terminated, and it is shown rather
               than blanked because a processor reads it as exactly that — a

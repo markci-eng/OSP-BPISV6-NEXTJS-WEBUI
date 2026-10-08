@@ -206,14 +206,18 @@ export function RopPayoutCard({
             </Text>
             <Text
               // Mono because an account number is checked digit by digit
-              // against a passbook or a screenshot. Each digit sits one mono
-              // space (1ch) apart via letter-spacing rather than inserted
-              // spaces, so a copied number pastes without gaps.
+              // against a passbook or a screenshot.
+              //
+              // LARGE AND BOLD (user, 2026-10-08) — it is the value the whole
+              // payout check turns on, at `5xl`. No extra letter-spacing at this
+              // size, so a bank number fits the 30% column where it can, and
+              // it breaks rather than overflows where it cannot.
               fontFamily="mono"
-              fontSize="md"
-              fontWeight="600"
-              color="gray.800"
-              letterSpacing={payout.accountNo ? "1ch" : undefined}
+              fontSize="5xl"
+              fontWeight="700"
+              lineHeight="shorter"
+              color="gray.900"
+              wordBreak="break-all"
             >
               {/* A cheque has no account — the em dash every empty field here
                   draws, rather than a blank that reads as unfilled. */}

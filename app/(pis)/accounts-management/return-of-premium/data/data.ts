@@ -7,16 +7,23 @@
 // list that looks right and a right panel that is empty.
 
 import { planholderLookup } from "../../planholder-profile/data/planholder-lookup";
-import { idCardImageUrl, type IdCardKind } from "../../reinstatement/data/id-card";
+import {
+  idCardImageUrl,
+  type IdCardData,
+  type IdCardKind,
+} from "../../reinstatement/data/id-card";
 import { payoutProofImageUrl } from "./payout-proof";
+import { ropFormImageUrl } from "./rop-form";
 import type {
   PlanholderNote,
   RopPayout,
   RopRecord,
+  RopSchedule,
   RopScheduleNo,
   RopScheduleRemarks,
   RopScheduleStatus,
   RopStatus,
+  RopSubmittedDocument,
 } from "./types";
 
 // Weighted so the list has more pending than settled, as the real queue does.
@@ -40,7 +47,8 @@ const PAYCLASS_CODES = ["NS", "DC", "RI", "RF", "TF", "AF"];
 const ACCOUNT_STATUSES = ["FP", "FP", "AC", "FP", "LA"];
 
 /** Termination status codes — "RP" is the returned-premium one. */
-const TERMINATION_STATUSES = ["RP", "RP", "NT", "SU"];
+// Codes from the RefTermiStat table (user, 2026-10-08) — "SU" was not one.
+const TERMINATION_STATUSES = ["RP", "RP", "NT", "FR"];
 
 /**
  * The channels a return can be released through.
@@ -287,6 +295,17 @@ const REMARK_ENTRIES: ((i: number) => string)[] = [
   () => "TERMINATED-SP BY:CLAIMSROSEMARIE ANN 09/02/2026",
 ];
 
+/**
+ * A plan's remarks trail as one block — one to five entries, `; `-separated.
+ * Shared with the PIS planholder profile's remarks card.
+ */
+export function buildPlanholderRemarks(i: number): string {
+  return REMARK_ENTRIES.slice(0, 1 + (i % REMARK_ENTRIES.length))
+    .map((entry) => entry(i))
+    .join("; ")
+    .concat(";");
+}
+
 const NOTE_ENTRIES = [
   "Called the planholder to confirm the payout account; no answer.",
   "Planholder confirmed the details over the phone.",
@@ -334,12 +353,47 @@ export const ROP_RECORDS: RopRecord[] = planholderLookup
       2,
       "0",
     )}-${String((i % 27) + 1).padStart(2, "0")}`;
+    const ropNo = `ROP-${2026 - Math.floor(monthIndex / 12)}-${String(
+      4200 + i,
+    ).padStart(6, "0")}`;
+    const newEffectivityDate = `${year - 5}-${String(month).padStart(
+      2,
+      "0",
+    )}-${String(day).padStart(2, "0")}`;
+
+    // ONE TO THREE SUBMITTED PAYOUTS, each on its own channel and each with
+    // its own account and payee — which is the point of the panel's dropdown:
+    // switching channel shows what was filed for that channel, not the same
+    // account under a different name.
+    const payouts = Array.from({ length: 1 + (i % 3) }, (_, k) =>
+      buildPayout(planholder, i, k),
+    );
+
+    const schedule: RopSchedule = (() => {
+      const contractPrice = CONTRACT_PRICES[i % CONTRACT_PRICES.length];
+      return {
+        mobileNo: `0917 ${String(200 + ((i * 37) % 800))} ${String(
+          1000 + ((i * 131) % 9000),
+        )}`,
+        // Initials of the plan name, e.g. "ST. GEORGE" → "SG".
+        planCode: planholder.planDescription
+          .split(/[\s.]+/)
+          .filter(Boolean)
+          .map((word) => word[0])
+          .join(""),
+        contractPrice,
+        dateApplied: ropDate,
+        amount: contractPrice / ROP_SCHEDULE_OPTIONS.length,
+        scheduleNo: ROP_SCHEDULE_OPTIONS[i % ROP_SCHEDULE_OPTIONS.length],
+        status: SCHEDULE_STATUS_CYCLE[i % SCHEDULE_STATUS_CYCLE.length],
+        remarks: "Valid",
+        notes: "",
+      };
+    })();
 
     return {
       id: `ROP-${String(i + 1).padStart(4, "0")}`,
-      ropNo: `ROP-${2026 - Math.floor(monthIndex / 12)}-${String(
-        4200 + i,
-      ).padStart(6, "0")}`,
+      ropNo,
       lpaNo: planholder.lpaNumber,
       // Surname first, the way every other list in the module prints it.
       planholderName: `${planholder.lastName}, ${planholder.firstName}`,
@@ -350,10 +404,7 @@ export const ROP_RECORDS: RopRecord[] = planholderLookup
 
       // The plan was re-dated five years before the return was raised, which
       // is the shape of a matured five-year term.
-      newEffectivityDate: `${year - 5}-${String(month).padStart(
-        2,
-        "0",
-      )}-${String(day).padStart(2, "0")}`,
+      newEffectivityDate,
       accountStatus: ACCOUNT_STATUSES[i % ACCOUNT_STATUSES.length],
       loanStatus: i % 5 === 0 ? "OUTSTANDING" : "CLEARED",
       terminationStatus: TERMINATION_STATUSES[i % TERMINATION_STATUSES.length],
@@ -369,63 +420,72 @@ export const ROP_RECORDS: RopRecord[] = planholderLookup
         code,
         flagged: code === "TF" || code === "AF",
       })),
-      // One record in seven has nothing on file, so the carousel's empty state
-      // is a thing the screen actually reaches rather than a branch nobody
-      // sees until a branch office submits a request without its documents.
-      submittedIds:
-        i % 7 === 3
-          ? []
-          : // A different starting ID per record, so all five kinds turn up
-            // across the list rather than every request opening on a passport.
-            Array.from({ length: 1 + (i % 3) }, (_, k) => {
-              const { label, kind } =
-                SUBMITTED_ID_KINDS[(i + k) % SUBMITTED_ID_KINDS.length];
-              return {
-                id: `${planholder.personId}-${kind}`,
-                label,
-                // Drawn from this planholder's own name and birthdate, so the
-                // ID agrees with the profile beside it.
-                imageUrl: idCardImageUrl({
-                  kind,
-                  firstName: planholder.firstName,
-                  middleName: planholder.middleName,
-                  lastName: planholder.lastName,
-                  birthdate,
-                  issuedDate: ropDate,
-                  seed: i,
-                }),
-              };
-            }),
-      // ONE TO THREE SUBMITTED PAYOUTS, each on its own channel and each with
-      // its own account and payee — which is the point of the panel's dropdown:
-      // switching channel shows what was filed for that channel, not the same
-      // account under a different name.
-      payouts: Array.from({ length: 1 + (i % 3) }, (_, k) =>
-        buildPayout(planholder, i, k),
-      ),
-      schedule: (() => {
-        const contractPrice = CONTRACT_PRICES[i % CONTRACT_PRICES.length];
-        return {
-          mobileNo: `0917 ${String(200 + ((i * 37) % 800))} ${String(
-            1000 + ((i * 131) % 9000),
-          )}`,
-          // Initials of the plan name, e.g. "ST. GEORGE" → "SG".
-          planCode: planholder.planDescription
-            .split(/[\s.]+/)
-            .filter(Boolean)
-            .map((word) => word[0])
-            .join(""),
-          contractPrice,
-          dateApplied: `${year}-${String(month).padStart(2, "0")}-${String(
-            day,
-          ).padStart(2, "0")}`,
-          amount: contractPrice / ROP_SCHEDULE_OPTIONS.length,
-          scheduleNo: ROP_SCHEDULE_OPTIONS[i % ROP_SCHEDULE_OPTIONS.length],
-          status: SCHEDULE_STATUS_CYCLE[i % SCHEDULE_STATUS_CYCLE.length],
-          remarks: "Valid",
-          notes: "",
+      // THE ROP FORM FIRST, ON EVERY REQUEST — no application is filed
+      // without it — with the planholder's ID photocopied onto the page. Then
+      // none to two IDs scanned on their own; one record in seven has none,
+      // so a request carrying only its form is something the screen reaches.
+      submittedDocuments: (() => {
+        // A different starting ID per record, so all five kinds turn up
+        // across the list rather than every request opening on a passport.
+        // Drawn from this planholder's own name and birthdate, so the ID
+        // agrees with the profile beside it.
+        const idCard = (k: number) => {
+          const { label, kind } =
+            SUBMITTED_ID_KINDS[(i + k) % SUBMITTED_ID_KINDS.length];
+          const data: IdCardData = {
+            kind,
+            firstName: planholder.firstName,
+            middleName: planholder.middleName,
+            lastName: planholder.lastName,
+            birthdate,
+            issuedDate: ropDate,
+            seed: i,
+          };
+          return { label, kind, data };
         };
+
+        const formId = idCard(0);
+        const payout = payouts[0];
+        const form: RopSubmittedDocument = {
+          id: `${planholder.personId}-rop-form`,
+          label: `ROP Application Form (with ${formId.label})`,
+          imageUrl: ropFormImageUrl({
+            formNo: `ROPSTORE${ropDate.replace(/-/g, "").slice(2)}${String(
+              9900 + i,
+            )}C`,
+            ropNo,
+            lpaNo: planholder.lpaNumber,
+            firstName: planholder.firstName,
+            middleName: planholder.middleName,
+            lastName: planholder.lastName,
+            planType: planholder.planDescription,
+            contractPrice: schedule.contractPrice,
+            inceptionDate: newEffectivityDate,
+            applicationDate: schedule.dateApplied,
+            itemNo: schedule.scheduleNo,
+            bank: payout.channel,
+            accountName: payout.accountName,
+            accountNo: payout.accountNo,
+            contactNo: schedule.mobileNo,
+            id: formId.data,
+            seed: i,
+          }),
+        };
+
+        const idCount = i % 7 === 3 ? 0 : i % 3;
+        const ids = Array.from({ length: idCount }, (_, n) => {
+          const { label, kind, data } = idCard(n + 1);
+          return {
+            id: `${planholder.personId}-${kind}`,
+            label,
+            imageUrl: idCardImageUrl(data),
+          };
+        });
+
+        return [form, ...ids];
       })(),
+      payouts,
+      schedule,
       // THE RELEASES BEFORE THIS ONE, one a year, oldest first. One to four
       // of them — (1st), (1st, 2nd), up to (1st … 4th) — so the table is seen
       // both as a single row and as a run. Only the LATEST can still be
@@ -483,10 +543,7 @@ export const ROP_RECORDS: RopRecord[] = planholderLookup
       })(),
       // A trail of one to five entries, so the remarks card is seen both
       // short and long enough to wrap over several lines.
-      planholderRemarks: REMARK_ENTRIES.slice(0, 1 + (i % REMARK_ENTRIES.length))
-        .map((entry) => entry(i))
-        .join("; ")
-        .concat(";"),
+      planholderRemarks: buildPlanholderRemarks(i),
       planholderNotes: buildPlanholderNotes(planholder.lpaNumber, i),
     };
   });

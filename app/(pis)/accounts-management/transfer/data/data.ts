@@ -10,7 +10,9 @@ import type {
   RopHistory,
   RopScheduleNo,
 } from "../../return-of-premium/data/types";
+import { transferFormPageUrls, waiverPageUrls } from "./transfer-form";
 import type {
+  TransferDocument,
   TransfereeDetails,
   TransferRecord,
   TransferStatus,
@@ -106,6 +108,12 @@ function buildSubmittedIds(
     return {
       id: `${person.idPrefix}-${kind}`,
       label,
+      holder: {
+        lastName: person.lastName,
+        firstName: person.firstName,
+        middleName: person.middleName,
+        dateOfBirth: person.birthdate,
+      },
       imageUrl: idCardImageUrl({
         kind,
         firstName: person.firstName,
@@ -167,6 +175,66 @@ function buildTransferee(i: number): TransfereeDetails {
         BENEFICIARY_RELATIONSHIPS[(i + k) % BENEFICIARY_RELATIONSHIPS.length],
     })),
   };
+}
+
+/** Why the transferor is giving the plan up, as written on the form. */
+const TRANSFER_REASONS = [
+  "Transferor is moving abroad for work and can no longer keep up the plan.",
+  "Parent transferring the plan to a child who now pays the installments.",
+  "Transferring the plan to spouse, who will continue the payments.",
+  "Plan given to a sibling as part of a family arrangement.",
+  "Transferor can no longer pay; a relative will take the plan over.",
+];
+
+/**
+ * The papers filed with request `i`: the Transfer of LPA form always, and the
+ * Waiver of Rights except on one request in five, so a request can be seen
+ * with it still missing.
+ */
+function buildDocuments(
+  record: Pick<TransferRecord, "id" | "lpaNo" | "dateRequested" | "requestingBranch" | "transferor" | "transferee">,
+  i: number,
+): TransferDocument[] {
+  const waiverFiled = i % 5 !== 4;
+  const form = {
+    formNo: String(41200 + i * 13).padStart(7, "0"),
+    lpaNo: record.lpaNo,
+    planType: record.transferor.planType,
+    signedDate: record.dateRequested,
+    originatingBranch: record.transferor.originatingBranch,
+    requestingBranch: record.requestingBranch,
+    salesAgent: record.transferor.salesAgent1,
+    reason: TRANSFER_REASONS[i % TRANSFER_REASONS.length],
+    transferor: record.transferor,
+    transferee: record.transferee,
+    waiverFiled,
+    seed: i,
+  };
+  const filed = {
+    uploadedBy: record.requestingBranch,
+    dateUploaded: record.dateRequested,
+  };
+
+  return [
+    {
+      id: `${record.id}-TRANSFER-FORM`,
+      label: "Transfer Form",
+      pages: transferFormPageUrls(form),
+      verified: i % 3 !== 2,
+      ...filed,
+    },
+    ...(waiverFiled
+      ? [
+          {
+            id: `${record.id}-WAIVER`,
+            label: "Waiver of Rights",
+            pages: waiverPageUrls(form),
+            verified: i % 2 === 0,
+            ...filed,
+          },
+        ]
+      : []),
+  ];
 }
 
 /** The plan's remarks trail, oldest first, as the plan holder module logs it. */
@@ -262,7 +330,7 @@ export const TRANSFER_RECORDS: TransferRecord[] = planholderLookup
       1 + (i % REMARK_ENTRIES.length),
     ).map((entry) => entry(i));
 
-    return {
+    const record = {
       id: `TRF-${String(i + 1).padStart(4, "0")}`,
       planholderName: `${planholder.lastName}, ${planholder.firstName}`,
       lpaNo: planholder.lpaNumber,
@@ -314,7 +382,13 @@ export const TRANSFER_RECORDS: TransferRecord[] = planholderLookup
           : buildSubmittedIds(
               {
                 ...transferee,
-                birthdate: transferee.dateOfBirth,
+                // ONE REQUEST IN EIGHT carries an ID whose birth year is off
+                // by one from the form, so the Valid ID card's Data Match is
+                // seen failing as well as passing.
+                birthdate:
+                  i % 8 === 6
+                    ? `${Number(transferee.dateOfBirth.slice(0, 4)) - 1}${transferee.dateOfBirth.slice(4)}`
+                    : transferee.dateOfBirth,
                 idPrefix: `TRF-${i + 1}-transferee`,
               },
               dateRequested,
@@ -337,6 +411,17 @@ export const TRANSFER_RECORDS: TransferRecord[] = planholderLookup
         .reverse(),
       planholderNotes: buildPlanholderNotes(planholder.lpaNumber, i),
       ropHistory: buildRopHistory(planholder, i, year, mm, dd),
+    };
+
+    return {
+      ...record,
+      // Mostly checked already, but not always, so both states of the
+      // Verify button are seen. Never verified with no ID on file.
+      transferorIdVerified:
+        record.transferorSubmittedIds.length > 0 && i % 3 !== 1,
+      transfereeIdVerified:
+        record.transfereeSubmittedIds.length > 0 && i % 4 !== 1,
+      documents: buildDocuments(record, i),
     };
   });
 

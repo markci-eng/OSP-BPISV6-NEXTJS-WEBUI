@@ -1,7 +1,8 @@
 "use client";
 
 // Return — a bulk action on the List of Confiscated COFP (user, 2026-10-05;
-// moved into the kit's DataTable selection bar, user, 2026-10-06). Opens the
+// moved into the kit's DataTable selection bar, user, 2026-10-06; under the
+// list beside Remove since that list took its own checkboxes, 2026-10-07). Opens the
 // Return COFP dialog for the checked certificates; the page drops them from
 // the list once they are returned.
 

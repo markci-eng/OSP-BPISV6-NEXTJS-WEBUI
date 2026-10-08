@@ -1,15 +1,15 @@
 "use client";
 
 // Planholder Information for the Replacement request picked under Branch (user,
-// 2026-10-06) — the 40% column beside the document viewer, drawn like the CSV
-// panel's card: the same title strip and dashed-leader rows.
+// 2026-10-06) — full width above the document viewer (user, 2026-10-08), drawn
+// like the CSV panel's card: the same title strip and identity header.
 
+import type { ReactNode } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { OSPBadge } from "osp-ui-kit";
 import { User } from "lucide-react";
 
 import {
-  InfoRow,
   KIT_BORDER,
   KIT_SHADOW,
   SectionCard,
@@ -18,6 +18,40 @@ import { RopPlanholderCard } from "../../return-of-premium/components/rop-planho
 import { formatAddress } from "../data/regions";
 import type { CofpReplacementDetails } from "../data/replacement-details";
 import type { CofpReplacementRequest } from "../data/types";
+
+/** A fact beside the name — caption over value, as the horizontal card draws. */
+function HeaderFact({
+  label,
+  mono = false,
+  children,
+}: {
+  label: string;
+  mono?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Box flex="1 1 140px" minW={0}>
+      <Text
+        fontSize="10px"
+        fontWeight="700"
+        letterSpacing="0.04em"
+        textTransform="uppercase"
+        color="gray.500"
+        mb={0.5}
+      >
+        {label}
+      </Text>
+      <Text
+        fontSize="sm"
+        fontWeight="600"
+        color="gray.800"
+        fontFamily={mono ? "mono" : undefined}
+      >
+        {children || "—"}
+      </Text>
+    </Box>
+  );
+}
 
 export interface CofpReplacementPlanholderCardProps {
   request: CofpReplacementRequest;
@@ -47,28 +81,37 @@ export function CofpReplacementPlanholderCard({
       {/* The plan holder's name and LPA number as the CSV and Transfer cards
           head theirs (user, 2026-10-06): avatar, surname-first name, and the
           LPA number under it. Replaces the LPA No. and name rows. */}
-      <Box pb={3} mb={1} borderBottomWidth="1px" borderColor="gray.100">
-        <RopPlanholderCard
-          orientation="horizontal"
-          embedded
-          name={`${request.lastName}, ${request.firstName} ${request.middleName}`}
-          lpaNo={request.lpaNo}
-          // No person id on a request — the LPA number keys the mock avatar.
-          personId={request.lpaNo}
-        />
-      </Box>
-
-      <Flex direction="column" gap={1}>
-        <InfoRow label="Branch" value={request.branch} />
-        <InfoRow
-          label="COFP No."
-          value={
-            <Text as="span" fontFamily="mono">
-              {request.cofpNo}
-            </Text>
-          }
-        />
-        <InfoRow label="Termination Status" value={details.terminationStatus} />
+      {/* Branch, COFP No. and Termination Status sit beside the name in the
+          same row (user, 2026-10-08), caption over value like the horizontal
+          card's own facts, rather than as dashed-leader rows under it. Wraps
+          on narrow screens rather than squeezing. */}
+      <Flex
+        align="center"
+        wrap={{ base: "wrap", lg: "nowrap" }}
+        columnGap={8}
+        rowGap={3}
+        pb={3}
+        mb={1}
+        borderBottomWidth="1px"
+        borderColor="gray.100"
+      >
+        <Box flex="2 1 280px" minW={0}>
+          <RopPlanholderCard
+            orientation="horizontal"
+            embedded
+            name={`${request.lastName}, ${request.firstName} ${request.middleName}`}
+            lpaNo={request.lpaNo}
+            // No person id on a request — the LPA number keys the mock avatar.
+            personId={request.lpaNo}
+          />
+        </Box>
+        <HeaderFact label="Branch">{request.branch}</HeaderFact>
+        <HeaderFact label="COFP No." mono>
+          {request.cofpNo}
+        </HeaderFact>
+        <HeaderFact label="Termination Status">
+          {details.terminationStatus}
+        </HeaderFact>
       </Flex>
 
       {/* The address under the rows, drawn like the Remarks box on the

@@ -29,6 +29,12 @@ export interface TransferRecord {
   transferee: TransfereeDetails;
   /** The transferee's proofs of identity, in the order they were filed. */
   transfereeSubmittedIds: TransferSubmittedId[];
+  /** Whether the transferor's identity has been checked against their IDs. */
+  transferorIdVerified: boolean;
+  /** Whether the transferee's identity has been checked against their IDs. */
+  transfereeIdVerified: boolean;
+  /** The papers filed with the request, for the Document Viewer. */
+  documents: TransferDocument[];
   /**
    * The plan holder module's remarks trail, as one block of text — entries
    * separated by `; `, the way the module stores them. Read only here.
@@ -67,6 +73,32 @@ export interface TransferSubmittedId {
   id: string;
   label: string;
   imageUrl: string;
+  /**
+   * What the ID itself says about its holder — the Valid ID card checks it
+   * against the party's details ("Data Match").
+   */
+  holder: {
+    lastName: string;
+    firstName: string;
+    middleName: string;
+    /** ISO date (yyyy-mm-dd). */
+    dateOfBirth: string;
+  };
+}
+
+/** One paper filed with the request, page by page. */
+export interface TransferDocument {
+  id: string;
+  /** "Transfer Form", "Waiver of Rights". */
+  label: string;
+  /** One image URL per page, in page order. */
+  pages: string[];
+  /** Whether the file has been checked; the processor can change it. */
+  verified: boolean;
+  /** The branch that uploaded it. */
+  uploadedBy: string;
+  /** ISO date (yyyy-mm-dd). */
+  dateUploaded: string;
 }
 
 /**

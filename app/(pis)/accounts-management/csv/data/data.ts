@@ -76,7 +76,27 @@ function buildSubmittedDocuments(
   return documents;
 }
 
-export const CSV_STATUS_OPTIONS: CsvStatus[] = ["SPFC", "For Process", "Pending"];
+export const CSV_STATUS_OPTIONS: CsvStatus[] = [
+  "SPFC",
+  "For Process",
+  "Pending",
+  "Denied",
+];
+
+/** Views kept above but hidden from the list header for now. */
+export const CSV_HIDDEN_STATUSES: CsvStatus[] = ["SPFC"];
+
+/** The views the list header steps through. */
+export const CSV_LIST_STATUSES: CsvStatus[] = CSV_STATUS_OPTIONS.filter(
+  (status) => !CSV_HIDDEN_STATUSES.includes(status),
+);
+
+/** What the processor can set in CSV Details. */
+export const CSV_DETAILS_STATUS_OPTIONS: CsvStatus[] = [
+  "For Process",
+  "Pending",
+  "Denied",
+];
 
 /** How a status reads as a badge. */
 export const CSV_STATUS_BADGE: Record<
@@ -86,6 +106,7 @@ export const CSV_STATUS_BADGE: Record<
   SPFC: "success",
   "For Process": "info",
   Pending: "warning",
+  Denied: "danger",
 };
 
 export const CSV_REMARKS_OPTIONS: CsvDetailsRemarks[] = ["Valid", "Invalid"];
@@ -98,9 +119,11 @@ const STATUS_CYCLE: CsvStatus[] = [
   "SPFC",
   "For Process",
   "Pending",
+  "Denied",
   "For Process",
   "SPFC",
   "Pending",
+  "Denied",
 ];
 
 /** The plan holder module's remark lines, in its own format, oldest first. */

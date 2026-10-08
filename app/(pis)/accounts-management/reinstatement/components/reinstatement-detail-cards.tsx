@@ -11,6 +11,7 @@ import { OSPBadge } from "osp-ui-kit";
 import { formatFiledDate } from "@/app/(pis)/data";
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { InfoRow } from "../../components/section-card";
+import { formatTerminationStatus } from "../../data/termination-status";
 import type {
   ReinstatementAccountDetails,
   ReinstatementPlanInfo,
@@ -106,7 +107,8 @@ export function ReinstatementDetailsSection({
   return (
     <Flex direction="column" minW={0}>
       <InfoRow label="Account Status" value={account.accountStatus} />
-      <InfoRow label="Termination Status" value={account.terminationStatus} />
+      <InfoRow label="Termination Status" value={formatTerminationStatus(account.terminationStatus)}
+      />
       <InfoRow label="Date of Death" value={date(account.dateOfDeath)} />
       <InfoRow
         label="Account Verified"

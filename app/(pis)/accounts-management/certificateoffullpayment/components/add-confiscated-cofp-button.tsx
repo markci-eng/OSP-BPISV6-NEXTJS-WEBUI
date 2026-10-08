@@ -15,20 +15,44 @@ import { toast } from "sonner";
 import type { CofpSpecialCandidate } from "../data/branches";
 import { CofpAddSpecialDialog } from "./add-special-cofp-dialog";
 
+/** What the toolbar button adds — named on the button, dialog and toast. */
+export interface CofpAddReplacementCopy {
+  /** e.g. "Add Confiscated COFP". */
+  title: string;
+  subtitle: string;
+  /** e.g. "Confiscated COFP" — "… added for <name>". */
+  noun: string;
+}
+
+const CONFISCATED_COPY: CofpAddReplacementCopy = {
+  title: "Add Confiscated COFP",
+  subtitle: "Find the planholder whose certificate was confiscated",
+  noun: "Confiscated COFP",
+};
+
+/** SPFC Replacement's "+" (user, 2026-10-07) — the same button and dialog. */
+export const SPFC_REPLACEMENT_COPY: CofpAddReplacementCopy = {
+  title: "Add SPFC Replacement",
+  subtitle: "Find the planholder whose certificate SPFC is replacing",
+  noun: "SPFC replacement",
+};
+
 /**
  * The Add Confiscated COFP toolbar button, and the dialog it opens — render
- * `dialog` anywhere on the page.
+ * `dialog` anywhere on the page. `copy` names it for another list — SPFC
+ * Replacement's (user, 2026-10-07).
  */
 export function useAddConfiscatedCofp(
   onAdd: (planholder: CofpSpecialCandidate) => void,
+  copy: CofpAddReplacementCopy = CONFISCATED_COPY,
 ): { button: ReactNode; dialog: ReactNode } {
   const [open, setOpen] = useState(false);
 
   return {
     button: (
       <SecondaryMdIconButton
-        aria-label="Add Confiscated COFP"
-        title="Add Confiscated COFP"
+        aria-label={copy.title}
+        title={copy.title}
         // A box, not a circle (user, 2026-10-06).
         rounded="md"
         onClick={() => setOpen(true)}
@@ -40,13 +64,14 @@ export function useAddConfiscatedCofp(
       <CofpAddSpecialDialog
         open={open}
         onOpenChange={setOpen}
-        title="Add Confiscated COFP"
-        subtitle="Find the planholder whose certificate was confiscated"
+        title={copy.title}
+        subtitle={copy.subtitle}
         askPreferredBranch={false}
+        askRemarks={false}
         onAdd={({ planholder }) => {
           onAdd(planholder);
           toast.success(
-            `Confiscated COFP added for ${planholder.name} (${planholder.lpaNo}).`,
+            `${copy.noun} added for ${planholder.name} (${planholder.lpaNo}).`,
           );
         }}
       />

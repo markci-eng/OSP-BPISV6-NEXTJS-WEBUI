@@ -6,13 +6,23 @@
 // Search for the plan holder by LPA number or name; the hits list their LPA
 // No and PH Name, and picking one fills in the Originating Branch (the plan
 // holder's own branch, shown, never edited). The Preferred Branch — where the
-// certificate is to go — is picked from every branch.
+// certificate is to go — is picked from every branch. An optional Remarks
+// follows (user, 2026-10-07).
 //
 // Nothing is persisted: the page is handed what was picked, until there is
 // somewhere to send it.
 
 import { useEffect, useState, type ChangeEvent, type KeyboardEvent } from "react";
-import { Box, CloseButton, Dialog, Flex, Grid, Portal, Text } from "@chakra-ui/react";
+import {
+  Box,
+  CloseButton,
+  Dialog,
+  Flex,
+  Grid,
+  Portal,
+  Text,
+  Textarea,
+} from "@chakra-ui/react";
 import { FilePlus, Search } from "lucide-react";
 import {
   FloatingLabelInput,
@@ -33,6 +43,8 @@ export interface CofpSpecialRequest {
   planholder: CofpSpecialCandidate;
   /** Set whenever the dialog asks for one — Add Special COFP always does. */
   preferredBranch?: CofpBranch;
+  /** Trimmed; empty when none was entered or the dialog does not ask. */
+  remarks: string;
 }
 
 export interface CofpAddSpecialDialogProps {
@@ -48,6 +60,11 @@ export interface CofpAddSpecialDialogProps {
    * (user, 2026-10-06), which only needs the planholder.
    */
   askPreferredBranch?: boolean;
+  /**
+   * Whether the optional Remarks is asked for. On for Add Special COFP
+   * (user, 2026-10-07); off for Add Confiscated COFP.
+   */
+  askRemarks?: boolean;
 }
 
 /** A small uppercase heading over a group of fields. */
@@ -72,12 +89,14 @@ export function CofpAddSpecialDialog({
   title = "Add Special COFP",
   subtitle = "Find the planholder, then pick the branch it goes to",
   askPreferredBranch = true,
+  askRemarks = true,
 }: CofpAddSpecialDialogProps) {
   const [query, setQuery] = useState("");
   // `undefined` until a search is run, so "no matches" is only said after one.
   const [results, setResults] = useState<CofpSpecialCandidate[]>();
   const [planholder, setPlanholder] = useState<CofpSpecialCandidate>();
   const [preferredCode, setPreferredCode] = useState<string>();
+  const [remarks, setRemarks] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   // Every opening starts blank, so a cancelled one leaves nothing behind.
@@ -87,6 +106,7 @@ export function CofpAddSpecialDialog({
     setResults(undefined);
     setPlanholder(undefined);
     setPreferredCode(undefined);
+    setRemarks("");
     setSubmitted(false);
   }, [open]);
 
@@ -100,7 +120,11 @@ export function CofpAddSpecialDialog({
   const add = () => {
     setSubmitted(true);
     if (!planholder || (askPreferredBranch && !preferredBranch)) return;
-    onAdd({ planholder, preferredBranch });
+    onAdd({
+      planholder,
+      preferredBranch,
+      remarks: askRemarks ? remarks.trim() : "",
+    });
     onOpenChange(false);
   };
 
@@ -265,6 +289,21 @@ export function CofpAddSpecialDialog({
                       submitted && !preferredBranch ? "Required" : undefined
                     }
                   />
+                )}
+
+                {askRemarks && (
+                  <>
+                    <GroupLabel>Remarks (Optional)</GroupLabel>
+                    <Textarea
+                      size="sm"
+                      rows={3}
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.currentTarget.value)}
+                      placeholder="ENTER REMARKS..."
+                      textTransform="uppercase"
+                      _placeholder={{ color: "gray.400" }}
+                    />
+                  </>
                 )}
               </Flex>
             </Dialog.Body>

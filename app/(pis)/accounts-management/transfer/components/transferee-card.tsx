@@ -1,25 +1,28 @@
 "use client";
 
-// The transferee — the person the plan is being transferred to — as one card:
-// details beside the IDs they submitted, laid out by the shared
-// `TransferPartyCard`, exactly as the Transferor card is.
+// Transferee Details — the person the plan is being transferred to. Stands
+// beside the Transferor Details card, with its Valid ID card under it.
 //
-// READ-ONLY: one list of `InfoRow`s, compact, labels allowed two lines, an em
-// dash where a field has nothing in it.
+// READ-ONLY: `InfoRow`s, compact, labels allowed two lines, an em dash where a
+// field has nothing in it.
 
 import type { ReactNode } from "react";
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { UserRoundPlus } from "lucide-react";
 import { OSPBadge } from "osp-ui-kit";
 
-import { InfoRow } from "../../components/section-card";
+import {
+  InfoRow,
+  KIT_BORDER,
+  KIT_SHADOW,
+  SectionCard,
+} from "../../components/section-card";
 import { RopPlanholderCard } from "../../return-of-premium/components/rop-planholder-card";
 import type {
   TransfereeBeneficiary,
   TransfereeDetails,
-  TransferSubmittedId,
 } from "../data/types";
-import { partyName, TransferPartyCard } from "./transfer-party-card";
+import { ColumnHeading, partyName } from "./transfer-party-card";
 
 /** The same row as the Transferor Details card's. */
 function Row(props: { label: string; value?: ReactNode; valueWrap?: boolean }) {
@@ -42,7 +45,7 @@ function Beneficiaries({
   const count = beneficiaries.length;
 
   return (
-    <Box mt={2} pt={2} borderTopWidth="1px" borderColor="border.muted">
+    <Box mt={3} pt={3} borderTopWidth="1px" borderColor="border.muted">
       <Flex align="center" justify="space-between" gap={2} mb={1.5}>
         <Text
           fontSize="2xs"
@@ -57,31 +60,14 @@ function Beneficiaries({
         {count > 0 && <OSPBadge type="success">Designated</OSPBadge>}
       </Flex>
 
-      {/* ROOM FOR FOUR, ALWAYS (user, 2026-09-30). The Submitted IDs viewer
-          beside this card takes its height from these details, so a short
-          list would shrink the ID with it. Unused slots are held by invisible
-          copies of a tile — the same markup, so the reserved height is exactly
-          four real tiles' — and a fifth beneficiary onward grows the card,
-          and the ID, as before.
-
-          Only from `lg`, where the viewer sits beside the details; stacked,
-          there is nothing to match. */}
-      <Box position="relative">
-        {count === 0 && (
-          // Said in words rather than left blank, so no beneficiaries reads
-          // as a fact about the transferee rather than a section that failed
-          // to load. Over the reserved space on `lg`, so it costs no height.
-          <Text
-            fontSize="xs"
-            color="gray.500"
-            py={1}
-            position={{ base: "static", lg: "absolute" }}
-            top={0}
-            left={0}
-          >
-            No beneficiaries designated.
-          </Text>
-        )}
+      {count === 0 ? (
+        // Said in words rather than left blank, so no beneficiaries reads as
+        // a fact about the transferee rather than a section that failed to
+        // load.
+        <Text fontSize="xs" color="gray.500" py={1}>
+          No beneficiaries designated.
+        </Text>
+      ) : (
         <Flex direction="column" gap={1.5}>
           {beneficiaries.map((beneficiary, i) => (
             <BeneficiaryTile
@@ -90,45 +76,25 @@ function Beneficiaries({
               beneficiary={beneficiary}
             />
           ))}
-          {Array.from(
-            { length: Math.max(0, RESERVED_BENEFICIARY_SLOTS - count) },
-            (_, i) => (
-              <BeneficiaryTile
-                key={`reserved-${i}`}
-                number={count + i + 1}
-                beneficiary={{ name: " ", relationship: " " }}
-                reserved
-              />
-            ),
-          )}
         </Flex>
-      </Box>
+      )}
     </Box>
   );
 }
 
-/** How many beneficiary tiles' height the card keeps, filled or not. */
-const RESERVED_BENEFICIARY_SLOTS = 4;
-
 /**
  * One beneficiary: its number, the name, and the relationship in a read-only
- * box at the right. `reserved` draws an invisible copy that only holds space,
- * and only from `lg`.
+ * box at the right.
  */
 function BeneficiaryTile({
   number,
   beneficiary,
-  reserved = false,
 }: {
   number: number;
   beneficiary: TransfereeBeneficiary;
-  reserved?: boolean;
 }) {
   return (
     <Flex
-      aria-hidden={reserved || undefined}
-      visibility={reserved ? "hidden" : undefined}
-      display={reserved ? { base: "none", lg: "flex" } : "flex"}
       align="center"
       gap={2}
       px={2.5}
@@ -190,56 +156,53 @@ export interface TransfereeCardProps {
   lpaNo: string;
   /** The transfer's person id; keys the transferee's own avatar from it. */
   personId: string;
-  /** The transferee's proofs of identity, in the order they were filed. */
-  documents: TransferSubmittedId[];
 }
 
 export function TransfereeCard({
   transferee,
   lpaNo,
   personId,
-  documents,
 }: TransfereeCardProps) {
   const { beneficiaries } = transferee;
 
   return (
-    <TransferPartyCard
+    <SectionCard
       icon={<UserRoundPlus size={14} />}
-      title="Transferee"
-      documents={documents}
-      details={
-      <Flex direction="column" minW={0}>
-        {/* THE TRANSFEREE HEADS IT (user, 2026-09-30), drawn as the
-            Transferor card's planholder row: name, LPA number, birthdate, age
-            and insurability. The insurability badge moved here from the
-            title strip, so it is not shown twice. */}
-        <Box pb={3} mb={1} borderBottomWidth="1px" borderColor="border.muted">
-          <RopPlanholderCard
-            orientation="horizontal"
-            embedded
-            name={partyName(transferee)}
-            lpaNo={lpaNo}
-            personId={`${personId}-transferee`}
-            birthdate={transferee.dateOfBirth || undefined}
-            insurability={transferee.insurable ? "Insurable" : "Not Insurable"}
-          />
-        </Box>
-
-        <Row
-          label="Contact Number"
-          value={transferee.contactNumber || undefined}
+      title="Transferee Details"
+      borderColor={KIT_BORDER}
+      boxShadow={KIT_SHADOW}
+      fill
+    >
+      {/* THE TRANSFEREE HEADS IT (user, 2026-09-30), drawn as the Transferor
+          card's planholder row: name, LPA number, birthdate, age and
+          insurability. The insurability badge lives here rather than in the
+          title strip, so it is not shown twice. */}
+      <Box pb={3} mb={3} borderBottomWidth="1px" borderColor="border.muted">
+        <RopPlanholderCard
+          orientation="horizontal"
+          embedded
+          name={partyName(transferee)}
+          lpaNo={lpaNo}
+          personId={`${personId}-transferee`}
+          birthdate={transferee.dateOfBirth || undefined}
+          insurability={transferee.insurable ? "Insurable" : "Not Insurable"}
         />
-        {/* The one value long enough to need a second line. */}
-        <Row
-          label="Registered Address"
-          valueWrap
-          value={transferee.registeredAddress || undefined}
-        />
+      </Box>
 
-        <Beneficiaries beneficiaries={beneficiaries} />
-      </Flex>
-      }
-    />
+      <ColumnHeading>Contact &amp; Residency</ColumnHeading>
+      <Row
+        label="Contact Number"
+        value={transferee.contactNumber || undefined}
+      />
+      {/* The one value long enough to need a second line. */}
+      <Row
+        label="Registered Address"
+        valueWrap
+        value={transferee.registeredAddress || undefined}
+      />
+
+      <Beneficiaries beneficiaries={beneficiaries} />
+    </SectionCard>
   );
 }
 

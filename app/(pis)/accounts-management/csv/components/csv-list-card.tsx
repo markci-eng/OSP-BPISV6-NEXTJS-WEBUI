@@ -21,7 +21,7 @@ import { H3 } from "osp-ui-kit";
 
 import { BRAND_COLORS } from "@/lib/theme/brand-colors";
 import { SURFACE_RADIUS } from "../../../claims/components/section-card";
-import { CSV_STATUS_OPTIONS } from "../data/data";
+import { CSV_LIST_STATUSES } from "../data/data";
 import type { CsvRecord, CsvStatus } from "../data/types";
 
 /** One of the header's chevrons. */
@@ -100,9 +100,9 @@ export function CsvListCard({
   }, [records, query]);
 
   const step = (direction: 1 | -1) => {
-    const count = CSV_STATUS_OPTIONS.length;
-    const index = CSV_STATUS_OPTIONS.indexOf(status);
-    onStatusChange(CSV_STATUS_OPTIONS[(index + direction + count) % count]);
+    const count = CSV_LIST_STATUSES.length;
+    const index = CSV_LIST_STATUSES.indexOf(status);
+    onStatusChange(CSV_LIST_STATUSES[(index + direction + count) % count]);
   };
 
   return (
@@ -134,7 +134,7 @@ export function CsvListCard({
             {status}
           </H3>
           <Flex gap={1} aria-hidden="true">
-            {CSV_STATUS_OPTIONS.map((option) => (
+            {CSV_LIST_STATUSES.map((option) => (
               <Box
                 as="button"
                 key={option}
@@ -198,7 +198,7 @@ export function CsvListCard({
                     value={status}
                     onValueChange={(e) => onStatusChange(e.value as CsvStatus)}
                   >
-                    {CSV_STATUS_OPTIONS.map((option) => (
+                    {CSV_LIST_STATUSES.map((option) => (
                       <Menu.RadioItem
                         key={option}
                         value={option}

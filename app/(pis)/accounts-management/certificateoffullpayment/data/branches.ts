@@ -67,16 +67,58 @@ export function branchRowsOf(
   const { tag, offset } = BRANCH_MOCK[view];
   const branchIndex = COFP_BRANCHES.indexOf(branch);
 
-  return Array.from({ length: branchCountOf(view, branch) }, (_, i) =>
-    mockCertificateRow({
+  return Array.from({ length: branchCountOf(view, branch) }, (_, i) => {
+    const n = offset + branchIndex * 31 + i;
+    const row = mockCertificateRow({
       id: `${branch.code}-${tag}${i + 1}`,
       code: branch.code,
       branch: branch.description,
-      n: offset + branchIndex * 31 + i,
+      n,
       i,
-    }),
-  );
+    });
+    if (view === "DEFICIENT") {
+      return { ...row, reason: DEFICIENT_REASONS[n % DEFICIENT_REASONS.length] };
+    }
+    if (view === "CONFISCATED") {
+      // MOCK (user, 2026-10-07): when it was confiscated — a few days apart
+      // counting back from 2026-10-05 — and, for SPFC, the batch it came in.
+      return {
+        ...row,
+        dateConfiscated: new Date(Date.UTC(2026, 9, 5 - i * 4 - (n % 3)))
+          .toISOString()
+          .slice(0, 10),
+        batchNo: `CB-2026-${String(10 - Math.floor(i / 4)).padStart(3, "0")}`,
+      };
+    }
+    return row;
+  });
 }
+
+/**
+ * Whether a branch has confiscated certificates still waiting to be confirmed
+ * (user, 2026-10-07) — the rail tags it "With pending confirmation".
+ *
+ * MOCK, derived from the branch code like its count; only a branch with
+ * confiscated certificates can have one pending.
+ */
+export function hasPendingConfirmation(branch: CofpBranch): boolean {
+  if (branchCountOf("CONFISCATED", branch) === 0) return false;
+  const seed = [...branch.code].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return seed % 3 === 0;
+}
+
+/**
+ * Why a certificate is held under Deficient (user, 2026-10-07) — MOCK, until
+ * the source says.
+ */
+const DEFICIENT_REASONS = [
+  "INCOMPLETE ADDRESS",
+  "UNPOSTED PAYMENT",
+  "NAME DISCREPANCY",
+  "MISSING BIRTHDATE",
+  "UNDERPAYMENT ON LAST INSTALLMENT",
+  "PENDING ACCOUNT TRANSFER",
+];
 
 /** How many Replacement requests the SPFC and Confiscated sources hold. */
 const REPLACEMENT_FIXED_COUNT: Record<
@@ -125,6 +167,9 @@ export function replacementRowsOf(
           i,
         }),
         dateRequested: mockDateRequested(n, i),
+        // MOCK (user, 2026-10-07): most are for process, the rest pending or
+        // denied.
+        status: n % 4 === 1 ? "PENDING" : n % 5 === 2 ? "DENIED" : "FOR_PROCESS",
       };
     });
   }
@@ -174,17 +219,53 @@ export function printedMemosOf(branch: CofpBranch): CofpMemo[] {
   const branchIndex = COFP_BRANCHES.indexOf(branch);
   const memoCount = Math.ceil(rows.length / MEMO_SIZE);
 
+  // MOCK: every third branch's newest memo is still to be transmitted.
+  const newestPending = branchIndex % 3 === 1;
+
   return Array.from({ length: memoCount }, (_, i) => {
     const seq = memoCount - i;
     const transmitted = new Date(Date.UTC(2026, 9, 1 - i * 7 - (branchIndex % 5)));
+    const pendingTransmit = newestPending && i === 0;
     return {
       id: `${branch.code}-M${seq}`,
       branch: branch.code,
       memoNo: `CFPM-${String(branchIndex + 1).padStart(3, "0")}-${String(seq).padStart(4, "0")}`,
       dateTransmitted: transmitted.toISOString().slice(0, 10),
-      rows: rows.slice((seq - 1) * MEMO_SIZE, seq * MEMO_SIZE),
+      pendingTransmit,
+      rows: rows
+        .slice((seq - 1) * MEMO_SIZE, seq * MEMO_SIZE)
+        .map((row, j) => ({
+          ...row,
+          // Nothing is released from a memo that has not gone out yet.
+          releasedTo: pendingTransmit
+            ? undefined
+            : RELEASED_TO[(branchIndex + seq + j) % RELEASED_TO.length],
+        })),
     };
   });
+}
+
+/** Who a printed certificate was released to — MOCK (user, 2026-10-07). */
+const RELEASED_TO = [
+  "PLANHOLDER",
+  "BRANCH CASHIER",
+  "AUTHORIZED REPRESENTATIVE",
+  "SALES AGENT",
+  "BRANCH MANAGER",
+];
+
+/**
+ * The codes of the branches with a memo still to be transmitted (user,
+ * 2026-10-07) — what the Printed combo box highlights.
+ */
+let pendingTransmitCodes: Set<string> | undefined;
+export function branchesPendingTransmit(): Set<string> {
+  pendingTransmitCodes ??= new Set(
+    COFP_BRANCHES.filter((branch) =>
+      printedMemosOf(branch).some((memo) => memo.pendingTransmit),
+    ).map((branch) => branch.code),
+  );
+  return pendingTransmitCodes;
 }
 
 /** A plan holder the Add Special COFP dialog can find (user, 2026-10-05). */

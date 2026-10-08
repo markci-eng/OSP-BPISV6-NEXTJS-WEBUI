@@ -120,6 +120,7 @@ export function CofpReplacementInfoCard({ info }: CofpReplacementInfoCardProps) 
     <InfoCardAccordion
       icon={<RefreshCw />}
       title="COFP Replacement Information"
+      defaultOpen
     >
       <Flex direction="column" gap={4}>
         <Box>

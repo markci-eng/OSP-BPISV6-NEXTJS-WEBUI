@@ -256,8 +256,9 @@ function ZoomPayoutDetails({ payout }: { payout: RopPayout }) {
     <Flex
       direction="column"
       gap={4}
-      w={{ base: "full", lg: "340px" }}
-      maxW="420px"
+      // Wide enough for the account number at `5xl` on one line.
+      w={{ base: "full", lg: "480px" }}
+      maxW="480px"
       flexShrink={0}
       p={5}
       bg="white"
@@ -274,8 +275,16 @@ function ZoomPayoutDetails({ payout }: { payout: RopPayout }) {
         Payout Details
       </Text>
 
+      {/* THE NUMBER OVER THE NAME (user, 2026-10-08): the number is what is
+          matched digit by digit against the scan, so it is set largest and
+          on the stronger tint; the name beside it is a step down. */}
       <KeyDetail label="Account Name" value={payout.accountName} />
-      <KeyDetail label="Payout Account No." value={payout.accountNo} mono />
+      <KeyDetail
+        label="Payout Account No."
+        value={payout.accountNo}
+        mono
+        emphasis
+      />
 
       <Flex
         direction="column"
@@ -298,30 +307,40 @@ function KeyDetail({
   label,
   value,
   mono = false,
+  emphasis = false,
 }: {
   label: string;
   value: string;
   mono?: boolean;
+  /** The value the scan is checked by — set larger, on a stronger tint. */
+  emphasis?: boolean;
 }) {
   return (
     <Box
       px={4}
-      py={3}
-      bg="green.50"
+      py={emphasis ? 4 : 3}
+      bg={emphasis ? "green.100" : "gray.50"}
       borderLeftWidth="4px"
-      borderColor={BRAND_COLORS.primaryGreen}
+      borderColor={emphasis ? BRAND_COLORS.primaryGreen : "gray.300"}
       borderRadius="md"
     >
-      <Text fontSize="xs" fontWeight="600" color="gray.600">
+      <Text
+        fontSize="xs"
+        fontWeight={emphasis ? "700" : "600"}
+        color={emphasis ? "green.800" : "gray.600"}
+      >
         {label}
       </Text>
       <Text
-        fontSize="xl"
-        fontWeight="800"
-        color="gray.900"
+        fontSize={emphasis ? "5xl" : "md"}
+        fontWeight={emphasis ? "800" : "700"}
+        lineHeight={emphasis ? "shorter" : undefined}
+        color={emphasis ? "gray.900" : "gray.700"}
         fontFamily={mono ? "mono" : undefined}
-        letterSpacing={mono ? "wide" : undefined}
-        wordBreak="break-word"
+        // No extra spacing at the emphasised size, so a bank number fits the
+        // panel on one line.
+        letterSpacing={mono && !emphasis ? "wide" : undefined}
+        wordBreak={mono ? "break-all" : "break-word"}
       >
         {value || "—"}
       </Text>

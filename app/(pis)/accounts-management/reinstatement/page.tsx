@@ -41,7 +41,7 @@ import {
 } from "./components/reinstatement-detail-cards";
 import { ReinstatementPaymentsCard } from "./components/reinstatement-payments-card";
 import { RemarksHistoryDialog } from "./components/remarks-history-dialog";
-import { SubmittedDocumentsCard } from "./components/submitted-documents-card";
+import { RopSubmittedDocumentsCard } from "../return-of-premium/components/rop-submitted-documents-card";
 import {
   fetchReinstatementRecords,
   REINSTATEMENT_STATUS_BADGE,
@@ -157,7 +157,7 @@ export default function ReinstatementPage() {
 
   return (
     <Page.Root
-      title="Re-Instatement"
+      title="Reinstatement"
       headerButton="menu"
       px={{ base: 0, lg: "10px" }}
     >
@@ -209,7 +209,9 @@ export default function ReinstatementPage() {
       </Page.ToolContent>
 
       <Page.MainContent>
+        {/* The list starts hidden; the toggle brings it back. */}
         <CollapsibleListLayout
+          defaultListVisible={false}
           list={
             <ReinstatementListCard
               records={inStatus}
@@ -285,8 +287,12 @@ export default function ReinstatementPage() {
                     </SectionCard>
 
                     <Box minW={0}>
-                      <SubmittedDocumentsCard
+                      {/* ROP's scrolling stack (user, 2026-10-08): the
+                          documents are read top to bottom, no next /
+                          previous buttons. */}
+                      <RopSubmittedDocumentsCard
                         documents={selected.submittedDocuments}
+                        emptyMessage="This request has no supporting documents on file yet."
                       />
                     </Box>
                   </Grid>

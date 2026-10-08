@@ -2,7 +2,7 @@ import { Grid } from "@chakra-ui/react";
 import { InfoItem } from "osp-ui-kit";
 import { RowItem } from "@/components/info-card/row-item";
 import { LuUser } from "react-icons/lu";
-import { InfoCardAccordion } from "osp-ui-kit";
+import { InfoCardAccordion, StaticCard } from "osp-ui-kit";
 
 export interface PlanholderInfoProps {
   personId: string;
@@ -29,10 +29,16 @@ export function PlanholderInfo({
   planholder,
   isOpen,
   onToggle,
+  collapsible = true,
 }: {
   planholder: PlanholderInfoProps | undefined;
   isOpen?: boolean;
   onToggle?: () => void;
+  /**
+   * Off draws the same card always open, with no toggle (PIS planholder
+   * profile, user, 2026-10-07). `isOpen` and `onToggle` are ignored then.
+   */
+  collapsible?: boolean;
 }) {
   const fields = [
     { label: "Nationality", value: planholder?.nationality ?? "—" },
@@ -55,14 +61,8 @@ export function PlanholderInfo({
     { label: "Height", value: planholder?.height ?? "—" },
   ];
 
-  return (
-    <InfoCardAccordion
-      icon={<LuUser />}
-      title={"Personal Information"}
-      subtitle="Personal Information"
-      isOpen={isOpen}
-      onToggle={onToggle}
-    >
+  const content = (
+    <>
       {/* Desktop: grid of InfoItems */}
       <Grid
         display={{ base: "none", lg: "grid" }}
@@ -87,6 +87,30 @@ export function PlanholderInfo({
           <RowItem key={field.label} label={field.label} value={field.value} />
         ))}
       </Grid>
+    </>
+  );
+
+  if (!collapsible) {
+    return (
+      <StaticCard
+        activeIcon={<LuUser />}
+        title={"Personal Information"}
+        subtitle="Personal Information"
+      >
+        {content}
+      </StaticCard>
+    );
+  }
+
+  return (
+    <InfoCardAccordion
+      icon={<LuUser />}
+      title={"Personal Information"}
+      subtitle="Personal Information"
+      isOpen={isOpen}
+      onToggle={onToggle}
+    >
+      {content}
     </InfoCardAccordion>
   );
 }

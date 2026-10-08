@@ -5,7 +5,7 @@ import type {
 } from "../../return-of-premium/data/types";
 
 /** The views the CSV list header steps through. */
-export type CsvStatus = "SPFC" | "For Process" | "Pending";
+export type CsvStatus = "SPFC" | "For Process" | "Pending" | "Denied";
 
 export type CsvLoanStatus = "CLEARED" | "OUTSTANDING";
 

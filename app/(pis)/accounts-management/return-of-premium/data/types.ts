@@ -36,8 +36,12 @@ export interface RopRecord {
   dateVerified: string;
   /** The pay classes posted against the plan. */
   payclasses: RopPayclass[];
-  /** Proof of identity submitted with the request; empty where none is on file. */
-  submittedIds: RopSubmittedId[];
+  /**
+   * The papers filed with the request. NEVER EMPTY: the ROP application form,
+   * with the planholder's ID photocopied onto it, is always first; any IDs
+   * scanned on their own follow it.
+   */
+  submittedDocuments: RopSubmittedDocument[];
   /**
    * The payouts the planholder SUBMITTED, one per channel.
    *
@@ -170,13 +174,13 @@ export interface RopPayout {
 export type RopLoanStatus = "CLEARED" | "OUTSTANDING";
 
 /**
- * A proof-of-identity image the requester submitted with the return.
+ * A document the requester submitted with the return — the ROP form or an ID.
  *
- * `label` is what the document IS — "Passport", "Driver's License" — because
- * the image alone does not say, and a processor checking requirements is
- * looking for a named document rather than a picture.
+ * `label` is what the document IS — "ROP Application Form", "Passport" —
+ * because the image alone does not say, and a processor checking requirements
+ * is looking for a named document rather than a picture.
  */
-export interface RopSubmittedId {
+export interface RopSubmittedDocument {
   id: string;
   label: string;
   imageUrl: string;

@@ -32,6 +32,7 @@ import type {
   CofpBranch,
   CofpRegion,
 } from "../../certificateoffullpayment/data/types";
+import { coicBranchesPendingTransmit } from "../data/data";
 import type { CoicMemo, CoicView } from "../data/types";
 
 const COIC_VIEWS: { view: CoicView; label: string }[] = [
@@ -87,7 +88,17 @@ export function CoicRailCard({
     );
   }, [regions, query]);
 
-  const count = showsRegions ? visibleRegions.length : memos.length;
+  // A memo is looked up by its number (user, 2026-10-07).
+  const visibleMemos = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return memos;
+    return memos.filter((memo) => memo.memoNo.toLowerCase().includes(needle));
+  }, [memos, query]);
+
+  // The branches the Printed combo box highlights — worked out once.
+  const pendingTransmitCodes = useMemo(() => coicBranchesPendingTransmit(), []);
+
+  const count = showsRegions ? visibleRegions.length : visibleMemos.length;
 
   return (
     <Box
@@ -188,8 +199,18 @@ export function CoicRailCard({
         </Flex>
       </Flex>
 
-      {showsRegions ? (
-        <Flex
+      {/* Printed picks its branch from a combo box — the branches with
+          certificates still for transmit highlighted (user, 2026-10-07) —
+          and searches the memos under it with the field below. */}
+      {!showsRegions && (
+        <BranchCombobox
+          branches={branches}
+          value={selectedBranchCode}
+          onChange={onSelectBranch}
+          highlightCodes={pendingTransmitCodes}
+        />
+      )}
+      <Flex
           align="center"
           gap={2}
           mb={3}
@@ -210,7 +231,9 @@ export function CoicRailCard({
           <Input
             value={query}
             onChange={(e) => setQuery(e.currentTarget.value)}
-            placeholder="Search region or branch..."
+            placeholder={
+              showsRegions ? "Search region or branch..." : "Search memo no..."
+            }
             flex="1"
             h="full"
             px={0}
@@ -229,20 +252,13 @@ export function CoicRailCard({
               color="gray.400"
               flexShrink={0}
               display="flex"
-              aria-label="Clear region search"
+              aria-label="Clear search"
               _hover={{ color: "gray.600" }}
             >
               <X size={14} />
             </Box>
           )}
         </Flex>
-      ) : (
-        <BranchCombobox
-          branches={branches}
-          value={selectedBranchCode}
-          onChange={onSelectBranch}
-        />
-      )}
 
       <Flex
         direction="column"
@@ -259,7 +275,9 @@ export function CoicRailCard({
               ? query
                 ? `No region matches “${query}”.`
                 : "Nothing to list under this action."
-              : "No memos transmitted to this branch."}
+              : memos.length === 0
+                ? "No memos transmitted to this branch."
+                : `No memo matches “${query}”.`}
           </Text>
         )}
 
@@ -272,7 +290,7 @@ export function CoicRailCard({
                 onClick={() => onSelectRegion(region)}
               />
             ))
-          : memos.map((memo) => (
+          : visibleMemos.map((memo) => (
               <MemoRow
                 key={memo.id}
                 memo={memo}

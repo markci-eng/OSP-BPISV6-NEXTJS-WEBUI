@@ -68,16 +68,19 @@ export interface PhBeneficiaries {
 function PlanTabs({
   planDetails,
   planholderAddress,
+  gap = 2,
 }: {
   planDetails: PlanDetailType;
   planholderAddress?: string;
+  /** Space between the cards; matched to the column around them when bare. */
+  gap?: number;
 }) {
   const statement = getPlanStatement(planDetails);
   const isDesktop = useBreakpointValue({ base: false, md: true });
   const InfoCard = isDesktop ? InfoCardAccordion : InfoCardSheet;
 
   return (
-    <Flex direction="column" gap={2}>
+    <Flex direction="column" gap={gap}>
       <InfoCard
         icon={<FiFileText size={16} />}
         title="Plan Details"
@@ -204,9 +207,9 @@ export function ListOfPlans({
   /**
    * Which half to draw. `"all"` (the default) is the picker and the details
    * panel side by side, as every caller has always had it. `"picker"` is only
-   * the LPA search and the plan cards; `"details"` is only the panel for the
-   * selected plan — for a screen that lays the two out apart (PIS planholder
-   * profile, 2026-10-06). Two halves drawn apart must share the selection, so
+   * the LPA search and the plan cards; `"details"` is only the selected plan's
+   * accordion cards, bare — for a screen that lays the two out apart (PIS
+   * planholder profile, 2026-10-06). Two halves drawn apart must share the selection, so
    * pass `selected` and `onSelect` to both.
    */
   part?: "all" | "picker" | "details";
@@ -430,8 +433,19 @@ export function ListOfPlans({
   );
 
   // Drawn apart, the details half has nothing to show without a plan — the
-  // picker beside it already says so.
-  if (part === "details") return details || null;
+  // picker beside it already says so. It is only the accordion cards: no LPA
+  // header, no quick actions and no bordered box around them (PIS planholder
+  // profile, user, 2026-10-07 — the header card above already names the plan
+  // and its standing). Spaced like the profile's cards around it (user,
+  // 2026-10-07), so the column reads as one even run of cards.
+  if (part === "details")
+    return planDetails ? (
+      <PlanTabs
+        planDetails={planDetails}
+        planholderAddress={planholderAddress}
+        gap={2}
+      />
+    ) : null;
   if (part === "picker") return plans.length > 0 ? picker : noPlans;
 
   return (

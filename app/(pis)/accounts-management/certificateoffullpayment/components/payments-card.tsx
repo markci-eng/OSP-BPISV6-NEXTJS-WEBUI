@@ -5,9 +5,10 @@
 //
 // AN ACCORDION because it is the longest thing in the column and the least
 // often read: a COFP is raised off the balance and the account status, both of
-// which are on the card above. The ledger is what gets opened when one of those
-// is in question, so it costs a row of card until then. `InfoCardAccordion` is
-// the kit's own, so it is the same fold the sales force screens use.
+// which are on the card above, so it can be folded away to a row of card.
+// Opens expanded, like every accordion in accounts management (user,
+// 2026-10-08). `InfoCardAccordion` is the kit's own, so it is the same fold
+// the sales force screens use.
 //
 // TEN ROWS A PAGE (user, 2026-09-22). The kit's `DataTable` is the app's table
 // — tanstack underneath, so sorting and paging come with it rather than being
@@ -104,6 +105,7 @@ export function CofpPaymentsCard({ payments }: CofpPaymentsCardProps) {
       // What the fold is worth opening for, on the fold itself: how many lines
       // are in there, so nobody opens it to find out.
       subtitle={`${payments.length} payment${payments.length === 1 ? "" : "s"} posted`}
+      defaultOpen
     >
       <DataTable
         columns={columns}

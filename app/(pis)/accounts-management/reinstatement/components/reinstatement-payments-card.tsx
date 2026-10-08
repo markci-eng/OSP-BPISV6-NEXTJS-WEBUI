@@ -136,6 +136,7 @@ export function ReinstatementPaymentsCard({
       // How many lines are in there, on the fold itself, so nobody opens it
       // to find out.
       subtitle={`${payments.length} payment${payments.length === 1 ? "" : "s"} posted`}
+      defaultOpen
     >
       <Box css={COMPACT_ROWS}>
       <DataTable<ReinstatementPayment>

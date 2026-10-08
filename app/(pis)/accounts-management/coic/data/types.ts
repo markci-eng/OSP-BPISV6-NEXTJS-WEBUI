@@ -17,6 +17,8 @@ export interface CoicForPrinting extends CofpForPrinting {
   coicNo: string;
   /** ISO. The "Individual Effective Date". */
   effectiveDate: string;
+  /** "YYYY-MM". The month the transaction was posted in (user, 2026-10-07). */
+  transactionMonth: string;
 }
 
 /** A transmittal memo the Printed view lists under a branch. */
@@ -26,8 +28,13 @@ export interface CoicMemo {
   /** The branch code the memo went to. */
   branch: string;
   memoNo: string;
-  /** ISO. */
+  /** ISO. When it went out — not shown while it is pending. */
   dateTransmitted: string;
+  /**
+   * Its certificates still for transmit (user, 2026-10-07) — the branch
+   * combo box highlights a branch with one.
+   */
+  pendingTransmit?: boolean;
   /** The printed certificates the memo carried. */
   rows: CoicForPrinting[];
 }

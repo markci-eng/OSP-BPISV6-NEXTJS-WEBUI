@@ -30,6 +30,7 @@ import type {
   SoaPayment,
   StatementOfAccount,
 } from "../data/statement-of-account";
+import { formatTerminationStatus } from "../data/termination-status";
 
 const PAPER_WIDTH = "816px";
 const INK = "#222";
@@ -412,7 +413,7 @@ export function StatementOfAccountSheet({
             <Fact
               labelWidth="96px"
               label="Termi. Status"
-              value={soa.terminationStatus}
+              value={formatTerminationStatus(soa.terminationStatus)}
             />
             <Fact labelWidth="96px" label="COFP No." value={soa.cofpNo} />
           </Box>

@@ -35,55 +35,96 @@ const formFor = (row: CoicForPrinting): CofpPhInfoForm => ({
   ...row.address,
 });
 
-/** "Feb 12, 2026" — the calendar date, never shifted by the time zone. */
-const shortDate = (iso: string) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-
 const mono = (value: string) => (
   <Text as="span" fontFamily="mono" whiteSpace="nowrap">
     {value}
   </Text>
 );
 
-const COLUMNS: ColumnDef<CoicForPrinting>[] = [
+/**
+ * The List of For Printing's columns (user, 2026-10-07): Branch, LPA No.,
+ * Last Name, First Name, Middle Name, Address, Transaction Month — then the
+ * Edit button, the kit's row action.
+ *
+ * Branch is the one in the filter menu. The kit's search only runs with its
+ * `filtering` feature on (see the table below), and the menu that comes with
+ * it lists every column not left out.
+ */
+const FOR_PRINTING_COLUMNS: ColumnDef<CoicForPrinting>[] = [
   { accessorKey: "branch", header: "Branch" },
   {
     accessorKey: "lpaNo",
-    header: "LPA No",
+    header: "LPA No.",
+    enableColumnFilter: false,
     cell: ({ getValue }) => mono(getValue<string>()),
   },
-  {
-    accessorKey: "coicNo",
-    header: "COIC No",
-    cell: ({ getValue }) => mono(getValue<string>()),
-  },
-  { accessorKey: "lastName", header: "Last Name" },
-  { accessorKey: "firstName", header: "First Name" },
-  { accessorKey: "middleName", header: "Middle Name" },
-  {
-    accessorKey: "effectiveDate",
-    header: "Effective Date",
-    cell: ({ getValue }) => (
-      <Text as="span" whiteSpace="nowrap">
-        {shortDate(getValue<string>())}
-      </Text>
-    ),
-  },
+  { accessorKey: "lastName", header: "Last Name", enableColumnFilter: false },
+  { accessorKey: "firstName", header: "First Name", enableColumnFilter: false },
+  { accessorKey: "middleName", header: "Middle Name", enableColumnFilter: false },
   {
     id: "address",
     accessorFn: (row) => formatAddress(row.address),
     header: "Address",
+    enableColumnFilter: false,
     meta: { minWidth: "220px" },
     cell: ({ getValue }) => (
       <Text as="span" whiteSpace="normal">
         {getValue<string>()}
       </Text>
     ),
+  },
+  {
+    // "YYYY-MM", so it sorts as a month; drawn as "Sep 2026".
+    accessorKey: "transactionMonth",
+    header: "Transaction Month",
+    enableColumnFilter: false,
+    cell: ({ getValue }) => (
+      <Text as="span" whiteSpace="nowrap">
+        {new Date(`${getValue<string>()}-01T00:00:00Z`).toLocaleDateString(
+          "en-US",
+          { month: "short", year: "numeric", timeZone: "UTC" },
+        )}
+      </Text>
+    ),
+  },
+];
+
+/**
+ * The List of Printed's columns (user, 2026-10-07): COIC No., LPA No., PH
+ * Name, Released To — after the kit's checkbox, with no address and no action
+ * column. Released To is the one in the filter menu.
+ */
+const PRINTED_COLUMNS: ColumnDef<CoicForPrinting>[] = [
+  {
+    accessorKey: "coicNo",
+    header: "COIC No.",
+    enableColumnFilter: false,
+    cell: ({ getValue }) => mono(getValue<string>()),
+  },
+  {
+    accessorKey: "lpaNo",
+    header: "LPA No.",
+    enableColumnFilter: false,
+    cell: ({ getValue }) => mono(getValue<string>()),
+  },
+  {
+    id: "phName",
+    accessorFn: (row) => `${row.lastName}, ${row.firstName} ${row.middleName}`,
+    header: "PH Name",
+    enableColumnFilter: false,
+  },
+  {
+    id: "releasedTo",
+    // Blank while the memo is still for transmit; a string either way so the
+    // search reads the column.
+    accessorFn: (row) => row.releasedTo ?? "",
+    header: "Released To",
+    cell: ({ getValue }) =>
+      getValue<string>() || (
+        <Text as="span" color="gray.400">
+          —
+        </Text>
+      ),
   },
 ];
 
@@ -178,7 +219,8 @@ export function CoicListCard({
       minW={0}
     >
       <DataTable<CoicForPrinting>
-        columns={COLUMNS}
+        // For Printing is the list with Print under it; the other is Printed.
+        columns={printable ? FOR_PRINTING_COLUMNS : PRINTED_COLUMNS}
         data={data}
         title={<H3 fontSize="lg">{title}</H3>}
         getRowId={(row) => row.id}
@@ -188,18 +230,25 @@ export function CoicListCard({
           pagination: true,
           showToolbarPagination: true,
           selection: !!bulkActions?.length,
-          filtering: false,
+          // On so the search works — the kit hands TanStack `enableFilters:
+          // features.filtering`, and with that off no column is searchable.
+          filtering: true,
           columnToggle: false,
           detailSidebar: false,
         }}
-        rowActions={rowActions}
+        // No action column on the List of Printed (user, 2026-10-07).
+        rowActions={printable ? rowActions : undefined}
         bulkActions={bulkActions}
         emptyState={
           <Text fontSize="sm" color="gray.400" py={6} textAlign="center">
             {emptyMessage}
           </Text>
         }
-        labels={{ searchPlaceholder: "Search LPA, COIC no, name, or address..." }}
+        labels={{
+          searchPlaceholder: printable
+            ? "Search LPA, name, or address..."
+            : "Search COIC no, LPA, name, or released to...",
+        }}
       />
 
       {printable && (

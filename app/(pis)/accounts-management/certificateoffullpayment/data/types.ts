@@ -65,8 +65,13 @@ export interface CofpMemo {
   /** The branch code the memo went to. */
   branch: string;
   memoNo: string;
-  /** ISO. */
+  /** ISO. When it went out — or, while pending, when it was printed. */
   dateTransmitted: string;
+  /**
+   * Printed but not yet transmitted to the branch (user, 2026-10-07) — the
+   * branch combo box highlights a branch with one.
+   */
+  pendingTransmit?: boolean;
   /** The printed certificates the memo carried. */
   rows: CofpForPrinting[];
 }
@@ -94,12 +99,31 @@ export interface CofpForPrinting {
   coverage: string;
   /** ISO. The "Given this … day of …" date. */
   fullPaidDate: string;
+  /** Why the certificate is deficient — set on Deficient's rows only. */
+  reason?: string;
+  /**
+   * Who the printed certificate was released to — set on Printed's rows only,
+   * and blank while its memo is still to be transmitted.
+   */
+  releasedTo?: string;
+  /** ISO. When it was confiscated — Confiscated's rows only. */
+  dateConfiscated?: string;
+  /** The batch it came in under — Confiscated's SPFC rows. */
+  batchNo?: string;
 }
+
+/**
+ * Where a Branch replacement request stands (user, 2026-10-07) — the status
+ * picked above the Branch combo box. For Process is the one on arrival.
+ */
+export type CofpReplacementStatus = "FOR_PROCESS" | "PENDING" | "DENIED";
 
 /** A Replacement request — the certificate to reissue, and when it was asked for. */
 export interface CofpReplacementRequest extends CofpForPrinting {
   /** ISO. */
   dateRequested: string;
+  /** Set on Branch requests only. */
+  status?: CofpReplacementStatus;
 }
 
 /** A plan holder's address as the Edit PH Info dialog edits it. */

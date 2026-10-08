@@ -40,15 +40,19 @@ import {
 } from "../return-of-premium/components/rop-payout-card";
 import { RopPayoutProofCard } from "../return-of-premium/components/rop-payout-proof-card";
 import { RopRemarksCard } from "../return-of-premium/components/rop-remarks-card";
-import { SubmittedDocumentsCard } from "../reinstatement/components/submitted-documents-card";
+import { RopSubmittedDocumentsCard } from "../return-of-premium/components/rop-submitted-documents-card";
 import { CsvDetailsCard } from "./components/csv-details-card";
 import { CsvListCard } from "./components/csv-list-card";
 import { CsvPlanholderCard } from "./components/csv-planholder-card";
-import { CSV_STATUS_OPTIONS, fetchCsvRecords } from "./data/data";
+import { CSV_LIST_STATUSES, fetchCsvRecords } from "./data/data";
 import type { CsvRecord, CsvStatus } from "./data/types";
 
-/** The 40% column, as on Return of Premium; full width once the panels stack. */
-const COLUMN_WIDTH = { base: "100%", lg: "40%" } as const;
+/**
+ * The 30% column, as on Return of Premium (user, 2026-10-08) — the planholder
+ * card and the payout details both take it, leaving 70% to the scans beside
+ * them. Full width once the panels stack.
+ */
+const COLUMN_WIDTH = { base: "100%", lg: "30%" } as const;
 const COLUMN_MIN_WIDTH = { lg: "280px" } as const;
 
 export default function CsvPage() {
@@ -56,7 +60,7 @@ export default function CsvPage() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string>();
   const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<CsvStatus>(CSV_STATUS_OPTIONS[0]);
+  const [status, setStatus] = useState<CsvStatus>(CSV_LIST_STATUSES[0]);
   // Read by the fetch below without making the status a dependency of it —
   // changing the view filters the records on hand, it does not refetch them.
   const statusRef = useRef(status);
@@ -210,7 +214,9 @@ export default function CsvPage() {
       </Page.ToolContent>
 
       <Page.MainContent>
+        {/* The list starts hidden; the toggle brings it back. */}
         <CollapsibleListLayout
+          defaultListVisible={false}
           list={
             <CsvListCard
               records={inStatus}
@@ -230,7 +236,7 @@ export default function CsvPage() {
             </Box>
           ) : selected ? (
             <Flex direction="column" gap="10px" w="full" minW={0}>
-              {/* The ROP row: the planholder card in 40% on the left, Submitted
+              {/* The ROP row: the planholder card in 30% on the left, Submitted
                   Documents in the rest. Stacks below `lg`. */}
               <Flex
                 direction={{ base: "column", lg: "row" }}
@@ -239,7 +245,7 @@ export default function CsvPage() {
                 w="full"
                 minW={0}
               >
-                {/* The column carries the 40%, not the card. */}
+                {/* The column carries the 30%, not the card. */}
                 <Flex
                   direction="column"
                   gap="10px"
@@ -263,20 +269,25 @@ export default function CsvPage() {
                   position={{ base: "static", lg: "relative" }}
                 >
                   <Box position={{ base: "static", lg: "absolute" }} inset={0}>
-                    <SubmittedDocumentsCard
+                    {/* ROP's scrolling stack (user, 2026-10-08): the
+                        documents are read top to bottom, no next / previous
+                        buttons. */}
+                    <RopSubmittedDocumentsCard
                       documents={selected.submittedDocuments}
+                      emptyMessage="This request has no supporting documents on file yet."
                     />
                   </Box>
                 </Box>
               </Flex>
   
               {/* Payout details and their proof in one fold, as on ROP — one
-                  surface split 40/60 like the Transferor card: details left,
+                  surface split 30/70 like the row above: details left,
                   proof right, a rule between that turns horizontal below
                   `lg`. */}
               <InfoCardAccordion
                 icon={<Wallet />}
                 title="Payout Details and Proof of Payout"
+                defaultOpen
               >
                 <Flex
                   direction={{ base: "column", lg: "row" }}
@@ -342,7 +353,11 @@ export default function CsvPage() {
 
               {/* The surrender and its validation in one fold, as ROP's
                   schedule. Keyed by record, so edits and ticks start clean. */}
-              <InfoCardAccordion icon={<CalendarClock />} title="CSV Details">
+              <InfoCardAccordion
+                icon={<CalendarClock />}
+                title="CSV Details"
+                defaultOpen
+              >
                 <CsvDetailsCard key={selected.id} details={selected.details} />
               </InfoCardAccordion>
 

@@ -55,6 +55,8 @@ import type { CofpRequest } from "../../cofp/data/types";
 import {
   COFP_PINNED_BRANCH_CODE,
   branchCountOf,
+  branchesPendingTransmit,
+  hasPendingConfirmation,
   isBranchView,
   type CofpBranchView,
 } from "../data/branches";
@@ -65,6 +67,7 @@ import type {
   CofpRegion,
   CofpReplacementRequest,
   CofpReplacementSource,
+  CofpReplacementStatus,
   CofpView,
 } from "../data/types";
 import { LIST_HEIGHT, ROW_GAP, ROW_HEIGHT, RequestRow } from "./request-row";
@@ -312,6 +315,29 @@ function SpecialRequestRow({
   );
 }
 
+/**
+ * "With pending confirmation" — beside the code of a branch whose confiscated
+ * certificates are still to be confirmed (user, 2026-10-07).
+ */
+function PendingConfirmationTag() {
+  return (
+    <Box
+      flexShrink={0}
+      px={1.5}
+      borderRadius="full"
+      bg="orange.100"
+      color="orange.700"
+      fontSize="9px"
+      fontWeight="700"
+      lineHeight="16px"
+      whiteSpace="nowrap"
+      title="Confiscated COFP still waiting to be confirmed"
+    >
+      With pending confirmation
+    </Box>
+  );
+}
+
 /** A branch's row — the code, its description under it, its count beside. */
 function BranchRow({
   branch,
@@ -326,6 +352,7 @@ function BranchRow({
   onClick: () => void;
 }) {
   const count = branchCountOf(view, branch);
+  const pending = view === "CONFISCATED" && hasPendingConfirmation(branch);
 
   return (
     <Flex
@@ -348,9 +375,12 @@ function BranchRow({
       flexShrink={0}
     >
       <Box minW={0} flex="1">
-        <Text fontSize="xs" fontWeight="700" color="gray.800" truncate>
-          {branch.code}
-        </Text>
+        <Flex align="center" gap={1.5} minW={0}>
+          <Text fontSize="xs" fontWeight="700" color="gray.800" truncate>
+            {branch.code}
+          </Text>
+          {pending && <PendingConfirmationTag />}
+        </Flex>
         <Text fontSize="10px" color="gray.400" truncate title={branch.description}>
           {branch.description}
         </Text>
@@ -428,9 +458,14 @@ function PinnedBranchRow({
         <Star size={14} fill="currentColor" />
       </Flex>
       <Box minW={0} flex="1">
-        <Text fontSize="sm" fontWeight="700" color="white" truncate>
-          {branch.code}
-        </Text>
+        <Flex align="center" gap={1.5} minW={0}>
+          <Text fontSize="sm" fontWeight="700" color="white" truncate>
+            {branch.code}
+          </Text>
+          {view === "CONFISCATED" && hasPendingConfirmation(branch) && (
+            <PendingConfirmationTag />
+          )}
+        </Flex>
         <Text
           fontSize="10px"
           color={BRAND_COLORS.softGreen}
@@ -500,13 +535,23 @@ export function MemoRow({
           {memo.branch}
         </Text>
       </Box>
+      {/* A memo still to go out says so, with no date — it has not been
+          transmitted (user, 2026-10-07) — in the colour the branch combo box
+          highlights it in. */}
       <Box flexShrink={0} textAlign="end">
-        <Text fontSize="9px" color="gray.400" textTransform="uppercase">
-          Transmitted
+        <Text
+          fontSize="9px"
+          color={memo.pendingTransmit ? "orange.600" : "gray.400"}
+          fontWeight={memo.pendingTransmit ? "700" : undefined}
+          textTransform="uppercase"
+        >
+          {memo.pendingTransmit ? "Pending Transmit" : "Transmitted"}
         </Text>
-        <Text fontSize="10.5px" color="gray.600" whiteSpace="nowrap">
-          {formatDate(memo.dateTransmitted)}
-        </Text>
+        {!memo.pendingTransmit && (
+          <Text fontSize="10.5px" color="gray.600" whiteSpace="nowrap">
+            {formatDate(memo.dateTransmitted)}
+          </Text>
+        )}
       </Box>
       {/* The number of printed certificates the memo carried — the same badge
           the branch and region rows draw. */}
@@ -610,6 +655,7 @@ export function BranchCombobox({
   label = "Branch",
   errorText,
   portalled = true,
+  highlightCodes,
 }: {
   branches: CofpBranch[];
   value?: string;
@@ -617,6 +663,11 @@ export function BranchCombobox({
   label?: string;
   errorText?: string;
   portalled?: boolean;
+  /**
+   * Branches drawn highlighted, with a Pending tag — Printed's branches with
+   * a memo still to transmit (user, 2026-10-07).
+   */
+  highlightCodes?: Set<string>;
 }) {
   const { contains } = useFilter({ sensitivity: "base" });
   const { collection, filter } = useListCollection({
@@ -660,14 +711,42 @@ export function BranchCombobox({
         <Combobox.Positioner>
           <Combobox.Content maxH="300px" overflowY="auto">
             <Combobox.Empty>No branch matches.</Combobox.Empty>
-            {collection.items.map((branch) => (
-              <Combobox.Item key={branch.code} item={branch}>
-                <Text fontSize="xs" truncate>
-                  {branchLabel(branch)}
-                </Text>
-                <Combobox.ItemIndicator />
-              </Combobox.Item>
-            ))}
+            {collection.items.map((branch) => {
+              const highlighted = highlightCodes?.has(branch.code);
+              return (
+                <Combobox.Item
+                  key={branch.code}
+                  item={branch}
+                  bg={highlighted ? "orange.50" : undefined}
+                  _highlighted={highlighted ? { bg: "orange.100" } : undefined}
+                >
+                  <Text
+                    fontSize="xs"
+                    truncate
+                    flex="1"
+                    fontWeight={highlighted ? "semibold" : undefined}
+                    color={highlighted ? "orange.800" : undefined}
+                  >
+                    {branchLabel(branch)}
+                  </Text>
+                  {highlighted && (
+                    <Box
+                      flexShrink={0}
+                      px={1.5}
+                      borderRadius="full"
+                      bg="orange.500"
+                      color="white"
+                      fontSize="9px"
+                      fontWeight="700"
+                      textTransform="uppercase"
+                    >
+                      Pending
+                    </Box>
+                  )}
+                  <Combobox.ItemIndicator />
+                </Combobox.Item>
+              );
+            })}
           </Combobox.Content>
         </Combobox.Positioner>
       </Portal>
@@ -708,6 +787,9 @@ export interface CofpRequestListCardProps {
   /** Which of Replacement's three sources is pressed. */
   replacementSource: CofpReplacementSource;
   onReplacementSourceChange: (source: CofpReplacementSource) => void;
+  /** Which status's requests Branch lists (user, 2026-10-07). */
+  replacementStatus: CofpReplacementStatus;
+  onReplacementStatusChange: (status: CofpReplacementStatus) => void;
   /** What Replacement's Branch combo box offers. */
   replacementBranches: CofpBranch[];
   replacementBranchCode?: string;
@@ -721,23 +803,103 @@ export interface CofpRequestListCardProps {
   onSelectReplacementRequest: (request: CofpReplacementRequest) => void;
 }
 
-const REPLACEMENT_SOURCES: { source: CofpReplacementSource; label: string }[] = [
-  { source: "SPFC", label: "SPFC" },
-  { source: "CONFISCATED", label: "Confiscated" },
-  { source: "BRANCH", label: "Branch" },
+const REPLACEMENT_SOURCES: { value: CofpReplacementSource; label: string }[] = [
+  { value: "SPFC", label: "SPFC" },
+  { value: "CONFISCATED", label: "Confiscated" },
+  { value: "BRANCH", label: "Branch" },
 ];
 
+/** Branch's status buttons (user, 2026-10-07), For Process first. */
+const REPLACEMENT_STATUSES: { value: CofpReplacementStatus; label: string }[] = [
+  { value: "FOR_PROCESS", label: "For Process" },
+  { value: "PENDING", label: "Pending" },
+  { value: "DENIED", label: "Denied" },
+];
+
+const statusLabelOf = (status: CofpReplacementStatus) =>
+  REPLACEMENT_STATUSES.find((option) => option.value === status)?.label ?? status;
+
 /**
- * Replacement's three source buttons (user, 2026-10-05) — one pressed at a
- * time, and the list beside the rail is that source's requests.
+ * A rail search field — icon, bare input, clear — drawn as the rail's own
+ * search is. Branch Replacement's search over its requests (user, 2026-10-07).
  */
-function ReplacementSourceButtons({
+function RailSearchField({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <Flex
+      align="center"
+      gap={2}
+      mb={3}
+      px={3}
+      h="36px"
+      flexShrink={0}
+      borderWidth="1px"
+      borderColor="border.muted"
+      borderRadius="lg"
+      _focusWithin={{
+        borderColor: "var(--chakra-colors-primary)",
+        boxShadow: "0 0 0 3px var(--chakra-colors-primary-disabled)",
+      }}
+    >
+      <Box color="gray.400" flexShrink={0} display="flex">
+        <Search size={14} />
+      </Box>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.currentTarget.value)}
+        placeholder={placeholder}
+        flex="1"
+        h="full"
+        px={0}
+        border="none"
+        bg="transparent"
+        borderRadius="0"
+        fontSize="sm"
+        color="gray.800"
+        _placeholder={{ color: "gray.400" }}
+        _focusVisible={{ boxShadow: "none", outline: "none" }}
+      />
+      {value && (
+        <Box
+          as="button"
+          onClick={() => onChange("")}
+          color="gray.400"
+          flexShrink={0}
+          display="flex"
+          aria-label="Clear search"
+          _hover={{ color: "gray.600" }}
+        >
+          <X size={14} />
+        </Box>
+      )}
+    </Flex>
+  );
+}
+
+/**
+ * A titled row of buttons, one pressed at a time — Replacement's three
+ * sources (user, 2026-10-05) and, under Branch, its three statuses (user,
+ * 2026-10-07).
+ */
+function ChoiceButtons<T extends string>({
+  title,
+  options,
   value,
   onChange,
 }: {
-  value: CofpReplacementSource;
-  onChange: (source: CofpReplacementSource) => void;
+  title: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
 }) {
+  const titleId = `replacement-${title.toLowerCase()}-title`;
   return (
     // In a card of its own under a "From" title (user, 2026-10-06), so the
     // three read as one choice apart from the combo box and list below.
@@ -751,7 +913,7 @@ function ReplacementSourceButtons({
       bg="gray.50"
     >
     <Text
-      id="replacement-source-title"
+      id={titleId}
       fontSize="xs"
       fontWeight="700"
       color="gray.600"
@@ -759,22 +921,22 @@ function ReplacementSourceButtons({
       textTransform="uppercase"
       mb={2}
     >
-      From
+      {title}
     </Text>
     <Flex
       role="radiogroup"
-      aria-labelledby="replacement-source-title"
+      aria-labelledby={titleId}
       gap={1.5}
     >
-      {REPLACEMENT_SOURCES.map(({ source, label }) => {
-        const active = source === value;
+      {options.map((option) => {
+        const active = option.value === value;
         return (
           <Box
             as="button"
-            key={source}
+            key={option.value}
             role="radio"
             aria-checked={active}
-            onClick={() => onChange(source)}
+            onClick={() => onChange(option.value)}
             flex="1"
             h="34px"
             px={2}
@@ -792,7 +954,7 @@ function ReplacementSourceButtons({
               color: active ? "white" : BRAND_COLORS.primaryGreen,
             }}
           >
-            {label}
+            {option.label}
           </Box>
         );
       })}
@@ -819,6 +981,8 @@ export function CofpRequestListCard({
   onSelectMemo,
   replacementSource,
   onReplacementSourceChange,
+  replacementStatus,
+  onReplacementStatusChange,
   replacementBranches,
   replacementBranchCode,
   onSelectReplacementBranch,
@@ -875,10 +1039,12 @@ export function CofpRequestListCard({
 
   // SPFC is pinned above the branches whatever the search (user, 2026-10-05),
   // the way From COFP Replacement is above the regions — so it is drawn on its
-  // own and left out of the list the search filters.
-  const pinnedBranch = branches.find(
-    (branch) => branch.code === COFP_PINNED_BRANCH_CODE,
-  );
+  // own and left out of the list the search filters. Deficient leaves SPFC out
+  // altogether (user, 2026-10-07).
+  const pinnedBranch =
+    view === "DEFICIENT"
+      ? undefined
+      : branches.find((branch) => branch.code === COFP_PINNED_BRANCH_CODE);
 
   // A branch is looked up by its code or description.
   const visibleBranches = useMemo(() => {
@@ -892,16 +1058,45 @@ export function CofpRequestListCard({
     );
   }, [branches, query]);
 
+  // A Branch replacement request is looked up by its LPA number or the plan
+  // holder's name (user, 2026-10-07) — its own field, under the combo box.
+  const [lpaQuery, setLpaQuery] = useState("");
+  const visibleReplacementRequests = useMemo(() => {
+    const needle = lpaQuery.trim().toLowerCase();
+    if (!needle) return replacementRequests;
+    return replacementRequests.filter((request) =>
+      `${request.lpaNo} ${request.lastName}, ${request.firstName} ${request.middleName}`
+        .toLowerCase()
+        .includes(needle),
+    );
+  }, [replacementRequests, lpaQuery]);
+
+  // A memo is looked up by its number (user, 2026-10-07).
+  const visibleMemos = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return memos;
+    return memos.filter((memo) => memo.memoNo.toLowerCase().includes(needle));
+  }, [memos, query]);
+
+  // The branches the Printed combo box highlights — worked out once.
+  const pendingTransmitCodes = useMemo(() => branchesPendingTransmit(), []);
+
   const count = showsReplacement
     ? replacementCount
     : showsRegions
     ? visibleRegions.length + (specialRequest ? 1 : 0)
     : showsMemos
-      ? memos.length
+      ? visibleMemos.length
       : showsBranches
         ? visibleBranches.length + (pinnedBranch ? 1 : 0)
         : visible.length;
-  const noun = showsRegions ? "region" : showsBranches ? "branch" : "request";
+  const noun = showsRegions
+    ? "region"
+    : showsMemos
+      ? "memo"
+      : showsBranches
+        ? "branch"
+        : "request";
 
   return (
     <Box
@@ -1027,22 +1222,38 @@ export function CofpRequestListCard({
         </Flex>
       </Flex>
 
-      {/* Replacement's source buttons, and under Branch the combo box of
-          branches with a request. Nothing else is drawn in the rail. */}
+      {/* Replacement's source buttons, and under Branch its status buttons
+          (user, 2026-10-07), the combo box of branches with a request, and
+          the searchable list of requests. Nothing else is drawn in the rail. */}
       {showsReplacement ? (
         <>
-          <ReplacementSourceButtons
+          <ChoiceButtons
+            title="From"
+            options={REPLACEMENT_SOURCES}
             value={replacementSource}
             onChange={onReplacementSourceChange}
           />
           {replacementSource === "BRANCH" && (
             <>
+              <ChoiceButtons
+                title="Status"
+                options={REPLACEMENT_STATUSES}
+                value={replacementStatus}
+                onChange={onReplacementStatusChange}
+              />
               <BranchCombobox
                 key="replacement-branch"
                 branches={replacementBranches}
                 value={replacementBranchCode}
                 onChange={onSelectReplacementBranch}
               />
+              {replacementBranchCode && (
+                <RailSearchField
+                  value={lpaQuery}
+                  onChange={setLpaQuery}
+                  placeholder="Search LPA no. or name..."
+                />
+              )}
               {/* The picked branch's requests, under the combo box (user,
                   2026-10-05) — scrolling inside the card like every other
                   rail list. */}
@@ -1056,12 +1267,14 @@ export function CofpRequestListCard({
                   flexShrink={{ base: 0, lg: 1 }}
                   overflowY="auto"
                 >
-                  {replacementRequests.length === 0 ? (
+                  {visibleReplacementRequests.length === 0 ? (
                     <Text fontSize="sm" color="gray.400" px={1} py={6} textAlign="center">
-                      No replacement requests from this branch.
+                      {replacementRequests.length === 0
+                        ? `No ${statusLabelOf(replacementStatus).toLowerCase()} requests from this branch.`
+                        : `No request matches “${lpaQuery}”.`}
                     </Text>
                   ) : (
-                    replacementRequests.map((request) => (
+                    visibleReplacementRequests.map((request) => (
                       <ReplacementRequestRow
                         key={request.id}
                         request={request}
@@ -1075,16 +1288,21 @@ export function CofpRequestListCard({
             </>
           )}
         </>
-      ) : /* Printed picks its branch from a combo box in place of the search
-          field — the memos under it are the list. */
-      showsMemos ? (
+      ) : (
+      <>
+      {/* Printed picks its branch from a combo box — the branches with a
+          memo still to transmit highlighted (user, 2026-10-07) — and
+          searches the memos under it with the field below (user,
+          2026-10-07). */}
+      {showsMemos && (
         <BranchCombobox
           branches={branches}
           value={selectedBranchCode}
           onChange={onSelectBranch}
+          highlightCodes={pendingTransmitCodes}
         />
-      ) : (
-      /* Same search field the memo rail uses — icon, bare input, clear. */
+      )}
+      {/* Same search field the memo rail uses — icon, bare input, clear. */}
       <Flex
         align="center"
         gap={2}
@@ -1109,9 +1327,11 @@ export function CofpRequestListCard({
           placeholder={
             showsRegions
               ? "Search region or branch..."
-              : showsBranches
-                ? "Search branch code or description..."
-                : "Search LPA, name, or CFP no..."
+              : showsMemos
+                ? "Search memo no..."
+                : showsBranches
+                  ? "Search branch code or description..."
+                  : "Search LPA, name, or CFP no..."
           }
           flex="1"
           h="full"
@@ -1138,6 +1358,7 @@ export function CofpRequestListCard({
           </Box>
         )}
       </Flex>
+      </>
       )}
 
       {/* THE LIST THE ACTION OPENS — whatever height the card has left on
@@ -1178,7 +1399,7 @@ export function CofpRequestListCard({
             ? visibleBranches.length === 0
             : count === 0) && (
           <Text fontSize="sm" color="gray.400" px={1} py={6} textAlign="center">
-            {showsMemos
+            {showsMemos && memos.length === 0
               ? "No memos transmitted to this branch."
               : query
                 ? `No ${noun} matches “${query}”.`
@@ -1196,7 +1417,7 @@ export function CofpRequestListCard({
               />
             ))
           : showsMemos
-            ? memos.map((memo) => (
+            ? visibleMemos.map((memo) => (
                 <MemoRow
                   key={memo.id}
                   memo={memo}

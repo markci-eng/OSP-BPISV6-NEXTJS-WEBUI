@@ -5,7 +5,7 @@
 //
 // THE IDENTITY ROW ON TOP is ROP's planholder card in its embedded horizontal
 // layout: avatar, name with the Edit PH Info pencil, the LPA number, birthdate
-// and age, and the request's status. Under it run the plan's facts in the
+// and age. The request's status sits in the title strip. Under it run the plan's facts in the
 // dashed-leader rows ROP Details draws, then a second green strip for the
 // COFP details.
 
@@ -20,6 +20,7 @@ import {
   KIT_SHADOW,
   SectionCard,
 } from "../../components/section-card";
+import { formatTerminationStatus } from "../../data/termination-status";
 import { RopPlanholderCard } from "../../return-of-premium/components/rop-planholder-card";
 import { CSV_STATUS_BADGE } from "../data/data";
 import type { CsvRecord } from "../data/types";
@@ -83,6 +84,13 @@ export function CsvPlanholderCard({ record, onEdit }: CsvPlanholderCardProps) {
     <SectionCard
       icon={<User size={14} />}
       title="Planholder Information"
+      // In the title strip, beside the card's name, rather than in the
+      // identity row below it.
+      action={
+        <OSPBadge type={CSV_STATUS_BADGE[record.status]}>
+          {record.status}
+        </OSPBadge>
+      }
       borderColor={KIT_BORDER}
       boxShadow={KIT_SHADOW}
     >
@@ -94,10 +102,6 @@ export function CsvPlanholderCard({ record, onEdit }: CsvPlanholderCardProps) {
           lpaNo={record.lpaNo}
           personId={record.personId}
           birthdate={record.birthdate}
-          status={{
-            label: record.status,
-            type: CSV_STATUS_BADGE[record.status],
-          }}
           onEdit={onEdit}
         />
       </Box>
@@ -121,7 +125,8 @@ export function CsvPlanholderCard({ record, onEdit }: CsvPlanholderCardProps) {
             </OSPBadge>
           }
         />
-        <InfoRow label="Termination Status" value={record.terminationStatus} />
+        <InfoRow label="Termination Status" value={formatTerminationStatus(record.terminationStatus)}
+        />
         <InfoRow
           label="Loan Status"
           value={

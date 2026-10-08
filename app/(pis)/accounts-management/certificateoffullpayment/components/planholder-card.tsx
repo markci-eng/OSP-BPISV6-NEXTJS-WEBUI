@@ -25,6 +25,7 @@ import { formatAge, formatFiledDate } from "@/app/(pis)/data";
 import { DetailCard } from "../../../claims/components/detail-card";
 import { InfoLabel } from "../../../claims/components/info-label";
 import { TooltipLabel } from "../../../claims/components/tooltip-label";
+import { formatTerminationStatus } from "../../data/termination-status";
 import { paymentsFor } from "../data/data";
 import type { CofpPlanholder } from "../data/types";
 import { CofpPaymentsCard } from "./payments-card";
@@ -93,11 +94,14 @@ export function CofpPlanholderCard({ planholder }: CofpPlanholderCardProps) {
             />
 
             <InfoLabel label="Move Date" value={shownDate(details.moveDate)} />
-            {/* The code, with what it means on hover — see {@link TooltipLabel}. */}
-            <TooltipLabel
+            {/* Code and description together, as the RefTermiStat table words
+                them and every Accounts Management screen shows them (user,
+                2026-10-08), rather than the code with its meaning on hover. */}
+            <InfoLabel
               label="Termination Status"
-              code={details.terminationStatusCode}
-              description={details.terminationStatusLabel}
+              value={formatTerminationStatus(
+                details.terminationStatusCode ?? details.terminationStatusLabel,
+              )}
             />
             <InfoLabel
               label="Termination Date"

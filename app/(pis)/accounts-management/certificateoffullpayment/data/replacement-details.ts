@@ -14,6 +14,7 @@ import {
 } from "../../csv/data/csv-documents";
 import { idCardImageUrl, type IdCardKind } from "../../reinstatement/data/id-card";
 import type { SubmittedDocument } from "../../reinstatement/data/types";
+import { formatTerminationStatus } from "../../data/termination-status";
 import { formatAddress } from "./regions";
 import type { CofpReplacementRequest } from "./types";
 
@@ -41,7 +42,7 @@ export interface CofpReplacementInfo {
 
 export interface CofpReplacementDetails {
   status: CofpReplacementStatus;
-  /** e.g. "NT - NOT TERMINATED". */
+  /** e.g. "NT - NOT YET TERMINATED", worded as the RefTermiStat table has it. */
   terminationStatus: string;
   documents: SubmittedDocument[];
   info: CofpReplacementInfo;
@@ -128,12 +129,11 @@ function replacementInfoOf(
   };
 }
 
-const TERMINATION_STATUSES = [
-  "NT - NOT TERMINATED",
-  "NT - NOT TERMINATED",
-  "NT - NOT TERMINATED",
-  "DC - DECEASED",
-];
+// Worded from the RefTermiStat table (user, 2026-10-08) — "CODE - DESCRIPTION",
+// as the table gives it. Mostly still standing, now and then another code.
+const TERMINATION_STATUSES = ["NT", "NT", "NT", "DC"].map(
+  formatTerminationStatus,
+);
 
 const ID_KINDS: { label: string; kind: IdCardKind }[] = [
   { label: "National ID", kind: "national-id" },

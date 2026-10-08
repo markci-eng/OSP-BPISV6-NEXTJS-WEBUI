@@ -46,10 +46,17 @@ export interface IdCarousel {
   /** Steps by `delta`, wrapping at both ends. */
   go: (delta: number) => void;
   count: number;
+  /**
+   * Whether the light-box is open. Held here rather than in the viewer so a
+   * button outside it — the Valid ID card's "View Full" — can open it too.
+   */
+  zoomed: boolean;
+  setZoomed: (zoomed: boolean) => void;
 }
 
 export function useIdCarousel(documents: TransferSubmittedId[]): IdCarousel {
   const [index, setIndex] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
   const count = documents.length;
 
   // Back to the first document whenever the set changes — the panel keeps this
@@ -67,7 +74,7 @@ export function useIdCarousel(documents: TransferSubmittedId[]): IdCarousel {
     setIndex((i) => (i + delta + count) % count);
   };
 
-  return { index, setIndex, go, count };
+  return { index, setIndex, go, count, zoomed, setZoomed };
 }
 
 /** "2 / 3", for the heading above the viewer. */
@@ -120,12 +127,19 @@ export function TransferSubmittedIdsCard({
 export function TransferSubmittedIdsViewer({
   documents,
   carousel,
+  zoom = 1,
 }: {
   documents: TransferSubmittedId[];
   carousel: IdCarousel;
+  /**
+   * How large the scan is drawn against the viewer, 1 being fitted whole.
+   * Any other value scrolls the scan inside the viewer rather than growing
+   * it. The Valid ID card's zoom control sets it; the light-box ignores it.
+   */
+  zoom?: number;
 }) {
-  const { index, setIndex, go, count } = carousel;
-  const [zoomed, setZoomed] = useState(false);
+  const { index, setIndex, go, count, zoomed, setZoomed } = carousel;
+  const scaled = zoom !== 1;
 
   const current = documents[index];
 
@@ -201,33 +215,46 @@ export function TransferSubmittedIdsViewer({
           minH={{ base: "auto", lg: "220px" }}
           display="flex"
         >
-          {/* No `type="button"`: Chakra's polymorphic `Box` does not carry the
-              native button props in its types, which is how the rest of this
-              codebase writes `as="button"`. Nothing here sits in a form, so
-              the implicit submit type costs nothing. */}
+          {/* SCALED, the scan sits in a scrolling layer at its zoomed width;
+              auto margins centre it when smaller and keep its edges in reach
+              when larger. Fitted (zoom 1) it is laid out exactly as before. */}
           <Box
-            as="button"
-            onClick={() => setZoomed(true)}
-            w="full"
             flex="1"
             minH={0}
+            minW={0}
             display="flex"
-            cursor="zoom-in"
-            aria-label={`Open ${current.label} full screen`}
+            overflow={scaled ? "auto" : "hidden"}
           >
-            {/* On desktop the scan is FITTED to the viewer — the whole ID in
-                view at whatever size the box allows, at the list's width and
-                with the list hidden alike (user, 2026-09-30). The box's height
-                is fixed by the panel, so `h="full"` here cannot feed back into
-                it. Below `lg` it keeps the ID's own ratio. */}
-            <Image
-              src={current.imageUrl}
-              alt={current.label}
-              w="full"
-              h={{ base: "auto", lg: "full" }}
-              aspectRatio={{ base: 16 / 10, lg: "auto" }}
-              objectFit="contain"
-            />
+            {/* No `type="button"`: Chakra's polymorphic `Box` does not carry
+                the native button props in its types, which is how the rest of
+                this codebase writes `as="button"`. Nothing here sits in a
+                form, so the implicit submit type costs nothing. */}
+            <Box
+              as="button"
+              onClick={() => setZoomed(true)}
+              w={scaled ? `${zoom * 100}%` : "full"}
+              flex={scaled ? "none" : "1"}
+              m={scaled ? "auto" : undefined}
+              minH={0}
+              display="flex"
+              cursor="zoom-in"
+              aria-label={`Open ${current.label} full screen`}
+            >
+              {/* On desktop the scan is FITTED to the viewer — the whole ID in
+                  view at whatever size the box allows, at the list's width and
+                  with the list hidden alike (user, 2026-09-30). The box's height
+                  is fixed by the panel, so `h="full"` here cannot feed back into
+                  it. Below `lg` it keeps the ID's own ratio. */}
+              <Image
+                src={current.imageUrl}
+                alt={current.label}
+                w="full"
+                h={scaled ? "auto" : { base: "auto", lg: "full" }}
+                maxW="none"
+                aspectRatio={scaled ? undefined : { base: 16 / 10, lg: "auto" }}
+                objectFit="contain"
+              />
+            </Box>
           </Box>
 
           {/* The zoom affordance, so the image reads as openable before

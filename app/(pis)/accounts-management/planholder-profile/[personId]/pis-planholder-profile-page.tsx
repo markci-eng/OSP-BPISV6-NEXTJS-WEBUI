@@ -9,20 +9,14 @@ import { MdOutlineCancelPresentation } from "react-icons/md";
 import { GiReceiveMoney } from "react-icons/gi";
 import { useRouter } from "next/navigation";
 
-import {
-  ActionButtons,
-  LookupField,
-  Page,
-  useMessageDialog,
-} from "osp-ui-kit";
+import { ActionButtons, LookupField, Page, useMessageDialog } from "osp-ui-kit";
 import type { LookupColumn } from "osp-ui-kit";
 import { BackToTop } from "../../components/back-to-top";
+import { formatTerminationStatus } from "../../data/termination-status";
 import { planholderLookup } from "../data/planholder-lookup";
 import { PlanholderProfileBody } from "../components/planholder-profile-body";
 import type { PlanholderLookup } from "@/components/plan-management/planholders/tables/planholder-list-table";
-import { RequestProps } from "@/components/plan-management/planholder-profile/sections/pending-requests";
 import { PlanholderPageProps } from "@/components/plan-management/planholder-profile/planholder-page";
-
 
 // Same columns the BPIS profile's lookup shows.
 const PLANHOLDER_LOOKUP_COLUMNS: LookupColumn<PlanholderLookup>[] = [
@@ -39,31 +33,10 @@ const PLANHOLDER_LOOKUP_COLUMNS: LookupColumn<PlanholderLookup>[] = [
   },
   { key: "branch", header: "Branch" },
   { key: "accountStatus", header: "Account Status" },
-  { key: "terminationStatus", header: "Termination Status" },
-];
-
-const MOCK_REQUESTS: RequestProps[] = [
   {
-    type: "Reinstatement",
-    title: "Reinstatement",
-    description: "LPA No. 2025-001234 · Annual Premium",
-    transactionId: "RI-2025-001234",
-    currentStep: 2,
-    totalSteps: 4,
-    status: "Pending",
-    date: "May 20, 2026",
-    hyperlink: "#",
-  },
-  {
-    type: "Returned of Premium",
-    title: "ROP Application",
-    description: "LPA No. 2024-009876 · Maturity Benefit",
-    transactionId: "ROP-2024-009876",
-    currentStep: 3,
-    totalSteps: 3,
-    status: "Approved",
-    date: "Nov 15, 2025",
-    hyperlink: "#",
+    key: "terminationStatus",
+    header: "Termination Status",
+    render: (value) => formatTerminationStatus(value as string),
   },
 ];
 
@@ -86,7 +59,11 @@ export default function PisPlanholderProfilePage({
   const ropId = undefined;
   const csvId = undefined;
 
-  const goToRequestOrNotify = (label: string, id: string | undefined, basePath: string) => {
+  const goToRequestOrNotify = (
+    label: string,
+    id: string | undefined,
+    basePath: string,
+  ) => {
     if (id) {
       router.push(`${basePath}/${id}`);
       return;
@@ -103,7 +80,7 @@ export default function PisPlanholderProfilePage({
   // the overflow drawer; the toolbar itself carries the planholder lookup.
   const overflowActions = [
     {
-      label: "Re-Instatement",
+      label: "Reinstatement",
       href: "/accounts-management/reinstatement",
       icon: () => <RiFileList3Line size={16} />,
     },
@@ -160,7 +137,7 @@ export default function PisPlanholderProfilePage({
   const planholderLookupField = (
     <LookupField<PlanholderLookup>
       label=""
-      placeholder="Change Planholder"
+      placeholder="Search Planholder"
       modalTitle="Search Planholder"
       columns={PLANHOLDER_LOOKUP_COLUMNS}
       dataSource={planholderLookup}
@@ -175,10 +152,7 @@ export default function PisPlanholderProfilePage({
   );
 
   return (
-    <Page.Root
-      title={"Planholder Profile"}
-      description="Clear Access to Every Planholder Detail."
-    >
+    <Page.Root title={"Planholder Profile"}>
       <Page.ToolContent>
         {/* Desktop — planholder lookup in place of the primary buttons, with
             every action in the overflow sheet beside it */}
@@ -197,95 +171,104 @@ export default function PisPlanholderProfilePage({
         )}
       </Page.ToolContent>
       <Page.MainContent>
-        <BackToTop />
+        {/* One column of our own (user, 2026-10-07): the kit's MainContent puts
+            a fixed 24px between its children and takes no `gap`, so
+            BackToTop's 1px sentinel alone pushed the profile a second 24px
+            below the header's own padding. No gap on desktop, where the
+            sentinel and the profile are all there is; the kit's 24px kept on
+            a phone, between the lookup and the profile. */}
+        <Flex direction="column" gap={{ base: 6, lg: 0 }}>
+          <BackToTop />
 
-        {/* Mobile — lookup sits above the profile header card, and stays
+          {/* Mobile — lookup sits above the profile header card, and stays
             reachable in the empty state so there is always a way to pick a
             planholder */}
-        <Box display={{ base: "block", lg: "none" }}>
-          {planholderLookupField}
-        </Box>
+          <Box display={{ base: "block", lg: "none" }}>
+            {planholderLookupField}
+          </Box>
 
-        {/* Empty state — a dialog over the blank profile, carrying the same
+          {/* Empty state — a dialog over the blank profile, carrying the same
             lookup the toolbar does. */}
-        <Dialog.Root
-          open={emptyStateOpen}
-          onOpenChange={(e) => setEmptyStateOpen(e.open)}
-          placement="center"
-          size={{ base: "xs", md: "md" }}
-          motionPreset="slide-in-bottom"
-          // Non-modal on purpose: the lookup inside opens a dialog of its own,
-          // and the nested modal locks (`pointer-events: none` on body) were
-          // not released when this one closed, leaving the page dead to
-          // clicks. Without the lock the page stays usable once dismissed.
-          modal={false}
-          // Zag derives this from `modal` (`closeOnInteractOutside: modal &&
-          // !alertDialog`), so going non-modal would otherwise stop clicks on
-          // the profile behind from dismissing the prompt.
-          closeOnInteractOutside
-        >
-          <Portal>
-            {/* No backdrop, and the positioner lets clicks through, so the
+          <Dialog.Root
+            open={emptyStateOpen}
+            onOpenChange={(e) => setEmptyStateOpen(e.open)}
+            placement="center"
+            size={{ base: "xs", md: "md" }}
+            motionPreset="slide-in-bottom"
+            // Non-modal on purpose: the lookup inside opens a dialog of its own,
+            // and the nested modal locks (`pointer-events: none` on body) were
+            // not released when this one closed, leaving the page dead to
+            // clicks. Without the lock the page stays usable once dismissed.
+            modal={false}
+            // Zag derives this from `modal` (`closeOnInteractOutside: modal &&
+            // !alertDialog`), so going non-modal would otherwise stop clicks on
+            // the profile behind from dismissing the prompt.
+            closeOnInteractOutside
+          >
+            <Portal>
+              {/* No backdrop, and the positioner lets clicks through, so the
                 page behind stays usable while the prompt is up — only the
                 card itself takes pointer events. */}
-            <Dialog.Positioner pointerEvents="none">
-              {/* No `overflow="hidden"` — it would clip the lookup's
+              <Dialog.Positioner pointerEvents="none">
+                {/* No `overflow="hidden"` — it would clip the lookup's
                   type-ahead list, which drops below the field */}
-              <Dialog.Content
-                borderRadius="2xl"
-                pointerEvents="auto"
-                boxShadow="2xl"
-              >
-                <Dialog.Body p={6}>
-                  <Flex direction="column" align="center" textAlign="center">
-                    {/* Same lookup as the toolbar, leading the dialog so the
+                <Dialog.Content
+                  borderRadius="2xl"
+                  pointerEvents="auto"
+                  boxShadow="2xl"
+                >
+                  <Dialog.Body p={6}>
+                    <Flex direction="column" align="center" textAlign="center">
+                      {/* Same lookup as the toolbar, leading the dialog so the
                         way forward is the first thing in reach. Raised so its
                         suggestions sit over the artwork below. */}
-                    <Box
-                      w="full"
-                      textAlign="start"
-                      mb={6}
-                      position="relative"
-                      zIndex={2}
-                    >
-                      {planholderLookupField}
-                    </Box>
+                      <Box
+                        w="full"
+                        textAlign="start"
+                        mb={6}
+                        position="relative"
+                        zIndex={2}
+                      >
+                        {planholderLookupField}
+                      </Box>
 
-                    <Flex
-                      align="center"
-                      justify="center"
-                      boxSize="140px"
-                      borderRadius="full"
-                      bg="var(--chakra-colors-primary-disabled)/20"
-                      color="var(--chakra-colors-primary)"
-                      mb={6}
-                    >
-                      <LuFolderOpen size={64} />
+                      <Flex
+                        align="center"
+                        justify="center"
+                        boxSize="140px"
+                        borderRadius="full"
+                        bg="var(--chakra-colors-primary-disabled)/20"
+                        color="var(--chakra-colors-primary)"
+                        mb={6}
+                      >
+                        <LuFolderOpen size={64} />
+                      </Flex>
+
+                      <Text fontSize="xl" fontWeight="bold" color="gray.800">
+                        No plan record selected yet
+                      </Text>
+                      <Text fontSize="sm" color="gray.500" mt={2}>
+                        Search for a planholder to load their records.
+                      </Text>
                     </Flex>
+                  </Dialog.Body>
+                </Dialog.Content>
+              </Dialog.Positioner>
+            </Portal>
+          </Dialog.Root>
 
-                    <Text fontSize="xl" fontWeight="bold" color="gray.800">
-                      No plan record selected yet
-                    </Text>
-                    <Text fontSize="sm" color="gray.500" mt={2}>
-                      Search for a planholder to load their records.
-                    </Text>
-                  </Flex>
-                </Dialog.Body>
-              </Dialog.Content>
-            </Dialog.Positioner>
-          </Portal>
-        </Dialog.Root>
-
-        <Box
-          display={{
-            base: props.planholderInfo ? "block" : "none",
-            lg: "block",
-          }}
-        >
-          {/* The profile itself, shared with the ROP module's right panel. */}
-          <PlanholderProfileBody props={props} requests={MOCK_REQUESTS} />
-        </Box>
-
+          <Box
+            display={{
+              base: props.planholderInfo ? "block" : "none",
+              lg: "block",
+            }}
+          >
+            {/* The profile itself, shared with the ROP module's right panel. */}
+            {/* No `requests`: Pending Requests follows the plan picked on
+                the name card (user, 2026-10-07). */}
+            <PlanholderProfileBody props={props} />
+          </Box>
+        </Flex>
       </Page.MainContent>
     </Page.Root>
   );

@@ -35,7 +35,7 @@ import { RopPlanholderCard } from "./rop-planholder-card";
 import { RopRemarksCard } from "./rop-remarks-card";
 import { RopScheduleCard } from "./rop-schedule-card";
 import { RopValidationCard } from "./rop-validation-card";
-import { RopSubmittedIdsCard } from "./rop-submitted-ids-card";
+import { RopSubmittedDocumentsCard } from "./rop-submitted-documents-card";
 import { ROP_SCHEDULE_STATUS_BADGE } from "../data/data";
 import type { RopRecord } from "../data/types";
 
@@ -49,15 +49,17 @@ export interface RopInformationPanelProps {
 }
 
 /**
- * The 40% column every state of this panel sits in — 40/60 against the
- * Submitted IDs, the same split as the payout fold (user, 2026-10-02).
+ * The 30% column every state of this panel sits in — 30/70 against the
+ * Submitted Documents, so the stacked ROP form and IDs get the room to be
+ * read (user, 2026-10-08). The payout fold matches it; the ROP Schedule
+ * fold keeps its own 40/60 split.
  *
  * Shared by the loading and empty states as well as the loaded one, so the
  * panel does not change width as it fills — a column that starts full-width
  * and snaps to a third once the record lands is a page that looks broken while
  * it loads.
  */
-const COLUMN_WIDTH = { base: "100%", lg: "40%" } as const;
+const COLUMN_WIDTH = { base: "100%", lg: "30%" } as const;
 const COLUMN_MIN_WIDTH = { lg: "280px" } as const;
 
 export function RopInformationPanel({
@@ -161,7 +163,7 @@ export function RopInformationPanel({
 
   // A ROW, THEN A CARD UNDER ITS LEFT HALF.
   //
-  // The Submitted IDs card is to be exactly as tall as the planholder card and
+  // The Submitted Documents card is to be exactly as tall as the planholder card and
   // the ROP details card TOGETHER (user, 2026-09-24) — not as tall as the whole
   // left column, which is what it became when the payout card joined it. So the
   // pairing is made structural: those two cards and the ID card are one row,
@@ -185,7 +187,7 @@ export function RopInformationPanel({
         w="full"
         minW={0}
       >
-        {/* LEFT — 40%, and it is the COLUMN that carries the width rather than
+        {/* LEFT — 30%, and it is the COLUMN that carries the width rather than
             each card in it (user, 2026-09-24): two nested percentage rules
             would have shrunk the inner card twice. `flexShrink={0}` holds the third against
             the viewer beside it, which would otherwise pull the row wider. */}
@@ -230,7 +232,7 @@ export function RopInformationPanel({
           position={{ base: "static", lg: "relative" }}
         >
           <Box position={{ base: "static", lg: "absolute" }} inset={0}>
-            <RopSubmittedIdsCard documents={record.submittedIds} />
+            <RopSubmittedDocumentsCard documents={record.submittedDocuments} />
           </Box>
         </Box>
       </Flex>
@@ -238,8 +240,8 @@ export function RopInformationPanel({
       {/* WHERE THE MONEY GOES, and the check that the person collecting is the
           person entitled to. Below the row rather than in it, so its height is
           its own and the ID card beside the row is not stretched by it. */}
-      {/* A SECOND ROW with the same 40/60 split as the first, so the
-          proof sits under the Submitted IDs card and the two image cards line
+      {/* A SECOND ROW with the same 30/70 split as the first, so the
+          proof sits under the Submitted Documents card and the two image cards line
           up. Stretched, so the proof is as tall as the payout details it is
           checked against. */}
       {/* ONE CARD AROUND THE PAIR (user, 2026-09-24): the details and their
@@ -253,6 +255,7 @@ export function RopInformationPanel({
       <InfoCardAccordion
         icon={<Wallet />}
         title="Payout Details and Proof of Payout"
+        defaultOpen
       >
         <Flex
           direction={{ base: "column", lg: "row" }}
@@ -262,7 +265,7 @@ export function RopInformationPanel({
         >
           {/* THE DETAILS, the left half. They set the fold's height. */}
           <Box
-            w={{ base: "full", lg: "40%" }}
+            w={{ base: "full", lg: "30%" }}
             flexShrink={0}
             minW={0}
             pr={{ base: 0, lg: 4 }}
@@ -331,7 +334,11 @@ export function RopInformationPanel({
       {/* The "ROP Schedule" title is on this outer card (user, 2026-09-24),
           heading the schedule and its validation together. A collapsible fold
           like the cards above it (user, 2026-09-28). */}
-      <InfoCardAccordion icon={<CalendarClock />} title="ROP Schedule">
+      <InfoCardAccordion
+        icon={<CalendarClock />}
+        title="ROP Schedule"
+        defaultOpen
+      >
         {/* THE LAST RELEASE ON FILE, above the one being set (user,
             2026-09-24), so the processor reads the history first. */}
         {/* A rule under the history, the same as the one above Save Changes,

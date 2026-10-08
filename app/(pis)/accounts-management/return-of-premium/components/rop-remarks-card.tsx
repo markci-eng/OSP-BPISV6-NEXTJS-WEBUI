@@ -131,6 +131,7 @@ export function RopRemarksCard({
     <InfoCardAccordion
       icon={<MessageSquareText />}
       title="Planholder Remarks and Notes"
+      defaultOpen
     >
       <Box mb={4}>
         <FieldLabel>Remarks:</FieldLabel>

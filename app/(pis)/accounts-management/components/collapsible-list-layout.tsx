@@ -18,14 +18,17 @@ type CollapsibleListLayoutProps = {
   list: ReactNode;
   /** The details panel, shown in the right column. */
   children: ReactNode;
+  /** Whether the list starts shown on desktop. Defaults to true. */
+  defaultListVisible?: boolean;
 };
 
 export function CollapsibleListLayout({
   list,
   children,
+  defaultListVisible = true,
 }: CollapsibleListLayoutProps) {
   // Hiding the list gives the details panel the full width.
-  const [listVisible, setListVisible] = useState(true);
+  const [listVisible, setListVisible] = useState(defaultListVisible);
 
   return (
     // Hiding the list slides it out while its column and the gap shrink to

@@ -169,6 +169,7 @@ export default function ReturnOfPremiumPage() {
             The layout keeps the list sticky on desktop so it stays in reach
             while the profile beside it is scrolled. */}
         <CollapsibleListLayout
+          defaultListVisible={false}
           list={
             <RopListCard
               records={inStatus}

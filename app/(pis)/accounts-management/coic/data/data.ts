@@ -40,6 +40,8 @@ function coicRow(args: Parameters<typeof mockCertificateRow>[0]): CoicForPrintin
     effectiveDate: `2026-${String((n % 9) + 1).padStart(2, "0")}-${String(
       (n % 27) + 1,
     ).padStart(2, "0")}`,
+    // MOCK (user, 2026-10-07): one of the last three months, Jul–Sep 2026.
+    transactionMonth: `2026-${String(7 + (n % 3)).padStart(2, "0")}`,
   };
 }
 
@@ -93,16 +95,52 @@ export function coicPrintedMemosOf(branch: CofpBranch): CoicMemo[] {
     }),
   );
   const memoCount = Math.ceil(rows.length / MEMO_SIZE);
+  // MOCK (user, 2026-10-07): every third branch's newest memo still has its
+  // certificates for transmit.
+  const newestPending = branchIndex % 3 === 2;
 
   return Array.from({ length: memoCount }, (_, i) => {
     const seq = memoCount - i;
     const transmitted = new Date(Date.UTC(2026, 9, 1 - i * 7 - (branchIndex % 5)));
+    const pendingTransmit = newestPending && i === 0;
     return {
       id: `COIC-${branch.code}-M${seq}`,
       branch: branch.code,
       memoNo: `CICM-${String(branchIndex + 1).padStart(3, "0")}-${String(seq).padStart(4, "0")}`,
       dateTransmitted: transmitted.toISOString().slice(0, 10),
-      rows: rows.slice((seq - 1) * MEMO_SIZE, seq * MEMO_SIZE),
+      pendingTransmit,
+      rows: rows
+        .slice((seq - 1) * MEMO_SIZE, seq * MEMO_SIZE)
+        .map((row, j) => ({
+          ...row,
+          // Nothing is released from a memo that has not gone out yet.
+          releasedTo: pendingTransmit
+            ? undefined
+            : RELEASED_TO[(branchIndex + seq + j) % RELEASED_TO.length],
+        })),
     };
   });
+}
+
+/** Who a printed certificate was released to — MOCK (user, 2026-10-07). */
+const RELEASED_TO = [
+  "PLANHOLDER",
+  "BRANCH CASHIER",
+  "AUTHORIZED REPRESENTATIVE",
+  "SALES AGENT",
+  "BRANCH MANAGER",
+];
+
+/**
+ * The codes of the branches with certificates still for transmit (user,
+ * 2026-10-07) — what the Printed combo box highlights.
+ */
+let pendingTransmitCodes: Set<string> | undefined;
+export function coicBranchesPendingTransmit(): Set<string> {
+  pendingTransmitCodes ??= new Set(
+    COIC_BRANCHES.filter((branch) =>
+      coicPrintedMemosOf(branch).some((memo) => memo.pendingTransmit),
+    ).map((branch) => branch.code),
+  );
+  return pendingTransmitCodes;
 }

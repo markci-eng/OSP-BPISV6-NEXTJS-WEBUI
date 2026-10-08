@@ -210,6 +210,16 @@ function HorizontalPlanholderCard({
                 </Text>
               </RowFact>
             </Box>
+            {/* A hairline between the two, as the vertical card draws. Embedded,
+                the pair always share a line; otherwise only in the single row,
+                since once it wraps the rule would dangle. */}
+            <Box
+              display={embedded ? "block" : { base: "none", lg: "block" }}
+              alignSelf="stretch"
+              flexShrink={0}
+              borderLeftWidth="1px"
+              borderColor="gray.200"
+            />
             <Box flex={factFlex("140px")} minW={0}>
               <RowFact label="Current Age">
                 <Text fontSize="sm" fontWeight="600" color="gray.800">

@@ -39,6 +39,8 @@ import {
   RiToolsLine,
   RiUser2Fill,
   RiUser2Line,
+  RiUserSearchFill,
+  RiUserSearchLine,
 } from "react-icons/ri";
 import { FaHandHoldingUsd } from "react-icons/fa";
 import { BiCoin, BiSolidCoin } from "react-icons/bi";
@@ -185,20 +187,9 @@ export const SideBarItemsBranch: NavItem[] = [
   {
     icon: HiOutlineShieldCheck,
     activeIcon: HiShieldCheck,
-    label: "Access Group Management",
+    label: "User Access Management",
     displayName: "Access",
-    subItems: [
-      {
-        label: "Access Groups",
-        href: "/role-access-management/access-groups",
-        displayName: "Groups",
-      },
-      {
-        label: "User Assignment",
-        href: "/role-access-management/user-assignment",
-        displayName: "Assign",
-      },
-    ],
+    href: "/user-access-management",
   },
 
   // {
@@ -428,34 +419,40 @@ export const SideBarItemsAMD: NavItem[] = [
     bottomNav: true,
   },
   {
+    icon: RiUserSearchLine,
+    activeIcon: RiUserSearchFill,
+    label: "Account Verification",
+    href: "/accounts-management/account-verification",
+  },
+  {
     icon: RiRefreshLine,
     activeIcon: RiRefreshFill,
-    label: "Re-Instatement",
+    label: "Reinstatement",
     href: "/accounts-management/reinstatement",
     bottomNav: true,
   },
   {
     icon: RiArrowLeftRightLine,
     activeIcon: RiArrowLeftRightFill,
-    label: "Transfer",
+    label: "Transfer of Rights",
     href: "/accounts-management/transfer",
   },
   {
     icon: TbReceiptDollar,
     activeIcon: TbReceiptDollarFilled,
-    label: "ROP",
+    label: "Return of Premium",
     href: "/accounts-management/return-of-premium",
   },
   {
     icon: BsFileEarmarkSpreadsheet,
     activeIcon: BsFileEarmarkSpreadsheetFill,
-    label: "CSV",
+    label: "Cash Surrender Value",
     href: "/accounts-management/csv",
   },
   {
     icon: RiClipboardLine,
     activeIcon: RiClipboardFill,
-    label: "COFP",
+    label: "Certificate of Full Payment",
     href: "/accounts-management/certificateoffullpayment",
   },
   {

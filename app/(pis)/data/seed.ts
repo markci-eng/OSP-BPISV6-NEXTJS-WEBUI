@@ -1545,6 +1545,7 @@ export const refTermiStatSeed: RefTermiStatRecord[] = [
   { termiStatCode: "CT", description: "CANCELLED/FORFEITED PLAN TERMINATION VALUE" },
   { termiStatCode: "CU", description: "CANCELLED LOAN" },
   { termiStatCode: "DC", description: "DENIED CLAIM" },
+  { termiStatCode: "FL", description: "FREE-LOOK ACCOUNT" },
   { termiStatCode: "FR", description: "FULLY PAID ROP" },
   { termiStatCode: "NT", description: "NOT YET TERMINATED" },
   { termiStatCode: "RD", description: "ST. PETER ACE PROGRAM" },

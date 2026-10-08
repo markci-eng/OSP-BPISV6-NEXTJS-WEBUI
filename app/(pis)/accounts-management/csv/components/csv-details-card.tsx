@@ -23,7 +23,10 @@ import {
   RopValidationCard,
   type RopValidationFindings,
 } from "../../return-of-premium/components/rop-validation-card";
-import { CSV_REMARKS_OPTIONS, CSV_STATUS_OPTIONS } from "../data/data";
+import {
+  CSV_DETAILS_STATUS_OPTIONS,
+  CSV_REMARKS_OPTIONS,
+} from "../data/data";
 import type { CsvDetails, CsvDetailsRemarks, CsvStatus } from "../data/types";
 
 /** MM/DD/YYYY, matching the ROP cards. */
@@ -103,7 +106,7 @@ export function CsvDetailsCard({ details }: CsvDetailsCardProps) {
               value={draft.status}
               onValueChange={(value) => set("status", value as CsvStatus)}
             >
-              {CSV_STATUS_OPTIONS.map((option) => (
+              {CSV_DETAILS_STATUS_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>

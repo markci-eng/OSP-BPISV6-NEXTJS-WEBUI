@@ -598,6 +598,7 @@ export type TerminationStatus =
   | "CT"
   | "CU"
   | "DC"
+  | "FL"
   | "FR"
   | "NT"
   | "RD"
@@ -622,6 +623,7 @@ export const TERMINATION_STATUS_LABELS: Record<TerminationStatus, string> = {
   CT: "Cancelled/Forfeited Plan Termination Value",
   CU: "Cancelled Loan",
   DC: "Denied Claim",
+  FL: "Free-Look Account",
   FR: "Fully Paid ROP",
   NT: "Not Yet Terminated",
   RD: "St. Peter ACE Program",

@@ -18,7 +18,7 @@ export const processOverview: ProcessOverview = {
 };
 
 export const processByType: ProcessByType[] = [
-  { type: "Re-Instatement", pending: 4, processing: 3, completed: 24 },
+  { type: "Reinstatement", pending: 4, processing: 3, completed: 24 },
   { type: "Transfer", pending: 2, processing: 1, completed: 14 },
   { type: "ROP", pending: 3, processing: 5, completed: 29 },
   { type: "Plan Termination", pending: 2, processing: 3, completed: 21 },

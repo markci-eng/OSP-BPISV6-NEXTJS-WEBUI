@@ -1,14 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { Box, Flex } from "@chakra-ui/react";
 import { Page } from "osp-ui-kit";
 
 import { CollapsibleListLayout } from "../components/collapsible-list-layout";
 import { SubmittedDocumentsCard } from "../reinstatement/components/submitted-documents-card";
-import { useAddConfiscatedCofp } from "./components/add-confiscated-cofp-button";
+import {
+  SPFC_REPLACEMENT_COPY,
+  useAddConfiscatedCofp,
+} from "./components/add-confiscated-cofp-button";
 import { CofpAddSpecialButton } from "./components/add-special-cofp-button";
+import { useCofpApproveAction } from "./components/approve-deficient-button";
 import { useCofpCancelAction } from "./components/cancel-cofp-button";
+import {
+  useCofpRemoveAction,
+  useCofpUntag,
+} from "./components/confiscated-actions";
+import { CofpEncodeOldButton } from "./components/encode-old-cofp-button";
 import { CofpForPrintingListCard } from "./components/for-printing-list-card";
 import { CofpPlanholderCard } from "./components/planholder-card";
 import { CofpPrintTransmittalButton } from "./components/print-transmittal-button";
@@ -20,6 +35,7 @@ import { CofpRequestListCard } from "./components/request-list-card";
 import { useCofpReturnAction } from "./components/return-cofp-button";
 import {
   COFP_BRANCHES,
+  COFP_PINNED_BRANCH_CODE,
   COFP_REPLACEMENT_BRANCHES,
   branchRowsOf,
   isBranchView,
@@ -35,8 +51,11 @@ import {
 } from "./data/regions";
 import { replacementDetailsOf } from "./data/replacement-details";
 import type {
+  CofpBranch,
+  CofpForPrinting,
   CofpReplacementRequest,
   CofpReplacementSource,
+  CofpReplacementStatus,
   CofpView,
 } from "./data/types";
 
@@ -58,6 +77,14 @@ export default function CertificateOfFullPaymentPage() {
   const changeView = (next: CofpView) => {
     setView(next);
     setSelectedId(requestsFor(next)[0]?.id);
+    // Deficient does not list SPFC (user, 2026-10-07), so the first branch it
+    // does list takes its place.
+    if (next === "DEFICIENT" && branchCode === COFP_PINNED_BRANCH_CODE) {
+      const first = COFP_BRANCHES.find(
+        (branch) => branch.code !== COFP_PINNED_BRANCH_CODE,
+      );
+      if (first) setBranchCode(first.code);
+    }
   };
 
   const selected = useMemo(
@@ -93,9 +120,24 @@ export default function CertificateOfFullPaymentPage() {
   const [cancelledRowIds, setCancelledRowIds] = useState<Set<string>>(
     () => new Set(),
   );
-  // Confiscated certificates sent back with Return leave the list for the rest
-  // of the visit (user, 2026-10-05).
+  // Confiscated certificates sent back with Return (user, 2026-10-05), or
+  // untagged or removed (user, 2026-10-07), leave the list for the rest of the
+  // visit.
   const [returnedRowIds, setReturnedRowIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const dropConfiscated = useCallback(
+    (gone: CofpForPrinting[]) =>
+      setReturnedRowIds((prev) => {
+        const next = new Set(prev);
+        gone.forEach((row) => next.add(row.id));
+        return next;
+      }),
+    [],
+  );
+  // Deficient accounts approved with Approve leave the list for the rest of
+  // the visit (user, 2026-10-07).
+  const [approvedRowIds, setApprovedRowIds] = useState<Set<string>>(
     () => new Set(),
   );
   const memos = useMemo(
@@ -129,23 +171,46 @@ export default function CertificateOfFullPaymentPage() {
   const [addedConfiscated, setAddedConfiscated] = useState<
     CofpReplacementRequest[]
   >([]);
+  // Added with SPFC's "+" (user, 2026-10-07), the same way above the SPFC list.
+  const [addedSpfc, setAddedSpfc] = useState<CofpReplacementRequest[]>([]);
+  // Under Branch, only the requests with the status picked above the combo
+  // box (user, 2026-10-07) — For Process on arrival.
+  const [replacementStatus, setReplacementStatus] =
+    useState<CofpReplacementStatus>("FOR_PROCESS");
+  const branchRequestsOf = (
+    branch: CofpBranch | undefined,
+    status: CofpReplacementStatus,
+  ) => replacementRowsOf("BRANCH", branch).filter((row) => row.status === status);
   const replacementRows = useMemo(
     () =>
       replacementSource === "CONFISCATED"
         ? [...addedConfiscated, ...replacementRowsOf("CONFISCATED")]
-        : replacementRowsOf(replacementSource, replacementBranch),
-    [replacementSource, replacementBranch, addedConfiscated],
+        : replacementSource === "SPFC"
+          ? [...addedSpfc, ...replacementRowsOf("SPFC")]
+          : branchRequestsOf(replacementBranch, replacementStatus),
+    [
+      replacementSource,
+      replacementBranch,
+      replacementStatus,
+      addedConfiscated,
+      addedSpfc,
+    ],
   );
-  const addConfiscated = (planholder: CofpSpecialCandidate) =>
-    setAddedConfiscated((prev) => [
-      {
-        ...planholder.row,
-        // Unique however often the same planholder is added.
-        id: `ADDED-${planholder.lpaNo}-${prev.length + 1}`,
-        dateRequested: new Date().toISOString().slice(0, 10),
-      },
-      ...prev,
-    ]);
+  /** The planholder as a new request, newest first — Add's two lists. */
+  const addTo =
+    (set: Dispatch<SetStateAction<CofpReplacementRequest[]>>, tag: string) =>
+    (planholder: CofpSpecialCandidate) =>
+      set((prev) => [
+        {
+          ...planholder.row,
+          // Unique however often the same planholder is added.
+          id: `${tag}-${planholder.lpaNo}-${prev.length + 1}`,
+          dateRequested: new Date().toISOString().slice(0, 10),
+        },
+        ...prev,
+      ]);
+  const addConfiscated = addTo(setAddedConfiscated, "ADDED");
+  const addSpfc = addTo(setAddedSpfc, "ADDED-SPFC");
   const showsReplacement = view === "REPLACEMENT";
   // Under Branch the requests are listed in the rail below the combo box
   // (user, 2026-10-05), and the one picked there is drawn on the right.
@@ -171,7 +236,14 @@ export default function CertificateOfFullPaymentPage() {
     if (next !== "BRANCH") return;
     const first = COFP_REPLACEMENT_BRANCHES[0];
     setReplacementBranchCode(first?.code);
-    setReplacementId(first ? replacementRowsOf("BRANCH", first)[0]?.id : undefined);
+    setReplacementId(branchRequestsOf(first, replacementStatus)[0]?.id);
+  };
+
+  // A new status picks its first request under the same branch, by the same
+  // rule (user, 2026-10-07).
+  const changeReplacementStatus = (next: CofpReplacementStatus) => {
+    setReplacementStatus(next);
+    setReplacementId(branchRequestsOf(replacementBranch, next)[0]?.id);
   };
 
   // THE LISTS' BUTTONS ARE THE KIT TABLE'S OWN (user, 2026-10-06): Cancel COFP
@@ -188,14 +260,31 @@ export default function CertificateOfFullPaymentPage() {
   });
   const returnAction = useCofpReturnAction({
     branchCode: selectedBranch?.code,
-    onReturned: (returned) =>
-      setReturnedRowIds((prev) => {
+    onReturned: dropConfiscated,
+  });
+  const removeAction = useCofpRemoveAction(dropConfiscated);
+  const untag = useCofpUntag(
+    useCallback((row: CofpForPrinting) => dropConfiscated([row]), [dropConfiscated]),
+  );
+  const approveAction = useCofpApproveAction({
+    onApproved: (approved) =>
+      setApprovedRowIds((prev) => {
         const next = new Set(prev);
-        returned.forEach((row) => next.add(row.id));
+        approved.forEach((row) => next.add(row.id));
         return next;
       }),
   });
+  const deficientRows = useMemo(
+    () =>
+      view === "DEFICIENT" && selectedBranch
+        ? branchRowsOf(view, selectedBranch).filter(
+            (row) => !approvedRowIds.has(row.id),
+          )
+        : [],
+    [view, selectedBranch, approvedRowIds],
+  );
   const addConfiscatedAction = useAddConfiscatedCofp(addConfiscated);
+  const addSpfcAction = useAddConfiscatedCofp(addSpfc, SPFC_REPLACEMENT_COPY);
   const confiscatedRows = useMemo(
     () =>
       view === "CONFISCATED" && selectedBranch
@@ -226,12 +315,19 @@ export default function CertificateOfFullPaymentPage() {
       )}
       {/* Print Transmittal sits beside the page title under Printed (user,
           2026-10-05), for the whole memo picked in the rail. */}
+      {/* Encode Old COFP beside it (user, 2026-10-07). */}
       {view === "PRINTED" && selectedBranch && (
         <Page.ToolContent>
-          <CofpPrintTransmittalButton
-            memo={selectedMemo}
-            branchName={selectedBranch.description}
-          />
+          <Flex gap={2} flexShrink={0}>
+            <CofpEncodeOldButton
+              branchName={selectedBranch.description}
+              branchCode={selectedBranch.code}
+            />
+            <CofpPrintTransmittalButton
+              memo={selectedMemo}
+              branchName={selectedBranch.description}
+            />
+          </Flex>
         </Page.ToolContent>
       )}
       <Page.MainContent>
@@ -260,6 +356,8 @@ export default function CertificateOfFullPaymentPage() {
               onSelectMemo={(memo) => setMemoId(memo.id)}
               replacementSource={replacementSource}
               onReplacementSourceChange={changeReplacementSource}
+              replacementStatus={replacementStatus}
+              onReplacementStatusChange={changeReplacementStatus}
               replacementBranches={COFP_REPLACEMENT_BRANCHES}
               replacementBranchCode={replacementBranchCode}
               onSelectReplacementBranch={(branch) => {
@@ -282,45 +380,19 @@ export default function CertificateOfFullPaymentPage() {
             {showsReplacement ? (
               replacementSource === "BRANCH" ? (
                 selectedReplacement && replacementDetails ? (
-                  // Planholder Information in 40%, the filed papers in the
-                  // rest (user, 2026-10-06) — the CSV panel's row. Stacks
-                  // below `lg`. COFP Replacement Information under the pair.
+                  // Planholder Information across the full width (user,
+                  // 2026-10-08), the filed papers under it, then COFP
+                  // Replacement Information.
                   <Flex direction="column" gap="10px" w="full" minW={0}>
-                  <Flex
-                    direction={{ base: "column", lg: "row" }}
-                    align="stretch"
-                    gap="10px"
-                    w="full"
-                    minW={0}
-                  >
-                    <Box
-                      w={{ base: "100%", lg: "40%" }}
-                      minW={{ lg: "280px" }}
-                      flexShrink={0}
-                    >
-                      <CofpReplacementPlanholderCard
-                        request={selectedReplacement}
-                        details={replacementDetails}
-                      />
-                    </Box>
-                    {/* Out of flow on `lg`, as on CSV, so the card sets the
-                        row's height and the scan is fitted inside it. */}
-                    <Box
-                      flex="1"
-                      minW={0}
-                      w={{ base: "full", lg: "auto" }}
-                      position={{ base: "static", lg: "relative" }}
-                    >
-                      <Box
-                        position={{ base: "static", lg: "absolute" }}
-                        inset={0}
-                      >
-                        <SubmittedDocumentsCard
-                          documents={replacementDetails.documents}
-                        />
-                      </Box>
-                    </Box>
-                  </Flex>
+                  <Box w="full" minW={0}>
+                    <CofpReplacementPlanholderCard
+                      request={selectedReplacement}
+                      details={replacementDetails}
+                    />
+                  </Box>
+                  <SubmittedDocumentsCard
+                    documents={replacementDetails.documents}
+                  />
                   <CofpReplacementInfoCard info={replacementDetails.info} />
                   <CofpReplacementDecisionButtons
                     lpaNo={selectedReplacement.lpaNo}
@@ -358,10 +430,14 @@ export default function CertificateOfFullPaymentPage() {
                   // Print COFP Replacement, bottom right (user, 2026-10-05):
                   // prints the replacement certificates for the rows shown.
                   printLabel="Print COFP Replacement"
+                  // "+" on Confiscated (user, 2026-10-06) and SPFC (user,
+                  // 2026-10-07).
                   headerActions={
                     replacementSource === "CONFISCATED"
                       ? addConfiscatedAction.button
-                      : undefined
+                      : replacementSource === "SPFC"
+                        ? addSpfcAction.button
+                        : undefined
                   }
                 />
               )
@@ -391,6 +467,7 @@ export default function CertificateOfFullPaymentPage() {
                       }
                       emptyMessage="No printed certificates in this branch."
                       printable={false}
+                      columnSet="printed"
                       bulkActions={[cancelAction]}
                     />
                   )
@@ -407,15 +484,30 @@ export default function CertificateOfFullPaymentPage() {
                       title="List of Confiscated COFP"
                       emptyMessage="No confiscated certificates in this branch."
                       printable={false}
-                      bulkActions={[returnAction.action]}
+                      // Its own columns — Batch Number in place of Date
+                      // Confiscated under SPFC — Edit | Untag on each row,
+                      // and Return and Remove under the list for the
+                      // checked rows (user, 2026-10-07).
+                      columnSet={
+                        selectedBranch.code === COFP_PINNED_BRANCH_CODE
+                          ? "confiscatedSpfc"
+                          : "confiscated"
+                      }
+                      onUntag={untag}
+                      footerActions={[returnAction.action, removeAction]}
                     />
                   ) : (
+                    // Checkboxes, the Reason column, and Approve under the
+                    // list for the considered accounts (user, 2026-10-07).
                     <CofpForPrintingListCard
-                      rows={branchRowsOf(view, selectedBranch)}
+                      key={`${view}-${selectedBranch.code}`}
+                      rows={deficientRows}
                       regionCode={selectedBranch.code}
                       title="List of Deficient"
                       emptyMessage="No deficient certificates in this branch."
                       printable={false}
+                      showReason
+                      footerActions={[approveAction.action]}
                     />
                   ))
                 : selected && (
@@ -424,7 +516,9 @@ export default function CertificateOfFullPaymentPage() {
           </Flex>
         </CollapsibleListLayout>
         {returnAction.dialog}
+        {approveAction.dialog}
         {addConfiscatedAction.dialog}
+        {addSpfcAction.dialog}
       </Page.MainContent>
     </Page.Root>
   );

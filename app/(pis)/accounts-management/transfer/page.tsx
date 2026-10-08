@@ -3,6 +3,11 @@
 // Transfer — a master/detail screen laid out like Return of Premium: the list
 // rail on the left (with the floating hide/show toggle), the selected request
 // on the right.
+//
+// THE REQUEST (user, 2026-10-08) is three columns: the transferor's and the
+// transferee's details side by side, each party's Valid ID card under its
+// details, and the Document Viewer pinned at the right beside both. The
+// remarks and Save run under the two parties.
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Flex, Grid, Text } from "@chakra-ui/react";
@@ -23,11 +28,25 @@ import { buildStatementOfAccount } from "../data/statement-of-account";
 import { RemarksHistoryDialog } from "../reinstatement/components/remarks-history-dialog";
 import { RopRemarksCard } from "../return-of-premium/components/rop-remarks-card";
 import { RopHistoryDialog } from "./components/rop-history-dialog";
+import { TransferDocumentViewerCard } from "./components/transfer-document-viewer-card";
 import { TransferListCard } from "./components/transfer-list-card";
+import { TransferValidIdCard } from "./components/transfer-valid-id-card";
 import { TransfereeCard } from "./components/transferee-card";
 import { TransferorCard } from "./components/transferor-card";
 import { fetchTransferRecords, TRANSFER_STATUS_OPTIONS } from "./data/data";
-import type { TransferRecord, TransferStatus } from "./data/types";
+import type {
+  TransferDocument,
+  TransferRecord,
+  TransferStatus,
+} from "./data/types";
+
+type Party = "transferor" | "transferee";
+
+// The panel's breakpoints, measured on the panel rather than the window: it is
+// narrower with the list shown than hidden. From PARTIES_WIDE the parties sit
+// side by side; from THREE_UP the Document Viewer joins them as a third column.
+const PARTIES_WIDE = "@container (min-width: 720px)";
+const THREE_UP = "@container (min-width: 1100px)";
 
 type HeaderActionKey = "remarks" | "changes" | "soa" | "rop";
 
@@ -63,6 +82,12 @@ export default function TransferPage() {
   const [remarksHistoryOpen, setRemarksHistoryOpen] = useState(false);
   const [ropHistoryOpen, setRopHistoryOpen] = useState(false);
   const [soaOpen, setSoaOpen] = useState(false);
+  // What the processor has marked verified or unverified this session, over
+  // what the record came with. Keyed `${recordId}:${party}` for IDs and by
+  // document id for files. Nothing is persisted yet — there is no endpoint.
+  const [verifiedOverrides, setVerifiedOverrides] = useState<
+    Record<string, boolean>
+  >({});
 
   useEffect(() => {
     let cancelled = false;
@@ -103,6 +128,38 @@ export default function TransferPage() {
     [inStatus, selectedId],
   );
 
+  const isIdVerified = (record: TransferRecord, party: Party) =>
+    verifiedOverrides[`${record.id}:${party}`] ??
+    (party === "transferor"
+      ? record.transferorIdVerified
+      : record.transfereeIdVerified);
+
+  const setIdVerified = (
+    record: TransferRecord,
+    party: Party,
+    verified: boolean,
+  ) => {
+    setVerifiedOverrides((current) => ({
+      ...current,
+      [`${record.id}:${party}`]: verified,
+    }));
+    const who = party === "transferor" ? "Transferor" : "Transferee";
+    if (verified) toast.success(`${who} ID verified`);
+    else toast.info(`${who} ID marked not verified`);
+  };
+
+  const isDocumentVerified = (document: TransferDocument) =>
+    verifiedOverrides[document.id] ?? document.verified;
+
+  const setDocumentVerified = (
+    document: TransferDocument,
+    verified: boolean,
+  ) => {
+    setVerifiedOverrides((current) => ({ ...current, [document.id]: verified }));
+    if (verified) toast.success(`${document.label} marked verified`);
+    else toast.info(`${document.label} marked for review`);
+  };
+
   // The transferor's plan, over the sample ledger — Transfer carries no
   // payments of its own.
   const soa = useMemo(() => {
@@ -129,7 +186,7 @@ export default function TransferPage() {
 
   return (
     <Page.Root
-      title="Transfer"
+      title="Transfer of Rights"
       headerButton="menu"
       px={{ base: 0, lg: "10px" }}
     >
@@ -196,7 +253,9 @@ export default function TransferPage() {
       </Page.ToolContent>
 
       <Page.MainContent>
+        {/* The list starts hidden on Transfer; the toggle brings it back. */}
         <CollapsibleListLayout
+          defaultListVisible={false}
           list={
             <TransferListCard
               records={inStatus}
@@ -210,54 +269,122 @@ export default function TransferPage() {
             />
           }
         >
-          <Flex direction="column" gap={4} minW={0}>
+          {/* A SIZE CONTAINER, so the columns follow the panel's width —
+              the list beside it takes a quarter of the page when shown. */}
+          <Box containerType="inline-size" minW={0}>
             {loading ? (
               <Text fontSize="sm" color="gray.400" py={4}>
                 Loading…
               </Text>
             ) : selected ? (
-              // One card per party, the transferor first: who is giving the
-              // plan up, then who is taking it on.
-              <>
-                <TransferorCard
-                  transferor={selected.transferor}
-                  lpaNo={selected.lpaNo}
-                  personId={selected.personId}
-                  documents={selected.transferorSubmittedIds}
-                />
-                <TransfereeCard
-                  transferee={selected.transferee}
-                  lpaNo={selected.lpaNo}
-                  personId={selected.personId}
-                  documents={selected.transfereeSubmittedIds}
-                />
-                {/* Keyed by record so the notes list opens on page one. */}
-                <RopRemarksCard
-                  key={selected.id}
-                  lpaNo={selected.lpaNo}
-                  planholderName={selected.planholderName}
-                  remarks={selected.planholderRemarks}
-                  notes={selected.planholderNotes}
-                />
-                {/* Bottom right under the remarks, as on Reinstatement.
-                    Nothing is persisted yet — there is no endpoint. */}
-                <Flex justify="flex-end">
-                  <PrimaryMdButton
-                    onClick={() =>
-                      toast.success(`${selected.lpaNo} changes saved`)
-                    }
+              <Grid
+                templateColumns="minmax(0, 1fr)"
+                gap={4}
+                alignItems="start"
+                css={{
+                  [THREE_UP]: {
+                    gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)",
+                  },
+                }}
+              >
+                <Flex direction="column" gap={4} minW={0}>
+                  {/* THE PARTIES, the transferor first: who is giving the
+                      plan up, then who is taking it on. Stacked, each party's
+                      ID follows its own details; side by side, the details
+                      share a row and the IDs the row under it, so each pair
+                      ends level. */}
+                  <Grid
+                    gap={4}
+                    templateColumns="minmax(0, 1fr)"
+                    templateAreas={`"transferor" "transferorId" "transferee" "transfereeId"`}
+                    css={{
+                      [PARTIES_WIDE]: {
+                        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                        gridTemplateAreas: `"transferor transferee" "transferorId transfereeId"`,
+                      },
+                    }}
                   >
-                    <Save size={16} />
-                    Save Changes
-                  </PrimaryMdButton>
+                    <Box gridArea="transferor" minW={0}>
+                      <TransferorCard
+                        transferor={selected.transferor}
+                        lpaNo={selected.lpaNo}
+                        personId={selected.personId}
+                      />
+                    </Box>
+                    <Box gridArea="transferee" minW={0}>
+                      <TransfereeCard
+                        transferee={selected.transferee}
+                        lpaNo={selected.lpaNo}
+                        personId={selected.personId}
+                      />
+                    </Box>
+                    <Box gridArea="transferorId" minW={0}>
+                      <TransferValidIdCard
+                        title="Transferor Valid ID"
+                        party={selected.transferor}
+                        documents={selected.transferorSubmittedIds}
+                        verified={isIdVerified(selected, "transferor")}
+                        onVerifiedChange={(verified) =>
+                          setIdVerified(selected, "transferor", verified)
+                        }
+                      />
+                    </Box>
+                    <Box gridArea="transfereeId" minW={0}>
+                      <TransferValidIdCard
+                        title="Transferee Valid ID"
+                        party={selected.transferee}
+                        documents={selected.transfereeSubmittedIds}
+                        verified={isIdVerified(selected, "transferee")}
+                        onVerifiedChange={(verified) =>
+                          setIdVerified(selected, "transferee", verified)
+                        }
+                      />
+                    </Box>
+                  </Grid>
+
+                  {/* Keyed by record so the notes list opens on page one. */}
+                  <RopRemarksCard
+                    key={selected.id}
+                    lpaNo={selected.lpaNo}
+                    planholderName={selected.planholderName}
+                    remarks={selected.planholderRemarks}
+                    notes={selected.planholderNotes}
+                  />
+                  {/* Bottom right under the remarks, as on Reinstatement.
+                      Nothing is persisted yet — there is no endpoint. */}
+                  <Flex justify="flex-end">
+                    <PrimaryMdButton
+                      onClick={() =>
+                        toast.success(`${selected.lpaNo} changes saved`)
+                      }
+                    >
+                      <Save size={16} />
+                      Save Changes
+                    </PrimaryMdButton>
+                  </Flex>
                 </Flex>
-              </>
+
+                {/* THE DOCUMENT VIEWER, pinned while the parties scroll past
+                    it — the form is read against them. Below THREE_UP it
+                    follows the parties, full width, and does not pin. */}
+                <Box
+                  minW={0}
+                  css={{ [THREE_UP]: { position: "sticky", top: "16px" } }}
+                >
+                  <TransferDocumentViewerCard
+                    documents={selected.documents}
+                    isVerified={isDocumentVerified}
+                    onVerifiedChange={setDocumentVerified}
+                    lpaNo={selected.lpaNo}
+                  />
+                </Box>
+              </Grid>
             ) : (
               <Text fontSize="sm" color="gray.400" py={4}>
                 Select a transfer request from the list.
               </Text>
             )}
-          </Flex>
+          </Box>
         </CollapsibleListLayout>
       </Page.MainContent>
     </Page.Root>
