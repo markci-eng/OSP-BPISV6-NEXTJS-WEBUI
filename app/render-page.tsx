@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { NotifyInstall } from "@splpi/estore-shared-components";
-import { AppLayout } from "osp-ui-kit";
+import { AppLayout, AppUser } from "osp-ui-kit";
 import { OspNavigationProvider } from "@/components/navigation/osp-nav-provider";
 import {
   SideBarItemsAMD,
@@ -59,6 +59,16 @@ export function RenderPage({
   const navItems =
     (userRole && ROLE_SIDEBAR_ITEMS[userRole]) || SideBarItemsEKolekta;
 
+  const user: AppUser = {
+    id: "user-id",
+    email: "joycebv@stpeter.com.ph",
+    displayName: "Joyce Basilio-Ramos",
+    avatarUrl:
+      "https://lh3.googleusercontent.com/a-/ALV-UjVMJSHCRae9AI71omM-12-JXe6RRORMkcfShnPQRn5izScdfxo=s240-p-k-rw-no",
+    position: userRole ?? "",
+    status: "active",
+  };
+
   return (
     <NotifyInstall appName={"One St. Peter: Life Plan"}>
       {userRole && ROLES_WITHOUT_CHATBOT.has(userRole) && (
@@ -67,6 +77,7 @@ export function RenderPage({
       <OspNavigationProvider>
         <AppLayout
           navItems={navItems}
+          user={user}
           notifications={Notifications}
           appName={userRole === "sales-agent" ? "eKolekta" : "One St. Peter"}
           appSubtitle="Life Plan Operations"

@@ -20,6 +20,7 @@ export interface PlanDetailType {
   terminationStatus: string;
   salesAgent1: string;
   salesAgent2: string;
+  remarks?: string | null;
 }
 
 export interface PlanholderInfoType {

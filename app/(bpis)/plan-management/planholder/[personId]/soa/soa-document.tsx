@@ -6,6 +6,7 @@ import {
   Flex,
   Grid,
   HStack,
+  Image,
   Separator,
   Table,
   Text,
@@ -106,10 +107,12 @@ export function SoaDocument({
             {/* Header */}
             <Flex justify="space-between" align="flex-start" gap={4} wrap="wrap">
               <Box>
-                <Text fontSize="lg" fontWeight="extrabold" letterSpacing="tight">
-                  ST. PETER LIFE PLAN, INC.
-                </Text>
-                <Text fontSize="xs" color="gray.500">
+                <Image
+                  src="/images/osp-chakra-reusable-components/stpeter-logo.png"
+                  alt="St. Peter Life Plan, Inc."
+                  h="34px"
+                />
+                <Text fontSize="xs" color="gray.500" mt={1}>
                   {plan.branch} Branch
                 </Text>
               </Box>
@@ -172,7 +175,7 @@ export function SoaDocument({
                 value={`${statement.installmentsPaid} of ${statement.totalInstallments}`}
               />
               <SummaryTile label="Total Payments" value={formatPeso(statement.totalPayments)} />
-              <SummaryTile label="Balance" value={formatPeso(statement.balance)} accent />
+              <SummaryTile label="Balance" value={formatPeso(statement.balance)} />
               <SummaryTile label="Termination Value" value={formatPeso(statement.terminationValue)} />
             </Grid>
 
@@ -251,6 +254,21 @@ export function SoaDocument({
               </Table.Root>
             </Box>
 
+            {/* Plan remarks */}
+            <Text fontSize="xs" fontWeight="bold" textTransform="uppercase" letterSpacing="wider" color="gray.500" mt={4} mb={2}>
+              Plan Remarks
+            </Text>
+            <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3}>
+              <Text
+                fontSize="11px"
+                color={plan.remarks ? "gray.900" : "gray.400"}
+                whiteSpace="pre-wrap"
+                wordBreak="break-word"
+              >
+                {plan.remarks || "No remarks on file."}
+              </Text>
+            </Box>
+
             <Text fontSize="10px" color="gray.400" mt={4}>
               This statement is system-generated from the plan's payment history.
               Total Payments ({formatPeso(statement.totalPayments)}) plus Balance
@@ -264,31 +282,13 @@ export function SoaDocument({
   );
 }
 
-function SummaryTile({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
+function SummaryTile({ label, value }: { label: string; value: string }) {
   return (
-    <Box
-      borderWidth="1px"
-      borderColor={accent ? "var(--chakra-colors-primary-disabled)" : "gray.200"}
-      borderRadius="md"
-      p={3}
-      bg={accent ? "var(--chakra-colors-primary-disabled)/10" : "white"}
-    >
+    <Box borderWidth="1px" borderColor="gray.200" borderRadius="md" p={3} bg="white">
       <Text fontSize="10px" color="gray.500" textTransform="uppercase" letterSpacing="wider" mb="2px">
         {label}
       </Text>
-      <Text
-        fontSize="sm"
-        fontWeight="bold"
-        color={accent ? "var(--chakra-colors-primary)" : "gray.900"}
-      >
+      <Text fontSize="sm" fontWeight="bold" color="gray.900">
         {value}
       </Text>
     </Box>

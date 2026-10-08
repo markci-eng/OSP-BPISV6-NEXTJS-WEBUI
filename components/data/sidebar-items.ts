@@ -126,7 +126,11 @@ export const SideBarItemsBranch: NavItem[] = [
     activeIcon: PesoSolidIcon,
     label: "Payment",
     subItems: [
-      { label: "Encode Payment", href: "/payment/encode-payment" },
+      {
+        label: "Encode Payment",
+        href: "/payment/encode-payment",
+        displayName: "Payment",
+      },
       { label: "View DRS", href: "/payment/view-drs" },
       {
         label: "Encode Validated Deposit Slip",
