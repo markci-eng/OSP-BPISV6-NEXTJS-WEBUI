@@ -1,8 +1,8 @@
 {
-  "buildId": "PjQS4iM498ePbdMKcG9jm",
-  "revision": "b6eee8006f8dd378",
-  "generatedAt": "2026-10-08T05:17:19.586Z",
-  "totalBytes": 13216960,
+  "buildId": "wS-w8cIsbMqHfGtFjS3hr",
+  "revision": "5653de4436881f6c",
+  "generatedAt": "2026-10-12T08:59:47.389Z",
+  "totalBytes": 14015298,
   "assets": [
     {
       "url": "/_next/static/chunks/0165c11b0c405030.js",
@@ -14,12 +14,6 @@
       "url": "/_next/static/chunks/017c343a9ea1e2ff.js",
       "hash": "146f00b25583080a",
       "size": 14600,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/01ba2cf40ce88a6c.js",
-      "hash": "a157ef200e461329",
-      "size": 13077,
       "required": true
     },
     {
@@ -35,12 +29,6 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/04842ff7f269cb4c.js",
-      "hash": "481284c9bf8a061d",
-      "size": 16726,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/0599cb1b08a71070.js",
       "hash": "5f48dcc7cb2879e0",
       "size": 371501,
@@ -53,9 +41,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/078009b664086bbb.js",
-      "hash": "6893e2ecca4127a3",
-      "size": 19445,
+      "url": "/_next/static/chunks/061915358e418986.js",
+      "hash": "e8eaa27086593943",
+      "size": 35885,
       "required": true
     },
     {
@@ -65,27 +53,15 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/0a409e18a626ad5b.js",
-      "hash": "3228d1512af73b78",
-      "size": 501565,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/0ba7bfb0a4154d2a.js",
       "hash": "27114d439eabd611",
       "size": 371501,
       "required": true
     },
     {
-      "url": "/_next/static/chunks/10fa3b614ea38fe1.js",
-      "hash": "eb811086927480b2",
-      "size": 15091,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/120e4865896278a6.js",
-      "hash": "d1d1daabbf8eb20f",
-      "size": 100998,
+      "url": "/_next/static/chunks/107d1925823017df.js",
+      "hash": "e994848c29af76a3",
+      "size": 9099,
       "required": true
     },
     {
@@ -101,9 +77,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/1e0a911ce1954776.js",
-      "hash": "3065799ae9bb23d7",
-      "size": 64299,
+      "url": "/_next/static/chunks/207a13d56ef64be3.js",
+      "hash": "1e6e6fab00920463",
+      "size": 25350,
       "required": true
     },
     {
@@ -131,57 +107,27 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/284c80c65435eb84.js",
-      "hash": "c7842ef62c2f989e",
-      "size": 17754,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/284e72921db9530b.js",
       "hash": "8578622239d5718a",
       "size": 44852,
       "required": true
     },
     {
-      "url": "/_next/static/chunks/28a0d942f0426bd7.js",
-      "hash": "4c5da671d6a1c233",
-      "size": 41360,
+      "url": "/_next/static/chunks/310f0ccf9c8af7e2.js",
+      "hash": "db995a51ca0c6c32",
+      "size": 188010,
       "required": true
     },
     {
-      "url": "/_next/static/chunks/28dbbf9bcc97f4da.js",
-      "hash": "25ff5199d63fa3b5",
-      "size": 3397,
+      "url": "/_next/static/chunks/32015ee32fe9c1e0.js",
+      "hash": "4eaa28032666aad7",
+      "size": 12970,
       "required": true
     },
     {
-      "url": "/_next/static/chunks/2c437d0534667097.js",
-      "hash": "bc6eb622ac2d353e",
-      "size": 24778,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/2d1936e4a0ef5bc0.js",
-      "hash": "5af88f0cd1a9de25",
-      "size": 26348,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/308d6ae78cbfa592.js",
-      "hash": "9ef3db2f341098a9",
-      "size": 28244,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/31c00eb376b2ee9f.js",
-      "hash": "4285da357fe03b40",
-      "size": 24419,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/33c314482e51c957.js",
-      "hash": "6e5154320ac75374",
-      "size": 15326,
+      "url": "/_next/static/chunks/3236796bfe198d20.js",
+      "hash": "bc895951817a185c",
+      "size": 27705,
       "required": true
     },
     {
@@ -191,9 +137,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/34b93f88c70e47b1.js",
-      "hash": "9ceb8d4ed34a598a",
-      "size": 34434,
+      "url": "/_next/static/chunks/35c9aee78d6eea3c.js",
+      "hash": "62b6916b3608c6a8",
+      "size": 12610,
       "required": true
     },
     {
@@ -209,6 +155,18 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/390ecd315293ba35.js",
+      "hash": "98e2ff44686f9a4c",
+      "size": 14374,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/39960fd08465a173.js",
+      "hash": "4f719564feed0a3a",
+      "size": 23412,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/3a852450ea398b80.js",
       "hash": "cb351f774d98eba9",
       "size": 1289,
@@ -221,9 +179,21 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/41467d9e1534dc0a.js",
+      "hash": "24747beb770e2c42",
+      "size": 27155,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/4378720ae3541ec2.js",
       "hash": "3c6b7c17998ab7b8",
       "size": 62354,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/449788156203dc3e.js",
+      "hash": "5d2b171e5884b402",
+      "size": 15048,
       "required": true
     },
     {
@@ -251,21 +221,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/4da8cb908b0e20b6.js",
-      "hash": "5e1979b6e5183c35",
-      "size": 14481,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/4f5e0ad2d3c1cf28.js",
       "hash": "ea7d0e0ce8a7f7eb",
       "size": 36927,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/4f95a3d4b419a168.js",
-      "hash": "6ad9bc70dca72b8a",
-      "size": 66173,
       "required": true
     },
     {
@@ -281,9 +239,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/5241ebef8707613c.js",
-      "hash": "0fa63886547ea82d",
-      "size": 37937,
+      "url": "/_next/static/chunks/5411d5f6cb78d274.js",
+      "hash": "c0fb27879ffbaaa6",
+      "size": 38965,
       "required": true
     },
     {
@@ -308,6 +266,12 @@
       "url": "/_next/static/chunks/5924890d5f312722.js",
       "hash": "4980582d00d213e0",
       "size": 878,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/5b26f464f2c7a590.js",
+      "hash": "056bb300c66cfdce",
+      "size": 729253,
       "required": true
     },
     {
@@ -341,6 +305,12 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/617d4af9b87dd214.js",
+      "hash": "06759fb7873c5330",
+      "size": 37771,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/621f7dc35ad5588b.js",
       "hash": "4caccc932c8f29d4",
       "size": 954,
@@ -353,27 +323,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/63f370da7f10f974.js",
-      "hash": "0d9a1eafc9e97811",
-      "size": 46342,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/6555283a7a3891a9.js",
-      "hash": "d4bd24e6074f609b",
-      "size": 25326,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/672573e372d823ed.js",
       "hash": "0a0290b977e84698",
       "size": 32114,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/68ed38a06e032b8e.js",
-      "hash": "644b21278a4e89c0",
-      "size": 15155,
       "required": true
     },
     {
@@ -383,27 +335,15 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/6b0f77922e6d539a.js",
-      "hash": "5d88b3620039b2e2",
-      "size": 20807,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/6c83d8b7294148bd.js",
-      "hash": "d059f9a3638c843f",
-      "size": 25344,
+      "url": "/_next/static/chunks/6c551f2636f95262.js",
+      "hash": "cd759bbec67f97fa",
+      "size": 79562,
       "required": true
     },
     {
       "url": "/_next/static/chunks/6fd823e9624d0f67.js",
       "hash": "1f2445d85c588687",
       "size": 29468,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/709a4f42fd30ca28.js",
-      "hash": "cfc3dc0d935350b1",
-      "size": 37937,
       "required": true
     },
     {
@@ -449,6 +389,18 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/79b95ce2c9709a77.js",
+      "hash": "3d35e1c4e57cd9a5",
+      "size": 37771,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/7ba0a6986ec61cd7.js",
+      "hash": "336faf7d01068bdd",
+      "size": 17754,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/7c2453e485d1869a.js",
       "hash": "3ef65755340c7302",
       "size": 70370,
@@ -461,15 +413,15 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/7c5e1d88cce02685.js",
-      "hash": "5a2d0ae4eba26ec5",
-      "size": 12611,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/7e1d4e3f74c2230b.js",
       "hash": "4be7340efc876955",
       "size": 37182,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/7e3ebb63e8775b16.js",
+      "hash": "95a8cddb7120f624",
+      "size": 83716,
       "required": true
     },
     {
@@ -482,6 +434,12 @@
       "url": "/_next/static/chunks/7e78130430bb6357.js",
       "hash": "79f6c51387b29322",
       "size": 640,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/7ee2afd4e7719186.js",
+      "hash": "b848a8b54e9f73e2",
+      "size": 57299,
       "required": true
     },
     {
@@ -503,9 +461,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/8058d7565fcf2ad3.js",
-      "hash": "455618e26abe9108",
-      "size": 3862,
+      "url": "/_next/static/chunks/80f1ad255d01e00c.js",
+      "hash": "a0d1cfef47875b1c",
+      "size": 27058,
       "required": true
     },
     {
@@ -515,9 +473,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/821d43fabdbae3cb.js",
-      "hash": "4e59451421c2b1a3",
-      "size": 1302848,
+      "url": "/_next/static/chunks/83756fa4955a93c1.js",
+      "hash": "2be1068dbd57a0cd",
+      "size": 71394,
       "required": true
     },
     {
@@ -536,6 +494,12 @@
       "url": "/_next/static/chunks/8b442e48ae748638.js",
       "hash": "08810cce21fdd154",
       "size": 55024,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/8d4243d493cceff6.js",
+      "hash": "f16327212651fae7",
+      "size": 34771,
       "required": true
     },
     {
@@ -569,12 +533,6 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/91eb07515249c779.js",
-      "hash": "2b6d676dea86af38",
-      "size": 10183,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/9243331a4ad2bd19.js",
       "hash": "981d76ae5fbb0d8e",
       "size": 63136,
@@ -605,18 +563,6 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/963b248a8b8f1f20.js",
-      "hash": "50cf6a8bf13778b1",
-      "size": 14362,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/964dd66c32510082.js",
-      "hash": "c40c2b3a11721433",
-      "size": 204021,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/9899f28d5df42831.js",
       "hash": "1ae392c969702849",
       "size": 107454,
@@ -629,33 +575,33 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/9ba214fc5e66a5f6.js",
+      "hash": "3cdffa76a94e7a53",
+      "size": 26463,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/9d8edf0dcf0a8ed1.js",
+      "hash": "e537522d0d8958a7",
+      "size": 16726,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/9eb4a630ee5e03f2.js",
       "hash": "4740659de2d2b4e5",
       "size": 579,
       "required": true
     },
     {
-      "url": "/_next/static/chunks/9fa8b16289bb214d.js",
-      "hash": "c69652b6d6a44145",
-      "size": 74066,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/a035cb3822789a81.js",
-      "hash": "f639da476f647aee",
-      "size": 27650,
+      "url": "/_next/static/chunks/9eb6d49e91140e98.js",
+      "hash": "7e37380a50cb9167",
+      "size": 56471,
       "required": true
     },
     {
       "url": "/_next/static/chunks/a048473a1c53769d.js",
       "hash": "af15c7391f711c86",
       "size": 35679,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/a214f558973b5ef1.js",
-      "hash": "7cac244066f99aa2",
-      "size": 35678,
       "required": true
     },
     {
@@ -707,6 +653,12 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/aeaf9d12b6525ff1.js",
+      "hash": "41ec70abdedc1784",
+      "size": 19338,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/afb0773121128824.js",
       "hash": "fc5a2f363ab7622e",
       "size": 15240,
@@ -719,15 +671,15 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/b3f3bd672488e5e3.js",
-      "hash": "ff698278117a8eb6",
-      "size": 21560,
+      "url": "/_next/static/chunks/b2bf585c25a368cf.js",
+      "hash": "6a85511bb7e2a0ec",
+      "size": 46342,
       "required": true
     },
     {
-      "url": "/_next/static/chunks/b5abc06c0448a04d.js",
-      "hash": "d98ca42971325f91",
-      "size": 81512,
+      "url": "/_next/static/chunks/b460b7e88e0dddcb.js",
+      "hash": "149ce8218bb1993c",
+      "size": 82577,
       "required": true
     },
     {
@@ -737,15 +689,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/b7186b83bdc20d38.js",
-      "hash": "b96fd73f401dadb1",
-      "size": 3230,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/b764c8e444b90e2f.js",
-      "hash": "41cf57d2999b2f9d",
-      "size": 46482,
+      "url": "/_next/static/chunks/b7f3c07c403141e7.js",
+      "hash": "1f0ebfc09656dfa3",
+      "size": 40703,
       "required": true
     },
     {
@@ -767,15 +713,15 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/ba94807f797e23e1.js",
-      "hash": "95e0a61d46bd03a1",
-      "size": 39506,
+      "url": "/_next/static/chunks/b9e88a4ed4e407d0.js",
+      "hash": "c4670969c99822a9",
+      "size": 14255,
       "required": true
     },
     {
-      "url": "/_next/static/chunks/bb476b8977ba7c5f.js",
-      "hash": "775ff1f9e0cb6ba2",
-      "size": 25033,
+      "url": "/_next/static/chunks/ba94807f797e23e1.js",
+      "hash": "95e0a61d46bd03a1",
+      "size": 39506,
       "required": true
     },
     {
@@ -791,9 +737,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/bebc10efb3b105a6.js",
-      "hash": "77a5c49a2219294e",
-      "size": 27938,
+      "url": "/_next/static/chunks/bf6cfd3cfb115a1b.js",
+      "hash": "9293a2d464e46897",
+      "size": 37771,
       "required": true
     },
     {
@@ -803,15 +749,21 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/c0fe8b92d0e9ae7f.js",
-      "hash": "d4cc36e2d96390a1",
-      "size": 90963,
+      "url": "/_next/static/chunks/c19e931cd721cd61.js",
+      "hash": "9f6a9e66dc909ab4",
+      "size": 25219,
       "required": true
     },
     {
       "url": "/_next/static/chunks/c20dee2294b375a8.js",
       "hash": "d0533b357b3dbc09",
       "size": 39506,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/c29dc82fa8f248cf.js",
+      "hash": "4584e467d1e9ca2d",
+      "size": 24312,
       "required": true
     },
     {
@@ -827,9 +779,21 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/c75a2f400bdae705.js",
+      "hash": "e4ceedcac0a9328e",
+      "size": 41253,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/c8af5a4c4cb68098.js",
       "hash": "653044cb7381237d",
       "size": 56070,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/c992391914c0224d.js",
+      "hash": "96eb41e17ba8f6a5",
+      "size": 46150,
       "required": true
     },
     {
@@ -839,27 +803,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/ca307712439e9ad4.js",
-      "hash": "3526a5dd1368012c",
-      "size": 7224,
-      "required": true
-    },
-    {
       "url": "/_next/static/chunks/cb35e0620f57de98.js",
       "hash": "8080509459da32ff",
       "size": 777,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/cc14a1d837f38ef0.js",
-      "hash": "6c5d6a5adf4acc1a",
-      "size": 84482,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/cdbaade5dd447fb2.js",
-      "hash": "1a0c3d7a8418051b",
-      "size": 79770,
       "required": true
     },
     {
@@ -875,15 +821,27 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/d2d29787e66e6459.js",
-      "hash": "7e8858c626436006",
-      "size": 37937,
+      "url": "/_next/static/chunks/d16db044544c11af.js",
+      "hash": "3d95073dac119373",
+      "size": 104534,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/d23fdb800aa08f99.js",
+      "hash": "d4ae55314708438c",
+      "size": 21559,
       "required": true
     },
     {
       "url": "/_next/static/chunks/d3865ded2df77a52.js",
       "hash": "66ca6da2e0c00ada",
       "size": 7756,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/d41a8217fe1daa2e.js",
+      "hash": "200433fcb5896460",
+      "size": 34750,
       "required": true
     },
     {
@@ -917,9 +875,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/d5af60bf3d34ce44.js",
-      "hash": "c77cdaee2684407e",
-      "size": 27058,
+      "url": "/_next/static/chunks/d637aed334e4c4a0.js",
+      "hash": "b1f6ccebad86a3a4",
+      "size": 502046,
       "required": true
     },
     {
@@ -932,6 +890,12 @@
       "url": "/_next/static/chunks/d789bd6e9b064868.js",
       "hash": "9d0be79c1786fe1f",
       "size": 23806,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/d9289391993bf1e0.js",
+      "hash": "7b193cfe86fb55d5",
+      "size": 25840,
       "required": true
     },
     {
@@ -995,9 +959,27 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/e09a39dd094ecefe.js",
+      "hash": "f9218c8acffb9e89",
+      "size": 7117,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/e2bc03b6f8d7b27f.js",
+      "hash": "0686a2b106e0136a",
+      "size": 41915,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/e37a3f72875099e6.js",
       "hash": "ffd9391e7de69d22",
       "size": 704,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/e40f288a53c6bf4a.js",
+      "hash": "a6be83a318bbd953",
+      "size": 81868,
       "required": true
     },
     {
@@ -1031,6 +1013,18 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/e861a6f6d7d40baf.js",
+      "hash": "17035e035e98fa42",
+      "size": 83716,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/e911c1eb78e5026d.js",
+      "hash": "052d7e1b1b54a4a2",
+      "size": 1303086,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/e933def9842c7254.js",
       "hash": "4bd6a614996cc8e9",
       "size": 58509,
@@ -1055,27 +1049,27 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/eef8b6f29a832065.js",
+      "hash": "9b93a82e285ddb2f",
+      "size": 19909,
+      "required": true
+    },
+    {
+      "url": "/_next/static/chunks/ef4b9ee93563d6fe.js",
+      "hash": "7391b9fc5faf9f0b",
+      "size": 81523,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/efbfc8b52cfcbe17.js",
       "hash": "da071d2f4b1f6984",
       "size": 29994,
       "required": true
     },
     {
-      "url": "/_next/static/chunks/f0ad82f5393665e0.js",
-      "hash": "339c2f441f78fa84",
-      "size": 23519,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/f6fded6f06a9f134.js",
-      "hash": "9c0149d43d139dfe",
-      "size": 50422,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/f7b4b7211f47d274.js",
-      "hash": "5b067b1e0902be39",
-      "size": 84482,
+      "url": "/_next/static/chunks/f347c33004b5e570.js",
+      "hash": "bb00faed8a4a3277",
+      "size": 24462,
       "required": true
     },
     {
@@ -1091,9 +1085,9 @@
       "required": true
     },
     {
-      "url": "/_next/static/chunks/f9eb2a66c0daaa70.js",
-      "hash": "3ba75f6a069dae2b",
-      "size": 32574,
+      "url": "/_next/static/chunks/fa63953fa3857944.js",
+      "hash": "7d76873869927a7b",
+      "size": 50354,
       "required": true
     },
     {
@@ -1109,6 +1103,12 @@
       "required": true
     },
     {
+      "url": "/_next/static/chunks/fc974f68e5551c03.js",
+      "hash": "12ab73cf07e87169",
+      "size": 3290,
+      "required": true
+    },
+    {
       "url": "/_next/static/chunks/fd5c74e8abf01199.js",
       "hash": "a877728eb83d4d53",
       "size": 732,
@@ -1118,12 +1118,6 @@
       "url": "/_next/static/chunks/fe150cca7650cdf4.js",
       "hash": "612ff76acfd542a7",
       "size": 32589,
-      "required": true
-    },
-    {
-      "url": "/_next/static/chunks/fee6ce07f513e22f.js",
-      "hash": "94a2d86cb3b67b28",
-      "size": 25913,
       "required": true
     },
     {
@@ -1205,19 +1199,19 @@
       "required": true
     },
     {
-      "url": "/_next/static/PjQS4iM498ePbdMKcG9jm/_buildManifest.js",
+      "url": "/_next/static/wS-w8cIsbMqHfGtFjS3hr/_buildManifest.js",
       "hash": "9476e0afd3f9da68",
       "size": 219,
       "required": true
     },
     {
-      "url": "/_next/static/PjQS4iM498ePbdMKcG9jm/_clientMiddlewareManifest.json",
+      "url": "/_next/static/wS-w8cIsbMqHfGtFjS3hr/_clientMiddlewareManifest.json",
       "hash": "5d25ee47954e3699",
       "size": 439,
       "required": true
     },
     {
-      "url": "/_next/static/PjQS4iM498ePbdMKcG9jm/_ssgManifest.js",
+      "url": "/_next/static/wS-w8cIsbMqHfGtFjS3hr/_ssgManifest.js",
       "hash": "678f6ce2cb80b1fe",
       "size": 80,
       "required": true
