@@ -53,7 +53,7 @@ export function PendingRequests({
   const content = (
     <Flex flexDir="column">
       <Carousel.Root slideCount={pendingRequests?.length ?? 0} maxW="full">
-        <Carousel.Control justifyContent="center" gap={2} w="full">
+        <Carousel.Control justifyContent="center" gap={4} w="full">
           {!isMobile && pendingRequests && pendingRequests.length > 1 && (
             <Carousel.PrevTrigger asChild>
               <IconButton size="2xs" variant="outline">
@@ -108,10 +108,10 @@ export function PendingRequests({
           transformOrigin="center"
           opacity="0.5"
           boxSize="2"
-          bg="gray.200"
+          bg={"primaryDisabled"}
           _current={{
             width: "10",
-            bg: "gray.300",
+            bg: "primary",
             opacity: 1,
           }}
         />

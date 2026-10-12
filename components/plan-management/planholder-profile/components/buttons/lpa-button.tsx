@@ -105,16 +105,20 @@ export function LPANumberButton({
               py="2px"
               borderRadius="full"
               bg={
-                plan.accountStatus === "LAPSED"
-                  ? "orange.400"
-                  : "whiteAlpha.200"
+                plan.terminationStatus !== "NOT YET TERMINATED"
+                  ? "red.500"
+                  : plan.accountStatus === "LAPSED"
+                    ? "orange.400"
+                    : "whiteAlpha.200"
               }
               fontSize="xs"
               color="white"
               fontWeight="semibold"
               letterSpacing="wide"
             >
-              {plan.accountStatus}
+              {plan.terminationStatus !== "NOT YET TERMINATED"
+                ? plan.terminationStatus
+                : plan.accountStatus}
             </Box>
           </Flex>
 
@@ -198,7 +202,10 @@ export function LPANumberButton({
               >
                 View Details
               </Button>
-              {personId && plan.accountStatus !== "LAPSED" && (
+              {personId &&
+                plan.accountStatus !== "LAPSED" &&
+                plan.accountStatus !== "FULLY PAID" &&
+                plan.terminationStatus === "NOT YET TERMINATED" && (
                 <Button
                   size="sm"
                   bg="white"
@@ -267,23 +274,41 @@ export function LPANumberButton({
             px={2}
             py={1}
             borderRadius="full"
-            bg={plan.accountStatus === "LAPSED" ? "orange.50" : "green.50"}
+            bg={
+              plan.terminationStatus !== "NOT YET TERMINATED"
+                ? "red.100"
+                : plan.accountStatus === "LAPSED"
+                  ? "orange.50"
+                  : "green.50"
+            }
             flexShrink={0}
           >
             <Box
               w="5px"
               h="5px"
               borderRadius="full"
-              bg={plan.accountStatus === "LAPSED" ? "orange.400" : "green.400"}
+              bg={
+                plan.terminationStatus !== "NOT YET TERMINATED"
+                  ? "red.500"
+                  : plan.accountStatus === "LAPSED"
+                    ? "orange.400"
+                    : "green.400"
+              }
             />
             <Text
               fontSize="10px"
               fontWeight="semibold"
               color={
-                plan.accountStatus === "LAPSED" ? "orange.600" : "green.600"
+                plan.terminationStatus !== "NOT YET TERMINATED"
+                  ? "red.600"
+                  : plan.accountStatus === "LAPSED"
+                    ? "orange.600"
+                    : "green.600"
               }
             >
-              {plan.accountStatus}
+              {plan.terminationStatus !== "NOT YET TERMINATED"
+                ? plan.terminationStatus
+                : plan.accountStatus}
             </Text>
           </Flex>
         </Flex>

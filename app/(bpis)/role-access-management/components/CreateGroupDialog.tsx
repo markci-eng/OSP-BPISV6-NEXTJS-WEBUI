@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Button, Flex, HStack, Switch, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, HStack, Text } from "@chakra-ui/react";
 import {
   FloatingLabelInput,
-  FloatingLabelSelect,
   ModalForm,
   ModalFormField,
   ModalFormSection,
@@ -15,19 +14,8 @@ import {
   ACCESS_COLORS,
   CODE_FONT,
 } from "../lib/access-theme";
-import type {
-  AccessGroup,
-  CreateGroupInput,
-  DataScopeLevel,
-  NewGroupBase,
-} from "../types";
+import type { AccessGroup, CreateGroupInput, NewGroupBase } from "../types";
 import { SYSTEM_CODE } from "../data/access-groups";
-
-const DATA_SCOPE_OPTIONS: { value: DataScopeLevel; label: string }[] = [
-  { value: "region", label: "By region" },
-  { value: "territory", label: "By territory" },
-  { value: "branch", label: "By branch" },
-];
 
 type CreateGroupDialogProps = {
   open: boolean;
@@ -108,8 +96,6 @@ export function CreateGroupDialog({
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
   const [base, setBase] = useState<NewGroupBase>("blank");
-  const [scoped, setScoped] = useState(false);
-  const [dataScope, setDataScope] = useState<DataScopeLevel>("region");
 
   // Reopening the dialog should offer an empty form, not the last attempt.
   useEffect(() => {
@@ -117,8 +103,6 @@ export function CreateGroupDialog({
     setCode("");
     setDescription("");
     setBase("blank");
-    setScoped(false);
-    setDataScope("region");
   }, [open]);
 
   return (
@@ -152,14 +136,7 @@ export function CreateGroupDialog({
             flex="1.4"
             loading={creating}
             loadingText="Creating…"
-            onClick={() =>
-              onSubmit({
-                code,
-                description,
-                base,
-                dataScope: scoped ? dataScope : undefined,
-              })
-            }
+            onClick={() => onSubmit({ code, description, base })}
           >
             Create group
           </PrimaryMdButton>
@@ -189,53 +166,6 @@ export function CreateGroupDialog({
           helperText="Shown wherever the role is listed."
         />
       </ModalFormField>
-
-      <ModalFormField>
-        <HStack
-          justify="space-between"
-          gap={3}
-          px={3}
-          py={2.5}
-          borderRadius="lg"
-          borderWidth="1px"
-          borderColor="gray.100"
-        >
-          <Box minW={0}>
-            <Text fontSize="sm" fontWeight="500" color="gray.800">
-              Data scope
-            </Text>
-            <Text fontSize="xs" color="gray.400">
-              Limit members to records in their own area.
-            </Text>
-          </Box>
-          <Switch.Root
-            checked={scoped}
-            onCheckedChange={(details) => setScoped(details.checked)}
-          >
-            <Switch.HiddenInput />
-            <Switch.Control>
-              <Switch.Thumb />
-            </Switch.Control>
-          </Switch.Root>
-        </HStack>
-      </ModalFormField>
-
-      {scoped && (
-        <ModalFormField>
-          <FloatingLabelSelect
-            label="Restrict by"
-            value={dataScope}
-            onValueChange={(value) => setDataScope(value as DataScopeLevel)}
-            helperText="Members see only records in their own area."
-          >
-            {DATA_SCOPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </FloatingLabelSelect>
-        </ModalFormField>
-      )}
 
       {error && (
         <ModalFormField fullWidth>

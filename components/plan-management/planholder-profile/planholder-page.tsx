@@ -14,7 +14,6 @@ import {
   PlanholderInfoProps,
 } from "./sections/planholder-info";
 import { PendingRequests, RequestProps } from "./sections/pending-requests";
-import { ContactInfo } from "./sections/contact-info";
 import { EmploymentInfo } from "./sections/employment-info";
 import { Address, PlanholderAddressCard } from "./sections/address-info";
 import { useRouter } from "next/navigation";
@@ -154,7 +153,6 @@ export default function PlanholderProfilePage({
     window.matchMedia("(min-width: 1024px)").matches;
   const [personalOpen, setPersonalOpen] = useState(isWebOnMount);
   const [addressOpen, setAddressOpen] = useState(isWebOnMount);
-  const [contactOpen, setContactOpen] = useState(isWebOnMount);
   const [employmentOpen, setEmploymentOpen] = useState(isWebOnMount);
 
   const planholderAddress = (() => {
@@ -400,7 +398,7 @@ export default function PlanholderProfilePage({
           direction="column"
           align="center"
           justify="center"
-          gap={4}
+          gap={{ base: "3", lg: "5" }}
           py={16}
           px={6}
           textAlign="center"
@@ -432,7 +430,7 @@ export default function PlanholderProfilePage({
           {/* Unified 2-column profile grid */}
           <Grid
             templateColumns={{ base: "1fr", lg: "2fr 1fr" }}
-            gap={5}
+            gap={{ base: "3", lg: "5" }}
             alignItems="start"
           >
             {/* Left column — identity & details */}
@@ -506,26 +504,6 @@ export default function PlanholderProfilePage({
                     <PendingRequests requests={MOCK_REQUESTS} />
                   </Box>
                 </Show>
-                <Box display={{ base: "block", lg: "none" }}>
-                  <ContactInfo
-                    contacts={{
-                      Email:
-                        props.planholderContact
-                          ?.filter((x) => x.type === "Email")
-                          .map((x) => x.value) ?? [],
-                      MobileNo:
-                        props.planholderContact
-                          ?.filter((x) => x.type === "MobileNo")
-                          .map((x) => x.value) ?? [],
-                      LandlineNo:
-                        props.planholderContact
-                          ?.filter((x) => x.type === "LandlineNo")
-                          .map((x) => x.value) ?? [],
-                    }}
-                    isOpen={contactOpen}
-                    onToggle={() => setContactOpen((p) => !p)}
-                  />
-                </Box>
                 <EmploymentInfo
                   planholderInfo={props.planholderInfo}
                   isOpen={employmentOpen}

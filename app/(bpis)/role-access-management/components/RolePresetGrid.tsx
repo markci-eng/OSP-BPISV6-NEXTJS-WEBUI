@@ -9,19 +9,8 @@ import {
   ACCESS_COLORS,
   CODE_FONT,
 } from "../lib/access-theme";
-import type {
-  AccessGroup,
-  DataScopeLevel,
-  GroupPresetMap,
-  GroupScopeMap,
-} from "../types";
+import type { AccessGroup, GroupPresetMap } from "../types";
 import { moduleContributions, uniqueContributionCount } from "../lib/role-selectors";
-import {
-  areaName,
-  DATA_SCOPE_AREAS,
-  DATA_SCOPE_NOUNS,
-} from "../data/data-scopes";
-import { SearchableChecklist } from "./SearchableChecklist";
 
 type RolePresetGridProps = {
   groups: AccessGroup[];
@@ -31,61 +20,7 @@ type RolePresetGridProps = {
   /** Roles the user currently holds, for the "Currently assigned" marker. */
   currentCodes: string[];
   onToggle: (code: string) => void;
-  /** Areas picked for each selected role that carries a data scope. */
-  scopes: GroupScopeMap;
-  onScopeChange: (groupCode: string, areaCodes: string[]) => void;
 };
-
-/**
- * Area picker for a role restricted by data scope. Rendered inside the role's
- * card, so clicks are stopped here — otherwise picking an area would also
- * untick the role.
- */
-function ScopePicker({
-  level,
-  selected,
-  onChange,
-}: {
-  level: DataScopeLevel;
-  selected: string[];
-  onChange: (areaCodes: string[]) => void;
-}) {
-  const nouns = DATA_SCOPE_NOUNS[level];
-  const missing = selected.length === 0;
-  const options = DATA_SCOPE_AREAS[level].map((area) => ({
-    value: area.code,
-    label: area.name,
-    description: area.parent ? areaName(area.parent) : undefined,
-  }));
-
-  return (
-    // The dropdown is portalled, but React still bubbles its clicks through
-    // this box — so stopping them here covers the open list as well.
-    <Box
-      mt={3}
-      pt={3.5}
-      borderTopWidth="1px"
-      borderColor="gray.100"
-      cursor="default"
-      onClick={(event) => event.stopPropagation()}
-    >
-      <SearchableChecklist
-        label={`Data scope · ${nouns.many}`}
-        options={options}
-        selected={selected}
-        onChange={onChange}
-        placeholder={`Select ${nouns.many}`}
-        searchPlaceholder={`Search ${nouns.many}…`}
-        invalid={missing}
-      />
-      {missing && (
-        <Text fontSize="11px" mt={1.5} color={ACCESS_COLORS.revokeText}>
-          Select at least one {nouns.one} for this role.
-        </Text>
-      )}
-    </Box>
-  );
-}
 
 function grantedCount(preset: PermissionMap | undefined): number {
   if (!preset) return 0;
@@ -138,8 +73,6 @@ export function RolePresetGrid({
   selectedCodes,
   currentCodes,
   onToggle,
-  scopes,
-  onScopeChange,
 }: RolePresetGridProps) {
   return (
     <Grid
@@ -236,20 +169,7 @@ export function RolePresetGrid({
                   ? `${unique} permission(s) only this role provides`
                   : `${grantedCount(preset)} of ${TOTAL_PERMISSION_COUNT} permissions`}
               </Text>
-              {group.dataScope && !picked && (
-                <Text fontSize="11px" color="gray.400">
-                  Scoped by {DATA_SCOPE_NOUNS[group.dataScope].one}
-                </Text>
-              )}
             </HStack>
-
-            {group.dataScope && picked && (
-              <ScopePicker
-                level={group.dataScope}
-                selected={scopes[group.code] ?? []}
-                onChange={(areaCodes) => onScopeChange(group.code, areaCodes)}
-              />
-            )}
           </Box>
         );
       })}

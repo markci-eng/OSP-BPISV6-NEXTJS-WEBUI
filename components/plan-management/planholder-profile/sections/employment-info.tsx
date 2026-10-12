@@ -11,6 +11,13 @@ export interface EmploymentInfoProps {
   sourceOfFund?: string;
 }
 
+/** Formats a TIN as 123-456-789-000, right-padding with zeros to 12 digits. */
+function formatTin(tin?: string) {
+  const digits = (tin ?? "").replace(/D/g, "").slice(0, 12);
+  if (!digits) return "—";
+  return digits.padEnd(12, "0").match(/d{3}/g)!.join("-");
+}
+
 export function EmploymentInfo({
   planholderInfo,
   isOpen,
@@ -22,7 +29,7 @@ export function EmploymentInfo({
 }) {
   const fields = [
     { label: "Employer", value: planholderInfo?.employerName ?? "—" },
-    { label: "TIN", value: planholderInfo?.tin ?? "—" },
+    { label: "TIN", value: formatTin(planholderInfo?.tin) },
     { label: "SSS/GSIS Number", value: planholderInfo?.securityNo ?? "—" },
     { label: "Source of Fund", value: planholderInfo?.sourceOfFund ?? "—" },
   ];

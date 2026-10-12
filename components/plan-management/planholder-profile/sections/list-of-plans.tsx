@@ -81,13 +81,25 @@ function PlanTabs({
 
   return (
     <Flex direction="column" gap={gap}>
-      <InfoCard
-        icon={<FiFileText size={16} />}
-        title="Plan Details"
-        subtitle="Coverage & premium info"
-      >
-        <PlanDetailsPage planDetails={planDetails} />
-      </InfoCard>
+      {/* Only the desktop accordion starts open; the mobile sheet has no such state. */}
+      {isDesktop ? (
+        <InfoCardAccordion
+          icon={<FiFileText size={16} />}
+          title="Plan Details"
+          subtitle="Coverage & premium info"
+          defaultOpen
+        >
+          <PlanDetailsPage planDetails={planDetails} />
+        </InfoCardAccordion>
+      ) : (
+        <InfoCardSheet
+          icon={<FiFileText size={16} />}
+          title="Plan Details"
+          subtitle="Coverage & premium info"
+        >
+          <PlanDetailsPage planDetails={planDetails} />
+        </InfoCardSheet>
+      )}
 
       <InfoCard
         icon={<LuUsersRound size={16} />}
@@ -373,7 +385,18 @@ export function ListOfPlans({
               </IconButton>
             </Carousel.PrevTrigger>
 
-            <Carousel.Indicators />
+            <Carousel.Indicators
+              transition="width 0.2s ease-in-out"
+              transformOrigin="center"
+              opacity="0.5"
+              boxSize="2"
+              bg={"primaryDisabled"}
+              _current={{
+                width: "10",
+                bg: "primary",
+                opacity: 1,
+              }}
+            />
 
             <Carousel.NextTrigger asChild>
               <IconButton size="xs" variant="ghost">
@@ -387,12 +410,7 @@ export function ListOfPlans({
   );
 
   const details = planDetails && (
-    <Box
-      p={3}
-      borderRadius={"sm"}
-      border={"1px solid"}
-      borderColor={"gray.200"}
-    >
+    <Box p={3} bg={"surface"} borderRadius={"card"} boxShadow={"card"}>
       <Flex align={"center"} justify={"space-between"}>
         <Flex gap={2} my={2} align={"center"}>
           <FaRegFileAlt size={40} color="var(--chakra-colors-primary)" />
@@ -409,7 +427,15 @@ export function ListOfPlans({
               >
                 {planDetails!.accountStatus}
               </OSPBadge>
-              <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
+              <OSPBadge
+                type={
+                  planDetails?.terminationStatus === "NOT YET TERMINATED"
+                    ? "success"
+                    : "danger"
+                }
+              >
+                {planDetails?.terminationStatus}
+              </OSPBadge>
             </Flex>
           </Flex>
         </Flex>
@@ -425,10 +451,12 @@ export function ListOfPlans({
 
   const noPlans = (
     <Card.MainContent>
-      <EmptyStateCard
-        title={"No Plans Found"}
-        description={"This person does not have any plans."}
-      />
+      <Box boxShadow={"card"} borderRadius={"card"} p={2} bg={"surface"}>
+        <EmptyStateCard
+          title={"No Plans Found"}
+          description={"This person does not have any plans."}
+        />
+      </Box>
     </Card.MainContent>
   );
 
@@ -565,7 +593,15 @@ export function ListOfPlans({
                       <LuBan size={12} color="var(--chakra-colors-fg-muted)" />
                       <Small color="fg.muted">Termination status</Small>
                     </Flex>
-                    <OSPBadge type="success">NOT YET TERMINATED</OSPBadge>
+                    <OSPBadge
+                type={
+                  planDetails?.terminationStatus === "NOT YET TERMINATED"
+                    ? "success"
+                    : "danger"
+                }
+              >
+                {planDetails?.terminationStatus}
+              </OSPBadge>
                   </Box>
                 </Grid>
                 <Strong>Common Actions</Strong>

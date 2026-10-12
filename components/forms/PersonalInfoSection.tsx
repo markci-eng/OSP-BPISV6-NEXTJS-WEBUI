@@ -221,7 +221,7 @@ export function PersonalInfoSection({
             color="gray.400"
             pointerEvents="none"
           >
-            lbs
+            kg
           </Text>
         </Box>
       </Grid>

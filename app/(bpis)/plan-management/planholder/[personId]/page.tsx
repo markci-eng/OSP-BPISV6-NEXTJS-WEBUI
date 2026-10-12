@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { PlanholderPage } from "./planholder-page";
-import { getPlanholderProfile } from "./api/planholder-profile.api";
+import { PlanholderProfilePage } from "./planholder-page";
+import { getPlanholderInfo } from "./api/planholder-profile.api";
 
 export default async function Page({
   params,
@@ -12,13 +12,17 @@ export default async function Page({
   const { personId } = await params;
   const { lpaNumber } = await searchParams;
 
-  const planholderProfileData = await getPlanholderProfile(personId);
+  const planholderInfo = await getPlanholderInfo(personId, lpaNumber);
 
-  if (!planholderProfileData) {
+  if (!planholderInfo) {
     redirect("/plan-management/planholder");
   }
 
   return (
-    <PlanholderPage props={planholderProfileData} selectedLpaNumber={lpaNumber} />
+    <PlanholderProfilePage
+      personId={personId}
+      selectedLpaNumber={lpaNumber ?? ""}
+      planholderInfo={planholderInfo}
+    />
   );
 }

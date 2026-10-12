@@ -8,7 +8,7 @@ const PlanholderCardSkeleton = () => (
     w="100%"
     p={4}
     borderRadius="2xl"
-    bg="white"
+    bg="surface"
     shadow="sm"
     overflow="hidden"
   >
@@ -92,7 +92,7 @@ export const PlanholderListSkeleton = () => (
       display={{ base: "none", md: "block" }}
       w="full"
       borderWidth="1px"
-      borderColor="gray.200"
+      borderColor="hairline"
       borderRadius="xl"
       overflow="hidden"
     >
@@ -102,12 +102,12 @@ export const PlanholderListSkeleton = () => (
         px={4}
         py={3}
         borderBottomWidth={1}
-        borderColor="gray.100"
+        borderColor="hairlineSubtle"
       >
         <Skeleton h="32px" w="240px" borderRadius="md" />
         <Skeleton h="32px" w="90px" borderRadius="md" />
       </Flex>
-      <Flex direction="column" divideY="1px" borderColor="gray.100">
+      <Flex direction="column" divideY="1px" borderColor="hairlineSubtle">
         {Array.from({ length: 8 }).map((_, i) => (
           <PlanholderRowSkeleton key={i} />
         ))}

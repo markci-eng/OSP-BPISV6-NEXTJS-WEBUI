@@ -1,22 +1,18 @@
-"use client";
+import { redirect } from "next/navigation";
+import { ChangeOfModePage } from "./change-of-mode-page";
 
-import { ChangeModePage } from "./change-of-mode/change-mode-page";
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ personId: string }>;
+}) {
+  const { personId } = await params;
 
-export default function Page() {
-  return (
-    <>
-      {/* <Box pt={4} px={6} mx="auto">
-        <Breadcrumb items={breadcrumbItems} />
-      </Box> */}
-      <ChangeModePage
-        onSuccess={function (
-          transactionId: string,
-          transactionAmount: number,
-        ): void {
-          throw new Error("Function not implemented.");
-        }}
-        successLink="/plan-management/change-of-mode/success"
-      />
-    </>
-  );
+  // A list row with no personId stringifies into the URL as "null" or
+  // "undefined". There is no one to show, so go back to the list.
+  if (personId === "null" || personId === "undefined") {
+    redirect("/plan-management/planholder");
+  }
+
+  return <ChangeOfModePage personId={personId} />;
 }

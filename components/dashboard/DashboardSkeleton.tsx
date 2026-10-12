@@ -12,13 +12,7 @@ import {
 export const AccountOverviewSkeleton = () => (
   <SimpleGrid columns={{ base: 2, md: 4 }} gap={3}>
     {Array.from({ length: 4 }).map((_, i) => (
-      <Box
-        key={i}
-        borderRadius="3xl"
-        border="2px solid"
-        borderColor="gray.100"
-        p={4}
-      >
+      <Box key={i} borderRadius="card" boxShadow="card" p={4} bg="surface">
         <Flex align="center" gap={2} mb={3}>
           <Skeleton w="33px" h="33px" borderRadius="lg" />
           <Skeleton h="14px" w="70px" />
@@ -28,7 +22,7 @@ export const AccountOverviewSkeleton = () => (
           justify="space-between"
           pt={2.5}
           borderTop="1px solid"
-          borderColor="gray.100"
+          borderColor="hairline"
         >
           <Box>
             <Skeleton h="9px" w="60px" mb={1} />
