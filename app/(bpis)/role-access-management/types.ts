@@ -75,6 +75,8 @@ export type AccessGroup = {
   summary: string;
   system?: boolean;
   modified: string;
+  /** Level the group's data access is restricted to; unset means unrestricted. */
+  dataScope?: DataScopeLevel;
 };
 
 /** AccessGroupCode -> the permissions that group grants. */
@@ -86,8 +88,16 @@ export type UserRoleMap = Record<string, string[]>;
 /** The base a newly created group starts from: blank, or an existing preset. */
 export type NewGroupBase = "blank" | (string & {});
 
+/** Organisational level a group's data access can be restricted to. */
+export type DataScopeLevel = "region" | "territory" | "branch";
+
+/** AccessGroupCode -> the area codes a scoped group is limited to for a user. */
+export type GroupScopeMap = Record<string, string[]>;
+
 export type CreateGroupInput = {
   code: string;
   description: string;
   base: NewGroupBase;
+  /** Omitted when the group is not restricted by data scope. */
+  dataScope?: DataScopeLevel;
 };

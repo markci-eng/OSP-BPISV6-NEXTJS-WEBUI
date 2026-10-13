@@ -67,6 +67,8 @@ export interface UserAssignmentRequest extends BaseApproval {
   currentGroups: string;
   /** Groups they would hold once approved. */
   requestedGroups: string;
+  /** Areas each scoped group is limited to, e.g. "BRMGR: ORT, QC". */
+  dataScopes?: string;
   /** Permissions gained and lost by the change, e.g. "+21 / −0". */
   permissionEffect: string;
   date: string;
